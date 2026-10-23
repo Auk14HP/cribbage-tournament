@@ -1,8 +1,7 @@
 /*
  * The Tournament core: owns every rule, knows nothing about the UI or the browser.
  * A Tournament is plain, JSON-serialisable data; commands return a new Tournament or a reason for refusing.
- * Read plain fields directly (tournament.players); add a query function only for views that must be
- * worked out from the data.
+ * How callers read it: CODING_STANDARDS.md, "The Tournament core".
  */
 import type { Result } from './result';
 

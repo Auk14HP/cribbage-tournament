@@ -1,6 +1,6 @@
 ## Checks
 
-Run `npm run check` (typecheck, lint, format check, tests) before committing; the pre-commit hook and CI both run it. `npm run format` fixes formatting.
+`npm run check` must pass to commit (pre-commit hook). CI also runs `npm run e2e`, the two-window browser tests the hook skips; run it before pushing a UI change.
 
 ## Agent skills
 

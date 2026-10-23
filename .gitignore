@@ -12,3 +12,6 @@ yarn-error.log*
 
 .idea
 /dist
+
+/test-results
+/playwright-report
