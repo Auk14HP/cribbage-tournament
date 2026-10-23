@@ -3,6 +3,7 @@
  * Saves state as JSON in local storage and tells subscribers when it changes, including
  * changes saved by another window (via the browser's storage events). A hosted version
  * would replace only this module.
+ * Saved state is labelled with the version of its shape; state saved with any other version loads as nothing.
  */
 
 export interface Store<T> {
@@ -12,7 +13,12 @@ export interface Store<T> {
 	subscribe(listener: () => void): () => void;
 }
 
-export const localStorageStore = <T>(key: string): Store<T> => {
+interface Saved<T> {
+	readonly version: number;
+	readonly state: T;
+}
+
+export const localStorageStore = <T>(key: string, version: number): Store<T> => {
 	const listeners = new Set<() => void>();
 
 	const read = (): T | undefined => {
@@ -21,7 +27,8 @@ export const localStorageStore = <T>(key: string): Store<T> => {
 			return undefined;
 		}
 		try {
-			return JSON.parse(saved) as T;
+			const parsed = JSON.parse(saved) as Partial<Saved<T>> | null;
+			return parsed?.version === version ? parsed.state : undefined;
 		} catch {
 			return undefined;
 		}
@@ -40,7 +47,7 @@ export const localStorageStore = <T>(key: string): Store<T> => {
 	return {
 		load: () => current,
 		save: (state) => {
-			localStorage.setItem(key, JSON.stringify(state));
+			localStorage.setItem(key, JSON.stringify({ version, state } satisfies Saved<T>));
 			current = state;
 			// Storage events only reach other windows, so tell this window's subscribers directly.
 			listeners.forEach((listener) => listener());

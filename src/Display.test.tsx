@@ -1,10 +1,20 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Display } from './Display';
 import { localStorageStore } from './storage';
-import { newTournament, registerPlayer, type Tournament } from './tournament';
+import type { Result } from './result';
+import {
+	addBoard,
+	makeDraw,
+	newTournament,
+	registerPlayer,
+	roundOneDraw,
+	start,
+	tournamentVersion,
+	type Tournament,
+} from './tournament';
 
 const key = 'display-test';
 
@@ -15,7 +25,7 @@ afterEach(() => {
 
 describe('the display route', () => {
 	it('shows registered Players and the count, updating when the Tournament is saved', () => {
-		const store = localStorageStore<Tournament>(key);
+		const store = localStorageStore<Tournament>(key, tournamentVersion);
 		render(<Display store={store} />);
 		expect(screen.getByText('0 Players registered')).toBeInTheDocument();
 
@@ -31,3 +41,44 @@ describe('the display route', () => {
 		]);
 	});
 });
+
+describe('the Round 1 draw screen', () => {
+	it('shows every first-Round Match with its Board, and who has a Bye, until Start', () => {
+		const store = localStorageStore<Tournament>(key, tournamentVersion);
+		render(<Display store={store} />);
+		let tournament = newTournament();
+		for (const name of ['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe']) {
+			tournament = expectOk(registerPlayer(tournament, name));
+		}
+		for (const board of ['5', '2']) {
+			tournament = expectOk(addBoard(tournament, board));
+		}
+		tournament = expectOk(makeDraw(tournament, Math.random));
+
+		act(() => store.save(tournament));
+
+		// 5 Players: one first-Round Match, on the lowest-numbered Board, and three Byes.
+		const draw = roundOneDraw(tournament)!;
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Round 1 draw');
+		const match = within(screen.getByRole('list', { name: 'Matches' })).getByRole('listitem');
+		expect(within(match).getByText('Board 2')).toBeInTheDocument();
+		expect(within(match).getByText(draw.matches[0].players[0].name)).toBeInTheDocument();
+		expect(within(match).getByText(draw.matches[0].players[1].name)).toBeInTheDocument();
+		expect(
+			within(screen.getByRole('list', { name: 'Byes' }))
+				.getAllByRole('listitem')
+				.map((item) => item.textContent),
+		).toEqual(draw.byes.map((p) => p.name));
+
+		act(() => store.save(expectOk(start(tournament))));
+
+		expect(screen.getByRole('heading', { level: 1 })).not.toHaveTextContent('Round 1 draw');
+	});
+});
+
+const expectOk = (outcome: Result<Tournament>): Tournament => {
+	if (!outcome.ok) {
+		throw new Error(outcome.reason);
+	}
+	return outcome.value;
+};
