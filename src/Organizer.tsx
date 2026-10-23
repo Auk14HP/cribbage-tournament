@@ -4,8 +4,6 @@ import { useRef, useState, type FormEvent } from "react";
 import type { Store } from "./storage";
 import {
   newTournament,
-  playerCount,
-  players,
   registerPlayer,
   removePlayer,
   renamePlayer,
@@ -41,8 +39,13 @@ export function Organizer({ store }: { store: Store<Tournament> }) {
     nameInput.current?.focus();
   }
 
-  function startRenaming(playerId: PlayerId | undefined) {
+  function startRenaming(playerId: PlayerId) {
     setRenaming(playerId);
+    setRefusal("");
+  }
+
+  function stopRenaming() {
+    setRenaming(undefined);
     setRefusal("");
   }
 
@@ -53,8 +56,8 @@ export function Organizer({ store }: { store: Store<Tournament> }) {
       )
     )
       return;
-    startRenaming(undefined);
-    apply({ ok: true, tournament: newTournament() });
+    stopRenaming();
+    store.save(newTournament());
     nameInput.current?.focus();
   }
 
@@ -89,18 +92,18 @@ export function Organizer({ store }: { store: Store<Tournament> }) {
       <p className="refusal" role="alert">
         {refusal}
       </p>
-      <p className="count">{playersRegistered(playerCount(tournament))}</p>
+      <p className="count">{playersRegistered(tournament.players.length)}</p>
       <ul className="players">
-        {players(tournament).map((player) =>
+        {tournament.players.map((player) =>
           player.id === renaming ? (
             <RenameRow
               key={player.id}
               player={player}
               onSave={(newName) => {
                 if (apply(renamePlayer(tournament, player.id, newName)))
-                  startRenaming(undefined);
+                  stopRenaming();
               }}
-              onCancel={() => startRenaming(undefined)}
+              onCancel={stopRenaming}
             />
           ) : (
             <li key={player.id}>

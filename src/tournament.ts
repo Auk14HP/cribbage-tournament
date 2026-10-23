@@ -1,5 +1,7 @@
 // The Tournament core: owns every rule, knows nothing about the UI or the browser.
 // A Tournament is plain, JSON-serialisable data; commands return a new Tournament or a reason for refusing.
+// Read plain fields directly (tournament.players); add a query function only for views that must be
+// worked out from the data.
 
 export type PlayerId = number;
 
@@ -84,18 +86,12 @@ function isRegistered(tournament: Tournament, playerId: PlayerId): boolean {
 function nameRefusal(
   tournament: Tournament,
   name: string,
-  renaming?: PlayerId,
+  exceptPlayerId?: PlayerId,
 ): string | undefined {
   if (name === "") return "Type the Player’s name.";
-  if (tournament.players.some((p) => p.name === name && p.id !== renaming)) {
+  if (
+    tournament.players.some((p) => p.name === name && p.id !== exceptPlayerId)
+  ) {
     return `There is already a Player called "${name}".`;
   }
-}
-
-export function players(tournament: Tournament): readonly Player[] {
-  return tournament.players;
-}
-
-export function playerCount(tournament: Tournament): number {
-  return tournament.players.length;
 }
