@@ -35,7 +35,10 @@ export interface MatchPlace {
 }
 
 export interface WinnersBracket {
-	// One entry per place in Round 2, in bracket order: neighbouring entries' Players meet there.
+	/*
+	 * The first Round, in bracket order. Each entry is a first-Round Match or a Bye, and sends one Player on
+	 * to Round 2, where each pair of neighbouring entries' Players meet.
+	 */
 	readonly firstRound: readonly (FirstRoundMatch | Bye)[];
 	/*
 	 * Each Match holding a Board, in the order the Matches took their Boards: being played, or held for a

@@ -2,7 +2,7 @@
  * The organizer route: shown on the laptop. Forwards the Organizer's actions to the Tournament core,
  * saves accepted changes through the store, and shows the core's reason when a change is refused.
  */
-import { useRef, useState, type FormEvent } from 'react';
+import { useRef, useState, type SubmitEvent } from 'react';
 import type { Result } from './result';
 import type { Store } from './storage';
 import {
@@ -95,7 +95,7 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
 	const [boardsRefusal, setBoardsRefusal] = useState('');
 	const nameInput = useRef<HTMLInputElement>(null);
 
-	const register = (event: FormEvent) => {
+	const register = (event: SubmitEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		const refusal = apply(registerPlayer(tournament, name));
 		setPlayersRefusal(refusal);
