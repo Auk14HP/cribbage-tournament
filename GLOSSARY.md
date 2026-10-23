@@ -1,0 +1,55 @@
+# Cribbage Tournament
+
+The language of a single-night, single-elimination cribbage tournament run at a local brewery: who plays, how they are paired, and how results move players through the brackets.
+
+## Language
+
+### People
+
+**Player**:
+A person who has paid the entry fee and is entered in tonight's **Tournament**.
+_Avoid_: Participant, entrant, competitor
+
+**Organizer**:
+The person running the **Tournament**: takes registrations and fees, and records each **Match** result.
+_Avoid_: Admin, host, TD
+
+### Structure
+
+**Tournament**:
+One night's event: a **Winners Bracket** and an optional **Losers Bracket**, self-contained to that night.
+_Avoid_: Event, night, competition
+
+**Winners Bracket**:
+The main single-elimination bracket every **Player** enters; its final winner is the tournament champion.
+_Avoid_: Main bracket, championship bracket
+
+**Losers Bracket**:
+A separate single-elimination bracket for **Players** who lost a first-**Round** **Match** in the **Winners Bracket** and chose to keep playing. A **Player** who had a **Bye** is never eligible.
+_Avoid_: Consolation bracket, second-chance bracket
+
+**Match**:
+A single game of cribbage to 121 between two **Players**; the winner advances, the loser leaves that bracket.
+_Avoid_: Game, round, heat
+
+**Round**:
+One column of a bracket: every **Match** that is the same number of wins away from the start.
+_Avoid_: Stage, level
+
+**Draw**:
+The random pairing of **Players** into a bracket's first **Round**, including who gets a **Bye**. Each bracket has exactly one Draw.
+_Avoid_: Seeding, pairing, shuffle
+
+**Bye**:
+A free pass through a bracket's first **Round**, given at random when the field doesn't fill the bracket. A Bye is not a **Match** and is not a loss.
+_Avoid_: Walkover, skip
+
+**Forfeit**:
+A **Match** result recorded when a **Player** leaves before playing it; their opponent wins.
+_Avoid_: Withdrawal, DNF, no-show
+
+### The room
+
+**Board**:
+A numbered cribbage board set out in the room, marked by a placard, where a **Match** is assigned to be played. Several Boards can share one physical table, and there are only as many Boards as the room has cribbage boards.
+_Avoid_: Table, spot, station, placard

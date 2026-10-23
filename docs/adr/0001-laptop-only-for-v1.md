@@ -1,0 +1,3 @@
+# Laptop-only for v1, hosted later
+
+The app runs entirely in the organizer's laptop browser: the organizer view on the laptop screen, the TV view in a second window on the TV as an extended display over HDMI, with tournament state saved locally. We chose this over a hosted site (TV opens a URL, organizer uses a phone) because brewery Wi-Fi and the TV's built-in browser are unproven, and a hosted version needs an organizer login and a database kept alive between monthly nights. Hosting is the expected next step, not a rejected one: the TV view learns about changes through a single seam so that seam can later be swapped for network sync.
