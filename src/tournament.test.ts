@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { newTournament, playerCount, players, registerPlayer, removePlayer, renamePlayer } from './tournament'
+import {
+  newTournament,
+  playerCount,
+  players,
+  registerPlayer,
+  removePlayer,
+  renamePlayer,
+  type Outcome,
+  type Tournament,
+} from './tournament'
 
 describe('registering Players', () => {
   it('lists registered Players by the name the room knows them by, with a running count', () => {
@@ -73,9 +82,19 @@ describe('correcting Players before the Draw', () => {
     expect(playerCount(tournament)).toBe(1)
     expect(registerPlayer(tournament, 'Dave K.').ok).toBe(true)
   })
+
+  it('refuses to rename or remove a Player who is no longer registered', () => {
+    let tournament = expectOk(registerPlayer(newTournament(), 'Dave K.'))
+    const daveK = players(tournament)[0]
+    tournament = expectOk(removePlayer(tournament, daveK.id))
+
+    const refused = { ok: false, reason: 'That Player is no longer registered.' }
+    expect(removePlayer(tournament, daveK.id)).toEqual(refused)
+    expect(renamePlayer(tournament, daveK.id, 'Dave K.')).toEqual(refused)
+  })
 })
 
-function expectOk<T>(outcome: { ok: true; tournament: T } | { ok: false; reason: string }): T {
+function expectOk(outcome: Outcome): Tournament {
   if (!outcome.ok) throw new Error(`Expected command to succeed, was rejected: ${outcome.reason}`)
   return outcome.tournament
 }

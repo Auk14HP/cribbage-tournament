@@ -6,7 +6,7 @@
 export interface Store<T> {
   load(): T | undefined
   save(state: T): void
-  subscribe(listener: (state: T) => void): () => void
+  subscribe(listener: (state: T) => void): void
 }
 
 export function localStorageStore<T>(key: string): Store<T> {
@@ -37,7 +37,6 @@ export function localStorageStore<T>(key: string): Store<T> {
     },
     subscribe(listener) {
       listeners.add(listener)
-      return () => listeners.delete(listener)
     },
   }
 }

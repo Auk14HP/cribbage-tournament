@@ -30,7 +30,10 @@ export function registerPlayer(tournament: Tournament, typedName: string): Outco
   }
 }
 
+const noSuchPlayer: Outcome = { ok: false, reason: 'That Player is no longer registered.' }
+
 export function renamePlayer(tournament: Tournament, playerId: PlayerId, typedName: string): Outcome {
+  if (!isRegistered(tournament, playerId)) return noSuchPlayer
   const name = typedName.trim()
   const refusal = nameRefusal(tournament, name, playerId)
   if (refusal) return { ok: false, reason: refusal }
@@ -44,7 +47,12 @@ export function renamePlayer(tournament: Tournament, playerId: PlayerId, typedNa
 }
 
 export function removePlayer(tournament: Tournament, playerId: PlayerId): Outcome {
+  if (!isRegistered(tournament, playerId)) return noSuchPlayer
   return { ok: true, tournament: { ...tournament, players: tournament.players.filter((p) => p.id !== playerId) } }
+}
+
+function isRegistered(tournament: Tournament, playerId: PlayerId): boolean {
+  return tournament.players.some((p) => p.id === playerId)
 }
 
 // Names must be unique so two Players can never be confused on the TV.

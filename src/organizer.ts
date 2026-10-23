@@ -13,6 +13,7 @@ import {
   type PlayerId,
   type Tournament,
 } from './tournament'
+import { playersRegistered } from './wording'
 
 export function showOrganizer(root: HTMLElement, store: Store<Tournament>): void {
   let tournament = store.load() ?? newTournament()
@@ -69,8 +70,7 @@ export function showOrganizer(root: HTMLElement, store: Store<Tournament>): void
   }
 
   function render(): void {
-    const n = playerCount(tournament)
-    count.textContent = `${n} ${n === 1 ? 'Player' : 'Players'} registered`
+    count.textContent = playersRegistered(playerCount(tournament))
     list.replaceChildren(...players(tournament).map((p) => (p.id === renaming ? renameRow(p.id, p.name) : playerRow(p.id, p.name))))
   }
 
