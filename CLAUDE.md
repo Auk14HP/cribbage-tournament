@@ -1,3 +1,7 @@
+## Checks
+
+Run `npm run check` (typecheck, lint, format check, tests) before committing; the pre-commit hook and CI both run it. `npm run format` fixes formatting.
+
 ## Agent skills
 
 ### Issue tracker
