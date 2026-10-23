@@ -149,38 +149,22 @@ const nameRefusal = (
 	return undefined;
 };
 
-export const addBoard = (tournament: Tournament, typedNumber: string): Result<Tournament> => {
-	const typed = typedNumber.trim();
+// Boards are numbered from 1, as the placards set out on them are.
+export const setBoardCount = (tournament: Tournament, typedCount: string): Result<Tournament> => {
+	if (tournament.phase !== 'registration') {
+		return { ok: false, reason: 'The number of Boards can’t change once the Draw is made.' };
+	}
+	const typed = typedCount.trim();
 	if (typed === '') {
-		return { ok: false, reason: 'Type the Board’s number.' };
+		return { ok: false, reason: 'Type how many Boards there are.' };
 	}
 	if (!/^[0-9]+$/.test(typed) || Number(typed) === 0) {
-		return { ok: false, reason: 'A Board number is a whole number on its placard, like 7.' };
+		return {
+			ok: false,
+			reason: 'The number of Boards is a whole number above zero, like 12.',
+		};
 	}
-	const board = Number(typed);
-	if (tournament.boards.includes(board)) {
-		return { ok: false, reason: `Board ${board} is already entered.` };
-	}
-	return {
-		ok: true,
-		value: { ...tournament, boards: [...tournament.boards, board].sort((a, b) => a - b) },
-	};
-};
-
-export const removeBoard = (tournament: Tournament, board: BoardNumber): Result<Tournament> => {
-	if (!tournament.boards.includes(board)) {
-		return { ok: false, reason: `Board ${board} is not entered.` };
-	}
-	const occupied = tournament.winnersBracket?.firstRound.some(
-		(entry) => !isBye(entry) && entry.board === board,
-	);
-	if (occupied) {
-		return { ok: false, reason: `Board ${board} has a Match on it.` };
-	}
-	return {
-		ok: true,
-		value: { ...tournament, boards: tournament.boards.filter((b) => b !== board) },
-	};
+	return { ok: true, value: { ...tournament, boards: range(Number(typed)).map((i) => i + 1) } };
 };
 
 export const makeDraw = (tournament: Tournament, random: Random): Result<Tournament> => {
@@ -239,8 +223,9 @@ const boardsShort = (matches: number, boards: number): string | undefined => {
 		matches === 1
 			? 'a Board for its first-Round Match'
 			: `a Board for each of its ${matches} first-Round Matches`;
-	const entered = boards === 0 ? 'none are' : boards === 1 ? '1 is' : `${boards} are`;
-	return `The Draw needs ${needed}, and ${entered} entered.`;
+	const set =
+		boards === 0 ? 'there are none' : `there ${boards === 1 ? 'is' : 'are'} only ${boards}`;
+	return `The Draw needs ${needed}, and ${set}.`;
 };
 
 export interface RoundOneDraw {

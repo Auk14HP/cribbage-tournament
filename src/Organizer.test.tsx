@@ -24,16 +24,19 @@ const register = async (user: ReturnType<typeof userEvent.setup>, name: string) 
 	await user.type(screen.getByLabelText('Player name'), `${name}{Enter}`);
 };
 
-const addBoard = async (user: ReturnType<typeof userEvent.setup>, board: string) => {
-	await user.type(screen.getByLabelText('Board number'), `${board}{Enter}`);
+const setBoardCount = async (user: ReturnType<typeof userEvent.setup>, count: string) => {
+	await user.clear(screen.getByLabelText('Number of Boards'));
+	await user.type(screen.getByLabelText('Number of Boards'), count);
 };
 
-const listed = (list: string) =>
-	within(screen.getByRole('list', { name: list }))
+// A refusal shows beside the controls that caused it.
+const refusalIn = (section: string) =>
+	within(screen.getByRole('region', { name: section })).getByRole('alert');
+
+const listedNames = () =>
+	within(screen.getByRole('list', { name: 'Players' }))
 		.queryAllByRole('listitem')
 		.map((item) => item.querySelector('span')?.textContent);
-
-const listedNames = () => listed('Players');
 
 describe('the organizer route', () => {
 	it('registers a Player, lists them with the running count, and clears the name box', async () => {
@@ -53,7 +56,7 @@ describe('the organizer route', () => {
 
 		await register(user, 'Big Dave');
 
-		expect(screen.getByRole('alert')).toHaveTextContent(
+		expect(refusalIn('Players')).toHaveTextContent(
 			'There is already a Player called "Big Dave".',
 		);
 		expect(screen.getByLabelText('Player name')).toHaveValue('Big Dave');
@@ -99,21 +102,26 @@ describe('the organizer route', () => {
 		expect(screen.getByLabelText('Player name')).toHaveFocus();
 	});
 
-	it('enters Boards, listed in number order, refusing a repeat, and takes one out', async () => {
+	it('numbers the Boards from 1 up to how many there are, and resumes with them', async () => {
 		const user = showOrganizer();
 
-		await addBoard(user, '3');
-		await addBoard(user, '1');
-		await addBoard(user, '12');
-		await addBoard(user, '3');
+		await setBoardCount(user, '12');
 
-		expect(screen.getByRole('alert')).toHaveTextContent('Board 3 is already entered.');
-		expect(listed('Boards')).toEqual(['Board 1', 'Board 3', 'Board 12']);
+		expect(screen.getByText('Placards 1 to 12')).toBeInTheDocument();
+		cleanup();
+		showOrganizer();
+		expect(screen.getByLabelText('Number of Boards')).toHaveValue('12');
+	});
 
-		const board12 = screen.getByText('Board 12').closest('li')!;
-		await user.click(within(board12).getByRole('button', { name: 'Remove' }));
+	it('shows why a number of Boards is refused, beside the Boards', async () => {
+		const user = showOrganizer();
 
-		expect(listed('Boards')).toEqual(['Board 1', 'Board 3']);
+		await setBoardCount(user, '0');
+
+		expect(refusalIn('Boards and the Draw')).toHaveTextContent(
+			'The number of Boards is a whole number above zero, like 12.',
+		);
+		expect(refusalIn('Players')).toBeEmptyDOMElement();
 	});
 
 	it('shows why the Draw is refused', async () => {
@@ -124,8 +132,8 @@ describe('the organizer route', () => {
 
 		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
 
-		expect(screen.getByRole('alert')).toHaveTextContent(
-			'The Draw needs a Board for its first-Round Match, and none are entered.',
+		expect(refusalIn('Boards and the Draw')).toHaveTextContent(
+			'The Draw needs a Board for its first-Round Match, and there are none.',
 		);
 	});
 
@@ -134,8 +142,7 @@ describe('the organizer route', () => {
 		for (const name of ['Dave K.', 'Big Dave', 'Sue']) {
 			await register(user, name);
 		}
-		await addBoard(user, '4');
-		await addBoard(user, '2');
+		await setBoardCount(user, '2');
 		const confirm = vi.spyOn(window, 'confirm');
 
 		confirm.mockReturnValueOnce(false);
@@ -153,7 +160,7 @@ describe('the organizer route', () => {
 		);
 		const byes = within(screen.getByRole('list', { name: 'Byes' })).getAllByRole('listitem');
 		expect(matches).toHaveLength(1);
-		expect(matches[0]).toHaveTextContent(/^Board 2/);
+		expect(matches[0]).toHaveTextContent(/^Board 1/);
 		expect(byes).toHaveLength(1);
 		const drawnIntoTheMatch = ['Dave K.', 'Big Dave', 'Sue'].filter(
 			(name) => name !== byes[0].textContent,
@@ -172,7 +179,7 @@ describe('the organizer route', () => {
 		await user.click(screen.getByRole('button', { name: 'Start a new Tournament' }));
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Register Players');
 		expect(listedNames()).toEqual([]);
-		expect(listed('Boards')).toEqual([]);
+		expect(screen.getByLabelText('Number of Boards')).toHaveValue('');
 		expect(screen.getByLabelText('Player name')).toHaveFocus();
 	});
 

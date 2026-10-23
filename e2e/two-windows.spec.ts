@@ -81,10 +81,7 @@ test('the TV holds the Round 1 draw from the moment the Draw is made until the O
 	for (const name of ['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Marge']) {
 		await register(organizer, name);
 	}
-	for (const board of ['3', '1', '2']) {
-		await organizer.getByLabel('Board number').fill(board);
-		await organizer.getByLabel('Board number').press('Enter');
-	}
+	await organizer.getByLabel('Number of Boards').fill('3');
 	organizer.once('dialog', (dialog) => dialog.accept());
 	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
 
