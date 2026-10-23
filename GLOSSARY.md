@@ -25,7 +25,7 @@ The main single-elimination bracket every **Player** enters; its final winner is
 _Avoid_: Main bracket, championship bracket
 
 **Losers Bracket**:
-A separate single-elimination bracket for **Players** who lost a first-**Round** **Match** in the **Winners Bracket** and chose to keep playing. A **Player** who had a **Bye** is never eligible.
+A separate single-elimination bracket for **Players** who lost their first **Match** in the **Winners Bracket**, in whichever **Round** it was, and chose to keep playing. Every **Player** can get at least two Matches in a night.
 _Avoid_: Consolation bracket, second-chance bracket
 
 **Match**:
@@ -37,11 +37,11 @@ One column of a bracket: every **Match** that is the same number of wins away fr
 _Avoid_: Stage, level
 
 **Draw**:
-The random pairing of **Players** into a bracket's first **Round**, including who gets a **Bye**. Each bracket has exactly one Draw.
+The random pairing of **Players** into a bracket's first **Round**, including who gets a **Bye**. The Draw seats every Player at a **Board**: each **Match** whose two Players it already knows gets one, and so does a Bye Player who waits for a first-Round Match's winner. Each bracket has exactly one Draw.
 _Avoid_: Seeding, pairing, shuffle
 
 **Bye**:
-A free pass through a bracket's first **Round**, given at random when the field doesn't fill the bracket. A Bye is not a **Match** and is not a loss.
+A free pass through a bracket's first **Round**, given at random when the field doesn't fill the bracket. A Bye is not a **Match** and is not a loss. Bye Players meet each other in the second Round, so they play from the start; only with an odd number of first-Round Matches does one Bye Player wait, at a **Board** of their own, for a first-Round Match's winner.
 _Avoid_: Walkover, skip
 
 **Forfeit**:

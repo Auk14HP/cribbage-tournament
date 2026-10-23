@@ -133,11 +133,11 @@ describe('the organizer route', () => {
 		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
 
 		expect(refusalIn('Boards and the Draw')).toHaveTextContent(
-			'The Draw needs a Board for its first-Round Match, and there are none.',
+			'The Draw seats every Player at a Board, so it needs 1 Board, and there are none.',
 		);
 	});
 
-	it('makes the Draw once confirmed, closing registration and showing Round 1, then Starts', async () => {
+	it('makes the Draw once confirmed, closing registration and showing the Matches it seats, then Starts', async () => {
 		const user = showOrganizer();
 		for (const name of ['Dave K.', 'Big Dave', 'Sue']) {
 			await register(user, name);
@@ -152,27 +152,25 @@ describe('the organizer route', () => {
 		confirm.mockReturnValueOnce(true);
 		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
 
-		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Round 1 draw');
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tonight’s Draw');
 		expect(screen.queryByLabelText('Player name')).not.toBeInTheDocument();
-		// 3 Players: one first-Round Match, on the lowest-numbered Board, and one Bye.
+		// 3 Players: one first-Round Match on Board 1, and the Bye Player sits at Board 2 to wait for its winner.
 		const matches = within(screen.getByRole('list', { name: 'Matches' })).getAllByRole(
 			'listitem',
 		);
-		const byes = within(screen.getByRole('list', { name: 'Byes' })).getAllByRole('listitem');
-		expect(matches).toHaveLength(1);
-		expect(matches[0]).toHaveTextContent(/^Board 1/);
-		expect(byes).toHaveLength(1);
-		const drawnIntoTheMatch = ['Dave K.', 'Big Dave', 'Sue'].filter(
-			(name) => name !== byes[0].textContent,
-		);
-		expect(drawnIntoTheMatch).toHaveLength(2);
-		for (const name of drawnIntoTheMatch) {
+		expect(matches).toHaveLength(2);
+		expect(matches[1]).toHaveTextContent(/^Board 2.+ v Winner of Board 1$/);
+		const waits = ['Dave K.', 'Big Dave', 'Sue'].find((name) =>
+			matches[1].textContent!.includes(name),
+		)!;
+		for (const name of ['Dave K.', 'Big Dave', 'Sue'].filter((n) => n !== waits)) {
 			expect(matches[0]).toHaveTextContent(name);
 		}
+		expect(matches[0]).toHaveTextContent(/^Board 1/);
 
 		await user.click(screen.getByRole('button', { name: 'Start' }));
 
-		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^Round 1$/);
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Now playing');
 		expect(screen.queryByRole('button', { name: 'Start' })).not.toBeInTheDocument();
 
 		confirm.mockReturnValueOnce(true);

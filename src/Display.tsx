@@ -3,9 +3,9 @@
  * Sizes are in vh so text scales with the TV: large and high-contrast, readable from across the room.
  */
 import type { Store } from './storage';
-import { roundOneDraw, type Tournament } from './tournament';
+import { tonightsDraw, type Tournament } from './tournament';
 import { useTournament } from './useTournament';
-import { playersRegistered } from './wording';
+import { playerName, playersRegistered } from './wording';
 
 export const Display = ({ store }: { store: Store<Tournament> }) => {
 	const tournament = useTournament(store);
@@ -14,9 +14,9 @@ export const Display = ({ store }: { store: Store<Tournament> }) => {
 			{tournament.phase === 'registration' ? (
 				<Players tournament={tournament} />
 			) : (
-				<RoundOne
+				<Draw
 					tournament={tournament}
-					heading={tournament.phase === 'drawShown' ? 'Round 1 draw' : 'Round 1'}
+					heading={tournament.phase === 'drawShown' ? 'Tonight’s Draw' : 'Now playing'}
 				/>
 			)}
 		</main>
@@ -38,16 +38,16 @@ const Players = ({ tournament }: { tournament: Tournament }) => (
 );
 
 /*
- * Every first-Round Match with its Board, so each Player can find their seat, and who has a Bye.
- * Sized so a 32-place bracket fits one screen: up to four rows of Matches, then a row of Byes.
+ * Every Match holding a Board, so each Player can find their seat, including a Bye Player waiting there
+ * for a Match's winner. Sized so a 32-place bracket fits one screen: up to four rows of Matches.
  */
-const RoundOne = ({ tournament, heading }: { tournament: Tournament; heading: string }) => {
-	const draw = roundOneDraw(tournament)!;
+const Draw = ({ tournament, heading }: { tournament: Tournament; heading: string }) => {
+	const matches = tonightsDraw(tournament)!;
 	return (
 		<>
 			<h1 className="text-[6vh] leading-none font-bold">{heading}</h1>
 			<ul aria-label="Matches" className="mt-[3vh] grid grid-cols-4 gap-[1.5vh]">
-				{draw.matches.map((match) => (
+				{matches.map((match) => (
 					<li
 						key={match.board}
 						className="rounded-[1vh] border-[0.3vh] border-gray-500 px-[1.5vw] py-[0.8vh] leading-tight"
@@ -58,27 +58,15 @@ const RoundOne = ({ tournament, heading }: { tournament: Tournament; heading: st
 						<span className="block text-[3.8vh] font-semibold">
 							{match.players[0].name}
 						</span>
-						<span className="block text-[3.8vh] font-semibold">
-							{match.players[1].name}
+						{/* A winner still to come is greyed, so it doesn't read as a Player's name. */}
+						<span
+							className={`block text-[3.8vh] font-semibold ${'winnerOfBoard' in match.players[1] ? 'text-gray-300 italic' : ''}`}
+						>
+							{playerName(match.players[1])}
 						</span>
 					</li>
 				))}
 			</ul>
-			{draw.byes.length > 0 && (
-				<>
-					<h2 className="mt-[2.5vh] text-[3.8vh] leading-tight font-bold text-yellow-300">
-						Byes, straight to Round 2
-					</h2>
-					<ul
-						aria-label="Byes"
-						className="mt-[1vh] grid grid-cols-4 gap-x-[1.5vh] text-[3.8vh] leading-tight font-semibold"
-					>
-						{draw.byes.map((player) => (
-							<li key={player.id}>{player.name}</li>
-						))}
-					</ul>
-				</>
-			)}
 		</>
 	);
 };

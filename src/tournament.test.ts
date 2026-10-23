@@ -5,10 +5,12 @@ import {
 	registerPlayer,
 	removePlayer,
 	renamePlayer,
-	roundOneDraw,
 	setBoardCount,
 	start,
+	tonightsDraw,
+	type Player,
 	type Tournament,
+	type WinnerOf,
 } from './tournament';
 import type { Result } from './result';
 
@@ -133,45 +135,66 @@ describe('setting out Boards', () => {
 
 describe('making the Draw', () => {
 	/*
-	 * The bracket is the next power of two at or above the field, so Round 2 has half that many places:
-	 * one for each first-Round Match winner and one for each Bye Player.
+	 * The bracket is the next power of two at or above the field, so 20 Players make 4 first-Round
+	 * Matches and 12 Byes. The Bye Players meet each other in Round 2, so all 20 play from the Start; with
+	 * an odd field one Player sits at a Board of their own, waiting for a first-Round Match's winner.
 	 */
 	it.each([
-		{ field: 2, matches: 1, byes: 0 },
-		{ field: 5, matches: 1, byes: 3 },
-		{ field: 8, matches: 4, byes: 0 },
-		{ field: 20, matches: 4, byes: 12 },
-		{ field: 26, matches: 10, byes: 6 },
-		{ field: 30, matches: 14, byes: 2 },
+		{ field: 2, boards: 1, waiting: 0 },
+		{ field: 3, boards: 2, waiting: 1 },
+		{ field: 5, boards: 3, waiting: 1 },
+		{ field: 8, boards: 4, waiting: 0 },
+		{ field: 20, boards: 10, waiting: 0 },
+		{ field: 21, boards: 11, waiting: 1 },
+		{ field: 26, boards: 13, waiting: 0 },
+		{ field: 30, boards: 15, waiting: 0 },
 	])(
-		'draws $field Players into $matches first-Round Matches and $byes Byes, each Player once',
-		({ field, matches, byes }) => {
+		'seats $field Players at $boards Boards, $waiting waiting for a winner, each Player once',
+		({ field, boards, waiting }) => {
 			const tournament = expectOk(makeDraw(tonight(field, 16), seededRandom(field)));
 
-			const draw = roundOneDraw(tournament)!;
-			expect(draw.matches.length).toBe(matches);
-			expect(draw.byes.length).toBe(byes);
-			const drawn = [...draw.matches.flatMap((m) => m.players), ...draw.byes];
-			expect(drawn.map((p) => p.name).sort()).toEqual(
+			const matches = tonightsDraw(tournament)!;
+			expect(matches.length).toBe(boards);
+			const seated = matches.flatMap((m) => m.players);
+			const [players, winners] = [
+				seated.filter((p): p is Player => 'name' in p),
+				seated.filter((p): p is WinnerOf => 'winnerOfBoard' in p),
+			];
+			expect(winners.length).toBe(waiting);
+			expect(players.map((p) => p.name).sort()).toEqual(
 				tournament.players.map((p) => p.name).sort(),
 			);
+			for (const { winnerOfBoard } of winners) {
+				const awaited = matches.find((m) => m.board === winnerOfBoard)!;
+				expect(awaited.players.every((p) => 'name' in p)).toBe(true);
+			}
 		},
 	);
+
+	it('seats a Bye Player at their own Board, waiting for the winner of a first-Round Match', () => {
+		const tournament = expectOk(makeDraw(tonight(3, 4), seededRandom(1)));
+
+		const [match, waiting] = tonightsDraw(tournament)!;
+		const [a, b] = match.players as [Player, Player];
+		const [bye] = tournament.players.filter((p) => p !== a && p !== b);
+		expect(match.board).toBe(1);
+		expect(waiting).toEqual({ board: 2, players: [bye, { winnerOfBoard: 1 }] });
+	});
 
 	it('makes the same Draw every time from the same seeded random source, and a different one from another', () => {
 		const night = tonight(26, 16);
 		const drawWith = (seed: number) =>
-			roundOneDraw(expectOk(makeDraw(night, seededRandom(seed))));
+			tonightsDraw(expectOk(makeDraw(night, seededRandom(seed))));
 
 		expect(drawWith(42)).toEqual(drawWith(42));
 		expect(drawWith(42)).not.toEqual(drawWith(43));
 	});
 
-	it('puts each first-Round Match on the lowest-numbered free Board', () => {
-		// 6 Players: two first-Round Matches.
-		const draw = roundOneDraw(expectOk(makeDraw(tonight(6, 5), seededRandom(1))))!;
+	it('puts each Match it seats on the lowest-numbered free Board', () => {
+		// 6 Players: two first-Round Matches, and the two Bye Players meet in Round 2.
+		const matches = tonightsDraw(expectOk(makeDraw(tonight(6, 5), seededRandom(1))))!;
 
-		expect(draw.matches.map((m) => m.board)).toEqual([1, 2]);
+		expect(matches.map((m) => m.board)).toEqual([1, 2, 3]);
 	});
 
 	it('refuses the Draw with fewer than two Players', () => {
@@ -181,17 +204,23 @@ describe('making the Draw', () => {
 		});
 	});
 
-	it('refuses the Draw until there is a Board for every first-Round Match', () => {
-		// 26 Players: 10 first-Round Matches.
-		expect(makeDraw(tonight(26, 9), seededRandom(1))).toEqual({
+	it('refuses the Draw until there is a Board for every Player to sit at', () => {
+		// 26 Players: 13 Matches, 10 in the first Round and 3 between Bye Players in Round 2.
+		expect(makeDraw(tonight(26, 12), seededRandom(1))).toEqual({
 			ok: false,
-			reason: 'The Draw needs a Board for each of its 10 first-Round Matches, and there are only 9.',
+			reason: 'The Draw seats every Player at a Board, so it needs 13 Boards, and there are only 12.',
+		});
+		// 21 Players: 10 Matches, and a Board for the Bye Player waiting for a winner.
+		expect(makeDraw(tonight(21, 10), seededRandom(1))).toEqual({
+			ok: false,
+			reason: 'The Draw seats every Player at a Board, so it needs 11 Boards, and there are only 10.',
 		});
 		expect(makeDraw(tonight(2, 0), seededRandom(1))).toEqual({
 			ok: false,
-			reason: 'The Draw needs a Board for its first-Round Match, and there are none.',
+			reason: 'The Draw seats every Player at a Board, so it needs 1 Board, and there are none.',
 		});
-		expect(makeDraw(tonight(26, 10), seededRandom(1)).ok).toBe(true);
+		expect(makeDraw(tonight(26, 13), seededRandom(1)).ok).toBe(true);
+		expect(makeDraw(tonight(21, 11), seededRandom(1)).ok).toBe(true);
 	});
 
 	it('closes registration: a late arrival is refused, and the drawn Players can’t be renamed or removed', () => {
@@ -230,7 +259,7 @@ describe('making the Draw', () => {
 });
 
 describe('starting the Tournament', () => {
-	it('moves the Tournament from the Round 1 draw screen to in progress', () => {
+	it('moves the Tournament from Tonight’s Draw screen to in progress', () => {
 		let tournament = expectOk(makeDraw(tonight(5, 4), seededRandom(1)));
 		expect(tournament.phase).toBe('drawShown');
 

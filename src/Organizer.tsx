@@ -11,16 +11,16 @@ import {
 	registerPlayer,
 	removePlayer,
 	renamePlayer,
-	roundOneDraw,
 	setBoardCount,
 	start,
+	tonightsDraw,
 	type Phase,
 	type Player,
 	type PlayerId,
 	type Tournament,
 } from './tournament';
 import { useTournament } from './useTournament';
-import { playersRegistered } from './wording';
+import { playerName, playersRegistered } from './wording';
 
 const button = 'rounded border border-gray-400 bg-gray-100 px-3 py-1.5 hover:bg-gray-200';
 const dangerButton = `${button} text-red-700`;
@@ -30,8 +30,8 @@ const textInput = 'rounded border border-gray-400 px-3 py-1.5';
 
 const headings: Record<Phase, string> = {
 	registration: 'Register Players',
-	drawShown: 'Round 1 draw',
-	inProgress: 'Round 1',
+	drawShown: 'Tonight’s Draw',
+	inProgress: 'Now playing',
 };
 
 // Saves the change if the core accepted it. Returns the reason it was refused, or '' if accepted.
@@ -78,7 +78,7 @@ export const Organizer = ({ store }: { store: Store<Tournament> }) => {
 			{tournament.phase === 'registration' ? (
 				<Registration key={newTournaments} tournament={tournament} apply={apply} />
 			) : (
-				<RoundOne tournament={tournament} apply={apply} />
+				<Draw tournament={tournament} apply={apply} />
 			)}
 		</main>
 	);
@@ -226,46 +226,31 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
 	);
 };
 
-// The first Round as drawn: shown while the TV holds the Round 1 draw screen, and after Start.
-const RoundOne = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
-	const draw = roundOneDraw(tournament)!;
+// The Matches the Draw seats: shown while the TV holds Tonight’s Draw, and after Start.
+const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
+	const matches = tonightsDraw(tournament)!;
 	const [refusal, setRefusal] = useState('');
 	return (
 		<div className="mt-6 flex items-start gap-12">
 			<section className="flex-1">
 				<h2 className="text-xl font-bold">Matches</h2>
 				<ul aria-label="Matches" className="mt-2">
-					{draw.matches.map((match) => (
+					{matches.map((match) => (
 						<li key={match.board} className="border-b border-gray-300 py-1.5 text-lg">
 							<span className="inline-block w-24 font-semibold">
 								Board {match.board}
 							</span>
-							{match.players[0].name} v {match.players[1].name}
+							{match.players[0].name} v {playerName(match.players[1])}
 						</li>
 					))}
 				</ul>
 			</section>
 			<section className="w-80">
-				{draw.byes.length > 0 && (
-					<>
-						<h2 className="text-xl font-bold">Byes</h2>
-						<ul aria-label="Byes" className="mt-2">
-							{draw.byes.map((player) => (
-								<li
-									key={player.id}
-									className="border-b border-gray-300 py-1.5 text-lg"
-								>
-									{player.name}
-								</li>
-							))}
-						</ul>
-					</>
-				)}
 				{tournament.phase === 'drawShown' && (
 					<>
-						<p className="mt-8">
-							The TV holds the Round 1 draw until you press Start, so everyone can
-							find their Board.
+						<p>
+							The TV holds Tonight’s Draw until you press Start, so everyone can find
+							their Board.
 						</p>
 						<button
 							type="button"
