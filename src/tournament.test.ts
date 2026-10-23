@@ -147,6 +147,15 @@ describe('entering Boards', () => {
 		expect(tournament.boards).toEqual([1]);
 		expect(addBoard(tournament, '22').ok).toBe(true);
 	});
+
+	it('refuses to take out a Board that was never entered', () => {
+		const tournament = expectOk(addBoard(newTournament(), '1'));
+
+		expect(removeBoard(tournament, 4)).toEqual({
+			ok: false,
+			reason: 'Board 4 is not entered.',
+		});
+	});
 });
 
 describe('making the Draw', () => {

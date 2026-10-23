@@ -27,6 +27,8 @@ export interface Bye {
 	readonly bye: PlayerId;
 }
 
+const isBye = (entry: FirstRoundMatch | Bye): entry is Bye => 'bye' in entry;
+
 export interface WinnersBracket {
 	// One entry per place in Round 2, in bracket order: neighbouring entries' Players meet there.
 	readonly firstRound: readonly (FirstRoundMatch | Bye)[];
@@ -166,8 +168,11 @@ export const addBoard = (tournament: Tournament, typedNumber: string): Result<To
 };
 
 export const removeBoard = (tournament: Tournament, board: BoardNumber): Result<Tournament> => {
+	if (!tournament.boards.includes(board)) {
+		return { ok: false, reason: `Board ${board} is not entered.` };
+	}
 	const occupied = tournament.winnersBracket?.firstRound.some(
-		(entry) => 'board' in entry && entry.board === board,
+		(entry) => !isBye(entry) && entry.board === board,
 	);
 	if (occupied) {
 		return { ok: false, reason: `Board ${board} has a Match on it.` };
@@ -196,8 +201,8 @@ export const makeDraw = (tournament: Tournament, random: Random): Result<Tournam
 		return { ok: false, reason: boardsRefusal };
 	}
 	// Each Bye takes a whole first-Round place, so no place is a Bye against a Bye.
-	const byePlaces = new Set(shuffle(range(places), random).slice(0, bracketSize - field));
-	const drawn = shuffle(
+	const byePlaces = new Set(inRandomOrder(range(places), random).slice(0, bracketSize - field));
+	const drawn = inRandomOrder(
 		tournament.players.map((p) => p.id),
 		random,
 	);
@@ -256,21 +261,19 @@ export const roundOneDraw = (tournament: Tournament): RoundOneDraw | undefined =
 	const player = (id: PlayerId): Player => tournament.players.find((p) => p.id === id)!;
 	return {
 		matches: bracket.firstRound
-			.filter((entry) => 'players' in entry)
+			.filter((entry): entry is FirstRoundMatch => !isBye(entry))
 			.map((match) => ({
 				players: [player(match.players[0]), player(match.players[1])],
 				board: match.board,
 			})),
-		byes: bracket.firstRound
-			.filter((entry) => 'bye' in entry)
-			.map((entry) => player(entry.bye)),
+		byes: bracket.firstRound.filter(isBye).map((entry) => player(entry.bye)),
 	};
 };
 
 const range = (count: number): number[] => Array.from({ length: count }, (_, i) => i);
 
 // Fisher–Yates: every order equally likely.
-const shuffle = <T>(items: readonly T[], random: Random): T[] => {
+const inRandomOrder = <T>(items: readonly T[], random: Random): T[] => {
 	const shuffled = [...items];
 	for (let i = shuffled.length - 1; i > 0; i--) {
 		const j = Math.floor(random() * (i + 1));

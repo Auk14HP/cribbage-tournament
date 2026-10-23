@@ -91,7 +91,7 @@ export const Organizer = ({ store }: { store: Store<Tournament> }) => {
 					clearRefusal={() => setRefusal('')}
 				/>
 			) : (
-				<FirstRound tournament={tournament} apply={apply} />
+				<RoundOne tournament={tournament} apply={apply} />
 			)}
 		</main>
 	);
@@ -253,7 +253,7 @@ const Registration = ({
 };
 
 // The first Round as drawn: shown while the TV holds the Round 1 draw screen, and after Start.
-const FirstRound = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
+const RoundOne = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const draw = roundOneDraw(tournament)!;
 	return (
 		<div className="mt-2 flex items-start gap-12">

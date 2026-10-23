@@ -52,7 +52,7 @@ const RoundOne = ({ tournament, heading }: { tournament: Tournament; heading: st
 						key={match.board}
 						className="rounded-[1vh] border-[0.3vh] border-gray-500 px-[1.5vw] py-[0.8vh] leading-tight"
 					>
-						<span className="block text-[3vh] font-bold text-yellow-300">
+						<span className="block text-[3.8vh] font-bold text-yellow-300">
 							Board {match.board}
 						</span>
 						<span className="block text-[3.8vh] font-semibold">
