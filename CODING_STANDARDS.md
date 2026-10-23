@@ -7,6 +7,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - Style with Tailwind utility classes in the component. `src/style.css` holds only the Tailwind import and any app-wide defaults under `@layer base`.
 - Size the organizer route in rem (Tailwind's default scale): rem follows the browser's font-size setting, so an Organizer who enlarges text gets a larger app. Use px only where scaling would be wrong, such as a hairline border.
 - Size the display route in vh, so text scales with the TV. It is read from across the room by an audience mostly 55+: large, high-contrast text.
+- Show a refusal beside the controls that caused it, where the Organizer is already looking.
 
 ## The Tournament core
 

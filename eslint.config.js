@@ -17,7 +17,14 @@ export default defineConfig([
 			reactHooks.configs.flat.recommended,
 			reactRefresh.configs.vite,
 		],
-		languageOptions: { globals: globals.browser },
+		languageOptions: {
+			globals: globals.browser,
+			// Type information, so rules such as no-deprecated can see what a name refers to.
+			parserOptions: {
+				project: ['./tsconfig.json', './tsconfig.node.json'],
+				tsconfigRootDir: import.meta.dirname,
+			},
+		},
 	},
 	// Prettier owns formatting, so its config switches off ESLint's formatting rules.
 	prettier,
@@ -33,6 +40,7 @@ export default defineConfig([
 			'func-style': ['error', 'expression'],
 			'prefer-arrow-callback': 'error',
 			'@stylistic/multiline-comment-style': ['error', 'starred-block'],
+			'@typescript-eslint/no-deprecated': 'error',
 		},
 	},
 ]);

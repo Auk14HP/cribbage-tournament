@@ -9,5 +9,11 @@
 		"skipLibCheck": true,
 		"noEmit": true
 	},
-	"include": ["vite.config.ts", "playwright.config.ts", "e2e"]
+	"include": [
+		"vite.config.ts",
+		"playwright.config.ts",
+		"playwright.screens.config.ts",
+		"e2e",
+		"screens"
+	]
 }

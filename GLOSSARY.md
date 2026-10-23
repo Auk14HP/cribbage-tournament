@@ -51,5 +51,5 @@ _Avoid_: Withdrawal, DNF, no-show
 ### The room
 
 **Board**:
-A numbered cribbage board set out in the room, marked by a placard, where a **Match** is assigned to be played. Several Boards can share one physical table, and there are only as many Boards as the room has cribbage boards.
+A numbered cribbage board set out in the room, where a **Match** is assigned to be played. Boards are numbered from 1 up by tent-number placards, like the ones a restaurant hands out to deliver food to a table. Several Boards can share one physical table, and there are only as many Boards as the room has cribbage boards.
 _Avoid_: Table, spot, station, placard
