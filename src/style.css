@@ -1,0 +1,96 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #111;
+}
+
+/* Background lives on body, not :root, so the TV's black fills the whole screen. */
+body {
+  background: #fff;
+  margin: 0;
+  padding: 1.5rem 2rem;
+}
+
+/* Organizer route (laptop) */
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+input,
+button {
+  font: inherit;
+  padding: 0.4rem 0.7rem;
+}
+
+form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.refusal {
+  color: #b00020;
+  font-weight: 600;
+  min-height: 1.5em;
+}
+
+.danger {
+  color: #b00020;
+}
+
+.players {
+  list-style: none;
+  padding: 0;
+}
+
+.players li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.players .name {
+  flex: 1;
+  font-size: 1.2rem;
+}
+
+/* Display route (TV): large, high-contrast text readable from across the room */
+
+body.display {
+  background: #000;
+  color: #fff;
+  padding: 3vh 4vw;
+}
+
+body.display h1 {
+  font-size: 7vh;
+  margin: 0;
+}
+
+body.display .count {
+  font-size: 5vh;
+  color: #ffd54a;
+  margin: 1vh 0 3vh;
+}
+
+body.display .names {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  columns: 3;
+  column-gap: 4vw;
+  font-size: 5vh;
+  font-weight: 600;
+  line-height: 1.4;
+}
