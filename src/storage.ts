@@ -5,42 +5,42 @@
 
 export interface Store<T> {
   // Returns the same object until the state changes, as React's useSyncExternalStore requires.
-  load(): T | undefined
-  save(state: T): void
-  subscribe(listener: () => void): () => void
+  load(): T | undefined;
+  save(state: T): void;
+  subscribe(listener: () => void): () => void;
 }
 
 export function localStorageStore<T>(key: string): Store<T> {
-  const listeners = new Set<() => void>()
-  let current = read()
+  const listeners = new Set<() => void>();
+  let current = read();
 
   function read(): T | undefined {
-    const saved = localStorage.getItem(key)
-    if (saved === null) return undefined
+    const saved = localStorage.getItem(key);
+    if (saved === null) return undefined;
     try {
-      return JSON.parse(saved) as T
+      return JSON.parse(saved) as T;
     } catch {
-      return undefined
+      return undefined;
     }
   }
 
-  window.addEventListener('storage', (event) => {
-    if (event.key !== key) return
-    current = read()
-    listeners.forEach((listener) => listener())
-  })
+  window.addEventListener("storage", (event) => {
+    if (event.key !== key) return;
+    current = read();
+    listeners.forEach((listener) => listener());
+  });
 
   return {
     load: () => current,
     save(state) {
-      localStorage.setItem(key, JSON.stringify(state))
-      current = state
+      localStorage.setItem(key, JSON.stringify(state));
+      current = state;
       // Storage events only reach other windows, so tell this window's subscribers directly.
-      listeners.forEach((listener) => listener())
+      listeners.forEach((listener) => listener());
     },
     subscribe(listener) {
-      listeners.add(listener)
-      return () => listeners.delete(listener)
+      listeners.add(listener);
+      return () => listeners.delete(listener);
     },
-  }
+  };
 }
