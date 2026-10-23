@@ -66,3 +66,38 @@ test('the TV shows each change the Organizer makes, live, and both windows resum
 
 	expect(consoleErrors).toEqual([]);
 });
+
+test('the TV holds Tonight’s Draw from the moment the Draw is made until the Organizer presses Start', async ({
+	context,
+	page: organizer,
+}) => {
+	const consoleErrors: string[] = [];
+	watchConsole(organizer, consoleErrors);
+	await organizer.goto('/');
+	const tv = await context.newPage();
+	watchConsole(tv, consoleErrors);
+	await tv.goto('/display');
+
+	for (const name of ['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Marge']) {
+		await register(organizer, name);
+	}
+	await organizer.getByLabel('Number of Boards').fill('3');
+	organizer.once('dialog', (dialog) => dialog.accept());
+	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
+
+	// 6 Players: two first-Round Matches and a Match between the two Bye Players, on Boards 1 to 3.
+	await expect(tv.getByRole('heading', { name: 'Tonight’s Draw' })).toBeVisible();
+	const tvMatches = tv.getByRole('list', { name: 'Matches' }).getByRole('listitem');
+	await expect(tvMatches).toHaveCount(3);
+	await expect(tvMatches.nth(0)).toContainText('Board 1');
+	await expect(tvMatches.nth(1)).toContainText('Board 2');
+	await expect(tvMatches.nth(2)).toContainText('Board 3');
+
+	await tv.reload();
+	await expect(tv.getByRole('heading', { name: 'Tonight’s Draw' })).toBeVisible();
+
+	await organizer.getByRole('button', { name: 'Start', exact: true }).click();
+	await expect(tv.getByRole('heading', { name: 'Now playing' })).toBeVisible();
+
+	expect(consoleErrors).toEqual([]);
+});
