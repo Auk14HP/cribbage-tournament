@@ -4,15 +4,17 @@
 // would replace only this module.
 
 export interface Store<T> {
+  // Returns the same object until the state changes, as React's useSyncExternalStore requires.
   load(): T | undefined
   save(state: T): void
-  subscribe(listener: (state: T) => void): void
+  subscribe(listener: () => void): () => void
 }
 
 export function localStorageStore<T>(key: string): Store<T> {
-  const listeners = new Set<(state: T) => void>()
+  const listeners = new Set<() => void>()
+  let current = read()
 
-  function load(): T | undefined {
+  function read(): T | undefined {
     const saved = localStorage.getItem(key)
     if (saved === null) return undefined
     try {
@@ -24,19 +26,21 @@ export function localStorageStore<T>(key: string): Store<T> {
 
   window.addEventListener('storage', (event) => {
     if (event.key !== key) return
-    const state = load()
-    if (state !== undefined) listeners.forEach((listener) => listener(state))
+    current = read()
+    listeners.forEach((listener) => listener())
   })
 
   return {
-    load,
+    load: () => current,
     save(state) {
       localStorage.setItem(key, JSON.stringify(state))
+      current = state
       // Storage events only reach other windows, so tell this window's subscribers directly.
-      listeners.forEach((listener) => listener(state))
+      listeners.forEach((listener) => listener())
     },
     subscribe(listener) {
       listeners.add(listener)
+      return () => listeners.delete(listener)
     },
   }
 }
