@@ -14,6 +14,10 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 
 Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
 
+## When a change revises agreed behaviour
+
+Behaviour is described in several places that must agree: the spec issue, every ticket that describes the behaviour (including the one the PR closes), and `GLOSSARY.md`. Update each one in the same branch as the code, so merging the PR never closes a ticket whose acceptance criteria the code no longer matches. Find them with `gh issue list --state all --search "<term>"` for the terms the change touches.
+
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_

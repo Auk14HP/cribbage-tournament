@@ -4,6 +4,6 @@ import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	plugins: [react(), tailwindcss()],
-	// e2e/ holds Playwright's browser tests, run by `npm run e2e`, not Vitest.
-	test: { exclude: [...configDefaults.exclude, 'e2e/**'] },
+	// e2e/ and screens/ are Playwright's, run by `npm run e2e` and `npm run screens`, not Vitest.
+	test: { exclude: [...configDefaults.exclude, 'e2e/**', 'screens/**'] },
 });

@@ -7,24 +7,17 @@ Behaviour across the two windows is covered by `npm run e2e` (`e2e/`, Playwright
 
 ## Screenshot a screen
 
-**Empty Tournament**, start the dev server on a spare port and screenshot it with Playwright's CLI:
+`npm run screens` (`screens/screens.spec.ts`) starts its own dev server, sets up a Tournament through the test night URL (`/?players=N&boards=M`, `src/testNight.ts`), and screenshots both routes, the organizer at 1280×720 and the TV at 1920×1080:
 
 ```bash
-(npm run dev -- --port 5180 --strictPort > /tmp/vite.log 2>&1 &)
-for i in $(seq 60); do curl -sf http://localhost:5180 >/dev/null && break; sleep 0.5; done
-npx playwright screenshot --channel chrome --viewport-size "1280,720" http://localhost:5180/display /tmp/tv.png
-lsof -ti:5180 -sTCP:LISTEN | xargs kill
+PLAYERS=29 BOARDS=16 npm run screens                  # registration
+PLAYERS=29 BOARDS=16 DRAW=1 npm run screens           # and Tonight's Draw
+PLAYERS=29 BOARDS=16 DRAW=1 START=1 npm run screens   # and after Start
 ```
 
-macOS has no `timeout`; the `for` loop is the wait. The organizer route is `/`, the display route `/display`.
+Images land in `test-results/screens/` (gitignored), named `{organizer,tv}-{registration,draw,started}.png`. Shoot the field sizes at the edges of the change: the largest field (32 fills every Board card) and an odd one where a Player waits for a winner (21).
 
-**With Players, Boards or results on screen**, take the screenshot inside a Playwright test at the moment that matters, since that is where the Tournament gets built up:
-
-```ts
-await tv.screenshot({ path: 'test-results/tv.png' });
-```
-
-Add the line to the relevant test in `e2e/`, run `npm run e2e` (it starts its own server), open the image, then remove the line. `test-results/` is gitignored.
+When the change shows a moment the script doesn't reach yet (results recorded, a champion), add that step to `screens/screens.spec.ts` behind its own variable, so the script grows with the app.
 
 ## What to look at
 
