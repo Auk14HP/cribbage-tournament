@@ -3,7 +3,7 @@ name: run-app
 description: Run the cribbage app and screenshot its screens. Use when checking that a UI change looks right on the organizer or display route, or when asked to run or show the app.
 ---
 
-Behaviour across the two windows is covered by `npm run e2e` (`e2e/`, Playwright against the installed Google Chrome). This skill is for what a test can't judge: how a screen looks. Every screenshot you take, you open and look at.
+Behaviour across the two windows, and the Winners Bracket's layout, are covered by `npm run e2e` (`e2e/`, Playwright against the installed Google Chrome). This skill is for what a test can't judge: how a screen looks. Every screenshot you take, you open and look at.
 
 ## Screenshot a screen
 
@@ -22,6 +22,8 @@ When the change shows a moment the script doesn't reach yet (results recorded, a
 
 ## What to look at
 
-The display route is read from across the room by an audience mostly 55+: text large and high-contrast, black filling the whole screen, nothing cropped. On the organizer route, check inputs show their full placeholder and controls line up.
+The display route is read from across the room by an audience mostly 55+: text large and high-contrast, black filling the whole screen, nothing cropped. On the Winners Bracket, every Match sits level with the middle of the two that feed it, in every Round; `e2e/bracket-layout.spec.ts` measures this, but look at it too, because a change that keeps the measurements right can still make pairs hard to tell apart.
+
+On the organizer route, check inputs show their full placeholder and controls line up. In the Matches list, the Boards, both Players and the "vs" each line up down the list, whether a name is a button or plain text and however long it is.
 
 Done when every screen the change touches has been screenshotted and looked at, and anything wrong is fixed or reported.
