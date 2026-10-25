@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import {
 	makeDraw,
 	newTournament,
+	recordWinner,
 	registerPlayer,
 	removePlayer,
 	renamePlayer,
 	setBoardCount,
 	start,
-	tonightsDraw,
+	matchesOnBoards,
+	winnersBracketPicture,
 	type Player,
 	type Tournament,
 	type WinnerOf,
@@ -153,7 +155,7 @@ describe('making the Draw', () => {
 		({ field, boards, waiting }) => {
 			const tournament = expectOk(makeDraw(tonight(field, 16), seededRandom(field)));
 
-			const matches = tonightsDraw(tournament)!;
+			const matches = matchesOnBoards(tournament);
 			expect(matches.length).toBe(boards);
 			const seated = matches.flatMap((m) => m.players);
 			const [players, winners] = [
@@ -174,17 +176,17 @@ describe('making the Draw', () => {
 	it('seats a Bye Player at their own Board, waiting for the winner of a first-Round Match', () => {
 		const tournament = expectOk(makeDraw(tonight(3, 4), seededRandom(1)));
 
-		const [match, waiting] = tonightsDraw(tournament)!;
+		const [match, waiting] = matchesOnBoards(tournament);
 		const [a, b] = match.players as [Player, Player];
 		const [bye] = tournament.players.filter((p) => p !== a && p !== b);
 		expect(match.board).toBe(1);
-		expect(waiting).toEqual({ board: 2, players: [bye, { winnerOfBoard: 1 }] });
+		expect(waiting).toMatchObject({ board: 2, players: [bye, { winnerOfBoard: 1 }] });
 	});
 
 	it('makes the same Draw every time from the same seeded random source, and a different one from another', () => {
 		const night = tonight(26, 16);
 		const drawWith = (seed: number) =>
-			tonightsDraw(expectOk(makeDraw(night, seededRandom(seed))));
+			matchesOnBoards(expectOk(makeDraw(night, seededRandom(seed))));
 
 		expect(drawWith(42)).toEqual(drawWith(42));
 		expect(drawWith(42)).not.toEqual(drawWith(43));
@@ -192,7 +194,7 @@ describe('making the Draw', () => {
 
 	it('puts each Match it seats on the lowest-numbered free Board', () => {
 		// 6 Players: two first-Round Matches, and the two Bye Players meet in Round 2.
-		const matches = tonightsDraw(expectOk(makeDraw(tonight(6, 5), seededRandom(1))))!;
+		const matches = matchesOnBoards(expectOk(makeDraw(tonight(6, 5), seededRandom(1))));
 
 		expect(matches.map((m) => m.board)).toEqual([1, 2, 3]);
 	});
@@ -281,6 +283,163 @@ describe('starting the Tournament', () => {
 	});
 });
 
+describe('recording winners', () => {
+	it('crowns the winner of a two-Player final as champion, freeing their Board', () => {
+		const tournament = started(2, 1);
+		const [final] = matchesOnBoards(tournament);
+		const [a] = final.players as [Player, Player];
+
+		const after = expectOk(recordWinner(tournament, final.match, a.id));
+
+		expect(winnersBracketPicture(after)!.champion).toEqual(a);
+		expect(matchesOnBoards(after)).toEqual([]);
+	});
+
+	it('plays a night with Byes through to a champion, moving each Match to the lowest-numbered free Board', () => {
+		/*
+		 * 5 Players: Ann and Bob play the one first-Round Match on Board 1. Cat has a Bye and waits at
+		 * Board 2 for its winner; Dan and Eve, the other Bye Players, meet in Round 2 on Board 3.
+		 */
+		let tournament = started(5, 4);
+		const seated = () =>
+			matchesOnBoards(tournament).map(({ board, players: [a, b] }) => [
+				board,
+				a.name,
+				'name' in b ? b.name : `Winner of Board ${b.winnerOfBoard}`,
+			]);
+		const on = (board: number) => matchesOnBoards(tournament).find((m) => m.board === board)!;
+		const [ann, bob] = on(1).players as [Player, Player];
+		const cat = on(2).players[0];
+		const dan = on(3).players[0];
+		const win = (board: number, winner: Player) => {
+			tournament = expectOk(recordWinner(tournament, on(board).match, winner.id));
+		};
+
+		win(3, dan);
+		// Dan waits for his Round 3 opponent without a Board; Board 3 is free.
+		expect(seated()).toEqual([
+			[1, ann.name, bob.name],
+			[2, cat.name, 'Winner of Board 1'],
+		]);
+
+		win(1, ann);
+		// Ann joins Cat at Board 2, and Board 1 frees. Once both are known, they're named in bracket order.
+		expect(seated()).toEqual([[2, ann.name, cat.name]]);
+
+		win(2, ann);
+		// The final is ready, and takes the lowest-numbered free Board.
+		expect(seated()).toEqual([[1, ann.name, dan.name]]);
+		expect(winnersBracketPicture(tournament)!.champion).toBeUndefined();
+
+		win(1, dan);
+		expect(seated()).toEqual([]);
+		expect(winnersBracketPicture(tournament)!.champion).toEqual(dan);
+	});
+
+	it('readies a Match as soon as both its Players are known, without waiting for the rest of the Round', () => {
+		// 8 Players: four first-Round Matches on Boards 1 to 4.
+		let tournament = started(8, 4);
+		const on = (board: number) => matchesOnBoards(tournament).find((m) => m.board === board)!;
+		const winFirst = (board: number) => {
+			const { match, players } = on(board);
+			tournament = expectOk(recordWinner(tournament, match, (players[0] as Player).id));
+		};
+		const fourth = (on(4).players[0] as Player).name;
+		const third = (on(3).players[0] as Player).name;
+
+		winFirst(4);
+		expect(matchesOnBoards(tournament).map((m) => m.board)).toEqual([1, 2, 3]);
+
+		winFirst(3);
+		// The winners of Boards 3 and 4 meet on Board 3, while Boards 1 and 2 are still playing.
+		expect(matchesOnBoards(tournament).map((m) => m.board)).toEqual([1, 2, 3]);
+		expect(on(3).players.map((p) => ('name' in p ? p.name : p))).toEqual([third, fourth]);
+	});
+
+	it.each([2, 3, 7, 12, 21, 26, 32])(
+		'plays %i Players to a champion, never seating two Matches at one Board',
+		(field) => {
+			const boards = Math.ceil(field / 2);
+			let tournament = started(field, boards, field);
+			let played = 0;
+			for (;;) {
+				const matches = matchesOnBoards(tournament);
+				const seats = matches.map((m) => m.board);
+				expect(new Set(seats).size).toBe(seats.length);
+				expect(seats.every((b) => b >= 1 && b <= boards)).toBe(true);
+				const ready = matches.find((m) => m.players.every((p) => 'name' in p));
+				if (!ready) {
+					break;
+				}
+				// The second-named Player wins, so a Player who waited isn't always the one who goes through.
+				const winner = ready.players[1] as Player;
+				tournament = expectOk(recordWinner(tournament, ready.match, winner.id));
+				played++;
+			}
+			// Every Match knocks one Player out, until one is left: the champion.
+			expect(played).toBe(field - 1);
+			expect(winnersBracketPicture(tournament)!.champion).toBeDefined();
+		},
+	);
+
+	it('refuses a winner before Start, twice for one Match, from outside the Match, or before both Players are known', () => {
+		const drawn = expectOk(makeDraw(tonight(3, 2), seededRandom(1)));
+		const [first, waiting] = matchesOnBoards(drawn);
+		const [a, b] = first.players as [Player, Player];
+		expect(recordWinner(drawn, first.match, a.id)).toEqual({
+			ok: false,
+			reason: 'Press Start before recording a winner.',
+		});
+
+		const tournament = expectOk(start(drawn));
+		expect(recordWinner(tournament, waiting.match, waiting.players[0].id)).toEqual({
+			ok: false,
+			reason: 'That Match is still waiting for a Player.',
+		});
+		expect(recordWinner(tournament, first.match, waiting.players[0].id)).toEqual({
+			ok: false,
+			reason: 'That Player isn’t in that Match.',
+		});
+		const recorded = expectOk(recordWinner(tournament, first.match, a.id));
+		expect(recordWinner(recorded, first.match, b.id)).toEqual({
+			ok: false,
+			reason: 'That Match already has a winner.',
+		});
+	});
+});
+
+describe('the Winners Bracket picture', () => {
+	it('puts Bye Players in Round 2, and shows who has advanced and who is still playing', () => {
+		// 5 Players in an 8-place bracket: one first-Round Match, three Byes.
+		let tournament = started(5, 4);
+		const [first, waiting, byes] = matchesOnBoards(tournament);
+		const [ann, bob] = first.players as [Player, Player];
+		const cat = waiting.players[0];
+		const [dan, eve] = byes.players as [Player, Player];
+
+		expect(winnersBracketPicture(tournament)).toEqual({
+			rounds: [
+				[{ players: [ann, bob], board: 1 }, undefined, undefined, undefined],
+				[
+					{ players: [undefined, cat], board: 2 },
+					{ players: [dan, eve], board: 3 },
+				],
+				[{ players: [undefined, undefined] }],
+			],
+		});
+
+		tournament = expectOk(recordWinner(tournament, first.match, bob.id));
+
+		expect(winnersBracketPicture(tournament)!.rounds.slice(0, 2)).toEqual([
+			[{ players: [ann, bob], winner: bob }, undefined, undefined, undefined],
+			[
+				{ players: [bob, cat], board: 2 },
+				{ players: [dan, eve], board: 3 },
+			],
+		]);
+	});
+});
+
 // A night with the given number of Players registered and Boards set out.
 const tonight = (players: number, boards: number): Tournament => {
 	let tournament = newTournament();
@@ -289,6 +448,10 @@ const tonight = (players: number, boards: number): Tournament => {
 	}
 	return boards === 0 ? tournament : expectOk(setBoardCount(tournament, String(boards)));
 };
+
+// A night that has made its Draw and Started.
+const started = (players: number, boards: number, seed = 1): Tournament =>
+	expectOk(start(expectOk(makeDraw(tonight(players, boards), seededRandom(seed)))));
 
 // A repeatable stand-in for Math.random (mulberry32): the same seed gives the same numbers.
 const seededRandom = (seed: number) => () => {

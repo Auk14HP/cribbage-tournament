@@ -2,18 +2,20 @@
  * The organizer route: shown on the laptop. Forwards the Organizer's actions to the Tournament core,
  * saves accepted changes through the store, and shows the core's reason when a change is refused.
  */
-import { useRef, useState, type SubmitEvent } from 'react';
+import { Fragment, useRef, useState, type SubmitEvent } from 'react';
 import type { Result } from './result';
 import type { Store } from './storage';
 import {
 	makeDraw,
+	matchesOnBoards,
 	newTournament,
+	recordWinner,
 	registerPlayer,
 	removePlayer,
 	renamePlayer,
 	setBoardCount,
 	start,
-	tonightsDraw,
+	winnersBracketPicture,
 	type Phase,
 	type Player,
 	type PlayerId,
@@ -226,24 +228,66 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
 	);
 };
 
-// The Matches the Draw seats: shown while the TV holds Tonight’s Draw, and after Start.
+/*
+ * The Matches holding a Board: the ones the Draw seats while the TV holds Tonight’s Draw, then the ones
+ * being played. Once Started, tapping a Player's name records them as the winner.
+ */
 const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
-	const matches = tonightsDraw(tournament)!;
+	const matches = matchesOnBoards(tournament);
+	const { champion } = winnersBracketPicture(tournament)!;
+	const playing = tournament.phase === 'inProgress';
 	const [refusal, setRefusal] = useState('');
 	return (
 		<div className="mt-6 flex items-start gap-12">
-			<section className="flex-1">
-				<h2 className="text-xl font-bold">Matches</h2>
-				<ul aria-label="Matches" className="mt-2">
-					{matches.map((match) => (
-						<li key={match.board} className="border-b border-gray-300 py-1.5 text-lg">
-							<span className="inline-block w-24 font-semibold">
-								Board {match.board}
-							</span>
-							{match.players[0].name} v {playerName(match.players[1])}
-						</li>
-					))}
-				</ul>
+			<section aria-label="Matches" className="flex-1">
+				{champion && (
+					<p className="text-2xl font-bold text-green-800">Champion: {champion.name}</p>
+				)}
+				{matches.length > 0 && (
+					<>
+						<h2 className="text-xl font-bold">Matches</h2>
+						{playing && <p className="mt-1 text-gray-700">Tap a Match’s winner.</p>}
+						<ul aria-label="Matches" className="mt-2">
+							{matches.map(({ board, match, players: [a, b] }) => (
+								<li
+									key={board}
+									className="flex items-center gap-2 border-b border-gray-300 py-1.5 text-lg"
+								>
+									<span className="w-24 font-semibold">Board {board}</span>
+									{playing && 'name' in b ? (
+										<>
+											{[a, b].map((player, i) => (
+												<Fragment key={player.id}>
+													{i === 1 && 'v'}
+													<button
+														type="button"
+														className={button}
+														onClick={() =>
+															setRefusal(
+																apply(
+																	recordWinner(
+																		tournament,
+																		match,
+																		player.id,
+																	),
+																),
+															)
+														}
+													>
+														{player.name}
+													</button>
+												</Fragment>
+											))}
+										</>
+									) : (
+										`${a.name} v ${playerName(b)}`
+									)}
+								</li>
+							))}
+						</ul>
+					</>
+				)}
+				{playing && <Refusal reason={refusal} />}
 			</section>
 			<section className="w-80">
 				{tournament.phase === 'drawShown' && (

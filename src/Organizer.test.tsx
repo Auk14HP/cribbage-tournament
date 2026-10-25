@@ -181,6 +181,40 @@ describe('the organizer route', () => {
 		expect(screen.getByLabelText('Player name')).toHaveFocus();
 	});
 
+	it('records each Match’s winner with one tap, through to the champion', async () => {
+		const user = showOrganizer();
+		for (const name of ['Dave K.', 'Big Dave', 'Sue']) {
+			await register(user, name);
+		}
+		await setBoardCount(user, '2');
+		vi.spyOn(window, 'confirm').mockReturnValue(true);
+		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
+		const matches = () =>
+			within(screen.getByRole('list', { name: 'Matches' })).getAllByRole('listitem');
+		const [first, waiting] = matches();
+		const bye = waiting.textContent!.match(/^Board 2(.+) v Winner of Board 1$/)![1];
+		// Before Start, no winner can be recorded.
+		expect(within(first).queryAllByRole('button')).toEqual([]);
+		await user.click(screen.getByRole('button', { name: 'Start' }));
+
+		// Board 2's Bye Player waits for Board 1's winner, so only Board 1 can be won yet.
+		expect(within(matches()[1]).queryAllByRole('button')).toEqual([]);
+		const [winner, loser] = within(matches()[0])
+			.getAllByRole('button')
+			.map((b) => b.textContent!);
+		await user.click(within(matches()[0]).getByRole('button', { name: winner }));
+
+		// The winner joins the Bye Player at Board 2, and Board 1 frees.
+		expect(matches()).toHaveLength(1);
+		expect(matches()[0]).toHaveTextContent(/^Board 2/);
+		expect(matches()[0]).toHaveTextContent(winner);
+		expect(matches()[0]).not.toHaveTextContent(loser);
+		await user.click(within(matches()[0]).getByRole('button', { name: bye }));
+
+		expect(screen.queryByRole('list', { name: 'Matches' })).not.toBeInTheDocument();
+		expect(screen.getByText(`Champion: ${bye}`)).toBeInTheDocument();
+	});
+
 	it('resumes the saved Tournament when reopened', async () => {
 		const user = showOrganizer();
 		await register(user, 'Dave K.');
