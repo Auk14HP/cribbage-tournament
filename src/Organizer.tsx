@@ -270,9 +270,9 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 								return (
 									<li key={board} className={matchRow}>
 										<span className="font-semibold">Board {board}</span>
-										{renderPlayer(a)}
-										<span className="text-center"> v </span>
-										{renderPlayer(b)}
+										<div className="text-right">{renderPlayer(a)}</div>
+										<span className="text-center"> vs </span>
+										<div>{renderPlayer(b)}</div>
 									</li>
 								);
 							})}
@@ -303,12 +303,15 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 	);
 };
 
-// Fixed columns, so each Board and both Players line up down the list however long the names.
+/*
+ * Fixed columns, so each Board and both Players line up down the list however long the names. The first
+ * Player sits against the "vs", like a scoreboard, so it is as close to one name as to the other.
+ */
 const matchRow =
-	'grid grid-cols-[6rem_11rem_2rem_1fr] items-center border-b border-gray-300 py-1.5 text-lg';
+	'grid grid-cols-[6rem_11rem_3rem_1fr] items-center border-b border-gray-300 py-1.5 text-lg';
 
 const WinnerButton = ({ player, onWin }: { player: Player; onWin: () => void }) => (
-	<button type="button" className={`${button} justify-self-start`} onClick={onWin}>
+	<button type="button" className={button} onClick={onWin}>
 		{player.name}
 	</button>
 );

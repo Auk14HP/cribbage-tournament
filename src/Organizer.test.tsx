@@ -159,7 +159,7 @@ describe('the organizer route', () => {
 			'listitem',
 		);
 		expect(matches).toHaveLength(2);
-		expect(matches[1]).toHaveTextContent(/^Board 2.+ v Winner of Board 1$/);
+		expect(matches[1]).toHaveTextContent(/^Board 2.+ vs Winner of Board 1$/);
 		const waits = ['Dave K.', 'Big Dave', 'Sue'].find((name) =>
 			matches[1].textContent!.includes(name),
 		)!;
@@ -193,7 +193,7 @@ describe('the organizer route', () => {
 		const listMatches = () =>
 			within(screen.getByRole('list', { name: 'Matches' })).getAllByRole('listitem');
 		const [first, waiting] = listMatches();
-		const bye = waiting.textContent!.match(/^Board 2(.+) v Winner of Board 1$/)![1];
+		const bye = waiting.textContent!.match(/^Board 2(.+) vs Winner of Board 1$/)![1];
 		// Before Start, no winner can be recorded.
 		expect(within(first).queryAllByRole('button')).toEqual([]);
 		await user.click(screen.getByRole('button', { name: 'Start' }));

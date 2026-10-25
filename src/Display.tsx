@@ -77,8 +77,8 @@ const bracketText = ['text-[5vh]', 'text-[5vh]', 'text-[4vh]', 'text-[3.2vh]', '
 
 /*
  * The whole Winners Bracket: its two halves run in from either side to the final in the middle. Each
- * Round's Matches share their column's height equally, so every Match sits level with the two that feed it.
- * The two Matches that feed the same next Match lean together, so each pair reads as one.
+ * Round's Matches share their column's height equally and sit in the middle of their share, so every
+ * Match is centred between the two that feed it.
  */
 const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 	const { rounds, champion } = getWinnersBracketPicture(tournament)!;
@@ -88,12 +88,6 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 		const matches = rounds[round];
 		const middle = matches.length / 2;
 		return side === 'left' ? matches.slice(0, middle) : matches.slice(middle);
-	};
-	const getLean = (i: number, count: number) => {
-		if (count === 1) {
-			return 'items-center';
-		}
-		return i % 2 === 0 ? 'items-end pb-[0.4vh]' : 'items-start pt-[0.4vh]';
 	};
 	const renderColumn = (
 		key: string,
@@ -107,7 +101,7 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 			<ul aria-label={getRoundName(round)} className="flex flex-1 flex-col">
 				{matches.map((match, i) =>
 					match ? (
-						<li key={i} className={`flex flex-1 ${getLean(i, matches.length)}`}>
+						<li key={i} className="flex flex-1 items-center">
 							<MatchBox
 								match={match}
 								champion={round === final ? champion : undefined}
