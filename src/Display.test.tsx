@@ -7,7 +7,7 @@ import { localStorageStore } from './storage';
 import type { Result } from './result';
 import {
 	makeDraw,
-	matchesOnBoards,
+	getMatchesOnBoards,
 	newTournament,
 	recordWinner,
 	registerPlayer,
@@ -61,7 +61,7 @@ describe('Tonight’s Draw screen', () => {
 		 * 5 Players: a first-Round Match on Board 1, a Bye Player at Board 2 waiting for its winner, and a
 		 * Match between the other two Bye Players on Board 3.
 		 */
-		const draw = matchesOnBoards(tournament);
+		const draw = getMatchesOnBoards(tournament);
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tonight’s Draw');
 		const cards = within(screen.getByRole('list', { name: 'Matches' })).getAllByRole(
 			'listitem',
@@ -90,15 +90,15 @@ describe('the Winners Bracket screen', () => {
 		}
 		tournament = expectOk(setBoardCount(tournament, '2'));
 		tournament = expectOk(start(expectOk(makeDraw(tournament, Math.random))));
-		const [first, waiting] = matchesOnBoards(tournament);
+		const [first, waiting] = getMatchesOnBoards(tournament);
 		const [a, b] = first.players as [Player, Player];
 		const bye = waiting.players[0];
-		const record = (match: typeof first.match, winner: Player) => {
+		const recordWinnerOf = (match: typeof first.match, winner: Player) => {
 			tournament = expectOk(recordWinner(tournament, match, winner.id));
 			act(() => store.save(tournament));
 		};
 		// What a Round's column shows, a Match per item.
-		const round = (name: string) =>
+		const listRound = (name: string) =>
 			screen
 				.getAllByRole('list', { name })
 				.flatMap((list) => within(list).queryAllByRole('listitem'))
@@ -108,15 +108,15 @@ describe('the Winners Bracket screen', () => {
 
 		// 3 Players in a 4-place bracket: one first-Round Match, and a Bye Player waiting in the final.
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Winners Bracket');
-		expect(round('Round 1')).toEqual([`Board 1${a.name}${b.name}`]);
-		expect(round('Final')).toEqual([`Board 2—${bye.name}`]);
+		expect(listRound('Round 1')).toEqual([`Board 1${a.name}${b.name}`]);
+		expect(listRound('Final')).toEqual([`Board 2—${bye.name}`]);
 		expect(screen.queryByText(/Champion/)).not.toBeInTheDocument();
 
-		record(first.match, a);
-		expect(round('Final')).toEqual([`Board 2${a.name}${bye.name}`]);
+		recordWinnerOf(first.match, a);
+		expect(listRound('Final')).toEqual([`Board 2${a.name}${bye.name}`]);
 
-		record(waiting.match, bye);
-		expect(round('Final')).toEqual([`${a.name}${bye.name}`]);
+		recordWinnerOf(waiting.match, bye);
+		expect(listRound('Final')).toEqual([`${a.name}${bye.name}`]);
 		expect(screen.getByText(`Champion: ${bye.name}`)).toBeInTheDocument();
 	});
 });

@@ -5,8 +5,8 @@ import { test } from '@playwright/test';
  *   PLAYERS=29 BOARDS=16 npm run screens    registration
  *   ... DRAW=1                              and Tonight's Draw
  *   ... DRAW=1 START=1                      and after Start
- *   ... DRAW=1 START=1 WINNERS=12           and after that many winners are recorded (all: to the champion)
- * Writes test-results/screens/{organizer,tv}-{registration,draw,started,winners}.png: the organizer at
+ *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
+ * Writes test-results/screens/{organizer,tv}-{registration,draw,started,results}.png: the organizer at
  * 1280×720, the TV at 1920×1080.
  */
 const players = process.env.PLAYERS ?? '26';
@@ -38,14 +38,14 @@ test('screens', async ({ context, page: organizer }) => {
 	await organizer.getByRole('button', { name: 'Start', exact: true }).click();
 	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 	await shoot('started');
-	if (!process.env.WINNERS) {
+	if (!process.env.RESULTS) {
 		return;
 	}
 	// The first Match on the list that can be won goes to its first-named Player each time.
-	const winners = process.env.WINNERS === 'all' ? Infinity : Number(process.env.WINNERS);
+	const results = process.env.RESULTS === 'all' ? Infinity : Number(process.env.RESULTS);
 	const first = organizer.getByRole('list', { name: 'Matches' }).getByRole('button').first();
-	for (let recorded = 0; recorded < winners && (await first.count()) > 0; recorded++) {
+	for (let recorded = 0; recorded < results && (await first.count()) > 0; recorded++) {
 		await first.click();
 	}
-	await shoot('winners');
+	await shoot('results');
 });

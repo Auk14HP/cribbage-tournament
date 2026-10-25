@@ -270,10 +270,10 @@ export const recordWinner = (
 		return { ok: false, reason: 'Press Start before recording a winner.' };
 	}
 	const bracket = tournament.winnersBracket!;
-	if (winnerOf(bracket, match) !== undefined) {
+	if (findWinner(bracket, match) !== undefined) {
 		return { ok: false, reason: 'That Match already has a winner.' };
 	}
-	const players = playersOf(bracket, match);
+	const players = findPlayers(bracket, match);
 	if (players.some((p) => typeof p !== 'number')) {
 		return { ok: false, reason: 'That Match is still waiting for a Player.' };
 	}
@@ -282,12 +282,12 @@ export const recordWinner = (
 	}
 	let next: WinnersBracket = {
 		...bracket,
-		onBoards: bracket.onBoards.filter((on) => !sameMatch(on.match, match)),
+		onBoards: bracket.onBoards.filter((on) => !isSameMatch(on.match, match)),
 		results: [...bracket.results, { match, winner }],
 	};
-	if (match.round < roundsIn(bracket)) {
+	if (match.round < countRounds(bracket)) {
 		const following = { round: match.round + 1, place: Math.floor(match.place / 2) };
-		if (boardOf(next, following) === undefined) {
+		if (findBoard(next, following) === undefined) {
 			/*
 			 * There is always a free Board: each winner recorded frees a Board and takes at most one, so
 			 * no more Boards are ever in use than the Draw needed.
@@ -301,38 +301,38 @@ export const recordWinner = (
 	return { ok: true, value: { ...tournament, winnersBracket: next } };
 };
 
-const sameMatch = (a: MatchPlace, b: MatchPlace): boolean =>
+const isSameMatch = (a: MatchPlace, b: MatchPlace): boolean =>
 	a.round === b.round && a.place === b.place;
 
 // The bracket holds twice as many Players as its first Round has places, halving each Round to the final.
-const roundsIn = (bracket: WinnersBracket): number => Math.log2(2 * bracket.firstRound.length);
+const countRounds = (bracket: WinnersBracket): number => Math.log2(2 * bracket.firstRound.length);
 
-const boardOf = (bracket: WinnersBracket, match: MatchPlace): BoardNumber | undefined =>
-	bracket.onBoards.find((on) => sameMatch(on.match, match))?.board;
+const findBoard = (bracket: WinnersBracket, match: MatchPlace): BoardNumber | undefined =>
+	bracket.onBoards.find((on) => isSameMatch(on.match, match))?.board;
 
-const winnerOf = (bracket: WinnersBracket, match: MatchPlace): PlayerId | undefined =>
-	bracket.results.find((r) => sameMatch(r.match, match))?.winner;
+const findWinner = (bracket: WinnersBracket, match: MatchPlace): PlayerId | undefined =>
+	bracket.results.find((r) => isSameMatch(r.match, match))?.winner;
 
 /*
  * A Match's two Players, each known or still to come from the earlier Match that sends them. A Bye Player
  * comes into Round 2 straight from the first Round.
  */
-const playersOf = (
+const findPlayers = (
 	bracket: WinnersBracket,
 	{ round, place }: MatchPlace,
 ): readonly [PlayerId | MatchPlace, PlayerId | MatchPlace] => {
 	if (round === 1) {
 		return (bracket.firstRound[place] as FirstRoundMatch).players;
 	}
-	const from = (side: number): PlayerId | MatchPlace => {
+	const findPlayerFrom = (side: number): PlayerId | MatchPlace => {
 		const earlier = { round: round - 1, place: 2 * place + side };
 		const entry = bracket.firstRound[earlier.place];
 		if (round === 2 && isBye(entry)) {
 			return entry.bye;
 		}
-		return winnerOf(bracket, earlier) ?? earlier;
+		return findWinner(bracket, earlier) ?? earlier;
 	};
-	return [from(0), from(1)];
+	return [findPlayerFrom(0), findPlayerFrom(1)];
 };
 
 // A Player still to come: the winner of the Match on that Board, or of a Match not yet started.
@@ -351,27 +351,26 @@ export interface MatchOnBoard {
  * Every Match holding a Board, in Board order, so each Player can find their seat: on Tonight’s Draw
  * screen, and as the Matches being played once Started. None before the Draw.
  */
-export const matchesOnBoards = (tournament: Tournament): readonly MatchOnBoard[] => {
+export const getMatchesOnBoards = (tournament: Tournament): readonly MatchOnBoard[] => {
 	const bracket = tournament.winnersBracket;
 	if (!bracket) {
 		return [];
 	}
-	const player = playerById(tournament);
-	const seated = (from: PlayerId | MatchPlace): Player | WinnerOf =>
-		typeof from === 'number' ? player(from) : { winnerOfBoard: boardOf(bracket, from) };
+	const findSeated = (from: PlayerId | MatchPlace): Player | WinnerOf =>
+		typeof from === 'number'
+			? findPlayer(tournament, from)
+			: { winnerOfBoard: findBoard(bracket, from) };
 	// A Match holds a Board once one of its Players is known, who is named first while they wait.
 	return bracket.onBoards
 		.map(({ match, board }): MatchOnBoard => {
-			const [a, b] = playersOf(bracket, match).map(seated);
+			const [a, b] = findPlayers(bracket, match).map(findSeated);
 			return { board, match, players: 'name' in a ? [a, b] : [b as Player, a] };
 		})
 		.sort((a, b) => a.board - b.board);
 };
 
-const playerById =
-	(tournament: Tournament) =>
-	(id: PlayerId): Player =>
-		tournament.players.find((p) => p.id === id)!;
+const findPlayer = (tournament: Tournament, id: PlayerId): Player =>
+	tournament.players.find((p) => p.id === id)!;
 
 // A Match in the Winners Bracket picture.
 export interface BracketMatch {
@@ -393,30 +392,29 @@ export interface WinnersBracketPicture {
 }
 
 // The whole Winners Bracket as it stands: who has advanced, who is still playing. Undefined before the Draw.
-export const winnersBracketPicture = (
+export const getWinnersBracketPicture = (
 	tournament: Tournament,
 ): WinnersBracketPicture | undefined => {
 	const bracket = tournament.winnersBracket;
 	if (!bracket) {
 		return undefined;
 	}
-	const player = playerById(tournament);
-	const known = (from: PlayerId | MatchPlace): Player | undefined =>
-		typeof from === 'number' ? player(from) : undefined;
-	const pictured = (match: MatchPlace): BracketMatch => {
-		const [a, b] = playersOf(bracket, match);
-		const winner = winnerOf(bracket, match);
+	const findKnown = (from: PlayerId | MatchPlace): Player | undefined =>
+		typeof from === 'number' ? findPlayer(tournament, from) : undefined;
+	const pictureMatch = (match: MatchPlace): BracketMatch => {
+		const [a, b] = findPlayers(bracket, match);
+		const winner = findWinner(bracket, match);
 		return {
-			players: [known(a), known(b)],
-			board: boardOf(bracket, match),
-			winner: winner === undefined ? undefined : player(winner),
+			players: [findKnown(a), findKnown(b)],
+			board: findBoard(bracket, match),
+			winner: winner === undefined ? undefined : findPlayer(tournament, winner),
 		};
 	};
-	const rounds = range(roundsIn(bracket)).map((r) =>
+	const rounds = range(countRounds(bracket)).map((r) =>
 		range(bracket.firstRound.length / 2 ** r).map((place) =>
 			r === 0 && isBye(bracket.firstRound[place])
 				? undefined
-				: pictured({ round: r + 1, place }),
+				: pictureMatch({ round: r + 1, place }),
 		),
 	);
 	return { rounds, champion: rounds.at(-1)![0]!.winner };

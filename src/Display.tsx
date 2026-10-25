@@ -4,14 +4,14 @@
  */
 import type { Store } from './storage';
 import {
-	matchesOnBoards,
-	winnersBracketPicture,
+	getMatchesOnBoards,
+	getWinnersBracketPicture,
 	type BracketMatch,
 	type Player,
 	type Tournament,
 } from './tournament';
 import { useTournament } from './useTournament';
-import { playerName, playersRegistered } from './wording';
+import { getPlayerName, playersRegistered } from './wording';
 
 export const Display = ({ store }: { store: Store<Tournament> }) => {
 	const tournament = useTournament(store);
@@ -43,7 +43,7 @@ const Players = ({ tournament }: { tournament: Tournament }) => (
  * for a Match's winner. Sized so a 32-place bracket fits one screen: up to four rows of Matches.
  */
 const Draw = ({ tournament }: { tournament: Tournament }) => {
-	const matches = matchesOnBoards(tournament);
+	const matches = getMatchesOnBoards(tournament);
 	return (
 		<>
 			<h1 className="text-[6vh] leading-none font-bold">Tonight’s Draw</h1>
@@ -63,7 +63,7 @@ const Draw = ({ tournament }: { tournament: Tournament }) => {
 						<span
 							className={`block text-[3.8vh] font-semibold ${'name' in match.players[1] ? '' : 'text-gray-300 italic'}`}
 						>
-							{playerName(match.players[1])}
+							{getPlayerName(match.players[1])}
 						</span>
 					</li>
 				))}
@@ -78,37 +78,49 @@ const bracketText = ['text-[5vh]', 'text-[5vh]', 'text-[4vh]', 'text-[3.2vh]', '
 /*
  * The whole Winners Bracket: its two halves run in from either side to the final in the middle. Each
  * Round's Matches share their column's height equally, so every Match sits level with the two that feed it.
+ * The two Matches that feed the same next Match lean together, so each pair reads as one.
  */
 const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
-	const { rounds, champion } = winnersBracketPicture(tournament)!;
+	const { rounds, champion } = getWinnersBracketPicture(tournament)!;
 	const final = rounds.length - 1;
-	const name = (round: number) => (round === final ? 'Final' : `Round ${round + 1}`);
-	const half = (round: number, side: number) => {
+	const getRoundName = (round: number) => (round === final ? 'Final' : `Round ${round + 1}`);
+	const getHalf = (round: number, side: 'left' | 'right') => {
 		const matches = rounds[round];
-		return matches.slice((side * matches.length) / 2, ((side + 1) * matches.length) / 2);
+		const middle = matches.length / 2;
+		return side === 'left' ? matches.slice(0, middle) : matches.slice(middle);
 	};
-	// A half whose first Round is all Byes has no column there: its Players start in Round 2.
-	const column = (key: string, round: number, matches: readonly (BracketMatch | undefined)[]) =>
-		matches.every((match) => match === undefined) ? null : (
-			<section key={key} className="flex flex-1 flex-col">
-				<h2 className="text-center text-[2.5vh] font-bold text-gray-300">{name(round)}</h2>
-				<ul aria-label={name(round)} className="flex flex-1 flex-col">
-					{matches.map((match, i) =>
-						match ? (
-							<li key={i} className="flex flex-1 items-center">
-								<MatchBox
-									match={match}
-									champion={round === final ? champion : undefined}
-								/>
-							</li>
-						) : (
-							// A Bye's place: its Player is in Round 2.
-							<li key={i} aria-hidden className="flex-1" />
-						),
-					)}
-				</ul>
-			</section>
-		);
+	const getLean = (i: number, count: number) => {
+		if (count === 1) {
+			return 'items-center';
+		}
+		return i % 2 === 0 ? 'items-end pb-[0.4vh]' : 'items-start pt-[0.4vh]';
+	};
+	const renderColumn = (
+		key: string,
+		round: number,
+		matches: readonly (BracketMatch | undefined)[],
+	) => (
+		<section key={key} className="flex flex-1 flex-col">
+			<h2 className="text-center text-[2.5vh] font-bold text-gray-300">
+				{getRoundName(round)}
+			</h2>
+			<ul aria-label={getRoundName(round)} className="flex flex-1 flex-col">
+				{matches.map((match, i) =>
+					match ? (
+						<li key={i} className={`flex flex-1 ${getLean(i, matches.length)}`}>
+							<MatchBox
+								match={match}
+								champion={round === final ? champion : undefined}
+							/>
+						</li>
+					) : (
+						// A Bye's place: its Player is in Round 2.
+						<li key={i} aria-hidden className="flex-1" />
+					),
+				)}
+			</ul>
+		</section>
+	);
 	const earlier = rounds.slice(0, final).map((_, round) => round);
 	return (
 		<div className="flex h-[94vh] flex-col">
@@ -123,11 +135,13 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 			<div
 				className={`mt-[2vh] flex flex-1 gap-[1vw] leading-[1.15] ${bracketText[rounds.length - 1]}`}
 			>
-				{earlier.map((round) => column(`left ${round}`, round, half(round, 0)))}
-				{column('final', final, rounds[final])}
+				{earlier.map((round) =>
+					renderColumn(`left ${round}`, round, getHalf(round, 'left')),
+				)}
+				{renderColumn('final', final, rounds[final])}
 				{[...earlier]
 					.reverse()
-					.map((round) => column(`right ${round}`, round, half(round, 1)))}
+					.map((round) => renderColumn(`right ${round}`, round, getHalf(round, 'right')))}
 			</div>
 		</div>
 	);
@@ -138,17 +152,18 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
  * holding a Board names it. The final turns yellow once it has a champion.
  */
 const MatchBox = ({ match, champion }: { match: BracketMatch; champion?: Player }) => {
-	const line = (player: Player | undefined) => {
-		const shade =
-			match.winner === undefined
-				? ''
-				: player?.id === match.winner.id
-					? 'font-bold'
-					: champion
-						? 'text-gray-700'
-						: 'text-gray-500';
-		return <span className={`block truncate ${shade}`}>{player?.name ?? '—'}</span>;
+	const getShade = (player: Player | undefined) => {
+		if (match.winner === undefined) {
+			return '';
+		}
+		if (player?.id === match.winner.id) {
+			return 'font-bold';
+		}
+		return champion ? 'text-gray-700' : 'text-gray-500';
 	};
+	const renderPlayer = (player: Player | undefined) => (
+		<span className={`block truncate ${getShade(player)}`}>{player?.name ?? '—'}</span>
+	);
 	return (
 		<div
 			className={`w-full rounded-[1vh] border-[0.3vh] px-[0.6vw] py-[0.3vh] font-semibold ${champion ? 'border-yellow-300 bg-yellow-300 text-black' : 'border-gray-500'}`}
@@ -156,8 +171,8 @@ const MatchBox = ({ match, champion }: { match: BracketMatch; champion?: Player 
 			{match.board !== undefined && (
 				<span className="block text-yellow-300">Board {match.board}</span>
 			)}
-			{line(match.players[0])}
-			{line(match.players[1])}
+			{renderPlayer(match.players[0])}
+			{renderPlayer(match.players[1])}
 		</div>
 	);
 };

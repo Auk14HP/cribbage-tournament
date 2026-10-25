@@ -7,7 +7,7 @@ import type { Result } from './result';
 import type { Store } from './storage';
 import {
 	makeDraw,
-	matchesOnBoards,
+	getMatchesOnBoards,
 	newTournament,
 	recordWinner,
 	registerPlayer,
@@ -15,15 +15,16 @@ import {
 	renamePlayer,
 	setBoardCount,
 	start,
-	winnersBracketPicture,
+	getWinnersBracketPicture,
 	type MatchPlace,
 	type Phase,
 	type Player,
 	type PlayerId,
 	type Tournament,
+	type WinnerOf,
 } from './tournament';
 import { useTournament } from './useTournament';
-import { playerName, playersRegistered } from './wording';
+import { getPlayerName, playersRegistered } from './wording';
 
 const button = 'rounded border border-gray-400 bg-gray-100 px-3 py-1.5 hover:bg-gray-200';
 const dangerButton = `${button} text-red-700`;
@@ -234,19 +235,12 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
  * being played. Once Started, tapping a Player's name records them as the winner.
  */
 const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
-	const matches = matchesOnBoards(tournament);
-	const { champion } = winnersBracketPicture(tournament)!;
+	const matches = getMatchesOnBoards(tournament);
+	const { champion } = getWinnersBracketPicture(tournament)!;
 	const playing = tournament.phase === 'inProgress';
 	const [refusal, setRefusal] = useState('');
-	const winnerButton = (match: MatchPlace, player: Player) => (
-		<button
-			type="button"
-			className={button}
-			onClick={() => setRefusal(apply(recordWinner(tournament, match, player.id)))}
-		>
-			{player.name}
-		</button>
-	);
+	const recordWinnerOf = (match: MatchPlace, player: Player) =>
+		setRefusal(apply(recordWinner(tournament, match, player.id)));
 	return (
 		<div className="mt-6 flex items-start gap-12">
 			<section className="flex-1">
@@ -258,21 +252,30 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 						<h2 className="text-xl font-bold">Matches</h2>
 						{playing && <p className="mt-1 text-gray-700">Tap a Match’s winner.</p>}
 						<ul aria-label="Matches" className="mt-2">
-							{matches.map(({ board, match, players: [a, b] }) => (
-								<li
-									key={board}
-									className="flex items-center gap-2 border-b border-gray-300 py-1.5 text-lg"
-								>
-									<span className="w-24 font-semibold">Board {board}</span>
-									{playing && 'name' in b ? (
-										<>
-											{winnerButton(match, a)} v {winnerButton(match, b)}
-										</>
+							{matches.map(({ board, match, players: [a, b] }) => {
+								// Once Started, a Match with both Players known can be won by tapping either.
+								const canWin = playing && 'name' in b;
+								const renderPlayer = (player: Player | WinnerOf) =>
+									canWin && 'name' in player ? (
+										<WinnerButton
+											player={player}
+											onWin={() => recordWinnerOf(match, player)}
+										/>
 									) : (
-										`${a.name} v ${playerName(b)}`
-									)}
-								</li>
-							))}
+										// Padded as a button is, so names line up whether they can be tapped or not.
+										<span className="border border-transparent px-3">
+											{getPlayerName(player)}
+										</span>
+									);
+								return (
+									<li key={board} className={matchRow}>
+										<span className="font-semibold">Board {board}</span>
+										{renderPlayer(a)}
+										<span className="text-center"> v </span>
+										{renderPlayer(b)}
+									</li>
+								);
+							})}
 						</ul>
 					</>
 				)}
@@ -299,6 +302,16 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 		</div>
 	);
 };
+
+// Fixed columns, so each Board and both Players line up down the list however long the names.
+const matchRow =
+	'grid grid-cols-[6rem_11rem_2rem_1fr] items-center border-b border-gray-300 py-1.5 text-lg';
+
+const WinnerButton = ({ player, onWin }: { player: Player; onWin: () => void }) => (
+	<button type="button" className={`${button} justify-self-start`} onClick={onWin}>
+		{player.name}
+	</button>
+);
 
 const Refusal = ({ reason }: { reason: string }) => (
 	<p role="alert" className="mt-2 min-h-6 font-semibold text-red-700">
