@@ -256,9 +256,10 @@ const boardsShort = (matches: number, boards: number): string | undefined => {
 };
 
 /*
- * Records a Match's winner, who advances to the next Round. The Match's Board frees. The next Match takes
- * the lowest-numbered free Board as soon as both its Players are known, unless it already holds a Board,
- * where a Bye Player waits for this winner.
+ * Records a Match's winner, who advances to the next Round. The Match's Board frees. The winner goes to
+ * their next Match's Board, where their opponent already waits; or, if it has none yet, the next Match
+ * takes the lowest-numbered free Board and the winner waits there for their opponent. That is often the
+ * Board they just won at.
  */
 export const recordWinner = (
 	tournament: Tournament,
@@ -286,11 +287,10 @@ export const recordWinner = (
 	};
 	if (match.round < roundsIn(bracket)) {
 		const following = { round: match.round + 1, place: Math.floor(match.place / 2) };
-		const ready = playersOf(next, following).every((p) => typeof p === 'number');
-		if (ready && boardOf(next, following) === undefined) {
+		if (boardOf(next, following) === undefined) {
 			/*
-			 * There is always a free Board: the Draw seats half the field, and the Matches being played
-			 * never hold more Players than that.
+			 * There is always a free Board: each winner recorded frees a Board and takes at most one, so
+			 * no more Boards are ever in use than the Draw needed.
 			 */
 			const board = tournament.boards.find(
 				(b) => !next.onBoards.some((on) => on.board === b),
@@ -335,9 +335,9 @@ const playersOf = (
 	return [from(0), from(1)];
 };
 
-// A Player still to come: the winner of the Match on that Board.
+// A Player still to come: the winner of the Match on that Board, or of a Match not yet started.
 export interface WinnerOf {
-	readonly winnerOfBoard: BoardNumber;
+	readonly winnerOfBoard?: BoardNumber;
 }
 
 export interface MatchOnBoard {
@@ -357,13 +357,13 @@ export const matchesOnBoards = (tournament: Tournament): readonly MatchOnBoard[]
 		return [];
 	}
 	const player = playerById(tournament);
-	// Only a Bye Player waits at a Board for a Player to come, and the Match they wait for is on a Board.
 	const seated = (from: PlayerId | MatchPlace): Player | WinnerOf =>
-		typeof from === 'number' ? player(from) : { winnerOfBoard: boardOf(bracket, from)! };
+		typeof from === 'number' ? player(from) : { winnerOfBoard: boardOf(bracket, from) };
+	// A Match holds a Board once one of its Players is known, who is named first while they wait.
 	return bracket.onBoards
 		.map(({ match, board }): MatchOnBoard => {
 			const [a, b] = playersOf(bracket, match).map(seated);
-			return { board, match, players: 'winnerOfBoard' in a ? [b as Player, a] : [a, b] };
+			return { board, match, players: 'name' in a ? [a, b] : [b as Player, a] };
 		})
 		.sort((a, b) => a.board - b.board);
 };

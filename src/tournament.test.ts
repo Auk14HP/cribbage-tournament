@@ -15,6 +15,7 @@ import {
 	type WinnerOf,
 } from './tournament';
 import type { Result } from './result';
+import { playerName } from './wording';
 
 describe('registering Players', () => {
 	it('lists registered Players by the name the room knows them by, with a running count', () => {
@@ -160,7 +161,7 @@ describe('making the Draw', () => {
 			const seated = matches.flatMap((m) => m.players);
 			const [players, winners] = [
 				seated.filter((p): p is Player => 'name' in p),
-				seated.filter((p): p is WinnerOf => 'winnerOfBoard' in p),
+				seated.filter((p): p is WinnerOf => !('name' in p)),
 			];
 			expect(winners.length).toBe(waiting);
 			expect(players.map((p) => p.name).sort()).toEqual(
@@ -295,7 +296,7 @@ describe('recording winners', () => {
 		expect(matchesOnBoards(after)).toEqual([]);
 	});
 
-	it('plays a night with Byes through to a champion, moving each Match to the lowest-numbered free Board', () => {
+	it('plays a night with Byes through to a champion, seating each winner at a Board as soon as they win', () => {
 		/*
 		 * 5 Players: Ann and Bob play the one first-Round Match on Board 1. Cat has a Bye and waits at
 		 * Board 2 for its winner; Dan and Eve, the other Bye Players, meet in Round 2 on Board 3.
@@ -305,7 +306,7 @@ describe('recording winners', () => {
 			matchesOnBoards(tournament).map(({ board, players: [a, b] }) => [
 				board,
 				a.name,
-				'name' in b ? b.name : `Winner of Board ${b.winnerOfBoard}`,
+				playerName(b),
 			]);
 		const on = (board: number) => matchesOnBoards(tournament).find((m) => m.board === board)!;
 		const [ann, bob] = on(1).players as [Player, Player];
@@ -316,44 +317,78 @@ describe('recording winners', () => {
 		};
 
 		win(3, dan);
-		// Dan waits for his Round 3 opponent without a Board; Board 3 is free.
+		// Board 3 frees and is the lowest free, so Dan waits there in the final for Board 2's winner.
 		expect(seated()).toEqual([
 			[1, ann.name, bob.name],
 			[2, cat.name, 'Winner of Board 1'],
+			[3, dan.name, 'Winner of Board 2'],
 		]);
 
 		win(1, ann);
 		// Ann joins Cat at Board 2, and Board 1 frees. Once both are known, they're named in bracket order.
-		expect(seated()).toEqual([[2, ann.name, cat.name]]);
+		expect(seated()).toEqual([
+			[2, ann.name, cat.name],
+			[3, dan.name, 'Winner of Board 2'],
+		]);
 
 		win(2, ann);
-		// The final is ready, and takes the lowest-numbered free Board.
-		expect(seated()).toEqual([[1, ann.name, dan.name]]);
+		// Ann joins Dan at Board 3 for the final, and Board 2 frees.
+		expect(seated()).toEqual([[3, ann.name, dan.name]]);
 		expect(winnersBracketPicture(tournament)!.champion).toBeUndefined();
 
-		win(1, dan);
+		win(3, dan);
 		expect(seated()).toEqual([]);
 		expect(winnersBracketPicture(tournament)!.champion).toEqual(dan);
 	});
 
-	it('readies a Match as soon as both its Players are known, without waiting for the rest of the Round', () => {
+	it('seats a winner at the lowest-numbered free Board to wait for their opponent, who comes to them', () => {
 		// 8 Players: four first-Round Matches on Boards 1 to 4.
 		let tournament = started(8, 4);
+		const seated = () =>
+			matchesOnBoards(tournament).map(({ board, players: [a, b] }) => [
+				board,
+				a.name,
+				playerName(b),
+			]);
 		const on = (board: number) => matchesOnBoards(tournament).find((m) => m.board === board)!;
+		const name = (board: number, side: number) => (on(board).players[side] as Player).name;
 		const winFirst = (board: number) => {
 			const { match, players } = on(board);
 			tournament = expectOk(recordWinner(tournament, match, (players[0] as Player).id));
 		};
-		const fourth = (on(4).players[0] as Player).name;
-		const third = (on(3).players[0] as Player).name;
+		const [a1, a2, a3, a4] = [1, 2, 3, 4].map((board) => name(board, 0));
 
 		winFirst(4);
-		expect(matchesOnBoards(tournament).map((m) => m.board)).toEqual([1, 2, 3]);
+		// Board 4 frees, and is the lowest free, so its winner waits there for Board 3's winner.
+		expect(seated()).toEqual([
+			[1, a1, name(1, 1)],
+			[2, a2, name(2, 1)],
+			[3, a3, name(3, 1)],
+			[4, a4, 'Winner of Board 3'],
+		]);
 
 		winFirst(3);
-		// The winners of Boards 3 and 4 meet on Board 3, while Boards 1 and 2 are still playing.
-		expect(matchesOnBoards(tournament).map((m) => m.board)).toEqual([1, 2, 3]);
-		expect(on(3).players.map((p) => ('name' in p ? p.name : p))).toEqual([third, fourth]);
+		// Board 3's winner goes to Board 4, and Board 3 frees.
+		expect(seated().map(([board]) => board)).toEqual([1, 2, 4]);
+		expect(on(4).players.map((p) => playerName(p))).toEqual([a3, a4]);
+
+		winFirst(4);
+		/*
+		 * The winner waits in the final at Board 3, the lowest free: their opponent will be the winner of
+		 * a Match that hasn't started yet.
+		 */
+		expect(seated()).toEqual([
+			[1, a1, name(1, 1)],
+			[2, a2, name(2, 1)],
+			[3, a3, 'Opponent to come'],
+		]);
+
+		winFirst(1);
+		expect(seated()).toEqual([
+			[1, a1, 'Winner of Board 2'],
+			[2, a2, name(2, 1)],
+			[3, a3, 'Winner of Board 1'],
+		]);
 	});
 
 	it.each([2, 3, 7, 12, 21, 26, 32])(

@@ -61,7 +61,7 @@ const Draw = ({ tournament }: { tournament: Tournament }) => {
 						</span>
 						{/* A winner still to come is greyed, so it doesn't read as a Player's name. */}
 						<span
-							className={`block text-[3.8vh] font-semibold ${'winnerOfBoard' in match.players[1] ? 'text-gray-300 italic' : ''}`}
+							className={`block text-[3.8vh] font-semibold ${'name' in match.players[1] ? '' : 'text-gray-300 italic'}`}
 						>
 							{playerName(match.players[1])}
 						</span>
