@@ -159,7 +159,7 @@ describe('the organizer route', () => {
 			'listitem',
 		);
 		expect(matches).toHaveLength(2);
-		expect(matches[1]).toHaveTextContent(/^Board 2.+ v Winner of Board 1$/);
+		expect(matches[1]).toHaveTextContent(/^Board 2.+ vs Winner of Board 1$/);
 		const waits = ['Dave K.', 'Big Dave', 'Sue'].find((name) =>
 			matches[1].textContent!.includes(name),
 		)!;
@@ -179,6 +179,44 @@ describe('the organizer route', () => {
 		expect(listedNames()).toEqual([]);
 		expect(screen.getByLabelText('Number of Boards')).toHaveValue('');
 		expect(screen.getByLabelText('Player name')).toHaveFocus();
+	});
+
+	it('records each Match’s winner with one tap, through to the champion', async () => {
+		const user = showOrganizer();
+		for (const name of ['Dave K.', 'Big Dave', 'Sue']) {
+			await register(user, name);
+		}
+		await setBoardCount(user, '2');
+		vi.spyOn(window, 'confirm').mockReturnValue(true);
+		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
+		// Each recorded winner re-renders the list, so it is looked up afresh after every tap.
+		const listMatches = () =>
+			within(screen.getByRole('list', { name: 'Matches' })).getAllByRole('listitem');
+		const [first, waiting] = listMatches();
+		const bye = waiting.textContent!.match(/^Board 2(.+) vs Winner of Board 1$/)![1];
+		// Before Start, no winner can be recorded.
+		expect(within(first).queryAllByRole('button')).toEqual([]);
+		await user.click(screen.getByRole('button', { name: 'Start' }));
+
+		// Board 2's Bye Player waits for Board 1's winner, so only Board 1 can be won yet.
+		const [boardOne, boardTwo] = listMatches();
+		expect(within(boardTwo).queryAllByRole('button')).toEqual([]);
+		const [winner, loser] = within(boardOne)
+			.getAllByRole('button')
+			.map((b) => b.textContent!);
+		await user.click(within(boardOne).getByRole('button', { name: winner }));
+
+		// The winner joins the Bye Player at Board 2, and Board 1 frees.
+		const matches = listMatches();
+		expect(matches).toHaveLength(1);
+		const [final] = matches;
+		expect(final).toHaveTextContent(/^Board 2/);
+		expect(final).toHaveTextContent(winner);
+		expect(final).not.toHaveTextContent(loser);
+		await user.click(within(final).getByRole('button', { name: bye }));
+
+		expect(screen.queryByRole('list', { name: 'Matches' })).not.toBeInTheDocument();
+		expect(screen.getByText(`Champion: ${bye}`)).toBeInTheDocument();
 	});
 
 	it('resumes the saved Tournament when reopened', async () => {

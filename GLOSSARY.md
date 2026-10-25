@@ -51,5 +51,5 @@ _Avoid_: Withdrawal, DNF, no-show
 ### The room
 
 **Board**:
-A numbered cribbage board set out in the room, where a **Match** is assigned to be played. Boards are numbered from 1 up by tent-number placards, like the ones a restaurant hands out to deliver food to a table. Several Boards can share one physical table, and there are only as many Boards as the room has cribbage boards.
+A numbered cribbage board set out in the room, where a **Match** is assigned to be played. Boards are numbered from 1 up by tent-number placards, like the ones a restaurant hands out to deliver food to a table. Several Boards can share one physical table, and there are only as many Boards as the room has cribbage boards. A Match takes the lowest-numbered free Board as soon as one of its Players is known, who sits there waiting for their opponent; the opponent comes to them. So a winner usually stays at the Board they just won at.
 _Avoid_: Table, spot, station, placard

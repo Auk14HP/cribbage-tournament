@@ -97,7 +97,44 @@ test('the TV holds Tonight’s Draw from the moment the Draw is made until the O
 	await expect(tv.getByRole('heading', { name: 'Tonight’s Draw' })).toBeVisible();
 
 	await organizer.getByRole('button', { name: 'Start', exact: true }).click();
-	await expect(tv.getByRole('heading', { name: 'Now playing' })).toBeVisible();
+	await expect(tv.getByRole('heading', { name: 'Winners Bracket' })).toBeVisible();
+
+	expect(consoleErrors).toEqual([]);
+});
+
+test('each winner the Organizer records reaches the TV’s Winners Bracket, through to the champion', async ({
+	context,
+	page: organizer,
+}) => {
+	const consoleErrors: string[] = [];
+	watchConsole(organizer, consoleErrors);
+	await organizer.goto('/');
+	const tv = await context.newPage();
+	watchConsole(tv, consoleErrors);
+	await tv.goto('/display');
+
+	for (const name of ['Dave K.', 'Big Dave', 'Sue']) {
+		await register(organizer, name);
+	}
+	await organizer.getByLabel('Number of Boards').fill('2');
+	organizer.once('dialog', (dialog) => dialog.accept());
+	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
+	await organizer.getByRole('button', { name: 'Start', exact: true }).click();
+
+	// 3 Players: one first-Round Match, and a Bye Player waiting in the final for its winner.
+	const matches = organizer.getByRole('list', { name: 'Matches' }).getByRole('listitem');
+	const tvFinal = tv.getByRole('list', { name: 'Final' }).getByRole('listitem');
+	await expect(tvFinal).toContainText('—');
+	const winner = await matches.first().getByRole('button').first().textContent();
+	await matches.first().getByRole('button', { name: winner! }).click();
+	await expect(tvFinal).toContainText(winner!);
+	await expect(tvFinal).not.toContainText('—');
+
+	await matches.first().getByRole('button', { name: winner! }).click();
+	await expect(tv.getByText(`Champion: ${winner}`)).toBeVisible();
+
+	await tv.reload();
+	await expect(tv.getByText(`Champion: ${winner}`)).toBeVisible();
 
 	expect(consoleErrors).toEqual([]);
 });

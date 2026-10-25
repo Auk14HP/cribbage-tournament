@@ -13,9 +13,10 @@ Behaviour across the two windows is covered by `npm run e2e` (`e2e/`, Playwright
 PLAYERS=29 BOARDS=16 npm run screens                  # registration
 PLAYERS=29 BOARDS=16 DRAW=1 npm run screens           # and Tonight's Draw
 PLAYERS=29 BOARDS=16 DRAW=1 START=1 npm run screens   # and after Start
+PLAYERS=29 BOARDS=16 DRAW=1 START=1 RESULTS=12 npm run screens   # and after 12 Match results (RESULTS=all: to the champion)
 ```
 
-Images land in `test-results/screens/` (gitignored), named `{organizer,tv}-{registration,draw,started}.png`. Shoot the field sizes at the edges of the change: the largest field (32 fills every Board card) and an odd one where a Player waits for a winner (21).
+Images land in `test-results/screens/` (gitignored), named `{organizer,tv}-{registration,draw,started,results}.png`. Shoot the field sizes at the edges of the change: the largest field (32 fills every Board card) and an odd one where a Player waits for a winner (21).
 
 When the change shows a moment the script doesn't reach yet (results recorded, a champion), add that step to `screens/screens.spec.ts` behind its own variable, so the script grows with the app.
 
