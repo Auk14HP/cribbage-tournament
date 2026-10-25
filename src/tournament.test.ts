@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	makeDraw,
+	matchesOnBoards,
 	newTournament,
 	recordWinner,
 	registerPlayer,
@@ -8,7 +9,6 @@ import {
 	renamePlayer,
 	setBoardCount,
 	start,
-	matchesOnBoards,
 	winnersBracketPicture,
 	type Player,
 	type Tournament,

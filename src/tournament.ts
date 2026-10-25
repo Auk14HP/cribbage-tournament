@@ -287,7 +287,7 @@ export const recordWinner = (
 	if (match.round < roundsIn(bracket)) {
 		const following = { round: match.round + 1, place: Math.floor(match.place / 2) };
 		const ready = playersOf(next, following).every((p) => typeof p === 'number');
-		if (ready && !next.onBoards.some((on) => sameMatch(on.match, following))) {
+		if (ready && boardOf(next, following) === undefined) {
 			/*
 			 * There is always a free Board: the Draw seats half the field, and the Matches being played
 			 * never hold more Players than that.
@@ -306,6 +306,9 @@ const sameMatch = (a: MatchPlace, b: MatchPlace): boolean =>
 
 // The bracket holds twice as many Players as its first Round has places, halving each Round to the final.
 const roundsIn = (bracket: WinnersBracket): number => Math.log2(2 * bracket.firstRound.length);
+
+const boardOf = (bracket: WinnersBracket, match: MatchPlace): BoardNumber | undefined =>
+	bracket.onBoards.find((on) => sameMatch(on.match, match))?.board;
 
 const winnerOf = (bracket: WinnersBracket, match: MatchPlace): PlayerId | undefined =>
 	bracket.results.find((r) => sameMatch(r.match, match))?.winner;
@@ -356,9 +359,7 @@ export const matchesOnBoards = (tournament: Tournament): readonly MatchOnBoard[]
 	const player = playerById(tournament);
 	// Only a Bye Player waits at a Board for a Player to come, and the Match they wait for is on a Board.
 	const seated = (from: PlayerId | MatchPlace): Player | WinnerOf =>
-		typeof from === 'number'
-			? player(from)
-			: { winnerOfBoard: bracket.onBoards.find((on) => sameMatch(on.match, from))!.board };
+		typeof from === 'number' ? player(from) : { winnerOfBoard: boardOf(bracket, from)! };
 	return bracket.onBoards
 		.map(({ match, board }): MatchOnBoard => {
 			const [a, b] = playersOf(bracket, match).map(seated);
@@ -407,7 +408,7 @@ export const winnersBracketPicture = (
 		const winner = winnerOf(bracket, match);
 		return {
 			players: [known(a), known(b)],
-			board: bracket.onBoards.find((on) => sameMatch(on.match, match))?.board,
+			board: boardOf(bracket, match),
 			winner: winner === undefined ? undefined : player(winner),
 		};
 	};

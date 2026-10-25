@@ -2,7 +2,7 @@
  * The organizer route: shown on the laptop. Forwards the Organizer's actions to the Tournament core,
  * saves accepted changes through the store, and shows the core's reason when a change is refused.
  */
-import { Fragment, useRef, useState, type SubmitEvent } from 'react';
+import { useRef, useState, type SubmitEvent } from 'react';
 import type { Result } from './result';
 import type { Store } from './storage';
 import {
@@ -16,6 +16,7 @@ import {
 	setBoardCount,
 	start,
 	winnersBracketPicture,
+	type MatchPlace,
 	type Phase,
 	type Player,
 	type PlayerId,
@@ -237,9 +238,18 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 	const { champion } = winnersBracketPicture(tournament)!;
 	const playing = tournament.phase === 'inProgress';
 	const [refusal, setRefusal] = useState('');
+	const winnerButton = (match: MatchPlace, player: Player) => (
+		<button
+			type="button"
+			className={button}
+			onClick={() => setRefusal(apply(recordWinner(tournament, match, player.id)))}
+		>
+			{player.name}
+		</button>
+	);
 	return (
 		<div className="mt-6 flex items-start gap-12">
-			<section aria-label="Matches" className="flex-1">
+			<section className="flex-1">
 				{champion && (
 					<p className="text-2xl font-bold text-green-800">Champion: {champion.name}</p>
 				)}
@@ -256,28 +266,7 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 									<span className="w-24 font-semibold">Board {board}</span>
 									{playing && 'name' in b ? (
 										<>
-											{[a, b].map((player, i) => (
-												<Fragment key={player.id}>
-													{i === 1 && 'v'}
-													<button
-														type="button"
-														className={button}
-														onClick={() =>
-															setRefusal(
-																apply(
-																	recordWinner(
-																		tournament,
-																		match,
-																		player.id,
-																	),
-																),
-															)
-														}
-													>
-														{player.name}
-													</button>
-												</Fragment>
-											))}
+											{winnerButton(match, a)} v {winnerButton(match, b)}
 										</>
 									) : (
 										`${a.name} v ${playerName(b)}`
