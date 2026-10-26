@@ -59,8 +59,11 @@ test('the TV shows each change the Organizer makes, live, and both windows resum
 	await expect(organizer.getByRole('listitem')).toHaveCount(2);
 	await expect(tvNames).toHaveText(['Dave K.', 'Big Dave']);
 
-	organizer.once('dialog', (dialog) => dialog.accept());
 	await organizer.getByRole('button', { name: 'Start a new Tournament' }).click();
+	await organizer
+		.getByRole('dialog')
+		.getByRole('button', { name: 'Start a new Tournament' })
+		.click();
 	await expect(tv.getByText('0 Players registered')).toBeVisible();
 	await expect(tvNames).toHaveCount(0);
 
@@ -82,8 +85,8 @@ test('the TV holds Tonight’s Draw from the moment the Draw is made until the O
 		await register(organizer, name);
 	}
 	await organizer.getByLabel('Number of Boards').fill('3');
-	organizer.once('dialog', (dialog) => dialog.accept());
 	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
+	await organizer.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
 
 	// 6 Players: two first-Round Matches and a Match between the two Bye Players, on Boards 1 to 3.
 	await expect(tv.getByRole('heading', { name: 'Tonight’s Draw' })).toBeVisible();
@@ -117,8 +120,8 @@ test('each winner the Organizer records reaches the TV’s Winners Bracket, thro
 		await register(organizer, name);
 	}
 	await organizer.getByLabel('Number of Boards').fill('2');
-	organizer.once('dialog', (dialog) => dialog.accept());
 	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
+	await organizer.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
 	await organizer.getByRole('button', { name: 'Start', exact: true }).click();
 
 	// 3 Players: one first-Round Match, and a Bye Player waiting in the final for its winner.

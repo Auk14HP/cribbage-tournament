@@ -28,8 +28,8 @@ test('screens', async ({ context, page: organizer }) => {
 	if (!process.env.DRAW) {
 		return;
 	}
-	organizer.once('dialog', (dialog) => dialog.accept());
 	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
+	await organizer.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
 	await tv.getByRole('heading', { name: 'Tonight’s Draw' }).waitFor();
 	await shoot('draw');
 	if (!process.env.START) {
