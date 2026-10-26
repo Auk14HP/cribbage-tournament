@@ -6,6 +6,7 @@ import type { Store } from './storage';
 import {
 	getMatchesOnBoards,
 	getWinnersBracketPicture,
+	hasLostInWinnersBracket,
 	type BracketMatch,
 	type Player,
 	type Tournament,
@@ -75,38 +76,61 @@ const Draw = ({ tournament }: { tournament: Tournament }) => {
 // Text shrinks as the bracket grows, so a 32-place bracket's nine columns fit across the TV.
 const bracketText = ['text-[5vh]', 'text-[5vh]', 'text-[4vh]', 'text-[3.2vh]', 'text-[2.5vh]'];
 
+type Side = 'left' | 'right';
+type LineShape = 'straight' | 'down' | 'up';
+
 /*
- * Bracket lines, drawn with CSS on each slot and sized to half the 1vw gap between Round columns. A Match
- * draws its line out on ::after: across to the gap's middle, then up or down to meet its pair halfway,
- * which is level with the Match they feed. That Match draws the rest on ::before: across from the gap's
- * middle to its own box. Both rely on every slot in a column taking an equal share of its height.
+ * Bracket lines, drawn with CSS on each slot and sized to half the gap between Round columns: in vw, not
+ * vh, because the gap is. A Match draws its line out on ::after: across to the gap's middle, then down or
+ * up to meet its pair halfway, which is level with the Match they feed. That Match draws the rest on
+ * ::before: across from the gap's middle to its own box. The final, fed from both sides, draws its right
+ * one on ::after. Both rely on every slot in a column taking an equal share of its height.
+ *
+ * The pieces each line is built from, written out whole so Tailwind finds every class.
  */
-const lineOut = {
-	left: {
-		single: 'after:absolute after:-right-[0.5vw] after:top-[calc(50%-0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh]',
-		top: 'after:absolute after:-right-[0.5vw] after:top-[calc(50%-0.15vh)] after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-r-[0.3vh]',
-		bottom: 'after:absolute after:-right-[0.5vw] after:top-0 after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-r-[0.3vh] after:border-b-[0.3vh]',
+const linePieces = {
+	after: {
+		base: 'after:absolute after:w-[0.5vw]',
+		edge: { left: 'after:-left-[0.5vw]', right: 'after:-right-[0.5vw]' },
+		shape: {
+			straight: 'after:top-[calc(50%-0.15vh)] after:border-t-[0.3vh]',
+			down: 'after:top-[calc(50%-0.15vh)] after:h-[calc(50%+0.15vh)] after:border-t-[0.3vh]',
+			up: 'after:top-0 after:h-[calc(50%+0.15vh)] after:border-b-[0.3vh]',
+		},
+		turn: { left: 'after:border-l-[0.3vh]', right: 'after:border-r-[0.3vh]' },
+		shade: { plain: 'after:border-gray-500', path: 'after:border-green-400' },
 	},
-	right: {
-		single: 'after:absolute after:-left-[0.5vw] after:top-[calc(50%-0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh]',
-		top: 'after:absolute after:-left-[0.5vw] after:top-[calc(50%-0.15vh)] after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-l-[0.3vh]',
-		bottom: 'after:absolute after:-left-[0.5vw] after:top-0 after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-b-[0.3vh] after:border-l-[0.3vh]',
+	before: {
+		base: 'before:absolute before:w-[0.5vw]',
+		edge: { left: 'before:-left-[0.5vw]', right: 'before:-right-[0.5vw]' },
+		shape: {
+			straight: 'before:top-[calc(50%-0.15vh)] before:border-t-[0.3vh]',
+			down: 'before:top-[calc(50%-0.15vh)] before:h-[calc(50%+0.15vh)] before:border-t-[0.3vh]',
+			up: 'before:top-0 before:h-[calc(50%+0.15vh)] before:border-b-[0.3vh]',
+		},
+		turn: { left: 'before:border-l-[0.3vh]', right: 'before:border-r-[0.3vh]' },
+		shade: { plain: 'before:border-gray-500', path: 'before:border-green-400' },
 	},
 };
-// The line coming in, on the side its feeders are. The final is fed from both sides, so it uses ::after too.
-const lineIn = {
-	left: 'before:absolute before:-left-[0.5vw] before:top-[calc(50%-0.15vh)] before:w-[0.5vw] before:border-t-[0.3vh]',
-	right: 'before:absolute before:-right-[0.5vw] before:top-[calc(50%-0.15vh)] before:w-[0.5vw] before:border-t-[0.3vh]',
-	finalRight:
-		'after:absolute after:-right-[0.5vw] after:top-[calc(50%-0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh]',
+
+/*
+ * One line on a slot's ::after or ::before, sticking out past its left or right edge. It is green on the
+ * path a Player still in the Winners Bracket took, from each Match they won to the Match they're in now.
+ */
+const drawLine = (end: 'after' | 'before', edge: Side, shape: LineShape, isPath: boolean) => {
+	const pieces = linePieces[end];
+	const turn = shape === 'straight' ? '' : pieces.turn[edge];
+	const shade = pieces.shade[isPath ? 'path' : 'plain'];
+	return [pieces.base, pieces.edge[edge], pieces.shape[shape], turn, shade].join(' ');
 };
-// The path of a Player still in, from each Match they won to the Match they're in now, is green; every other line grey.
-const lineShade = {
-	after: { plain: 'after:border-gray-500', path: 'after:border-green-400' },
-	before: { plain: 'before:border-gray-500', path: 'before:border-green-400' },
-};
-const shadeLine = (end: 'after' | 'before', isPath: boolean) =>
-	lineShade[end][isPath ? 'path' : 'plain'];
+
+const otherSide = { left: 'right', right: 'left' } as const;
+
+// How a slot draws: its bracket lines, and whether its Match is on the path of a Player still in.
+interface SlotLook {
+	readonly lines: string;
+	readonly isOnPath: boolean;
+}
 
 /*
  * The whole Winners Bracket: its two halves run in from either side to the final in the middle. Each
@@ -117,85 +141,83 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 	const { rounds, champion } = getWinnersBracketPicture(tournament)!;
 	const final = rounds.length - 1;
 	const getRoundName = (round: number) => (round === final ? 'Final' : `Round ${round + 1}`);
-	const getHalf = (round: number, side: 'left' | 'right') => {
+	const getHalf = (round: number, side: Side) => {
 		const matches = rounds[round];
 		const middle = matches.length / 2;
 		return side === 'left' ? matches.slice(0, middle) : matches.slice(middle);
 	};
-	// Every Player who has lost a Match. Once a Player is out, their path goes back to grey.
-	const listLoserIds = (match: BracketMatch | undefined) => {
-		if (!match?.winner) {
-			return [];
-		}
-		const winner = match.winner;
-		return match.players.flatMap((p) => (p && p.id !== winner.id ? [p.id] : []));
-	};
-	const knockedOut = new Set(rounds.flat().flatMap(listLoserIds));
+	// A decided Match whose winner hasn't lost since: the path of a Player still in the Winners Bracket.
 	const isWonByPlayerStillIn = (match: BracketMatch | undefined) =>
-		match?.winner !== undefined && !knockedOut.has(match.winner.id);
-	// The two places that feed a Match: none for a first-Round Match, a Bye's place undefined.
-	const getFeeders = (round: number, side: 'left' | 'right', place: number) =>
+		match?.winner !== undefined && !hasLostInWinnersBracket(tournament, match.winner.id);
+	/*
+	 * The places that feed a Match from one side: none for a first-Round Match, a Bye's place undefined.
+	 * The final is fed from each half's last Round.
+	 */
+	const getFeeders = (round: number, side: Side, place: number) =>
 		round > 0 ? getHalf(round - 1, side).slice(2 * place, 2 * place + 2) : [];
-	// A Match fed only by Byes, or a first-Round Match, has no line coming in.
-	const hasFeeder = (round: number, side: 'left' | 'right', place: number) =>
-		getFeeders(round, side, place).some(Boolean);
-	const hasWinnerIn = (round: number, side: 'left' | 'right', place: number) =>
+	const isFedByPlayerStillIn = (round: number, side: Side, place: number) =>
 		getFeeders(round, side, place).some(isWonByPlayerStillIn);
-	const getLines = (round: number, side: 'left' | 'right', place: number) => {
-		const count = getHalf(round, side).length;
-		const isPath = isWonByPlayerStillIn(getHalf(round, side)[place]);
-		const out = lineOut[side][count === 1 ? 'single' : place % 2 === 0 ? 'top' : 'bottom'];
-		const lines = [out, shadeLine('after', isPath)];
-		if (hasFeeder(round, side, place)) {
-			lines.push(lineIn[side], shadeLine('before', hasWinnerIn(round, side, place)));
+	// The line into a Match from one side. A Match fed only by Byes, or a first-Round Match, has none.
+	const drawLineIn = (round: number, side: Side, place: number, end: 'after' | 'before') => {
+		const feeders = getFeeders(round, side, place);
+		if (!feeders.some(Boolean)) {
+			return '';
 		}
-		return lines.join(' ');
+		const isPath = isFedByPlayerStillIn(round, side, place);
+		return drawLine(end, side, 'straight', isPath);
 	};
-	const getFinalLines = () => {
-		const lines = [];
-		if (hasFeeder(final, 'left', 0)) {
-			lines.push(lineIn.left, shadeLine('before', hasWinnerIn(final, 'left', 0)));
-		}
-		if (hasFeeder(final, 'right', 0)) {
-			lines.push(lineIn.finalRight, shadeLine('after', hasWinnerIn(final, 'right', 0)));
-		}
-		return lines.join(' ');
+	// A Match in one half: its line out towards the final, and its line in from the Matches that feed it.
+	const describeHalfSlot = (round: number, side: Side, place: number): SlotLook => {
+		const half = getHalf(round, side);
+		const isPath = isWonByPlayerStillIn(half[place]);
+		const pairShape = place % 2 === 0 ? 'down' : 'up';
+		const lineOut = drawLine(
+			'after',
+			otherSide[side],
+			half.length === 1 ? 'straight' : pairShape,
+			isPath,
+		);
+		const lineIn = drawLineIn(round, side, place, 'before');
+		const isFedByPath = isFedByPlayerStillIn(round, side, place);
+		return { lines: `${lineOut} ${lineIn}`, isOnPath: isPath || isFedByPath };
 	};
-	// A Match on the path of a Player still in: won by them, or the Match they won their way into.
-	const isOnPath = (round: number, side: 'left' | 'right' | 'final', place: number) => {
-		const sides = side === 'final' ? (['left', 'right'] as const) : [side];
-		const match = side === 'final' ? rounds[final][0] : getHalf(round, side)[place];
-		return isWonByPlayerStillIn(match) || sides.some((s) => hasWinnerIn(round, s, place));
+	// The final: a line in from each half.
+	const describeFinal = (): SlotLook => {
+		const lineInLeft = drawLineIn(final, 'left', 0, 'before');
+		const lineInRight = drawLineIn(final, 'right', 0, 'after');
+		const isFedByPath = (['left', 'right'] as const).some((side) =>
+			isFedByPlayerStillIn(final, side, 0),
+		);
+		const isPath = isWonByPlayerStillIn(rounds[final][0]);
+		return { lines: `${lineInLeft} ${lineInRight}`, isOnPath: isPath || isFedByPath };
 	};
 	const renderColumn = (
 		key: string,
 		round: number,
-		side: 'left' | 'right' | 'final',
 		matches: readonly (BracketMatch | undefined)[],
-		getSlotLines: (place: number) => string,
+		describeSlot: (place: number) => SlotLook,
 	) => (
 		<section key={key} className="flex flex-1 flex-col">
 			<h2 className="text-center text-[2.5vh] font-bold text-gray-300">
 				{getRoundName(round)}
 			</h2>
 			<ul aria-label={getRoundName(round)} className="flex flex-1 flex-col">
-				{matches.map((match, i) =>
-					match ? (
-						<li
-							key={i}
-							className={`relative flex flex-1 items-center ${getSlotLines(i)}`}
-						>
+				{matches.map((match, i) => {
+					if (!match) {
+						// A Bye's place: its Player is in Round 2. It draws no line.
+						return <li key={i} aria-hidden className="flex-1" />;
+					}
+					const { lines, isOnPath } = describeSlot(i);
+					return (
+						<li key={i} className={`relative flex flex-1 items-center ${lines}`}>
 							<MatchBox
 								match={match}
 								champion={round === final ? champion : undefined}
-								isOnPath={isOnPath(round, side, i)}
+								isOnPath={isOnPath}
 							/>
 						</li>
-					) : (
-						// A Bye's place: its Player is in Round 2. It draws no line.
-						<li key={i} aria-hidden className="flex-1" />
-					),
-				)}
+					);
+				})}
 			</ul>
 		</section>
 	);
@@ -214,20 +236,16 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 				className={`mt-[2vh] flex flex-1 gap-[1vw] leading-[1.15] ${bracketText[rounds.length - 1]}`}
 			>
 				{earlier.map((round) =>
-					renderColumn(`left ${round}`, round, 'left', getHalf(round, 'left'), (place) =>
-						getLines(round, 'left', place),
+					renderColumn(`left ${round}`, round, getHalf(round, 'left'), (place) =>
+						describeHalfSlot(round, 'left', place),
 					),
 				)}
-				{renderColumn('final', final, 'final', rounds[final], getFinalLines)}
+				{renderColumn('final', final, rounds[final], describeFinal)}
 				{[...earlier]
 					.reverse()
 					.map((round) =>
-						renderColumn(
-							`right ${round}`,
-							round,
-							'right',
-							getHalf(round, 'right'),
-							(place) => getLines(round, 'right', place),
+						renderColumn(`right ${round}`, round, getHalf(round, 'right'), (place) =>
+							describeHalfSlot(round, 'right', place),
 						),
 					)}
 			</div>
@@ -237,8 +255,8 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 
 /*
  * A Match's two Players: the winner bright, the loser faded, a Player still to come as a dash. A Match
- * holding a Board names it. A Match on a winner's path has a green border. The final turns yellow once it
- * has a champion.
+ * holding a Board names it. A Match on the path of a Player still in the Winners Bracket has a green
+ * border. The final turns yellow once it has a champion.
  */
 const MatchBox = ({
 	match,

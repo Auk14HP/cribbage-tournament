@@ -10,6 +10,7 @@ import {
 	setBoardCount,
 	start,
 	getWinnersBracketPicture,
+	hasLostInWinnersBracket,
 	type Player,
 	type Tournament,
 	type WinnerOf,
@@ -485,6 +486,30 @@ describe('the Winners Bracket picture', () => {
 				{ players: [dan, eve], board: 3 },
 			],
 		]);
+	});
+});
+
+describe('who has lost in the Winners Bracket', () => {
+	it('counts only a Player beaten in a Match, not one with a Bye or still to play', () => {
+		// 5 Players: Ann and Bob play the one first-Round Match; Cat has a Bye and waits for its winner.
+		let tournament = startTournament(5, 4);
+		const [first, waiting] = getMatchesOnBoards(tournament);
+		const [ann, bob] = first.players as [Player, Player];
+		const cat = waiting.players[0];
+
+		expect(hasLostInWinnersBracket(tournament, ann.id)).toBe(false);
+
+		tournament = expectOk(recordWinner(tournament, first.match, bob.id));
+
+		expect(hasLostInWinnersBracket(tournament, ann.id)).toBe(true);
+		expect(hasLostInWinnersBracket(tournament, bob.id)).toBe(false);
+		expect(hasLostInWinnersBracket(tournament, cat.id)).toBe(false);
+
+		const bobAndCat = getMatchesOnBoards(tournament).find((m) => m.board === waiting.board)!;
+		tournament = expectOk(recordWinner(tournament, bobAndCat.match, cat.id));
+
+		expect(hasLostInWinnersBracket(tournament, bob.id)).toBe(true);
+		expect(hasLostInWinnersBracket(tournament, cat.id)).toBe(false);
 	});
 });
 
