@@ -280,24 +280,17 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 							{matches.map(({ board, match, players: [a, b] }) => {
 								// Once Started, a Match with both Players known can be won by tapping either.
 								const canWin = playing && 'name' in b;
-								const renderPlayer = (player: Player | WinnerOf) =>
-									canWin && 'name' in player ? (
-										<WinnerButton
-											player={player}
-											onWin={() => recordWinnerOf(match, player)}
-										/>
-									) : (
-										// Padded as a button is, so names line up whether they can be tapped or not.
-										<span className="border border-transparent px-3">
-											{getPlayerName(player)}
-										</span>
-									);
+								const onWin = (player: Player) => recordWinnerOf(match, player);
 								return (
 									<li key={board} className={matchRow}>
 										<span className="font-semibold">Board {board}</span>
-										<div className="text-right">{renderPlayer(a)}</div>
+										<div className="text-right">
+											<MatchPlayer player={a} canWin={canWin} onWin={onWin} />
+										</div>
 										<span className="text-center"> vs </span>
-										<div>{renderPlayer(b)}</div>
+										<div>
+											<MatchPlayer player={b} canWin={canWin} onWin={onWin} />
+										</div>
 									</li>
 								);
 							})}
@@ -334,6 +327,23 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
  */
 const matchRow =
 	'grid grid-cols-[6rem_11rem_3rem_1fr] items-center border-b border-gray-300 py-1.5 text-lg';
+
+// One Player in a Match row: a button to tap once the Match can be won, otherwise their name.
+const MatchPlayer = ({
+	player,
+	canWin,
+	onWin,
+}: {
+	player: Player | WinnerOf;
+	canWin: boolean;
+	onWin: (player: Player) => void;
+}) =>
+	canWin && 'name' in player ? (
+		<WinnerButton player={player} onWin={() => onWin(player)} />
+	) : (
+		// Padded as a button is, so names line up whether they can be tapped or not.
+		<span className="border border-transparent px-3">{getPlayerName(player)}</span>
+	);
 
 const WinnerButton = ({ player, onWin }: { player: Player; onWin: () => void }) => (
 	<button type="button" className={button} onClick={onWin}>

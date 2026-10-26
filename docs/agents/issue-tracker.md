@@ -8,11 +8,17 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 - **Read an issue**: `gh issue view <number> --json number,title,body,labels,comments`.
 - **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.
 - **Make an issue a sub-issue of a parent**: `gh issue create --parent <parent> ...`, or `gh issue edit <parent> --add-sub-issue <child>` afterwards (`gh` 2.94+). Older `gh`: `gh api --method POST repos/<owner>/<repo>/issues/<parent>/sub_issues -F sub_issue_id=<child-db-id>` (database id, as in **Blocking** below). Without sub-issues, put `Part of #<parent>` at the top of the child body.
-- **Comment on an issue**: `gh issue comment <number> --body "..."`
+- **Sign every comment**: start each comment you post, on an issue or a PR, with `🤖 `. You post under the user's account, so the emoji is what tells your words from theirs.
+- **Comment on an issue**: `gh issue comment <number> --body "🤖 ..."`
 - **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **Close**: `gh issue close <number> --comment "..."`
 
 Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
+
+## Review comments on a pull request
+
+- **Read them**: `gh api repos/{owner}/{repo}/pulls/<number>/comments --jq '.[] | {id, path, line, in_reply_to_id, body}'`. Leave out `diff_hunk`: it repeats the surrounding code with every comment. Check the PR's conversation comments (`gh pr view <number> --json comments`) only when the PR shows any.
+- **Reply in a comment's thread**: `gh api repos/{owner}/{repo}/pulls/<number>/comments/<id>/replies -f body="🤖 ..."`, naming the commit that addresses it. Leave resolving the thread to the reviewer.
 
 ## When a change revises agreed behaviour
 
