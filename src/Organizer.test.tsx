@@ -45,7 +45,8 @@ const setBoardCount = async (user: User, count: string) => {
 
 // Answers the open confirmation dialog by pressing one of its buttons.
 const answerDialog = async (user: User, button: string) => {
-	await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: button }));
+	const dialog = within(screen.getByRole('dialog'));
+	await user.click(dialog.getByRole('button', { name: button }));
 };
 
 // A refusal shows beside the controls that caused it.
