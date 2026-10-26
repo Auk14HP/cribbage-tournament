@@ -2,7 +2,7 @@
  * The organizer route: shown on the laptop. Forwards the Organizer's actions to the Tournament core,
  * saves accepted changes through the store, and shows the core's reason when a change is refused.
  */
-import { useRef, useState, type SubmitEvent } from 'react';
+import { useId, useRef, useState, type RefObject, type SubmitEvent } from 'react';
 import type { Result } from './result';
 import type { Store } from './storage';
 import {
@@ -30,6 +30,7 @@ const button = 'rounded border border-gray-400 bg-gray-100 px-3 py-1.5 hover:bg-
 const dangerButton = `${button} text-red-700`;
 const primaryButton =
 	'rounded bg-blue-700 px-4 py-2 text-lg font-semibold text-white hover:bg-blue-800';
+const confirmButton = 'rounded px-3 py-1.5 font-semibold text-white';
 const textInput = 'rounded border border-gray-400 px-3 py-1.5';
 
 const headings: Record<Phase, string> = {
@@ -54,10 +55,9 @@ export const Organizer = ({ store }: { store: Store<Tournament> }) => {
 		return '';
 	};
 
+	const newTournamentDialog = useRef<HTMLDialogElement>(null);
+
 	const startNewTournament = () => {
-		if (!confirm('Start a new Tournament? Every Player, Board and the Draw will be cleared.')) {
-			return;
-		}
 		store.save(createTournament());
 		setNewTournaments((count) => count + 1);
 	};
@@ -74,11 +74,22 @@ export const Organizer = ({ store }: { store: Store<Tournament> }) => {
 					>
 						Open TV display
 					</a>
-					<button type="button" className={dangerButton} onClick={startNewTournament}>
+					<button
+						type="button"
+						className={dangerButton}
+						onClick={() => newTournamentDialog.current?.showModal()}
+					>
 						Start a new Tournament
 					</button>
 				</nav>
 			</header>
+			<ConfirmDialog
+				ref={newTournamentDialog}
+				message="Start a new Tournament? Every Player, Board and the Draw will be cleared."
+				confirmLabel="Start a new Tournament"
+				isDestructive
+				onConfirm={startNewTournament}
+			/>
 			{tournament.phase === 'registration' ? (
 				<Registration key={newTournaments} tournament={tournament} apply={apply} />
 			) : (
@@ -98,6 +109,7 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
 	const [playersRefusal, setPlayersRefusal] = useState('');
 	const [boardsRefusal, setBoardsRefusal] = useState('');
 	const nameInput = useRef<HTMLInputElement>(null);
+	const drawDialog = useRef<HTMLDialogElement>(null);
 
 	const register = (event: SubmitEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -125,15 +137,7 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
 		setBoardsRefusal(apply(setBoardCount(tournament, typed)));
 	};
 
-	const draw = () => {
-		if (
-			confirm(
-				'Make the Draw? Registration will close: no Player can be added, renamed or removed afterwards.',
-			)
-		) {
-			setBoardsRefusal(apply(makeDraw(tournament, Math.random)));
-		}
-	};
+	const draw = () => setBoardsRefusal(apply(makeDraw(tournament, Math.random)));
 
 	return (
 		<div className="mt-6 flex items-start gap-12">
@@ -221,9 +225,19 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
 				{!boardsRefusal && tournament.boards.length > 0 && (
 					<p className="mt-2 text-gray-700">Placards 1 to {tournament.boards.length}</p>
 				)}
-				<button type="button" className={`${primaryButton} mt-8 w-full`} onClick={draw}>
+				<button
+					type="button"
+					className={`${primaryButton} mt-8 w-full`}
+					onClick={() => drawDialog.current?.showModal()}
+				>
 					Make the Draw
 				</button>
+				<ConfirmDialog
+					ref={drawDialog}
+					message="Make the Draw? Registration will close: no Player can be added, renamed or removed afterwards."
+					confirmLabel="Make the Draw"
+					onConfirm={draw}
+				/>
 				<Refusal reason={boardsRefusal} />
 			</section>
 		</div>
@@ -315,6 +329,53 @@ const WinnerButton = ({ player, onWin }: { player: Player; onWin: () => void }) 
 		{player.name}
 	</button>
 );
+
+/*
+ * Asks the Organizer to confirm an action before it is taken: open it with `showModal()` on its ref.
+ * Cancel or Escape closes it and nothing happens. A destructive action gets a red confirm button. Being the browser's modal <dialog>, it takes focus
+ * when it opens (on Cancel, the safe answer) and gives it back to the page when it closes.
+ */
+const ConfirmDialog = ({
+	ref,
+	message,
+	confirmLabel,
+	isDestructive = false,
+	onConfirm,
+}: {
+	ref: RefObject<HTMLDialogElement | null>;
+	message: string;
+	confirmLabel: string;
+	isDestructive?: boolean;
+	onConfirm: () => void;
+}) => {
+	const messageId = useId();
+	return (
+		<dialog
+			ref={ref}
+			aria-labelledby={messageId}
+			className="m-auto max-w-lg rounded-lg p-6 shadow-xl backdrop:bg-black/40"
+		>
+			<p id={messageId} className="text-lg">
+				{message}
+			</p>
+			<div className="mt-6 flex justify-end gap-2">
+				<button type="button" className={button} onClick={() => ref.current?.close()}>
+					Cancel
+				</button>
+				<button
+					type="button"
+					className={`${confirmButton} ${isDestructive ? 'bg-red-700 hover:bg-red-800' : 'bg-blue-700 hover:bg-blue-800'}`}
+					onClick={() => {
+						ref.current?.close();
+						onConfirm();
+					}}
+				>
+					{confirmLabel}
+				</button>
+			</div>
+		</dialog>
+	);
+};
 
 const Refusal = ({ reason }: { reason: string }) => (
 	<p role="alert" className="mt-2 min-h-6 font-semibold text-red-700">

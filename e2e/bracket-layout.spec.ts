@@ -28,8 +28,8 @@ const listColumns = async (tv: Page, rounds: number) => {
 
 const startTournament = async (page: Page, players: number) => {
 	await page.goto(`/?players=${players}&boards=${Math.ceil(players / 2)}`);
-	page.once('dialog', (dialog) => dialog.accept());
 	await page.getByRole('button', { name: 'Make the Draw' }).click();
+	await page.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
 	await page.getByRole('button', { name: 'Start', exact: true }).click();
 };
 

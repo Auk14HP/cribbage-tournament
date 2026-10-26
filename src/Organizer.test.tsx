@@ -2,31 +2,50 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Organizer } from './Organizer';
 import { createLocalStorageStore } from './storage';
 import { tournamentVersion, type Tournament } from './tournament';
 
 const key = 'organizer-test';
 
+/*
+ * jsdom has no modal dialogs, so these stand in for the browser's, opening and closing only. Escape and
+ * moving focus are the browser's, covered in e2e/.
+ */
+beforeAll(() => {
+	HTMLDialogElement.prototype.showModal = function () {
+		this.open = true;
+	};
+	HTMLDialogElement.prototype.close = function () {
+		this.open = false;
+	};
+});
+
 afterEach(() => {
 	cleanup();
 	localStorage.clear();
-	vi.restoreAllMocks();
 });
+
+type User = ReturnType<typeof userEvent.setup>;
 
 const showOrganizer = () => {
 	render(<Organizer store={createLocalStorageStore<Tournament>(key, tournamentVersion)} />);
 	return userEvent.setup();
 };
 
-const register = async (user: ReturnType<typeof userEvent.setup>, name: string) => {
+const register = async (user: User, name: string) => {
 	await user.type(screen.getByLabelText('Player name'), `${name}{Enter}`);
 };
 
-const setBoardCount = async (user: ReturnType<typeof userEvent.setup>, count: string) => {
+const setBoardCount = async (user: User, count: string) => {
 	await user.clear(screen.getByLabelText('Number of Boards'));
 	await user.type(screen.getByLabelText('Number of Boards'), count);
+};
+
+// Answers the open confirmation dialog by pressing one of its buttons.
+const answerDialog = async (user: User, button: string) => {
+	await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: button }));
 };
 
 // A refusal shows beside the controls that caused it.
@@ -89,14 +108,18 @@ describe('the organizer route', () => {
 	it('starts a new Tournament only once the Organizer confirms', async () => {
 		const user = showOrganizer();
 		await register(user, 'Dave K.');
-		const confirm = vi.spyOn(window, 'confirm');
 
-		confirm.mockReturnValueOnce(false);
 		await user.click(screen.getByRole('button', { name: 'Start a new Tournament' }));
+		expect(screen.getByRole('dialog')).toHaveTextContent(
+			'Start a new Tournament? Every Player, Board and the Draw will be cleared.',
+		);
+		await answerDialog(user, 'Cancel');
+		expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 		expect(listPlayerNames()).toEqual(['Dave K.']);
 
-		confirm.mockReturnValueOnce(true);
 		await user.click(screen.getByRole('button', { name: 'Start a new Tournament' }));
+		await answerDialog(user, 'Start a new Tournament');
+		expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 		expect(listPlayerNames()).toEqual([]);
 		expect(screen.getByText('0 Players registered')).toBeInTheDocument();
 		expect(screen.getByLabelText('Player name')).toHaveFocus();
@@ -128,9 +151,9 @@ describe('the organizer route', () => {
 		const user = showOrganizer();
 		await register(user, 'Dave K.');
 		await register(user, 'Big Dave');
-		vi.spyOn(window, 'confirm').mockReturnValue(true);
 
 		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
+		await answerDialog(user, 'Make the Draw');
 
 		expect(getRefusalIn('Boards and the Draw')).toHaveTextContent(
 			'The Draw seats every Player at a Board, so it needs 1 Board, and there are none.',
@@ -143,14 +166,16 @@ describe('the organizer route', () => {
 			await register(user, name);
 		}
 		await setBoardCount(user, '2');
-		const confirm = vi.spyOn(window, 'confirm');
 
-		confirm.mockReturnValueOnce(false);
 		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
+		expect(screen.getByRole('dialog')).toHaveTextContent(
+			'Make the Draw? Registration will close: no Player can be added, renamed or removed afterwards.',
+		);
+		await answerDialog(user, 'Cancel');
 		expect(screen.getByLabelText('Player name')).toBeInTheDocument();
 
-		confirm.mockReturnValueOnce(true);
 		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
+		await answerDialog(user, 'Make the Draw');
 
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tonight’s Draw');
 		expect(screen.queryByLabelText('Player name')).not.toBeInTheDocument();
@@ -173,8 +198,8 @@ describe('the organizer route', () => {
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Now playing');
 		expect(screen.queryByRole('button', { name: 'Start' })).not.toBeInTheDocument();
 
-		confirm.mockReturnValueOnce(true);
 		await user.click(screen.getByRole('button', { name: 'Start a new Tournament' }));
+		await answerDialog(user, 'Start a new Tournament');
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Register Players');
 		expect(listPlayerNames()).toEqual([]);
 		expect(screen.getByLabelText('Number of Boards')).toHaveValue('');
@@ -187,8 +212,8 @@ describe('the organizer route', () => {
 			await register(user, name);
 		}
 		await setBoardCount(user, '2');
-		vi.spyOn(window, 'confirm').mockReturnValue(true);
 		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
+		await answerDialog(user, 'Make the Draw');
 		// Each recorded winner re-renders the list, so it is looked up afresh after every tap.
 		const listMatches = () =>
 			within(screen.getByRole('list', { name: 'Matches' })).getAllByRole('listitem');
