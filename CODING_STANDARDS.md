@@ -9,7 +9,11 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 
 ## Readability
 
-- Don't nest a call two or more levels deep inside another call's arguments: name the inner result first, so each line does one thing and the name says what it is. Write `const dialog = within(screen.getByRole('dialog'))` and then `user.click(dialog.getByRole('button', { name }))`, not `user.click(within(screen.getByRole('dialog')).getByRole('button', { name }))`. One level is fine: `expect(screen.getByRole('heading')).toHaveTextContent('Now playing')`. A callback's body starts afresh: `matches.find((m) => m.players.every(isKnown))` nests nothing.
+- Don't nest a call two or more levels deep inside another call's arguments: name the inner result first, so each line does one thing and the name says what it is. Write `const dialog = within(screen.getByRole('dialog'))` and then `user.click(dialog.getByRole('button', { name }))`, not `user.click(within(screen.getByRole('dialog')).getByRole('button', { name }))`. One level is fine: `expect(screen.getByRole('heading')).toHaveTextContent('Now playing')`. A callback's body starts afresh: `matches.find((m) => m.players.every(isKnown))` nests nothing. ESLint catches a call nested in arguments two deep; a call made on a call's result, like `within(...)` above, is left to review.
+
+## Components
+
+- Define a helper at module level when it reads no props, state or hooks, passing in what it needs. Only what reads the component's own state lives inside it.
 
 ## Styling
 
@@ -17,6 +21,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - Size the organizer route in rem (Tailwind's default scale): rem follows the browser's font-size setting, so an Organizer who enlarges text gets a larger app. Use px only where scaling would be wrong, such as a hairline border.
 - Size the display route in vh, so text scales with the TV. It is read from across the room by an audience mostly 55+: large, high-contrast text.
 - Show a refusal beside the controls that caused it, where the Organizer is already looking.
+- Keep Tailwind classes that must change together, such as every use of one colour that means one thing, in one named object, each class written out whole so Tailwind finds it.
 
 ## The Tournament core
 
@@ -29,6 +34,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - Core tests drive commands and assert on what the Tournament then holds, describing a Tournament in the Organizer's terms.
 - Route tests (React Testing Library, jsdom) render a route against the real storage adapter and drive it through visible labels and roles: what the Organizer sees and can do.
 - Behaviour across two windows belongs in `e2e/` (Playwright).
+- Find a Match in a test by its Players, not by its Board or its place in a list: how Boards are assigned may change.
 - A test written after its code earns its place by failing once the behaviour is broken: break it, watch the test go red, restore.
 
 ## Routing

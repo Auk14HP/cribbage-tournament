@@ -42,6 +42,25 @@ export default defineConfig([
 			'@stylistic/multiline-comment-style': ['error', 'starred-block'],
 			'@typescript-eslint/no-deprecated': 'error',
 			'@typescript-eslint/no-floating-promises': 'error',
+			'no-restricted-syntax': [
+				'error',
+				/*
+				 * A call inside a call's arguments, inside another call's arguments. A callback's body starts
+				 * afresh, so iterating nested arrays is fine. A call made on a call's result, such as
+				 * within(...).getByRole(...), slips past: CODING_STANDARDS.md covers it at review.
+				 */
+				{
+					selector:
+						':matches(CallExpression, NewExpression) > :matches(CallExpression, NewExpression).arguments > :matches(CallExpression, NewExpression).arguments',
+					message:
+						'Name the inner result first: a call nests at most one level inside another call’s arguments (CODING_STANDARDS.md, Readability).',
+				},
+				{
+					selector:
+						'VariableDeclarator[id.name=/^render[A-Z]/] > ArrowFunctionExpression',
+					message: 'Make this its own component instead of a renderX helper.',
+				},
+			],
 		},
 	},
 ]);
