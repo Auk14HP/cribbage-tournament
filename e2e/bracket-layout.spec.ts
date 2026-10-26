@@ -58,8 +58,9 @@ for (const { players, rounds } of [
 					await findMiddle(feeders[2 * i]),
 					await findMiddle(feeders[2 * i + 1]),
 				];
+				const slotMiddle = await findMiddle(slot);
 				expect(
-					Math.abs((await findMiddle(slot)) - (a + b) / 2),
+					Math.abs(slotMiddle - (a + b) / 2),
 					`Round ${round}, ${side} half, Match ${i + 1}`,
 				).toBeLessThan(2);
 			}
@@ -69,7 +70,8 @@ for (const { players, rounds } of [
 			findColumn(rounds - 1, 'right')[0],
 		];
 		const middle = ((await findMiddle(left)) + (await findMiddle(right))) / 2;
-		expect(Math.abs((await findMiddle(final[0])) - middle), 'the final').toBeLessThan(2);
+		const finalMiddle = await findMiddle(final[0]);
+		expect(Math.abs(finalMiddle - middle), 'the final').toBeLessThan(2);
 
 		for (const { slots } of columns) {
 			for (const box of await Promise.all(slots.map((slot) => slot.locator('> *').all()))) {

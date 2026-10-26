@@ -74,7 +74,8 @@ describe('Tonight’s Draw screen', () => {
 		);
 		expect(cards[1]).toHaveTextContent(/Winner of Board 1$/);
 
-		act(() => store.save(expectOk(start(tournament))));
+		const started = expectOk(start(tournament));
+		act(() => store.save(started));
 
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Winners Bracket');
 	});
@@ -89,7 +90,8 @@ describe('the Winners Bracket screen', () => {
 			tournament = expectOk(registerPlayer(tournament, name));
 		}
 		tournament = expectOk(setBoardCount(tournament, '2'));
-		tournament = expectOk(start(expectOk(makeDraw(tournament, Math.random))));
+		tournament = expectOk(makeDraw(tournament, Math.random));
+		tournament = expectOk(start(tournament));
 		const [first, waiting] = getMatchesOnBoards(tournament);
 		const [a, b] = first.players as [Player, Player];
 		const bye = waiting.players[0];
