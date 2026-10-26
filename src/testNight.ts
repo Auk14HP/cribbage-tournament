@@ -4,7 +4,7 @@
  * Tournament is already under way. main.tsx calls it only under `npm run dev`; a build leaves it out.
  */
 import type { Store } from './storage';
-import { newTournament, registerPlayer, setBoardCount, type Tournament } from './tournament';
+import { createTournament, registerPlayer, setBoardCount, type Tournament } from './tournament';
 
 // Names like the room's, a few long, so the TV is tried with realistic widths.
 const names = [
@@ -43,7 +43,7 @@ const names = [
 ];
 
 // A unique name for each Player: the list once, then numbered rounds of it.
-const testName = (index: number): string => {
+const makeTestName = (index: number): string => {
 	const round = Math.floor(index / names.length);
 	const name = names[index % names.length];
 	return round === 0 ? name : `${name} ${round + 1}`;
@@ -64,9 +64,9 @@ export const setUpTestNight = (store: Store<Tournament>) => {
 	if (underWay && !confirm('Replace the saved Tournament with test Players?')) {
 		return;
 	}
-	let tournament = newTournament();
+	let tournament = createTournament();
 	for (let i = 0; i < players; i++) {
-		const registered = registerPlayer(tournament, testName(i));
+		const registered = registerPlayer(tournament, makeTestName(i));
 		if (registered.ok) {
 			tournament = registered.value;
 		}

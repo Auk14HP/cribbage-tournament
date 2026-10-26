@@ -18,7 +18,7 @@ interface Saved<T> {
 	readonly state: T;
 }
 
-export const localStorageStore = <T>(key: string, version: number): Store<T> => {
+export const createLocalStorageStore = <T>(key: string, version: number): Store<T> => {
 	const listeners = new Set<() => void>();
 
 	const read = (): T | undefined => {

@@ -11,7 +11,7 @@ import {
 	type Tournament,
 } from './tournament';
 import { useTournament } from './useTournament';
-import { getPlayerName, playersRegistered } from './wording';
+import { getPlayerName, describePlayersRegistered } from './wording';
 
 export const Display = ({ store }: { store: Store<Tournament> }) => {
 	const tournament = useTournament(store);
@@ -28,7 +28,7 @@ const Players = ({ tournament }: { tournament: Tournament }) => (
 	<>
 		<h1 className="text-[7vh] font-bold">Tonight’s Players</h1>
 		<p className="mt-[1vh] mb-[3vh] text-[5vh] text-yellow-300">
-			{playersRegistered(tournament.players.length)}
+			{describePlayersRegistered(tournament.players.length)}
 		</p>
 		<ul className="columns-3 gap-x-[4vw] text-[5vh] leading-snug font-semibold">
 			{tournament.players.map((p) => (

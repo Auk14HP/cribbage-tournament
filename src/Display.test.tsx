@@ -3,12 +3,12 @@ import '@testing-library/jest-dom/vitest';
 import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Display } from './Display';
-import { localStorageStore } from './storage';
+import { createLocalStorageStore } from './storage';
 import type { Result } from './result';
 import {
 	makeDraw,
 	getMatchesOnBoards,
-	newTournament,
+	createTournament,
 	recordWinner,
 	registerPlayer,
 	setBoardCount,
@@ -27,11 +27,11 @@ afterEach(() => {
 
 describe('the display route', () => {
 	it('shows registered Players and the count, updating when the Tournament is saved', () => {
-		const store = localStorageStore<Tournament>(key, tournamentVersion);
+		const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
 		render(<Display store={store} />);
 		expect(screen.getByText('0 Players registered')).toBeInTheDocument();
 
-		const registered = registerPlayer(newTournament(), 'Big Dave');
+		const registered = registerPlayer(createTournament(), 'Big Dave');
 		if (!registered.ok) {
 			throw new Error(registered.reason);
 		}
@@ -46,9 +46,9 @@ describe('the display route', () => {
 
 describe('Tonight’s Draw screen', () => {
 	it('shows every Match with its Board, including a Bye Player waiting for a winner, until Start', () => {
-		const store = localStorageStore<Tournament>(key, tournamentVersion);
+		const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
 		render(<Display store={store} />);
-		let tournament = newTournament();
+		let tournament = createTournament();
 		for (const name of ['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe']) {
 			tournament = expectOk(registerPlayer(tournament, name));
 		}
@@ -82,9 +82,9 @@ describe('Tonight’s Draw screen', () => {
 
 describe('the Winners Bracket screen', () => {
 	it('shows the bracket after Start, with Bye Players in Round 2, updating live and highlighting the champion', () => {
-		const store = localStorageStore<Tournament>(key, tournamentVersion);
+		const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
 		render(<Display store={store} />);
-		let tournament = newTournament();
+		let tournament = createTournament();
 		for (const name of ['Dave K.', 'Big Dave', 'Sue']) {
 			tournament = expectOk(registerPlayer(tournament, name));
 		}

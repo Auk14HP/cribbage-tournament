@@ -2,6 +2,11 @@
 
 Judgement calls for review. Anything mechanical is enforced by `npm run check` (ESLint, Prettier, TypeScript) instead of written here. Architecture decisions live in `docs/adr/`; domain words in `GLOSSARY.md`.
 
+## Naming
+
+- Give every function a verb-first name (`createTournament`, `findNameRefusal`), including helpers and test helpers, so it is never mistaken for a value. A predicate starts with `is` or `has`. ESLint has no rule that can check this.
+- React components and hooks keep React's conventions: a component is a PascalCase noun (`Organizer`), a hook starts with `use` (`useTournament`).
+
 ## Styling
 
 - Style with Tailwind utility classes in the component. `src/style.css` holds only the Tailwind import and any app-wide defaults under `@layer base`.
