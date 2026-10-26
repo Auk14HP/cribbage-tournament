@@ -433,7 +433,7 @@ export const hasLostInWinnersBracket = (tournament: Tournament, player: PlayerId
 		return false;
 	}
 	return bracket.results.some(
-		(r) => r.winner !== player && findPlayers(bracket, r.match).includes(player),
+		(r) => findPlayers(bracket, r.match).includes(player) && r.winner !== player,
 	);
 };
 

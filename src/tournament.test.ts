@@ -11,6 +11,7 @@ import {
 	start,
 	getWinnersBracketPicture,
 	hasLostInWinnersBracket,
+	type MatchOnBoard,
 	type Player,
 	type Tournament,
 	type WinnerOf,
@@ -505,13 +506,17 @@ describe('who has lost in the Winners Bracket', () => {
 		expect(hasLostInWinnersBracket(tournament, bob.id)).toBe(false);
 		expect(hasLostInWinnersBracket(tournament, cat.id)).toBe(false);
 
-		const bobAndCat = getMatchesOnBoards(tournament).find((m) => m.board === waiting.board)!;
+		const bobAndCat = getMatchesOnBoards(tournament).find((m) => isPlaying(m, bob, cat))!;
 		tournament = expectOk(recordWinner(tournament, bobAndCat.match, cat.id));
 
 		expect(hasLostInWinnersBracket(tournament, bob.id)).toBe(true);
 		expect(hasLostInWinnersBracket(tournament, cat.id)).toBe(false);
 	});
 });
+
+// Whether all the given Players are seated in a Match, wherever the Draw put it.
+const isPlaying = (match: MatchOnBoard, ...players: Player[]): boolean =>
+	players.every((p) => match.players.some((seated) => 'id' in seated && seated.id === p.id));
 
 // A Tournament with the given number of Players registered and Boards set out.
 const setUpTournament = (players: number, boards: number): Tournament => {

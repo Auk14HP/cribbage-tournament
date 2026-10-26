@@ -78,13 +78,31 @@ const bracketText = ['text-[5vh]', 'text-[5vh]', 'text-[4vh]', 'text-[3.2vh]', '
 
 type Side = 'left' | 'right';
 type LineShape = 'straight' | 'down' | 'up';
+// One Round's Matches, or half of them, in bracket order. A Bye's place in the first Round is undefined.
+type RoundMatches = readonly (BracketMatch | undefined)[];
 
 /*
- * Bracket lines, drawn with CSS on each slot and sized to half the gap between Round columns: in vw, not
- * vh, because the gap is. A Match draws its line out on ::after: across to the gap's middle, then down or
- * up to meet its pair halfway, which is level with the Match they feed. That Match draws the rest on
- * ::before: across from the gap's middle to its own box. The final, fed from both sides, draws its right
- * one on ::after. Both rely on every slot in a column taking an equal share of its height.
+ * The colours of a winner's path, kept in one place: a Match card's border, and a bracket line on a
+ * slot's ::after or ::before. Green is the path a Player still in the Winners Bracket took, from each
+ * Match they won to the Match they're in now; everything else is grey. Each class is written out whole
+ * so Tailwind finds it.
+ */
+const pathShade = {
+	card: { plain: 'border-gray-500', path: 'border-green-400' },
+	after: { plain: 'after:border-gray-500', path: 'after:border-green-400' },
+	before: { plain: 'before:border-gray-500', path: 'before:border-green-400' },
+};
+
+const getPathShade = (element: keyof typeof pathShade, isPath: boolean) =>
+	pathShade[element][isPath ? 'path' : 'plain'];
+
+/*
+ * Bracket lines, drawn with CSS on each slot and sized to half the gap between Round columns. They are in
+ * vw, not vh, because that gap is 1vw wide: a line sized in vh would fall short of the next column, or
+ * run into it, on a TV that isn't 16:9. A Match draws its line out on ::after: across to the gap's middle,
+ * then down or up to meet its pair halfway, which is level with the Match they feed. That Match draws the
+ * rest on ::before: across from the gap's middle to its own box. The final, fed from both sides, draws its
+ * right one on ::after. Both rely on every slot in a column taking an equal share of its height.
  *
  * The pieces each line is built from, written out whole so Tailwind finds every class.
  */
@@ -98,7 +116,6 @@ const linePieces = {
 			up: 'after:top-0 after:h-[calc(50%+0.15vh)] after:border-b-[0.3vh]',
 		},
 		turn: { left: 'after:border-l-[0.3vh]', right: 'after:border-r-[0.3vh]' },
-		shade: { plain: 'after:border-gray-500', path: 'after:border-green-400' },
 	},
 	before: {
 		base: 'before:absolute before:w-[0.5vw]',
@@ -109,28 +126,91 @@ const linePieces = {
 			up: 'before:top-0 before:h-[calc(50%+0.15vh)] before:border-b-[0.3vh]',
 		},
 		turn: { left: 'before:border-l-[0.3vh]', right: 'before:border-r-[0.3vh]' },
-		shade: { plain: 'before:border-gray-500', path: 'before:border-green-400' },
 	},
 };
 
-/*
- * One line on a slot's ::after or ::before, sticking out past its left or right edge. It is green on the
- * path a Player still in the Winners Bracket took, from each Match they won to the Match they're in now.
- */
-const drawLine = (end: 'after' | 'before', edge: Side, shape: LineShape, isPath: boolean) => {
+// Which pseudo-element of a slot a line is drawn on.
+type LineEnd = keyof typeof linePieces;
+
+// One line on a slot's ::after or ::before, sticking out past its left or right edge.
+const drawLine = (end: LineEnd, edge: Side, shape: LineShape, isPath: boolean) => {
 	const pieces = linePieces[end];
 	const turn = shape === 'straight' ? '' : pieces.turn[edge];
-	const shade = pieces.shade[isPath ? 'path' : 'plain'];
+	const shade = getPathShade(end, isPath);
 	return [pieces.base, pieces.edge[edge], pieces.shape[shape], turn, shade].join(' ');
 };
 
 const otherSide = { left: 'right', right: 'left' } as const;
 
-// How a slot draws: its bracket lines, and whether its Match is on the path of a Player still in.
-interface SlotLook {
+const getHalf = (matches: RoundMatches, side: Side): RoundMatches => {
+	const middle = matches.length / 2;
+	return side === 'left' ? matches.slice(0, middle) : matches.slice(middle);
+};
+
+// A decided Match whose winner hasn't lost since: the path of a Player still in the Winners Bracket.
+const isWonByPlayerStillIn = (tournament: Tournament, match: BracketMatch | undefined) =>
+	match?.winner !== undefined && !hasLostInWinnersBracket(tournament, match.winner.id);
+
+const isFedByPlayerStillIn = (tournament: Tournament, feeders: RoundMatches) =>
+	feeders.some((match) => isWonByPlayerStillIn(tournament, match));
+
+// The line into a Match from the places that feed it on one side. A Match fed only by Byes has none.
+const drawLineIn = (tournament: Tournament, feeders: RoundMatches, side: Side, end: LineEnd) => {
+	if (!feeders.some(Boolean)) {
+		return '';
+	}
+	const isPath = isFedByPlayerStillIn(tournament, feeders);
+	return drawLine(end, side, 'straight', isPath);
+};
+
+// A Match, the bracket lines its slot draws, and whether it is on the path of a Player still in.
+interface BracketSlot {
+	readonly match: BracketMatch;
 	readonly lines: string;
 	readonly isOnPath: boolean;
 }
+
+/*
+ * One half of a Round: each Match with its line out towards the final, and its line in from the two
+ * places in the Round before that feed it. A first-Round Match has none feeding it. A Bye's place stays
+ * undefined.
+ */
+const describeHalf = (
+	tournament: Tournament,
+	rounds: readonly RoundMatches[],
+	round: number,
+	side: Side,
+): (BracketSlot | undefined)[] => {
+	const half = getHalf(rounds[round], side);
+	const earlier = round > 0 ? getHalf(rounds[round - 1], side) : [];
+	return half.map((match, place) => {
+		if (!match) {
+			return undefined;
+		}
+		const feeders = earlier.slice(2 * place, 2 * place + 2);
+		const isPath = isWonByPlayerStillIn(tournament, match);
+		const pairShape = place % 2 === 0 ? 'down' : 'up';
+		const shape = half.length === 1 ? 'straight' : pairShape;
+		const lineOut = drawLine('after', otherSide[side], shape, isPath);
+		const lineIn = drawLineIn(tournament, feeders, side, 'before');
+		const isFedByPath = isFedByPlayerStillIn(tournament, feeders);
+		return { match, lines: `${lineOut} ${lineIn}`, isOnPath: isPath || isFedByPath };
+	});
+};
+
+// The final, with a line in from each half's last Round. A two-Player bracket's final has none.
+const describeFinal = (tournament: Tournament, rounds: readonly RoundMatches[]): BracketSlot => {
+	const match = rounds.at(-1)![0]!;
+	const beforeFinal = rounds.at(-2) ?? [];
+	const fromLeft = getHalf(beforeFinal, 'left');
+	const fromRight = getHalf(beforeFinal, 'right');
+	const lineInLeft = drawLineIn(tournament, fromLeft, 'left', 'before');
+	const lineInRight = drawLineIn(tournament, fromRight, 'right', 'after');
+	const isPath = isWonByPlayerStillIn(tournament, match);
+	const isFedByPath =
+		isFedByPlayerStillIn(tournament, fromLeft) || isFedByPlayerStillIn(tournament, fromRight);
+	return { match, lines: `${lineInLeft} ${lineInRight}`, isOnPath: isPath || isFedByPath };
+};
 
 /*
  * The whole Winners Bracket: its two halves run in from either side to the final in the middle. Each
@@ -139,89 +219,7 @@ interface SlotLook {
  */
 const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 	const { rounds, champion } = getWinnersBracketPicture(tournament)!;
-	const final = rounds.length - 1;
-	const getRoundName = (round: number) => (round === final ? 'Final' : `Round ${round + 1}`);
-	const getHalf = (round: number, side: Side) => {
-		const matches = rounds[round];
-		const middle = matches.length / 2;
-		return side === 'left' ? matches.slice(0, middle) : matches.slice(middle);
-	};
-	// A decided Match whose winner hasn't lost since: the path of a Player still in the Winners Bracket.
-	const isWonByPlayerStillIn = (match: BracketMatch | undefined) =>
-		match?.winner !== undefined && !hasLostInWinnersBracket(tournament, match.winner.id);
-	/*
-	 * The places that feed a Match from one side: none for a first-Round Match, a Bye's place undefined.
-	 * The final is fed from each half's last Round.
-	 */
-	const getFeeders = (round: number, side: Side, place: number) =>
-		round > 0 ? getHalf(round - 1, side).slice(2 * place, 2 * place + 2) : [];
-	const isFedByPlayerStillIn = (round: number, side: Side, place: number) =>
-		getFeeders(round, side, place).some(isWonByPlayerStillIn);
-	// The line into a Match from one side. A Match fed only by Byes, or a first-Round Match, has none.
-	const drawLineIn = (round: number, side: Side, place: number, end: 'after' | 'before') => {
-		const feeders = getFeeders(round, side, place);
-		if (!feeders.some(Boolean)) {
-			return '';
-		}
-		const isPath = isFedByPlayerStillIn(round, side, place);
-		return drawLine(end, side, 'straight', isPath);
-	};
-	// A Match in one half: its line out towards the final, and its line in from the Matches that feed it.
-	const describeHalfSlot = (round: number, side: Side, place: number): SlotLook => {
-		const half = getHalf(round, side);
-		const isPath = isWonByPlayerStillIn(half[place]);
-		const pairShape = place % 2 === 0 ? 'down' : 'up';
-		const lineOut = drawLine(
-			'after',
-			otherSide[side],
-			half.length === 1 ? 'straight' : pairShape,
-			isPath,
-		);
-		const lineIn = drawLineIn(round, side, place, 'before');
-		const isFedByPath = isFedByPlayerStillIn(round, side, place);
-		return { lines: `${lineOut} ${lineIn}`, isOnPath: isPath || isFedByPath };
-	};
-	// The final: a line in from each half.
-	const describeFinal = (): SlotLook => {
-		const lineInLeft = drawLineIn(final, 'left', 0, 'before');
-		const lineInRight = drawLineIn(final, 'right', 0, 'after');
-		const isFedByPath = (['left', 'right'] as const).some((side) =>
-			isFedByPlayerStillIn(final, side, 0),
-		);
-		const isPath = isWonByPlayerStillIn(rounds[final][0]);
-		return { lines: `${lineInLeft} ${lineInRight}`, isOnPath: isPath || isFedByPath };
-	};
-	const renderColumn = (
-		key: string,
-		round: number,
-		matches: readonly (BracketMatch | undefined)[],
-		describeSlot: (place: number) => SlotLook,
-	) => (
-		<section key={key} className="flex flex-1 flex-col">
-			<h2 className="text-center text-[2.5vh] font-bold text-gray-300">
-				{getRoundName(round)}
-			</h2>
-			<ul aria-label={getRoundName(round)} className="flex flex-1 flex-col">
-				{matches.map((match, i) => {
-					if (!match) {
-						// A Bye's place: its Player is in Round 2. It draws no line.
-						return <li key={i} aria-hidden className="flex-1" />;
-					}
-					const { lines, isOnPath } = describeSlot(i);
-					return (
-						<li key={i} className={`relative flex flex-1 items-center ${lines}`}>
-							<MatchBox
-								match={match}
-								champion={round === final ? champion : undefined}
-								isOnPath={isOnPath}
-							/>
-						</li>
-					);
-				})}
-			</ul>
-		</section>
-	);
-	const earlier = rounds.slice(0, final).map((_, round) => round);
+	const earlier = rounds.slice(0, -1).map((_, round) => round);
 	return (
 		<div className="flex h-[94vh] flex-col">
 			<div className="flex items-baseline justify-between">
@@ -235,22 +233,66 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 			<div
 				className={`mt-[2vh] flex flex-1 gap-[1vw] leading-[1.15] ${bracketText[rounds.length - 1]}`}
 			>
-				{earlier.map((round) =>
-					renderColumn(`left ${round}`, round, getHalf(round, 'left'), (place) =>
-						describeHalfSlot(round, 'left', place),
-					),
-				)}
-				{renderColumn('final', final, rounds[final], describeFinal)}
-				{[...earlier]
-					.reverse()
-					.map((round) =>
-						renderColumn(`right ${round}`, round, getHalf(round, 'right'), (place) =>
-							describeHalfSlot(round, 'right', place),
-						),
-					)}
+				{earlier.map((round) => (
+					<BracketColumn
+						key={`left ${round}`}
+						name={`Round ${round + 1}`}
+						slots={describeHalf(tournament, rounds, round, 'left')}
+					/>
+				))}
+				<BracketColumn
+					name="Final"
+					slots={[describeFinal(tournament, rounds)]}
+					champion={champion}
+				/>
+				{[...earlier].reverse().map((round) => (
+					<BracketColumn
+						key={`right ${round}`}
+						name={`Round ${round + 1}`}
+						slots={describeHalf(tournament, rounds, round, 'right')}
+					/>
+				))}
 			</div>
 		</div>
 	);
+};
+
+// One Round column, or half of one: its slots share the column's height equally.
+const BracketColumn = ({
+	name,
+	slots,
+	champion,
+}: {
+	name: string;
+	slots: readonly (BracketSlot | undefined)[];
+	champion?: Player;
+}) => (
+	<section className="flex flex-1 flex-col">
+		<h2 className="text-center text-[2.5vh] font-bold text-gray-300">{name}</h2>
+		<ul aria-label={name} className="flex flex-1 flex-col">
+			{slots.map((slot, i) =>
+				slot ? (
+					<li key={i} className={`relative flex flex-1 items-center ${slot.lines}`}>
+						<MatchBox match={slot.match} champion={champion} isOnPath={slot.isOnPath} />
+					</li>
+				) : (
+					// A Bye's place: its Player is in Round 2. It draws no line.
+					<li key={i} aria-hidden className="flex-1" />
+				),
+			)}
+		</ul>
+	</section>
+);
+
+// The winner bright, the loser faded, and faded further once the final has a champion.
+const getPlayerShade = (match: BracketMatch, player: Player | undefined, champion?: Player) => {
+	if (match.winner === undefined) {
+		return '';
+	}
+	if (player?.id === match.winner.id) {
+		return 'font-bold';
+	}
+	return champion ? 'text-gray-700' : 'text-gray-500';
 };
 
 /*
@@ -266,28 +308,25 @@ const MatchBox = ({
 	match: BracketMatch;
 	champion?: Player;
 	isOnPath: boolean;
-}) => {
-	const getShade = (player: Player | undefined) => {
-		if (match.winner === undefined) {
-			return '';
-		}
-		if (player?.id === match.winner.id) {
-			return 'font-bold';
-		}
-		return champion ? 'text-gray-700' : 'text-gray-500';
-	};
-	const renderPlayer = (player: Player | undefined) => (
-		<span className={`block truncate ${getShade(player)}`}>{player?.name ?? '—'}</span>
-	);
-	return (
-		<div
-			className={`w-full rounded-[1vh] border-[0.3vh] px-[0.6vw] py-[0.3vh] font-semibold ${champion ? 'border-yellow-300 bg-yellow-300 text-black' : isOnPath ? 'border-green-400' : 'border-gray-500'}`}
-		>
-			{match.board !== undefined && (
-				<span className="block text-yellow-300">Board {match.board}</span>
-			)}
-			{renderPlayer(match.players[0])}
-			{renderPlayer(match.players[1])}
-		</div>
-	);
-};
+}) => (
+	<div
+		className={`w-full rounded-[1vh] border-[0.3vh] px-[0.6vw] py-[0.3vh] font-semibold ${champion ? 'border-yellow-300 bg-yellow-300 text-black' : getPathShade('card', isOnPath)}`}
+	>
+		{match.board !== undefined && (
+			<span className="block text-yellow-300">Board {match.board}</span>
+		)}
+		<MatchPlayer
+			player={match.players[0]}
+			shade={getPlayerShade(match, match.players[0], champion)}
+		/>
+		<MatchPlayer
+			player={match.players[1]}
+			shade={getPlayerShade(match, match.players[1], champion)}
+		/>
+	</div>
+);
+
+// One Player's name in a Match card, or a dash while they are still to come.
+const MatchPlayer = ({ player, shade }: { player: Player | undefined; shade: string }) => (
+	<span className={`block truncate ${shade}`}>{player?.name ?? '—'}</span>
+);
