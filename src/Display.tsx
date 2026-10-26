@@ -100,7 +100,7 @@ const lineIn = {
 	finalRight:
 		'after:absolute after:-right-[0.5vw] after:top-[calc(50%-0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh]',
 };
-// A winner's path, from a decided Match to the Match they advanced to, is green; every other line grey.
+// The path of a Player still in, from each Match they won to the Match they're in now, is green; every other line grey.
 const lineShade = {
 	after: { plain: 'after:border-gray-500', path: 'after:border-green-400' },
 	before: { plain: 'before:border-gray-500', path: 'before:border-green-400' },
@@ -122,6 +122,17 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 		const middle = matches.length / 2;
 		return side === 'left' ? matches.slice(0, middle) : matches.slice(middle);
 	};
+	// Every Player who has lost a Match. Once a Player is out, their path goes back to grey.
+	const listLoserIds = (match: BracketMatch | undefined) => {
+		if (!match?.winner) {
+			return [];
+		}
+		const winner = match.winner;
+		return match.players.flatMap((p) => (p && p.id !== winner.id ? [p.id] : []));
+	};
+	const knockedOut = new Set(rounds.flat().flatMap(listLoserIds));
+	const isWonByPlayerStillIn = (match: BracketMatch | undefined) =>
+		match?.winner !== undefined && !knockedOut.has(match.winner.id);
 	// The two places that feed a Match: none for a first-Round Match, a Bye's place undefined.
 	const getFeeders = (round: number, side: 'left' | 'right', place: number) =>
 		round > 0 ? getHalf(round - 1, side).slice(2 * place, 2 * place + 2) : [];
@@ -129,12 +140,12 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 	const hasFeeder = (round: number, side: 'left' | 'right', place: number) =>
 		getFeeders(round, side, place).some(Boolean);
 	const hasWinnerIn = (round: number, side: 'left' | 'right', place: number) =>
-		getFeeders(round, side, place).some((m) => m?.winner);
+		getFeeders(round, side, place).some(isWonByPlayerStillIn);
 	const getLines = (round: number, side: 'left' | 'right', place: number) => {
 		const count = getHalf(round, side).length;
-		const isDecided = getHalf(round, side)[place]?.winner !== undefined;
+		const isPath = isWonByPlayerStillIn(getHalf(round, side)[place]);
 		const out = lineOut[side][count === 1 ? 'single' : place % 2 === 0 ? 'top' : 'bottom'];
-		const lines = [out, shadeLine('after', isDecided)];
+		const lines = [out, shadeLine('after', isPath)];
 		if (hasFeeder(round, side, place)) {
 			lines.push(lineIn[side], shadeLine('before', hasWinnerIn(round, side, place)));
 		}
@@ -150,11 +161,11 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 		}
 		return lines.join(' ');
 	};
-	// A Match on a winner's path: decided, or holding a Player who won their way in.
+	// A Match on the path of a Player still in: won by them, or the Match they won their way into.
 	const isOnPath = (round: number, side: 'left' | 'right' | 'final', place: number) => {
 		const sides = side === 'final' ? (['left', 'right'] as const) : [side];
 		const match = side === 'final' ? rounds[final][0] : getHalf(round, side)[place];
-		return match?.winner !== undefined || sides.some((s) => hasWinnerIn(round, s, place));
+		return isWonByPlayerStillIn(match) || sides.some((s) => hasWinnerIn(round, s, place));
 	};
 	const renderColumn = (
 		key: string,
