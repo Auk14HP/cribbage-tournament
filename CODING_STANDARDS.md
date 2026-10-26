@@ -7,6 +7,10 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - Give every function a verb-first name (`createTournament`, `findNameRefusal`), including helpers and test helpers, so it is never mistaken for a value. A predicate starts with `is` or `has`. ESLint has no rule that can check this.
 - React components and hooks keep React's conventions: a component is a PascalCase noun (`Organizer`), a hook starts with `use` (`useTournament`).
 
+## Readability
+
+- Don't nest a call two or more levels deep inside another call's arguments: name the inner result first, so each line does one thing and the name says what it is. Write `const dialog = within(screen.getByRole('dialog'))` and then `user.click(dialog.getByRole('button', { name }))`, not `user.click(within(screen.getByRole('dialog')).getByRole('button', { name }))`. One level is fine: `expect(screen.getByRole('heading')).toHaveTextContent('Now playing')`. A callback's body starts afresh: `matches.find((m) => m.players.every(isKnown))` nests nothing.
+
 ## Styling
 
 - Style with Tailwind utility classes in the component. `src/style.css` holds only the Tailwind import and any app-wide defaults under `@layer base`.

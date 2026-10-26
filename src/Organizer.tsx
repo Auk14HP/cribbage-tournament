@@ -134,10 +134,19 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
 	// Saved as it is typed, so the Draw always uses the number on screen.
 	const changeBoardCount = (typed: string) => {
 		setTypedBoardCount(typed);
-		setBoardsRefusal(apply(setBoardCount(tournament, typed)));
+		const refusal = apply(setBoardCount(tournament, typed));
+		setBoardsRefusal(refusal);
 	};
 
-	const draw = () => setBoardsRefusal(apply(makeDraw(tournament, Math.random)));
+	const draw = () => {
+		const refusal = apply(makeDraw(tournament, Math.random));
+		setBoardsRefusal(refusal);
+	};
+
+	const remove = (playerId: PlayerId) => {
+		const refusal = apply(removePlayer(tournament, playerId));
+		setPlayersRefusal(refusal);
+	};
 
 	return (
 		<div className="mt-6 flex items-start gap-12">
@@ -196,11 +205,7 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
 								<button
 									type="button"
 									className={dangerButton}
-									onClick={() =>
-										setPlayersRefusal(
-											apply(removePlayer(tournament, player.id)),
-										)
-									}
+									onClick={() => remove(player.id)}
 								>
 									Remove
 								</button>
@@ -253,8 +258,14 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 	const { champion } = getWinnersBracketPicture(tournament)!;
 	const playing = tournament.phase === 'inProgress';
 	const [refusal, setRefusal] = useState('');
-	const recordWinnerOf = (match: MatchPlace, player: Player) =>
-		setRefusal(apply(recordWinner(tournament, match, player.id)));
+	const recordWinnerOf = (match: MatchPlace, player: Player) => {
+		const reason = apply(recordWinner(tournament, match, player.id));
+		setRefusal(reason);
+	};
+	const pressStart = () => {
+		const reason = apply(start(tournament));
+		setRefusal(reason);
+	};
 	return (
 		<div className="mt-6 flex items-start gap-12">
 			<section className="flex-1">
@@ -305,7 +316,7 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 						<button
 							type="button"
 							className={`${primaryButton} mt-2 w-full`}
-							onClick={() => setRefusal(apply(start(tournament)))}
+							onClick={pressStart}
 						>
 							Start
 						</button>
