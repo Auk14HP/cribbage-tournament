@@ -1,3 +1,7 @@
+## Branches
+
+`main` changes only through a pull request. Start each ticket on a branch named `issue-<number>-<slug>` before the first commit; the pre-commit hook refuses commits on `main`.
+
 ## Checks
 
 `npm run check` must pass to commit (pre-commit hook). CI also runs `npm run e2e`, the two-window browser tests the hook skips; run it before pushing a UI change.

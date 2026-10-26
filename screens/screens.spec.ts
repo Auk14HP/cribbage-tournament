@@ -1,7 +1,7 @@
 import { test } from '@playwright/test';
 
 /*
- * Not a test: screenshots of both routes for a Tournament of any size, set up through the test night URL.
+ * Not a test: screenshots of both routes for a Tournament of any size, set up through the test Tournament URL.
  *   PLAYERS=29 BOARDS=16 npm run screens    registration
  *   ... DRAW=1                              and Tonight's Draw
  *   ... DRAW=1 START=1                      and after Start

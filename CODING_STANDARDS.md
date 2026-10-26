@@ -22,7 +22,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 
 ## Tests
 
-- Core tests drive commands and assert on what the Tournament then holds, describing a night in the Organizer's terms.
+- Core tests drive commands and assert on what the Tournament then holds, describing a Tournament in the Organizer's terms.
 - Route tests (React Testing Library, jsdom) render a route against the real storage adapter and drive it through visible labels and roles: what the Organizer sees and can do.
 - Behaviour across two windows belongs in `e2e/` (Playwright).
 - A test written after its code earns its place by failing once the behaviour is broken: break it, watch the test go red, restore.

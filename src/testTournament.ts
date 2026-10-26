@@ -1,6 +1,6 @@
 /*
  * Dev only: `/?players=26&boards=12` replaces the saved Tournament with one that has that many Players
- * registered and Boards set out, so a night can be tried without typing every name. It asks first if a
+ * registered and Boards set out, so a Tournament can be tried without typing every name. It asks first if a
  * Tournament is already under way. main.tsx calls it only under `npm run dev`; a build leaves it out.
  */
 import type { Store } from './storage';
@@ -49,14 +49,14 @@ const makeTestName = (index: number): string => {
 	return round === 0 ? name : `${name} ${round + 1}`;
 };
 
-export const setUpTestNight = (store: Store<Tournament>) => {
+export const setUpTestTournament = (store: Store<Tournament>) => {
 	const params = new URLSearchParams(location.search);
 	const players = Number(params.get('players') ?? 0);
 	const boards = params.get('boards');
 	if (!params.has('players') && boards === null) {
 		return;
 	}
-	// So a reload carries on with the test night instead of starting it again.
+	// So a reload carries on with the test Tournament instead of starting it again.
 	history.replaceState(null, '', location.pathname);
 
 	const saved = store.load();

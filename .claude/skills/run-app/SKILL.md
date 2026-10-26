@@ -7,7 +7,7 @@ Behaviour across the two windows, and the Winners Bracket's layout, are covered 
 
 ## Screenshot a screen
 
-`npm run screens` (`screens/screens.spec.ts`) starts its own dev server, sets up a Tournament through the test night URL (`/?players=N&boards=M`, `src/testNight.ts`), and screenshots both routes, the organizer at 1280×720 and the TV at 1920×1080:
+`npm run screens` (`screens/screens.spec.ts`) starts its own dev server, sets up a Tournament through the test Tournament URL (`/?players=N&boards=M`, `src/testTournament.ts`), and screenshots both routes, the organizer at 1280×720 and the TV at 1920×1080:
 
 ```bash
 PLAYERS=29 BOARDS=16 npm run screens                  # registration

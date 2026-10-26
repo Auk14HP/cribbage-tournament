@@ -26,7 +26,7 @@ const listColumns = async (tv: Page, rounds: number) => {
 	return { columns, final: await listRound(rounds).locator('> li').all() };
 };
 
-const startNight = async (page: Page, players: number) => {
+const startTournament = async (page: Page, players: number) => {
 	await page.goto(`/?players=${players}&boards=${Math.ceil(players / 2)}`);
 	page.once('dialog', (dialog) => dialog.accept());
 	await page.getByRole('button', { name: 'Make the Draw' }).click();
@@ -42,7 +42,7 @@ for (const { players, rounds } of [
 		context,
 		page: organizer,
 	}) => {
-		await startNight(organizer, players);
+		await startTournament(organizer, players);
 		const tv = await context.newPage();
 		await tv.setViewportSize({ width: 1920, height: 1080 });
 		await tv.goto('/display');

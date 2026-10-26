@@ -187,9 +187,9 @@ describe('making the Draw', () => {
 	});
 
 	it('makes the same Draw every time from the same seeded random source, and a different one from another', () => {
-		const night = setUpTournament(26, 16);
+		const registered = setUpTournament(26, 16);
 		const drawWith = (seed: number) =>
-			getMatchesOnBoards(expectOk(makeDraw(night, createSeededRandom(seed))));
+			getMatchesOnBoards(expectOk(makeDraw(registered, createSeededRandom(seed))));
 
 		expect(drawWith(42)).toEqual(drawWith(42));
 		expect(drawWith(42)).not.toEqual(drawWith(43));
@@ -292,7 +292,7 @@ describe('starting the Tournament', () => {
 
 describe('recording winners', () => {
 	it('crowns the winner of a two-Player final as champion, freeing their Board', () => {
-		const tournament = startNight(2, 1);
+		const tournament = startTournament(2, 1);
 		const [final] = getMatchesOnBoards(tournament);
 		const [a] = final.players as [Player, Player];
 
@@ -302,12 +302,12 @@ describe('recording winners', () => {
 		expect(getMatchesOnBoards(after)).toEqual([]);
 	});
 
-	it('plays a night with Byes through to a champion, seating each winner at a Board as soon as they win', () => {
+	it('plays a Tournament with Byes through to a champion, seating each winner at a Board as soon as they win', () => {
 		/*
 		 * 5 Players: Ann and Bob play the one first-Round Match on Board 1. Cat has a Bye and waits at
 		 * Board 2 for its winner; Dan and Eve, the other Bye Players, meet in Round 2 on Board 3.
 		 */
-		let tournament = startNight(5, 4);
+		let tournament = startTournament(5, 4);
 		const listSeats = () =>
 			getMatchesOnBoards(tournament).map(({ board, players: [a, b] }) => [
 				board,
@@ -350,7 +350,7 @@ describe('recording winners', () => {
 
 	it('seats a winner at the lowest-numbered free Board to wait for their opponent, who comes to them', () => {
 		// 8 Players: four first-Round Matches on Boards 1 to 4.
-		let tournament = startNight(8, 4);
+		let tournament = startTournament(8, 4);
 		const listSeats = () =>
 			getMatchesOnBoards(tournament).map(({ board, players: [a, b] }) => [
 				board,
@@ -404,7 +404,7 @@ describe('recording winners', () => {
 		'plays %i Players to a champion, never seating two Matches at one Board',
 		(field) => {
 			const boards = Math.ceil(field / 2);
-			let tournament = startNight(field, boards, field);
+			let tournament = startTournament(field, boards, field);
 			let played = 0;
 			for (;;) {
 				const matches = getMatchesOnBoards(tournament);
@@ -455,7 +455,7 @@ describe('recording winners', () => {
 describe('the Winners Bracket picture', () => {
 	it('puts Bye Players in Round 2, and shows who has advanced and who is still playing', () => {
 		// 5 Players in an 8-place bracket: one first-Round Match, three Byes.
-		let tournament = startNight(5, 4);
+		let tournament = startTournament(5, 4);
 		const [first, waiting, byes] = getMatchesOnBoards(tournament);
 		const [ann, bob] = first.players as [Player, Player];
 		const cat = waiting.players[0];
@@ -484,7 +484,7 @@ describe('the Winners Bracket picture', () => {
 	});
 });
 
-// A night with the given number of Players registered and Boards set out.
+// A Tournament with the given number of Players registered and Boards set out.
 const setUpTournament = (players: number, boards: number): Tournament => {
 	let tournament = createTournament();
 	for (let i = 1; i <= players; i++) {
@@ -493,8 +493,8 @@ const setUpTournament = (players: number, boards: number): Tournament => {
 	return boards === 0 ? tournament : expectOk(setBoardCount(tournament, String(boards)));
 };
 
-// A night that has made its Draw and Started.
-const startNight = (players: number, boards: number, seed = 1): Tournament => {
+// A Tournament that has made its Draw and Started.
+const startTournament = (players: number, boards: number, seed = 1): Tournament => {
 	const registered = setUpTournament(players, boards);
 	const drawn = expectOk(makeDraw(registered, createSeededRandom(seed)));
 	return expectOk(start(drawn));

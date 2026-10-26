@@ -25,7 +25,7 @@ The main single-elimination bracket every **Player** enters; its final winner is
 _Avoid_: Main bracket, championship bracket
 
 **Losers Bracket**:
-A separate single-elimination bracket for **Players** who lost their first **Match** in the **Winners Bracket**, in whichever **Round** it was, and chose to keep playing. Every **Player** can get at least two Matches in a night.
+A separate single-elimination bracket for **Players** who lost their first **Match** in the **Winners Bracket**, in whichever **Round** it was, and chose to keep playing. Every **Player** can get at least two Matches in a Tournament.
 _Avoid_: Consolation bracket, second-chance bracket
 
 **Match**:

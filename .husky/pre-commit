@@ -1,1 +1,5 @@
+if [ "$(git branch --show-current)" = "main" ]; then
+	echo "Commit on a branch, not main: main changes only through a pull request." >&2
+	exit 1
+fi
 npm run check
