@@ -76,9 +76,35 @@ const Draw = ({ tournament }: { tournament: Tournament }) => {
 const bracketText = ['text-[5vh]', 'text-[5vh]', 'text-[4vh]', 'text-[3.2vh]', 'text-[2.5vh]'];
 
 /*
+ * Bracket lines, drawn with CSS on each slot and sized to half the 1vw gap between Round columns. A Match
+ * draws its line out on ::after: across to the gap's middle, then up or down to meet its pair halfway,
+ * which is level with the Match they feed. That Match draws the rest on ::before: across from the gap's
+ * middle to its own box. Both rely on every slot in a column taking an equal share of its height.
+ */
+const lineOut = {
+	left: {
+		single: 'after:absolute after:-right-[0.5vw] after:top-[calc(50%-0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-gray-500',
+		top: 'after:absolute after:-right-[0.5vw] after:top-[calc(50%-0.15vh)] after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-r-[0.3vh] after:border-gray-500',
+		bottom: 'after:absolute after:-right-[0.5vw] after:top-0 after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-r-[0.3vh] after:border-b-[0.3vh] after:border-gray-500',
+	},
+	right: {
+		single: 'after:absolute after:-left-[0.5vw] after:top-[calc(50%-0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-gray-500',
+		top: 'after:absolute after:-left-[0.5vw] after:top-[calc(50%-0.15vh)] after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-l-[0.3vh] after:border-gray-500',
+		bottom: 'after:absolute after:-left-[0.5vw] after:top-0 after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-b-[0.3vh] after:border-l-[0.3vh] after:border-gray-500',
+	},
+};
+// The line coming in, on the side its feeders are. The final is fed from both sides, so it uses ::after too.
+const lineIn = {
+	left: 'before:absolute before:-left-[0.5vw] before:top-[calc(50%-0.15vh)] before:w-[0.5vw] before:border-t-[0.3vh] before:border-gray-500',
+	right: 'before:absolute before:-right-[0.5vw] before:top-[calc(50%-0.15vh)] before:w-[0.5vw] before:border-t-[0.3vh] before:border-gray-500',
+	finalRight:
+		'after:absolute after:-right-[0.5vw] after:top-[calc(50%-0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-gray-500',
+};
+
+/*
  * The whole Winners Bracket: its two halves run in from either side to the final in the middle. Each
  * Round's Matches share their column's height equally and sit in the middle of their share, so every
- * Match is centred between the two that feed it.
+ * Match is centred between the two that feed it, and bracket lines join them.
  */
 const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 	const { rounds, champion } = getWinnersBracketPicture(tournament)!;
@@ -89,10 +115,29 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 		const middle = matches.length / 2;
 		return side === 'left' ? matches.slice(0, middle) : matches.slice(middle);
 	};
+	// A Match fed only by Byes, or a first-Round Match, has no line coming in.
+	const hasFeeder = (round: number, side: 'left' | 'right', place: number) =>
+		round > 0 &&
+		getHalf(round - 1, side)
+			.slice(2 * place, 2 * place + 2)
+			.some(Boolean);
+	const getLines = (round: number, side: 'left' | 'right', place: number) => {
+		const count = getHalf(round, side).length;
+		const out = lineOut[side][count === 1 ? 'single' : place % 2 === 0 ? 'top' : 'bottom'];
+		return hasFeeder(round, side, place) ? `${out} ${lineIn[side]}` : out;
+	};
+	const getFinalLines = () => {
+		const lines = [
+			hasFeeder(final, 'left', 0) && lineIn.left,
+			hasFeeder(final, 'right', 0) && lineIn.finalRight,
+		];
+		return lines.filter(Boolean).join(' ');
+	};
 	const renderColumn = (
 		key: string,
 		round: number,
 		matches: readonly (BracketMatch | undefined)[],
+		getSlotLines: (place: number) => string,
 	) => (
 		<section key={key} className="flex flex-1 flex-col">
 			<h2 className="text-center text-[2.5vh] font-bold text-gray-300">
@@ -101,14 +146,17 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 			<ul aria-label={getRoundName(round)} className="flex flex-1 flex-col">
 				{matches.map((match, i) =>
 					match ? (
-						<li key={i} className="flex flex-1 items-center">
+						<li
+							key={i}
+							className={`relative flex flex-1 items-center ${getSlotLines(i)}`}
+						>
 							<MatchBox
 								match={match}
 								champion={round === final ? champion : undefined}
 							/>
 						</li>
 					) : (
-						// A Bye's place: its Player is in Round 2.
+						// A Bye's place: its Player is in Round 2. It draws no line.
 						<li key={i} aria-hidden className="flex-1" />
 					),
 				)}
@@ -130,12 +178,18 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 				className={`mt-[2vh] flex flex-1 gap-[1vw] leading-[1.15] ${bracketText[rounds.length - 1]}`}
 			>
 				{earlier.map((round) =>
-					renderColumn(`left ${round}`, round, getHalf(round, 'left')),
+					renderColumn(`left ${round}`, round, getHalf(round, 'left'), (place) =>
+						getLines(round, 'left', place),
+					),
 				)}
-				{renderColumn('final', final, rounds[final])}
+				{renderColumn('final', final, rounds[final], getFinalLines)}
 				{[...earlier]
 					.reverse()
-					.map((round) => renderColumn(`right ${round}`, round, getHalf(round, 'right')))}
+					.map((round) =>
+						renderColumn(`right ${round}`, round, getHalf(round, 'right'), (place) =>
+							getLines(round, 'right', place),
+						),
+					)}
 			</div>
 		</div>
 	);
