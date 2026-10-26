@@ -8,7 +8,7 @@ import type { Store } from './storage';
 import {
 	makeDraw,
 	getMatchesOnBoards,
-	newTournament,
+	createTournament,
 	recordWinner,
 	registerPlayer,
 	removePlayer,
@@ -24,7 +24,7 @@ import {
 	type WinnerOf,
 } from './tournament';
 import { useTournament } from './useTournament';
-import { getPlayerName, playersRegistered } from './wording';
+import { getPlayerName, describePlayersRegistered } from './wording';
 
 const button = 'rounded border border-gray-400 bg-gray-100 px-3 py-1.5 hover:bg-gray-200';
 const dangerButton = `${button} text-red-700`;
@@ -58,7 +58,7 @@ export const Organizer = ({ store }: { store: Store<Tournament> }) => {
 		if (!confirm('Start a new Tournament? Every Player, Board and the Draw will be cleared.')) {
 			return;
 		}
-		store.save(newTournament());
+		store.save(createTournament());
 		setNewTournaments((count) => count + 1);
 	};
 
@@ -157,7 +157,7 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
 					</button>
 				</form>
 				<Refusal reason={playersRefusal} />
-				<p className="mt-2">{playersRegistered(tournament.players.length)}</p>
+				<p className="mt-2">{describePlayersRegistered(tournament.players.length)}</p>
 				<ul aria-label="Players" className="mt-2">
 					{tournament.players.map((player) =>
 						player.id === renaming ? (

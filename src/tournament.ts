@@ -68,7 +68,7 @@ export interface Tournament {
 // Bump whenever the Tournament's shape changes, so a Tournament saved in an older shape loads as blank.
 export const tournamentVersion = 4;
 
-export const newTournament = (): Tournament => ({
+export const createTournament = (): Tournament => ({
 	phase: 'registration',
 	players: [],
 	nextPlayerId: 1,
@@ -80,7 +80,7 @@ export const registerPlayer = (tournament: Tournament, typedName: string): Resul
 		return { ok: false, reason: 'Registration closed when the Draw was made.' };
 	}
 	const name = typedName.trim();
-	const refusal = nameRefusal(tournament, name);
+	const refusal = findNameRefusal(tournament, name);
 	if (refusal) {
 		return { ok: false, reason: refusal };
 	}
@@ -117,7 +117,7 @@ export const renamePlayer = (
 		return noSuchPlayer;
 	}
 	const name = typedName.trim();
-	const refusal = nameRefusal(tournament, name, playerId);
+	const refusal = findNameRefusal(tournament, name, playerId);
 	if (refusal) {
 		return { ok: false, reason: refusal };
 	}
@@ -150,7 +150,7 @@ const isRegistered = (tournament: Tournament, playerId: PlayerId): boolean =>
 	tournament.players.some((p) => p.id === playerId);
 
 // Names must be unique so two Players can never be confused on the TV.
-const nameRefusal = (
+const findNameRefusal = (
 	tournament: Tournament,
 	name: string,
 	exceptPlayerId?: PlayerId,
@@ -179,7 +179,10 @@ export const setBoardCount = (tournament: Tournament, typedCount: string): Resul
 			reason: 'The number of Boards is a whole number above zero, like 12.',
 		};
 	}
-	return { ok: true, value: { ...tournament, boards: range(Number(typed)).map((i) => i + 1) } };
+	return {
+		ok: true,
+		value: { ...tournament, boards: listIndexes(Number(typed)).map((i) => i + 1) },
+	};
 };
 
 export const makeDraw = (tournament: Tournament, random: Random): Result<Tournament> => {
@@ -196,7 +199,7 @@ export const makeDraw = (tournament: Tournament, random: Random): Result<Tournam
 	}
 	const places = bracketSize / 2;
 	const firstRoundMatches = field - places;
-	const drawn = inRandomOrder(
+	const drawn = shuffle(
 		tournament.players.map((p) => p.id),
 		random,
 	);
@@ -208,18 +211,18 @@ export const makeDraw = (tournament: Tournament, random: Random): Result<Tournam
 	 * at the Draw, so every Player has a seat.
 	 */
 	let next = 0;
-	const firstRound = range(places).map((place): FirstRoundMatch | Bye =>
+	const firstRound = listIndexes(places).map((place): FirstRoundMatch | Bye =>
 		place < firstRoundMatches
 			? { players: [drawn[next++], drawn[next++]] }
 			: { bye: drawn[next++] },
 	);
 	const opening: MatchPlace[] = [
-		...range(firstRoundMatches).map((place) => ({ round: 1, place })),
-		...range(Math.floor(places / 2))
+		...listIndexes(firstRoundMatches).map((place) => ({ round: 1, place })),
+		...listIndexes(Math.floor(places / 2))
 			.filter((place) => isBye(firstRound[2 * place]) || isBye(firstRound[2 * place + 1]))
 			.map((place) => ({ round: 2, place })),
 	];
-	const boardsRefusal = boardsShort(opening.length, tournament.boards.length);
+	const boardsRefusal = findBoardsShortRefusal(opening.length, tournament.boards.length);
 	if (boardsRefusal) {
 		return { ok: false, reason: boardsRefusal };
 	}
@@ -246,7 +249,7 @@ export const start = (tournament: Tournament): Result<Tournament> => {
 };
 
 // Every Match the Draw seats needs a Board at the Draw: there is no waiting for one yet.
-const boardsShort = (matches: number, boards: number): string | undefined => {
+const findBoardsShortRefusal = (matches: number, boards: number): string | undefined => {
 	if (boards >= matches) {
 		return undefined;
 	}
@@ -410,8 +413,8 @@ export const getWinnersBracketPicture = (
 			winner: winner === undefined ? undefined : findPlayer(tournament, winner),
 		};
 	};
-	const rounds = range(countRounds(bracket)).map((r) =>
-		range(bracket.firstRound.length / 2 ** r).map((place) =>
+	const rounds = listIndexes(countRounds(bracket)).map((r) =>
+		listIndexes(bracket.firstRound.length / 2 ** r).map((place) =>
 			r === 0 && isBye(bracket.firstRound[place])
 				? undefined
 				: pictureMatch({ round: r + 1, place }),
@@ -420,10 +423,10 @@ export const getWinnersBracketPicture = (
 	return { rounds, champion: rounds.at(-1)![0]!.winner };
 };
 
-const range = (count: number): number[] => Array.from({ length: count }, (_, i) => i);
+const listIndexes = (count: number): number[] => Array.from({ length: count }, (_, i) => i);
 
 // Fisher–Yates: every order equally likely.
-const inRandomOrder = <T>(items: readonly T[], random: Random): T[] => {
+const shuffle = <T>(items: readonly T[], random: Random): T[] => {
 	const shuffled = [...items];
 	for (let i = shuffled.length - 1; i > 0; i--) {
 		const j = Math.floor(random() * (i + 1));
