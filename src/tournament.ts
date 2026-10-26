@@ -423,6 +423,20 @@ export const getWinnersBracketPicture = (
 	return { rounds, champion: rounds.at(-1)![0]!.winner };
 };
 
+/*
+ * Whether a Player has lost a Match in the Winners Bracket, and so left it. A Bye is not a loss, and a
+ * Player who has lost may still be playing in the Losers Bracket.
+ */
+export const hasLostInWinnersBracket = (tournament: Tournament, player: PlayerId): boolean => {
+	const bracket = tournament.winnersBracket;
+	if (!bracket) {
+		return false;
+	}
+	return bracket.results.some(
+		(r) => findPlayers(bracket, r.match).includes(player) && r.winner !== player,
+	);
+};
+
 const listIndexes = (count: number): number[] => Array.from({ length: count }, (_, i) => i);
 
 // Fisher–Yates: every order equally likely.
