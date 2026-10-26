@@ -41,6 +41,7 @@ export default defineConfig([
 			'prefer-arrow-callback': 'error',
 			'@stylistic/multiline-comment-style': ['error', 'starred-block'],
 			'@typescript-eslint/no-deprecated': 'error',
+			'@typescript-eslint/no-floating-promises': 'error',
 		},
 	},
 ]);
