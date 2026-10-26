@@ -83,23 +83,30 @@ const bracketText = ['text-[5vh]', 'text-[5vh]', 'text-[4vh]', 'text-[3.2vh]', '
  */
 const lineOut = {
 	left: {
-		single: 'after:absolute after:-right-[0.5vw] after:top-[calc(50%-0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-gray-500',
-		top: 'after:absolute after:-right-[0.5vw] after:top-[calc(50%-0.15vh)] after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-r-[0.3vh] after:border-gray-500',
-		bottom: 'after:absolute after:-right-[0.5vw] after:top-0 after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-r-[0.3vh] after:border-b-[0.3vh] after:border-gray-500',
+		single: 'after:absolute after:-right-[0.5vw] after:top-[calc(50%-0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh]',
+		top: 'after:absolute after:-right-[0.5vw] after:top-[calc(50%-0.15vh)] after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-r-[0.3vh]',
+		bottom: 'after:absolute after:-right-[0.5vw] after:top-0 after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-r-[0.3vh] after:border-b-[0.3vh]',
 	},
 	right: {
-		single: 'after:absolute after:-left-[0.5vw] after:top-[calc(50%-0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-gray-500',
-		top: 'after:absolute after:-left-[0.5vw] after:top-[calc(50%-0.15vh)] after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-l-[0.3vh] after:border-gray-500',
-		bottom: 'after:absolute after:-left-[0.5vw] after:top-0 after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-b-[0.3vh] after:border-l-[0.3vh] after:border-gray-500',
+		single: 'after:absolute after:-left-[0.5vw] after:top-[calc(50%-0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh]',
+		top: 'after:absolute after:-left-[0.5vw] after:top-[calc(50%-0.15vh)] after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-l-[0.3vh]',
+		bottom: 'after:absolute after:-left-[0.5vw] after:top-0 after:h-[calc(50%+0.15vh)] after:w-[0.5vw] after:border-b-[0.3vh] after:border-l-[0.3vh]',
 	},
 };
 // The line coming in, on the side its feeders are. The final is fed from both sides, so it uses ::after too.
 const lineIn = {
-	left: 'before:absolute before:-left-[0.5vw] before:top-[calc(50%-0.15vh)] before:w-[0.5vw] before:border-t-[0.3vh] before:border-gray-500',
-	right: 'before:absolute before:-right-[0.5vw] before:top-[calc(50%-0.15vh)] before:w-[0.5vw] before:border-t-[0.3vh] before:border-gray-500',
+	left: 'before:absolute before:-left-[0.5vw] before:top-[calc(50%-0.15vh)] before:w-[0.5vw] before:border-t-[0.3vh]',
+	right: 'before:absolute before:-right-[0.5vw] before:top-[calc(50%-0.15vh)] before:w-[0.5vw] before:border-t-[0.3vh]',
 	finalRight:
-		'after:absolute after:-right-[0.5vw] after:top-[calc(50%-0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh] after:border-gray-500',
+		'after:absolute after:-right-[0.5vw] after:top-[calc(50%-0.15vh)] after:w-[0.5vw] after:border-t-[0.3vh]',
 };
+// A winner's path, from a decided Match to the Match they advanced to, is green; every other line grey.
+const lineShade = {
+	after: { plain: 'after:border-gray-500', path: 'after:border-green-400' },
+	before: { plain: 'before:border-gray-500', path: 'before:border-green-400' },
+};
+const shadeLine = (end: 'after' | 'before', isPath: boolean) =>
+	lineShade[end][isPath ? 'path' : 'plain'];
 
 /*
  * The whole Winners Bracket: its two halves run in from either side to the final in the middle. Each
@@ -115,27 +122,44 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 		const middle = matches.length / 2;
 		return side === 'left' ? matches.slice(0, middle) : matches.slice(middle);
 	};
+	// The two places that feed a Match: none for a first-Round Match, a Bye's place undefined.
+	const getFeeders = (round: number, side: 'left' | 'right', place: number) =>
+		round > 0 ? getHalf(round - 1, side).slice(2 * place, 2 * place + 2) : [];
 	// A Match fed only by Byes, or a first-Round Match, has no line coming in.
 	const hasFeeder = (round: number, side: 'left' | 'right', place: number) =>
-		round > 0 &&
-		getHalf(round - 1, side)
-			.slice(2 * place, 2 * place + 2)
-			.some(Boolean);
+		getFeeders(round, side, place).some(Boolean);
+	const hasWinnerIn = (round: number, side: 'left' | 'right', place: number) =>
+		getFeeders(round, side, place).some((m) => m?.winner);
 	const getLines = (round: number, side: 'left' | 'right', place: number) => {
 		const count = getHalf(round, side).length;
+		const isDecided = getHalf(round, side)[place]?.winner !== undefined;
 		const out = lineOut[side][count === 1 ? 'single' : place % 2 === 0 ? 'top' : 'bottom'];
-		return hasFeeder(round, side, place) ? `${out} ${lineIn[side]}` : out;
+		const lines = [out, shadeLine('after', isDecided)];
+		if (hasFeeder(round, side, place)) {
+			lines.push(lineIn[side], shadeLine('before', hasWinnerIn(round, side, place)));
+		}
+		return lines.join(' ');
 	};
 	const getFinalLines = () => {
-		const lines = [
-			hasFeeder(final, 'left', 0) && lineIn.left,
-			hasFeeder(final, 'right', 0) && lineIn.finalRight,
-		];
-		return lines.filter(Boolean).join(' ');
+		const lines = [];
+		if (hasFeeder(final, 'left', 0)) {
+			lines.push(lineIn.left, shadeLine('before', hasWinnerIn(final, 'left', 0)));
+		}
+		if (hasFeeder(final, 'right', 0)) {
+			lines.push(lineIn.finalRight, shadeLine('after', hasWinnerIn(final, 'right', 0)));
+		}
+		return lines.join(' ');
+	};
+	// A Match on a winner's path: decided, or holding a Player who won their way in.
+	const isOnPath = (round: number, side: 'left' | 'right' | 'final', place: number) => {
+		const sides = side === 'final' ? (['left', 'right'] as const) : [side];
+		const match = side === 'final' ? rounds[final][0] : getHalf(round, side)[place];
+		return match?.winner !== undefined || sides.some((s) => hasWinnerIn(round, s, place));
 	};
 	const renderColumn = (
 		key: string,
 		round: number,
+		side: 'left' | 'right' | 'final',
 		matches: readonly (BracketMatch | undefined)[],
 		getSlotLines: (place: number) => string,
 	) => (
@@ -153,6 +177,7 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 							<MatchBox
 								match={match}
 								champion={round === final ? champion : undefined}
+								isOnPath={isOnPath(round, side, i)}
 							/>
 						</li>
 					) : (
@@ -178,16 +203,20 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 				className={`mt-[2vh] flex flex-1 gap-[1vw] leading-[1.15] ${bracketText[rounds.length - 1]}`}
 			>
 				{earlier.map((round) =>
-					renderColumn(`left ${round}`, round, getHalf(round, 'left'), (place) =>
+					renderColumn(`left ${round}`, round, 'left', getHalf(round, 'left'), (place) =>
 						getLines(round, 'left', place),
 					),
 				)}
-				{renderColumn('final', final, rounds[final], getFinalLines)}
+				{renderColumn('final', final, 'final', rounds[final], getFinalLines)}
 				{[...earlier]
 					.reverse()
 					.map((round) =>
-						renderColumn(`right ${round}`, round, getHalf(round, 'right'), (place) =>
-							getLines(round, 'right', place),
+						renderColumn(
+							`right ${round}`,
+							round,
+							'right',
+							getHalf(round, 'right'),
+							(place) => getLines(round, 'right', place),
 						),
 					)}
 			</div>
@@ -197,9 +226,18 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 
 /*
  * A Match's two Players: the winner bright, the loser faded, a Player still to come as a dash. A Match
- * holding a Board names it. The final turns yellow once it has a champion.
+ * holding a Board names it. A Match on a winner's path has a green border. The final turns yellow once it
+ * has a champion.
  */
-const MatchBox = ({ match, champion }: { match: BracketMatch; champion?: Player }) => {
+const MatchBox = ({
+	match,
+	champion,
+	isOnPath,
+}: {
+	match: BracketMatch;
+	champion?: Player;
+	isOnPath: boolean;
+}) => {
 	const getShade = (player: Player | undefined) => {
 		if (match.winner === undefined) {
 			return '';
@@ -214,7 +252,7 @@ const MatchBox = ({ match, champion }: { match: BracketMatch; champion?: Player 
 	);
 	return (
 		<div
-			className={`w-full rounded-[1vh] border-[0.3vh] px-[0.6vw] py-[0.3vh] font-semibold ${champion ? 'border-yellow-300 bg-yellow-300 text-black' : 'border-gray-500'}`}
+			className={`w-full rounded-[1vh] border-[0.3vh] px-[0.6vw] py-[0.3vh] font-semibold ${champion ? 'border-yellow-300 bg-yellow-300 text-black' : isOnPath ? 'border-green-400' : 'border-gray-500'}`}
 		>
 			{match.board !== undefined && (
 				<span className="block text-yellow-300">Board {match.board}</span>
