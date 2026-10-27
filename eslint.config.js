@@ -19,9 +19,13 @@ export default defineConfig([
 		],
 		languageOptions: {
 			globals: globals.browser,
-			// Type information, so rules such as no-deprecated can see what a name refers to.
+			/*
+			 * Type information, so rules such as no-deprecated can see what a name refers to. The project
+			 * service finds each file's tsconfig as an editor does, from the root tsconfig.json's references,
+			 * so a file an editor would leave without its types fails lint.
+			 */
 			parserOptions: {
-				project: ['./tsconfig.app.json', './tsconfig.node.json'],
+				projectService: true,
 				tsconfigRootDir: import.meta.dirname,
 			},
 		},
