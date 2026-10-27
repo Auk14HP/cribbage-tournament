@@ -5,6 +5,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 ## Naming
 
 - Give every function a verb-first name (`createTournament`, `findNameRefusal`), including helpers and test helpers, so it is never mistaken for a value. A predicate starts with `is` or `has`. ESLint has no rule that can check this.
+- Name a value for what it holds: a locator for the element it finds (`championHeading`), not the screen that element suggests.
 - React components and hooks keep React's conventions: a component is a PascalCase noun (`Organizer`), a hook starts with `use` (`useTournament`).
 
 ## Readability
@@ -34,6 +35,8 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - Core tests drive commands and assert on what the Tournament then holds, describing a Tournament in the Organizer's terms.
 - Route tests (React Testing Library, jsdom) render a route against the real storage adapter and drive it through visible labels and roles: what the Organizer sees and can do.
 - Behaviour across two windows belongs in `e2e/` (Playwright).
+- Set-up that two tests in a file share becomes a module-level test helper (`showOrganizer`, `setUpDraw`), so each test shows only what it is about.
+- A test of when something happens checks both sides of the moment: the old state just before it, the new one at it (still the Winners Bracket at 19 seconds, Now playing at 20).
 - Find a Match in a test by its Players, not by its Board or its place in a list: how Boards are assigned may change.
 - A test written after its code earns its place by failing once the behaviour is broken: break it, watch the test go red, restore.
 
