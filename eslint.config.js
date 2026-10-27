@@ -21,7 +21,7 @@ export default defineConfig([
 			globals: globals.browser,
 			// Type information, so rules such as no-deprecated can see what a name refers to.
 			parserOptions: {
-				project: ['./tsconfig.json', './tsconfig.node.json'],
+				project: ['./tsconfig.app.json', './tsconfig.node.json'],
 				tsconfigRootDir: import.meta.dirname,
 			},
 		},

@@ -134,12 +134,12 @@ test('each winner the Organizer records reaches the TV’s Winners Bracket, thro
 	await expect(tvFinal).not.toContainText('—');
 
 	await matches.first().getByRole('button', { name: winner! }).click();
-	const championScreen = tv.getByRole('heading', { name: 'Tonight’s Champion' });
-	await expect(championScreen).toBeVisible();
+	const championHeading = tv.getByRole('heading', { name: 'Tonight’s Champion' });
+	await expect(championHeading).toBeVisible();
 	await expect(tv.getByText(winner!, { exact: true })).toBeVisible();
 
 	await tv.reload();
-	await expect(championScreen).toBeVisible();
+	await expect(championHeading).toBeVisible();
 	await expect(tv.getByText(winner!, { exact: true })).toBeVisible();
 
 	expect(consoleErrors).toEqual([]);
