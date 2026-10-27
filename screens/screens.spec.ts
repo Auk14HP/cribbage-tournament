@@ -4,9 +4,9 @@ import { test } from '@playwright/test';
  * Not a test: screenshots of both routes for a Tournament of any size, set up through the test Tournament URL.
  *   PLAYERS=29 BOARDS=16 npm run screens    registration
  *   ... DRAW=1                              and Tonight's Draw
- *   ... DRAW=1 START=1                      and after Start
+ *   ... DRAW=1 START=1                      and after Start, then Now playing
  *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
- * Writes test-results/screens/{organizer,tv}-{registration,draw,started,results}.png: the organizer at
+ * Writes test-results/screens/{organizer,tv}-{registration,draw,started,now-playing,results,champion}.png: the organizer at
  * 1280×720, the TV at 1920×1080.
  */
 const players = process.env.PLAYERS ?? '26';
@@ -38,6 +38,10 @@ test('screens', async ({ context, page: organizer }) => {
 	await organizer.getByRole('button', { name: 'Start', exact: true }).click();
 	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 	await shoot('started');
+	// Each screen for 1 second, so the TV soon moves on to Now playing.
+	await organizer.getByLabel('Seconds per TV screen').fill('1');
+	await tv.getByRole('heading', { name: 'Now playing' }).waitFor();
+	await shoot('now-playing');
 	if (!process.env.RESULTS) {
 		return;
 	}
@@ -47,5 +51,11 @@ test('screens', async ({ context, page: organizer }) => {
 	for (let recorded = 0; recorded < results && (await first.count()) > 0; recorded++) {
 		await first.click();
 	}
+	// The TV cycles each second, so wait for the screen to shoot: the bracket, then the champion once finished.
+	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 	await shoot('results');
+	if ((await first.count()) === 0) {
+		await tv.getByRole('heading', { name: 'Tonight’s Champion' }).waitFor();
+		await shoot('champion');
+	}
 });

@@ -11,6 +11,8 @@ import {
 	start,
 	getWinnersBracketPicture,
 	hasLostInWinnersBracket,
+	getNowPlaying,
+	setScreenSeconds,
 	type MatchOnBoard,
 	type Player,
 	type Tournament,
@@ -136,6 +138,32 @@ describe('setting out Boards', () => {
 			expect(setBoardCount(tournament, typed)).toEqual({
 				ok: false,
 				reason: 'The number of Boards is a whole number above zero, like 12.',
+			});
+		}
+	});
+});
+
+describe('timing the TV screens', () => {
+	it('shows each TV screen for 20 seconds unless the Organizer changes it, even once Started', () => {
+		expect(createTournament().screenSeconds).toBe(20);
+
+		const started = startTournament(5, 4);
+		const changed = expectOk(setScreenSeconds(started, ' 45 '));
+
+		expect(changed.screenSeconds).toBe(45);
+	});
+
+	it('refuses a blank, or anything but a whole number above zero', () => {
+		const tournament = createTournament();
+
+		expect(setScreenSeconds(tournament, ' ')).toEqual({
+			ok: false,
+			reason: 'Type how many seconds the TV shows each screen.',
+		});
+		for (const typed of ['0', '-5', '2.5', 'ten']) {
+			expect(setScreenSeconds(tournament, typed)).toEqual({
+				ok: false,
+				reason: 'The TV shows each screen for a whole number of seconds above zero, like 20.',
 			});
 		}
 	});
@@ -305,6 +333,27 @@ describe('recording winners', () => {
 
 		expect(getWinnersBracketPicture(after)!.champion).toEqual(a);
 		expect(getMatchesOnBoards(after)).toEqual([]);
+	});
+
+	it('finishes the Tournament once the final has a winner, and refuses any more winners or a Start', () => {
+		const tournament = startTournament(3, 2);
+		const [first, waiting] = getMatchesOnBoards(tournament);
+		const [a] = first.players as [Player, Player];
+		const afterFirst = expectOk(recordWinner(tournament, first.match, a.id));
+		expect(afterFirst.phase).toBe('inProgress');
+
+		const finished = expectOk(recordWinner(afterFirst, waiting.match, a.id));
+
+		expect(finished.phase).toBe('finished');
+		expect(getWinnersBracketPicture(finished)!.champion).toEqual(a);
+		expect(recordWinner(finished, waiting.match, a.id)).toEqual({
+			ok: false,
+			reason: 'The Tournament is finished.',
+		});
+		expect(start(finished)).toEqual({
+			ok: false,
+			reason: 'The Tournament has already started.',
+		});
 	});
 
 	it('plays a Tournament with Byes through to a champion, seating each winner at a Board as soon as they win', () => {
@@ -487,6 +536,36 @@ describe('the Winners Bracket picture', () => {
 				{ players: [dan, eve], board: 3 },
 			],
 		]);
+	});
+});
+
+describe('Now playing', () => {
+	it('lists each Match being played, with its Board and both Players, but not a Player waiting', () => {
+		// 5 Players: Ann and Bob play on Board 1, Cat waits at Board 2 for its winner, Dan and Eve play on Board 3.
+		let tournament = startTournament(5, 4);
+		const [first, waiting, byes] = getMatchesOnBoards(tournament);
+		const [ann, bob] = first.players as [Player, Player];
+		const cat = waiting.players[0];
+		const [dan, eve] = byes.players as [Player, Player];
+		const listNowPlaying = () =>
+			getNowPlaying(tournament).map(({ board, players: [a, b] }) => [board, a.name, b.name]);
+
+		expect(listNowPlaying()).toEqual([
+			[1, ann.name, bob.name],
+			[3, dan.name, eve.name],
+		]);
+
+		tournament = expectOk(recordWinner(tournament, first.match, ann.id));
+		expect(listNowPlaying()).toEqual([
+			[2, ann.name, cat.name],
+			[3, dan.name, eve.name],
+		]);
+	});
+
+	it('lists nothing before Start', () => {
+		const drawn = expectOk(makeSeededDraw(5, 4));
+
+		expect(getNowPlaying(drawn)).toEqual([]);
 	});
 });
 

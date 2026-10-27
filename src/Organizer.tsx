@@ -14,6 +14,7 @@ import {
 	removePlayer,
 	renamePlayer,
 	setBoardCount,
+	setScreenSeconds,
 	start,
 	getWinnersBracketPicture,
 	type MatchPlace,
@@ -37,6 +38,7 @@ const headings: Record<Phase, string> = {
 	registration: 'Register Players',
 	drawShown: 'Tonight’s Draw',
 	inProgress: 'Now playing',
+	finished: 'Tournament finished',
 };
 
 // Saves the change if the core accepted it. Returns the reason it was refused, or '' if accepted.
@@ -214,37 +216,42 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
 					)}
 				</ul>
 			</section>
-			<section aria-label="Boards and the Draw" className="w-80">
-				<h2 className="text-xl font-bold">Boards</h2>
-				<label className="mt-2 flex items-center gap-2">
-					Number of Boards
-					<input
-						type="text"
-						inputMode="numeric"
-						autoComplete="off"
-						value={boardCount}
-						onChange={(event) => changeBoardCount(event.target.value)}
-						className={`${textInput} w-20`}
+			<div className="w-80">
+				<section aria-label="Boards and the Draw">
+					<h2 className="text-xl font-bold">Boards</h2>
+					<label className="mt-2 flex items-center gap-2">
+						Number of Boards
+						<input
+							type="text"
+							inputMode="numeric"
+							autoComplete="off"
+							value={boardCount}
+							onChange={(event) => changeBoardCount(event.target.value)}
+							className={`${textInput} w-20`}
+						/>
+					</label>
+					{!boardsRefusal && tournament.boards.length > 0 && (
+						<p className="mt-2 text-gray-700">
+							Placards 1 to {tournament.boards.length}
+						</p>
+					)}
+					<button
+						type="button"
+						className={`${primaryButton} mt-8 w-full`}
+						onClick={() => drawDialog.current?.showModal()}
+					>
+						Make the Draw
+					</button>
+					<ConfirmDialog
+						ref={drawDialog}
+						message="Make the Draw? Registration will close: no Player can be added, renamed or removed afterwards."
+						confirmLabel="Make the Draw"
+						onConfirm={draw}
 					/>
-				</label>
-				{!boardsRefusal && tournament.boards.length > 0 && (
-					<p className="mt-2 text-gray-700">Placards 1 to {tournament.boards.length}</p>
-				)}
-				<button
-					type="button"
-					className={`${primaryButton} mt-8 w-full`}
-					onClick={() => drawDialog.current?.showModal()}
-				>
-					Make the Draw
-				</button>
-				<ConfirmDialog
-					ref={drawDialog}
-					message="Make the Draw? Registration will close: no Player can be added, renamed or removed afterwards."
-					confirmLabel="Make the Draw"
-					onConfirm={draw}
-				/>
-				<Refusal reason={boardsRefusal} />
-			</section>
+					<Refusal reason={boardsRefusal} />
+				</section>
+				<ScreenTiming tournament={tournament} apply={apply} />
+			</div>
 		</div>
 	);
 };
@@ -316,8 +323,37 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 						<Refusal reason={refusal} />
 					</>
 				)}
+				<ScreenTiming tournament={tournament} apply={apply} />
 			</section>
 		</div>
+	);
+};
+
+// How long the TV shows each screen it cycles through once Started. Saved as it is typed, like the Boards.
+const ScreenTiming = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
+	const [seconds, setTypedSeconds] = useState(String(tournament.screenSeconds));
+	const [refusal, setRefusal] = useState('');
+	const changeSeconds = (typed: string) => {
+		setTypedSeconds(typed);
+		const reason = apply(setScreenSeconds(tournament, typed));
+		setRefusal(reason);
+	};
+	return (
+		<section aria-label="TV screens" className="mt-8 first:mt-0">
+			<h2 className="text-xl font-bold">TV screens</h2>
+			<label className="mt-2 flex items-center gap-2">
+				Seconds per TV screen
+				<input
+					type="text"
+					inputMode="numeric"
+					autoComplete="off"
+					value={seconds}
+					onChange={(event) => changeSeconds(event.target.value)}
+					className={`${textInput} w-20`}
+				/>
+			</label>
+			<Refusal reason={refusal} />
+		</section>
 	);
 };
 

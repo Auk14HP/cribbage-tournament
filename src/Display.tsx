@@ -2,9 +2,11 @@
  * The display route: read-only, shown on the TV. Redraws whenever the saved Tournament changes.
  * Sizes are in vh so text scales with the TV: large and high-contrast, readable from across the room.
  */
+import { useEffect, useState } from 'react';
 import type { Store } from './storage';
 import {
 	getMatchesOnBoards,
+	getNowPlaying,
 	getWinnersBracketPicture,
 	hasLostInWinnersBracket,
 	type BracketMatch,
@@ -20,8 +22,100 @@ export const Display = ({ store }: { store: Store<Tournament> }) => {
 		<main className="min-h-screen bg-black px-[4vw] py-[3vh] text-white">
 			{tournament.phase === 'registration' && <Players tournament={tournament} />}
 			{tournament.phase === 'drawShown' && <Draw tournament={tournament} />}
-			{tournament.phase === 'inProgress' && <WinnersBracket tournament={tournament} />}
+			{tournament.phase === 'inProgress' && (
+				<Cycle key="inProgress" tournament={tournament} screens={playingScreens} />
+			)}
+			{tournament.phase === 'finished' && (
+				<Cycle key="finished" tournament={tournament} screens={finishedScreens} />
+			)}
 		</main>
+	);
+};
+
+// The screens the TV cycles through, each for the Tournament's screenSeconds.
+const cycledScreens = {
+	winnersBracket: (tournament: Tournament) => <WinnersBracket tournament={tournament} />,
+	nowPlaying: (tournament: Tournament) => <NowPlaying tournament={tournament} />,
+	champion: (tournament: Tournament) => <Champion tournament={tournament} />,
+};
+
+type CycledScreen = keyof typeof cycledScreens;
+
+// Once Started, from the Winners Bracket. Once finished, from the champion, so the night ends on them.
+const playingScreens: readonly CycledScreen[] = ['winnersBracket', 'nowPlaying'];
+const finishedScreens: readonly CycledScreen[] = ['champion', 'winnersBracket'];
+
+/*
+ * Shows each screen in turn, from the first. A new screenSeconds restarts the current screen's time, so
+ * the change shows at once.
+ */
+const Cycle = ({
+	tournament,
+	screens,
+}: {
+	tournament: Tournament;
+	screens: readonly CycledScreen[];
+}) => {
+	const [shown, setShown] = useState(0);
+	useEffect(() => {
+		const timer = setTimeout(
+			() => setShown((index) => (index + 1) % screens.length),
+			tournament.screenSeconds * 1000,
+		);
+		return () => clearTimeout(timer);
+	}, [shown, screens.length, tournament.screenSeconds]);
+	return cycledScreens[screens[shown]](tournament);
+};
+
+/*
+ * Columns and text sizes for Now playing, by how many Matches are being played: as large as fits, down to
+ * a 32-place bracket's 16 first-Round Matches in four rows of four.
+ */
+const nowPlayingLayouts = [
+	{ upTo: 4, grid: 'grid-cols-2', text: 'text-[8vh]' },
+	{ upTo: 9, grid: 'grid-cols-3', text: 'text-[6vh]' },
+	{ upTo: Infinity, grid: 'grid-cols-4', text: 'text-[4.5vh]' },
+];
+
+// Each Match being played, its Board and both Players, in big text so a Player can find their seat.
+const NowPlaying = ({ tournament }: { tournament: Tournament }) => {
+	const matches = getNowPlaying(tournament);
+	const layout = nowPlayingLayouts.find(({ upTo }) => matches.length <= upTo)!;
+	return (
+		<>
+			<h1 className="text-[6vh] leading-none font-bold">Now playing</h1>
+			<ul
+				aria-label="Matches"
+				className={`mt-[3vh] grid gap-[2vh] ${layout.grid} ${layout.text}`}
+			>
+				{matches.map(({ board, players: [a, b] }) => (
+					<li
+						key={board}
+						className="rounded-[1vh] border-[0.3vh] border-gray-500 px-[1.5vw] py-[1vh] leading-tight font-semibold"
+					>
+						<span className="block font-bold text-yellow-300">Board {board}</span>
+						<span className="block truncate">{a.name}</span>
+						<span className="block truncate">{b.name}</span>
+					</li>
+				))}
+			</ul>
+		</>
+	);
+};
+
+/*
+ * Once the Tournament is finished: the champion, as large as the TV allows. The Winners Bracket's is the
+ * night's only champion until the Losers Bracket is played.
+ */
+const Champion = ({ tournament }: { tournament: Tournament }) => {
+	const { champion } = getWinnersBracketPicture(tournament)!;
+	return (
+		<div className="flex h-[94vh] flex-col items-center justify-center text-center">
+			<h1 className="text-[8vh] leading-none font-bold">Tonight’s Champion</h1>
+			<p className="mt-[6vh] text-[14vh] leading-none font-bold text-yellow-300">
+				{champion!.name}
+			</p>
+		</div>
 	);
 };
 
