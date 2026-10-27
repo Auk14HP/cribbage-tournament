@@ -105,7 +105,7 @@ test('the TV holds Tonight’s Draw from the moment the Draw is made until the O
 	expect(consoleErrors).toEqual([]);
 });
 
-test('each winner the Organizer records reaches the TV’s Winners Bracket, through to the champions screen', async ({
+test('each winner the Organizer records reaches the TV’s Winners Bracket, through to the champion screen', async ({
 	context,
 	page: organizer,
 }) => {
@@ -134,12 +134,12 @@ test('each winner the Organizer records reaches the TV’s Winners Bracket, thro
 	await expect(tvFinal).not.toContainText('—');
 
 	await matches.first().getByRole('button', { name: winner! }).click();
-	const champions = tv.getByRole('heading', { name: 'Tonight’s Champions' });
-	await expect(champions).toBeVisible();
+	const championScreen = tv.getByRole('heading', { name: 'Tonight’s Champion' });
+	await expect(championScreen).toBeVisible();
 	await expect(tv.getByText(winner!, { exact: true })).toBeVisible();
 
 	await tv.reload();
-	await expect(champions).toBeVisible();
+	await expect(championScreen).toBeVisible();
 	await expect(tv.getByText(winner!, { exact: true })).toBeVisible();
 
 	expect(consoleErrors).toEqual([]);

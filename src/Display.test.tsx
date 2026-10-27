@@ -177,8 +177,8 @@ describe('the TV cycle', () => {
 	});
 });
 
-describe('the champions screen', () => {
-	it('shows the champion once the final has a winner, and stops cycling', () => {
+describe('the champion screen', () => {
+	it('shows the champion once the final has a winner, then cycles it with the finished bracket', () => {
 		vi.useFakeTimers();
 		const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
 		render(<Display store={store} />);
@@ -191,21 +191,26 @@ describe('the champions screen', () => {
 		tournament = expectOk(start(tournament));
 		const [final] = getMatchesOnBoards(tournament);
 		const champion = final.players[0];
+		const readHeading = () => screen.getByRole('heading', { level: 1 }).textContent;
+		const wait = (seconds: number) => {
+			act(() => {
+				vi.advanceTimersByTime(seconds * 1000);
+			});
+		};
 
 		tournament = expectOk(recordWinner(tournament, final.match, champion.id));
 		act(() => store.save(tournament));
 
-		const expectChampionsShown = () => {
-			expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-				'Tonight’s Champions',
-			);
-			expect(screen.getByText(champion.name)).toBeInTheDocument();
-		};
-		expectChampionsShown();
-		act(() => {
-			vi.advanceTimersByTime(120_000);
-		});
-		expectChampionsShown();
+		// With no Losers Bracket played, the night has one champion.
+		expect(readHeading()).toBe('Tonight’s Champion');
+		expect(screen.getByText(champion.name)).toBeInTheDocument();
+
+		wait(20);
+		expect(readHeading()).toBe('Winners Bracket');
+		expect(screen.getByText(`Champion: ${champion.name}`)).toBeInTheDocument();
+
+		wait(20);
+		expect(readHeading()).toBe('Tonight’s Champion');
 	});
 });
 
