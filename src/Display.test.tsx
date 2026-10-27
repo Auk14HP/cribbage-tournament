@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { act, cleanup, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Display } from './Display';
 import { createLocalStorageStore } from './storage';
 import type { Result } from './result';
@@ -12,6 +12,7 @@ import {
 	recordWinner,
 	registerPlayer,
 	setBoardCount,
+	setScreenSeconds,
 	start,
 	tournamentVersion,
 	type Player,
@@ -21,6 +22,7 @@ import {
 const key = 'display-test';
 
 afterEach(() => {
+	vi.useRealTimers();
 	cleanup();
 	localStorage.clear();
 });
@@ -82,7 +84,7 @@ describe('Tonight’s Draw screen', () => {
 });
 
 describe('the Winners Bracket screen', () => {
-	it('shows the bracket after Start, with Bye Players in Round 2, updating live and highlighting the champion', () => {
+	it('shows the bracket after Start, with Bye Players in Round 2, updating live', () => {
 		const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
 		render(<Display store={store} />);
 		let tournament = createTournament();
@@ -116,10 +118,94 @@ describe('the Winners Bracket screen', () => {
 
 		recordWinnerOf(first.match, a);
 		expect(listRound('Final')).toEqual([`Board 2${a.name}${bye.name}`]);
+	});
+});
 
-		recordWinnerOf(waiting.match, bye);
-		expect(listRound('Final')).toEqual([`${a.name}${bye.name}`]);
-		expect(screen.getByText(`Champion: ${bye.name}`)).toBeInTheDocument();
+describe('the TV cycle', () => {
+	it('holds Tonight’s Draw until Start, then cycles the Winners Bracket and Now playing, each for the set time', () => {
+		vi.useFakeTimers();
+		const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
+		render(<Display store={store} />);
+		let tournament = createTournament();
+		for (const name of ['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe']) {
+			tournament = expectOk(registerPlayer(tournament, name));
+		}
+		tournament = expectOk(setBoardCount(tournament, '3'));
+		tournament = expectOk(makeDraw(tournament, Math.random));
+		act(() => store.save(tournament));
+		const readHeading = () => screen.getByRole('heading', { level: 1 }).textContent;
+		const wait = (seconds: number) => {
+			act(() => {
+				vi.advanceTimersByTime(seconds * 1000);
+			});
+		};
+
+		wait(60);
+		expect(readHeading()).toBe('Tonight’s Draw');
+
+		tournament = expectOk(start(tournament));
+		act(() => store.save(tournament));
+		expect(readHeading()).toBe('Winners Bracket');
+		wait(19);
+		expect(readHeading()).toBe('Winners Bracket');
+		wait(1);
+		expect(readHeading()).toBe('Now playing');
+
+		/*
+		 * 5 Players: a first-Round Match on Board 1, a Bye Player at Board 2 waiting for its winner, and a
+		 * Match between the other two Bye Players on Board 3. The waiting Player isn't playing yet.
+		 */
+		const [first, , byes] = getMatchesOnBoards(tournament);
+		const describeCard = ({ board, players: [a, b] }: typeof first) =>
+			`Board ${board}${a.name}${(b as Player).name}`;
+		const cards = within(screen.getByRole('list', { name: 'Matches' })).getAllByRole(
+			'listitem',
+		);
+		expect(cards.map((card) => card.textContent)).toEqual([
+			describeCard(first),
+			describeCard(byes),
+		]);
+
+		wait(20);
+		expect(readHeading()).toBe('Winners Bracket');
+
+		// A new time takes effect without a refresh.
+		tournament = expectOk(setScreenSeconds(tournament, '5'));
+		act(() => store.save(tournament));
+		wait(5);
+		expect(readHeading()).toBe('Now playing');
+	});
+});
+
+describe('the champions screen', () => {
+	it('shows the champion once the final has a winner, and stops cycling', () => {
+		vi.useFakeTimers();
+		const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
+		render(<Display store={store} />);
+		let tournament = createTournament();
+		for (const name of ['Dave K.', 'Big Dave']) {
+			tournament = expectOk(registerPlayer(tournament, name));
+		}
+		tournament = expectOk(setBoardCount(tournament, '1'));
+		tournament = expectOk(makeDraw(tournament, Math.random));
+		tournament = expectOk(start(tournament));
+		const [final] = getMatchesOnBoards(tournament);
+		const champion = final.players[0];
+
+		tournament = expectOk(recordWinner(tournament, final.match, champion.id));
+		act(() => store.save(tournament));
+
+		const expectChampionsShown = () => {
+			expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+				'Tonight’s Champions',
+			);
+			expect(screen.getByText(champion.name)).toBeInTheDocument();
+		};
+		expectChampionsShown();
+		act(() => {
+			vi.advanceTimersByTime(120_000);
+		});
+		expectChampionsShown();
 	});
 });
 

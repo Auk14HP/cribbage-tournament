@@ -2,9 +2,11 @@
  * The display route: read-only, shown on the TV. Redraws whenever the saved Tournament changes.
  * Sizes are in vh so text scales with the TV: large and high-contrast, readable from across the room.
  */
+import { useEffect, useState } from 'react';
 import type { Store } from './storage';
 import {
 	getMatchesOnBoards,
+	getNowPlaying,
 	getWinnersBracketPicture,
 	hasLostInWinnersBracket,
 	type BracketMatch,
@@ -20,8 +22,82 @@ export const Display = ({ store }: { store: Store<Tournament> }) => {
 		<main className="min-h-screen bg-black px-[4vw] py-[3vh] text-white">
 			{tournament.phase === 'registration' && <Players tournament={tournament} />}
 			{tournament.phase === 'drawShown' && <Draw tournament={tournament} />}
-			{tournament.phase === 'inProgress' && <WinnersBracket tournament={tournament} />}
+			{tournament.phase === 'inProgress' && <Cycle tournament={tournament} />}
+			{tournament.phase === 'finished' && <Champions tournament={tournament} />}
 		</main>
+	);
+};
+
+// The screens the TV cycles through once Started, in order, each for the Tournament's screenSeconds.
+const screens = ['winnersBracket', 'nowPlaying'] as const;
+
+/*
+ * Shows each screen in turn, starting from the Winners Bracket at Start. A new screenSeconds restarts the
+ * current screen's time, so the change shows at once.
+ */
+const Cycle = ({ tournament }: { tournament: Tournament }) => {
+	const [shown, setShown] = useState(0);
+	useEffect(() => {
+		const timer = setTimeout(
+			() => setShown((index) => (index + 1) % screens.length),
+			tournament.screenSeconds * 1000,
+		);
+		return () => clearTimeout(timer);
+	}, [shown, tournament.screenSeconds]);
+	return screens[shown] === 'winnersBracket' ? (
+		<WinnersBracket tournament={tournament} />
+	) : (
+		<NowPlaying tournament={tournament} />
+	);
+};
+
+/*
+ * Columns and text sizes for Now playing, by how many Matches are being played: as large as fits, down to
+ * a 32-place bracket's 16 first-Round Matches in four rows of four.
+ */
+const nowPlayingLayouts = [
+	{ upTo: 4, grid: 'grid-cols-2', text: 'text-[8vh]' },
+	{ upTo: 9, grid: 'grid-cols-3', text: 'text-[6vh]' },
+	{ upTo: Infinity, grid: 'grid-cols-4', text: 'text-[4.5vh]' },
+];
+
+// Each Match being played, its Board and both Players, in big text so a Player can find their seat.
+const NowPlaying = ({ tournament }: { tournament: Tournament }) => {
+	const matches = getNowPlaying(tournament);
+	const layout = nowPlayingLayouts.find(({ upTo }) => matches.length <= upTo)!;
+	return (
+		<>
+			<h1 className="text-[6vh] leading-none font-bold">Now playing</h1>
+			<ul
+				aria-label="Matches"
+				className={`mt-[3vh] grid gap-[2vh] ${layout.grid} ${layout.text}`}
+			>
+				{matches.map(({ board, players: [a, b] }) => (
+					<li
+						key={board}
+						className="rounded-[1vh] border-[0.3vh] border-gray-500 px-[1.5vw] py-[1vh] leading-tight font-semibold"
+					>
+						<span className="block font-bold text-yellow-300">Board {board}</span>
+						<span className="block truncate">{a.name}</span>
+						<span className="block truncate">{b.name}</span>
+					</li>
+				))}
+			</ul>
+		</>
+	);
+};
+
+// Held once the Tournament is finished: the champion, as large as the TV allows.
+const Champions = ({ tournament }: { tournament: Tournament }) => {
+	const { champion } = getWinnersBracketPicture(tournament)!;
+	return (
+		<div className="flex h-[94vh] flex-col items-center justify-center text-center">
+			<h1 className="text-[8vh] leading-none font-bold">Tonight’s Champions</h1>
+			<p className="mt-[8vh] text-[5vh] font-semibold text-gray-300">Winners Bracket</p>
+			<p className="mt-[2vh] text-[14vh] leading-none font-bold text-yellow-300">
+				{champion!.name}
+			</p>
+		</div>
 	);
 };
 
@@ -218,18 +294,11 @@ const describeFinal = (tournament: Tournament, rounds: readonly RoundMatches[]):
  * Match is centred between the two that feed it, and bracket lines join them.
  */
 const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
-	const { rounds, champion } = getWinnersBracketPicture(tournament)!;
+	const { rounds } = getWinnersBracketPicture(tournament)!;
 	const earlier = rounds.slice(0, -1).map((_, round) => round);
 	return (
 		<div className="flex h-[94vh] flex-col">
-			<div className="flex items-baseline justify-between">
-				<h1 className="text-[6vh] leading-none font-bold">Winners Bracket</h1>
-				{champion && (
-					<p className="text-[6vh] leading-none font-bold text-yellow-300">
-						Champion: {champion.name}
-					</p>
-				)}
-			</div>
+			<h1 className="text-[6vh] leading-none font-bold">Winners Bracket</h1>
 			<div
 				className={`mt-[2vh] flex flex-1 gap-[1vw] leading-[1.15] ${bracketText[rounds.length - 1]}`}
 			>
@@ -240,11 +309,7 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 						slots={describeHalf(tournament, rounds, round, 'left')}
 					/>
 				))}
-				<BracketColumn
-					name="Final"
-					slots={[describeFinal(tournament, rounds)]}
-					champion={champion}
-				/>
+				<BracketColumn name="Final" slots={[describeFinal(tournament, rounds)]} />
 				{[...earlier].reverse().map((round) => (
 					<BracketColumn
 						key={`right ${round}`}
@@ -261,11 +326,9 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 const BracketColumn = ({
 	name,
 	slots,
-	champion,
 }: {
 	name: string;
 	slots: readonly (BracketSlot | undefined)[];
-	champion?: Player;
 }) => (
 	<section className="flex flex-1 flex-col">
 		<h2 className="text-center text-[2.5vh] font-bold text-gray-300">{name}</h2>
@@ -273,7 +336,7 @@ const BracketColumn = ({
 			{slots.map((slot, i) =>
 				slot ? (
 					<li key={i} className={`relative flex flex-1 items-center ${slot.lines}`}>
-						<MatchBox match={slot.match} champion={champion} isOnPath={slot.isOnPath} />
+						<MatchBox match={slot.match} isOnPath={slot.isOnPath} />
 					</li>
 				) : (
 					// A Bye's place: its Player is in Round 2. It draws no line.
@@ -284,45 +347,28 @@ const BracketColumn = ({
 	</section>
 );
 
-// The winner bright, the loser faded, and faded further once the final has a champion.
-const getPlayerShade = (match: BracketMatch, player: Player | undefined, champion?: Player) => {
+// The winner bright, the loser faded.
+const getPlayerShade = (match: BracketMatch, player: Player | undefined) => {
 	if (match.winner === undefined) {
 		return '';
 	}
-	if (player?.id === match.winner.id) {
-		return 'font-bold';
-	}
-	return champion ? 'text-gray-700' : 'text-gray-500';
+	return player?.id === match.winner.id ? 'font-bold' : 'text-gray-500';
 };
 
 /*
  * A Match's two Players: the winner bright, the loser faded, a Player still to come as a dash. A Match
  * holding a Board names it. A Match on the path of a Player still in the Winners Bracket has a green
- * border. The final turns yellow once it has a champion.
+ * border.
  */
-const MatchBox = ({
-	match,
-	champion,
-	isOnPath,
-}: {
-	match: BracketMatch;
-	champion?: Player;
-	isOnPath: boolean;
-}) => (
+const MatchBox = ({ match, isOnPath }: { match: BracketMatch; isOnPath: boolean }) => (
 	<div
-		className={`w-full rounded-[1vh] border-[0.3vh] px-[0.6vw] py-[0.3vh] font-semibold ${champion ? 'border-yellow-300 bg-yellow-300 text-black' : getPathShade('card', isOnPath)}`}
+		className={`w-full rounded-[1vh] border-[0.3vh] px-[0.6vw] py-[0.3vh] font-semibold ${getPathShade('card', isOnPath)}`}
 	>
 		{match.board !== undefined && (
 			<span className="block text-yellow-300">Board {match.board}</span>
 		)}
-		<MatchPlayer
-			player={match.players[0]}
-			shade={getPlayerShade(match, match.players[0], champion)}
-		/>
-		<MatchPlayer
-			player={match.players[1]}
-			shade={getPlayerShade(match, match.players[1], champion)}
-		/>
+		<MatchPlayer player={match.players[0]} shade={getPlayerShade(match, match.players[0])} />
+		<MatchPlayer player={match.players[1]} shade={getPlayerShade(match, match.players[1])} />
 	</div>
 );
 

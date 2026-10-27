@@ -245,6 +245,43 @@ describe('the organizer route', () => {
 		expect(screen.getByText(`Champion: ${bye}`)).toBeInTheDocument();
 	});
 
+	it('sets how long the TV shows each screen, from 20 seconds, before or after Start', async () => {
+		const user = showOrganizer();
+		const getSecondsBox = () => screen.getByLabelText('Seconds per TV screen');
+		expect(getSecondsBox()).toHaveValue('20');
+
+		await user.clear(getSecondsBox());
+		await user.type(getSecondsBox(), '30');
+		cleanup();
+		showOrganizer();
+		expect(getSecondsBox()).toHaveValue('30');
+
+		for (const name of ['Dave K.', 'Big Dave']) {
+			await register(user, name);
+		}
+		await setBoardCount(user, '1');
+		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
+		await answerDialog(user, 'Make the Draw');
+		await user.click(screen.getByRole('button', { name: 'Start' }));
+		await user.clear(getSecondsBox());
+		await user.type(getSecondsBox(), '45');
+		cleanup();
+		showOrganizer();
+		expect(getSecondsBox()).toHaveValue('45');
+	});
+
+	it('shows why a screen time is refused, beside it', async () => {
+		const user = showOrganizer();
+
+		await user.clear(screen.getByLabelText('Seconds per TV screen'));
+		await user.type(screen.getByLabelText('Seconds per TV screen'), '0');
+
+		expect(getRefusalIn('TV screens')).toHaveTextContent(
+			'The TV shows each screen for a whole number of seconds above zero, like 20.',
+		);
+		expect(getRefusalIn('Boards and the Draw')).toBeEmptyDOMElement();
+	});
+
 	it('resumes the saved Tournament when reopened', async () => {
 		const user = showOrganizer();
 		await register(user, 'Dave K.');

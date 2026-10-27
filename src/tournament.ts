@@ -53,8 +53,9 @@ export interface WinnersBracket {
  * registration: Players and Boards are being entered.
  * drawShown: the Draw is made and the TV holds Tonight’s Draw screen until the Organizer presses Start.
  * inProgress: Matches are being played.
+ * finished: the final has a winner, and the TV holds the champions screen.
  */
-export type Phase = 'registration' | 'drawShown' | 'inProgress';
+export type Phase = 'registration' | 'drawShown' | 'inProgress' | 'finished';
 
 export interface Tournament {
 	readonly phase: Phase;
@@ -63,16 +64,19 @@ export interface Tournament {
 	// In number order.
 	readonly boards: readonly BoardNumber[];
 	readonly winnersBracket?: WinnersBracket;
+	// How long the TV shows each screen it cycles through once Started.
+	readonly screenSeconds: number;
 }
 
 // Bump whenever the Tournament's shape changes, so a Tournament saved in an older shape loads as blank.
-export const tournamentVersion = 4;
+export const tournamentVersion = 5;
 
 export const createTournament = (): Tournament => ({
 	phase: 'registration',
 	players: [],
 	nextPlayerId: 1,
 	boards: [],
+	screenSeconds: 20,
 });
 
 export const registerPlayer = (tournament: Tournament, typedName: string): Result<Tournament> => {
@@ -169,11 +173,11 @@ export const setBoardCount = (tournament: Tournament, typedCount: string): Resul
 	if (tournament.phase !== 'registration') {
 		return { ok: false, reason: 'The number of Boards can’t change once the Draw is made.' };
 	}
-	const typed = typedCount.trim();
-	if (typed === '') {
+	const count = parseCount(typedCount);
+	if (count === 'blank') {
 		return { ok: false, reason: 'Type how many Boards there are.' };
 	}
-	if (!/^[0-9]+$/.test(typed) || Number(typed) === 0) {
+	if (count === 'notCount') {
 		return {
 			ok: false,
 			reason: 'The number of Boards is a whole number above zero, like 12.',
@@ -181,8 +185,35 @@ export const setBoardCount = (tournament: Tournament, typedCount: string): Resul
 	}
 	return {
 		ok: true,
-		value: { ...tournament, boards: listIndexes(Number(typed)).map((i) => i + 1) },
+		value: { ...tournament, boards: listIndexes(count).map((i) => i + 1) },
 	};
+};
+
+// A typed whole number above zero, or why it isn't one: nothing typed, or something else.
+const parseCount = (typed: string): number | 'blank' | 'notCount' => {
+	const trimmed = typed.trim();
+	if (trimmed === '') {
+		return 'blank';
+	}
+	return /^[0-9]+$/.test(trimmed) && Number(trimmed) > 0 ? Number(trimmed) : 'notCount';
+};
+
+// Can change at any time: the TV picks it up at once, without a refresh.
+export const setScreenSeconds = (
+	tournament: Tournament,
+	typedSeconds: string,
+): Result<Tournament> => {
+	const seconds = parseCount(typedSeconds);
+	if (seconds === 'blank') {
+		return { ok: false, reason: 'Type how many seconds the TV shows each screen.' };
+	}
+	if (seconds === 'notCount') {
+		return {
+			ok: false,
+			reason: 'The TV shows each screen for a whole number of seconds above zero, like 20.',
+		};
+	}
+	return { ok: true, value: { ...tournament, screenSeconds: seconds } };
 };
 
 export const makeDraw = (tournament: Tournament, random: Random): Result<Tournament> => {
@@ -242,7 +273,7 @@ export const start = (tournament: Tournament): Result<Tournament> => {
 	if (tournament.phase === 'registration') {
 		return { ok: false, reason: 'Make the Draw before starting.' };
 	}
-	if (tournament.phase === 'inProgress') {
+	if (tournament.phase !== 'drawShown') {
 		return { ok: false, reason: 'The Tournament has already started.' };
 	}
 	return { ok: true, value: { ...tournament, phase: 'inProgress' } };
@@ -269,6 +300,9 @@ export const recordWinner = (
 	match: MatchPlace,
 	winner: PlayerId,
 ): Result<Tournament> => {
+	if (tournament.phase === 'finished') {
+		return { ok: false, reason: 'The Tournament is finished.' };
+	}
 	if (tournament.phase !== 'inProgress') {
 		return { ok: false, reason: 'Press Start before recording a winner.' };
 	}
@@ -288,18 +322,18 @@ export const recordWinner = (
 		onBoards: bracket.onBoards.filter((on) => !isSameMatch(on.match, match)),
 		results: [...bracket.results, { match, winner }],
 	};
-	if (match.round < countRounds(bracket)) {
-		const following = { round: match.round + 1, place: Math.floor(match.place / 2) };
-		if (findBoard(next, following) === undefined) {
-			/*
-			 * There is always a free Board: each winner recorded frees a Board and takes at most one, so
-			 * no more Boards are ever in use than the Draw needed.
-			 */
-			const board = tournament.boards.find(
-				(b) => !next.onBoards.some((on) => on.board === b),
-			)!;
-			next = { ...next, onBoards: [...next.onBoards, { match: following, board }] };
-		}
+	// The final's winner is the champion, and finishes the Tournament.
+	if (match.round === countRounds(bracket)) {
+		return { ok: true, value: { ...tournament, phase: 'finished', winnersBracket: next } };
+	}
+	const following = { round: match.round + 1, place: Math.floor(match.place / 2) };
+	if (findBoard(next, following) === undefined) {
+		/*
+		 * There is always a free Board: each winner recorded frees a Board and takes at most one, so
+		 * no more Boards are ever in use than the Draw needed.
+		 */
+		const board = tournament.boards.find((b) => !next.onBoards.some((on) => on.board === b))!;
+		next = { ...next, onBoards: [...next.onBoards, { match: following, board }] };
 	}
 	return { ok: true, value: { ...tournament, winnersBracket: next } };
 };
@@ -370,6 +404,24 @@ export const getMatchesOnBoards = (tournament: Tournament): readonly MatchOnBoar
 			return { board, match, players: 'name' in a ? [a, b] : [b as Player, a] };
 		})
 		.sort((a, b) => a.board - b.board);
+};
+
+export interface MatchBeingPlayed {
+	readonly board: BoardNumber;
+	readonly players: readonly [Player, Player];
+}
+
+/*
+ * Every Match being played, in Board order: both its Players are known and sit at its Board. A Player
+ * waiting for their opponent is not playing yet. None before Start.
+ */
+export const getNowPlaying = (tournament: Tournament): readonly MatchBeingPlayed[] => {
+	if (tournament.phase !== 'inProgress') {
+		return [];
+	}
+	return getMatchesOnBoards(tournament).flatMap(({ board, players: [a, b] }) =>
+		'name' in b ? [{ board, players: [a, b] as const }] : [],
+	);
 };
 
 const findPlayer = (tournament: Tournament, id: PlayerId): Player =>
