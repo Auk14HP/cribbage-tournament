@@ -351,7 +351,12 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 	);
 };
 
-// One Round column, or half of one: its slots share the column's height equally.
+/*
+ * One Round column, or half of one: its slots share the column's height equally. Columns start at their
+ * content's width but may shrink below it, so long names never push a column off the TV, and a header
+ * never wraps, so every column's Matches start level. No column shrinks narrower than its header: 11vh
+ * is a little wider than "Round 4" at the header's 2.5vh.
+ */
 const BracketColumn = ({
 	name,
 	slots,
@@ -361,8 +366,10 @@ const BracketColumn = ({
 	slots: readonly (BracketSlot | undefined)[];
 	champion?: Player;
 }) => (
-	<section className="flex flex-1 flex-col">
-		<h2 className="text-center text-[2.5vh] font-bold text-gray-300">{name}</h2>
+	<section className="flex min-w-[11vh] flex-auto flex-col">
+		<h2 className="text-center text-[2.5vh] font-bold whitespace-nowrap text-gray-300">
+			{name}
+		</h2>
 		<ul aria-label={name} className="flex flex-1 flex-col">
 			{slots.map((slot, i) =>
 				slot ? (
