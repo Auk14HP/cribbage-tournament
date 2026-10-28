@@ -103,9 +103,6 @@ export const Organizer = ({ store }: { store: Store<Tournament> }) => {
 
 const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const [name, setName] = useState('');
-	const [boardCount, setTypedBoardCount] = useState(
-		tournament.boards.length > 0 ? String(tournament.boards.length) : '',
-	);
 	const [renaming, setRenaming] = useState<PlayerId>();
 	// Each refusal shows beside the controls that caused it.
 	const [playersRefusal, setPlayersRefusal] = useState('');
@@ -133,9 +130,7 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
 		setPlayersRefusal('');
 	};
 
-	// Saved as it is typed, so the Draw always uses the number on screen.
-	const changeBoardCount = (typed: string) => {
-		setTypedBoardCount(typed);
+	const saveBoardCount = (typed: string) => {
 		const refusal = apply(setBoardCount(tournament, typed));
 		setBoardsRefusal(refusal);
 	};
@@ -219,22 +214,20 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
 			<div className="w-80">
 				<section aria-label="Boards and the Draw">
 					<h2 className="text-xl font-bold">Boards</h2>
-					<label className="mt-2 flex items-center gap-2">
-						Number of Boards
-						<input
-							type="text"
-							inputMode="numeric"
-							autoComplete="off"
-							value={boardCount}
-							onChange={(event) => changeBoardCount(event.target.value)}
-							className={`${textInput} w-20`}
-						/>
-					</label>
-					{!boardsRefusal && tournament.boards.length > 0 && (
-						<p className="mt-2 text-gray-700">
-							Placards 1 to {tournament.boards.length}
-						</p>
-					)}
+					<NumberBox
+						label="Number of Boards"
+						saved={tournament.boards.length > 0 ? String(tournament.boards.length) : ''}
+						onSave={saveBoardCount}
+					/>
+					{/*
+					 * Its line is kept even when empty, so saving the Boards as the Organizer leaves the box for
+					 * Make the Draw doesn't move the button out from under their click.
+					 */}
+					<p className="mt-2 min-h-6 text-gray-700">
+						{!boardsRefusal &&
+							tournament.boards.length > 0 &&
+							`Placards 1 to ${tournament.boards.length}`}
+					</p>
 					<button
 						type="button"
 						className={`${primaryButton} mt-8 w-full`}
@@ -329,29 +322,24 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 	);
 };
 
-// How long the TV shows each screen it cycles through once Started. Saved as it is typed, like the Boards.
+/*
+ * How long the TV shows each screen it cycles through once Started. Like the Boards, saved when the Organizer
+ * leaves the box or presses Enter, not as they type.
+ */
 const ScreenTiming = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
-	const [seconds, setTypedSeconds] = useState(String(tournament.screenSeconds));
 	const [refusal, setRefusal] = useState('');
-	const changeSeconds = (typed: string) => {
-		setTypedSeconds(typed);
+	const saveSeconds = (typed: string) => {
 		const reason = apply(setScreenSeconds(tournament, typed));
 		setRefusal(reason);
 	};
 	return (
 		<section aria-label="TV screens" className="mt-8 first:mt-0">
 			<h2 className="text-xl font-bold">TV screens</h2>
-			<label className="mt-2 flex items-center gap-2">
-				Seconds per TV screen
-				<input
-					type="text"
-					inputMode="numeric"
-					autoComplete="off"
-					value={seconds}
-					onChange={(event) => changeSeconds(event.target.value)}
-					className={`${textInput} w-20`}
-				/>
-			</label>
+			<NumberBox
+				label="Seconds per TV screen"
+				saved={String(tournament.screenSeconds)}
+				onSave={saveSeconds}
+			/>
 			<Refusal reason={refusal} />
 		</section>
 	);
@@ -431,6 +419,49 @@ const ConfirmDialog = ({
 				</button>
 			</div>
 		</dialog>
+	);
+};
+
+/*
+ * A box for a number the Organizer types, saved only once they are done with it: when the box loses focus
+ * or they press Enter. Until then the Tournament keeps the number last saved. Leaving the box unchanged
+ * saves nothing, so tabbing through it neither refuses a blank nor saves the same number again.
+ */
+const NumberBox = ({
+	label,
+	saved,
+	onSave,
+}: {
+	label: string;
+	saved: string;
+	onSave: (typed: string) => void;
+}) => {
+	const [typed, setTyped] = useState(saved);
+	const [lastSaved, setLastSaved] = useState(saved);
+	const save = () => {
+		if (typed !== lastSaved) {
+			setLastSaved(typed);
+			onSave(typed);
+		}
+	};
+	return (
+		<label className="mt-2 flex items-center gap-2">
+			{label}
+			<input
+				type="text"
+				inputMode="numeric"
+				autoComplete="off"
+				value={typed}
+				onChange={(event) => setTyped(event.target.value)}
+				onBlur={save}
+				onKeyDown={(event) => {
+					if (event.key === 'Enter') {
+						save();
+					}
+				}}
+				className={`${textInput} w-20`}
+			/>
+		</label>
 	);
 };
 

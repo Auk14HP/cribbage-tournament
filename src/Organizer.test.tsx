@@ -38,9 +38,21 @@ const register = async (user: User, name: string) => {
 	await user.type(screen.getByLabelText('Player name'), `${name}{Enter}`);
 };
 
+// Replaces the number in its box, staying in the box, so nothing is saved yet.
+const typeNumber = async (user: User, label: string, number: string) => {
+	const box = screen.getByLabelText(label);
+	await user.clear(box);
+	await user.type(box, number);
+};
+
+// Types a number into its box and presses Enter, saving it as an Organizer would.
+const enterNumber = async (user: User, label: string, number: string) => {
+	await typeNumber(user, label, number);
+	await user.keyboard('{Enter}');
+};
+
 const setBoardCount = async (user: User, count: string) => {
-	await user.clear(screen.getByLabelText('Number of Boards'));
-	await user.type(screen.getByLabelText('Number of Boards'), count);
+	await enterNumber(user, 'Number of Boards', count);
 };
 
 // Answers the open confirmation dialog by pressing one of its buttons.
@@ -137,15 +149,35 @@ describe('the organizer route', () => {
 		expect(screen.getByLabelText('Number of Boards')).toHaveValue('12');
 	});
 
-	it('shows why a number of Boards is refused, beside the Boards', async () => {
+	it('saves the number of Boards only once the Organizer leaves the box or presses Enter', async () => {
 		const user = showOrganizer();
 
-		await setBoardCount(user, '0');
+		await user.type(screen.getByLabelText('Number of Boards'), '12');
+		expect(screen.queryByText(/^Placards/)).not.toBeInTheDocument();
+		await user.tab();
+		expect(screen.getByText('Placards 1 to 12')).toBeInTheDocument();
+
+		await typeNumber(user, 'Number of Boards', '15');
+		expect(screen.getByText('Placards 1 to 12')).toBeInTheDocument();
+		await user.keyboard('{Enter}');
+		expect(screen.getByText('Placards 1 to 15')).toBeInTheDocument();
+	});
+
+	it('shows why a number of Boards is refused, beside the Boards, once the Organizer is done typing', async () => {
+		const user = showOrganizer();
+		await setBoardCount(user, '12');
+
+		await typeNumber(user, 'Number of Boards', '0');
+		expect(getRefusalIn('Boards and the Draw')).toBeEmptyDOMElement();
+		await user.tab();
 
 		expect(getRefusalIn('Boards and the Draw')).toHaveTextContent(
 			'The number of Boards is a whole number above zero, like 12.',
 		);
 		expect(getRefusalIn('Players')).toBeEmptyDOMElement();
+		cleanup();
+		showOrganizer();
+		expect(screen.getByText('Placards 1 to 12')).toBeInTheDocument();
 	});
 
 	it('shows why the Draw is refused', async () => {
@@ -250,8 +282,7 @@ describe('the organizer route', () => {
 		const getSecondsBox = () => screen.getByLabelText('Seconds per TV screen');
 		expect(getSecondsBox()).toHaveValue('20');
 
-		await user.clear(getSecondsBox());
-		await user.type(getSecondsBox(), '30');
+		await enterNumber(user, 'Seconds per TV screen', '30');
 		cleanup();
 		showOrganizer();
 		expect(getSecondsBox()).toHaveValue('30');
@@ -263,23 +294,47 @@ describe('the organizer route', () => {
 		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
 		await answerDialog(user, 'Make the Draw');
 		await user.click(screen.getByRole('button', { name: 'Start' }));
-		await user.clear(getSecondsBox());
-		await user.type(getSecondsBox(), '45');
+		await enterNumber(user, 'Seconds per TV screen', '45');
 		cleanup();
 		showOrganizer();
 		expect(getSecondsBox()).toHaveValue('45');
 	});
 
-	it('shows why a screen time is refused, beside it', async () => {
+	it('saves a screen time only once the Organizer leaves the box or presses Enter', async () => {
+		let user = showOrganizer();
+		const getSecondsBox = () => screen.getByLabelText('Seconds per TV screen');
+
+		await typeNumber(user, 'Seconds per TV screen', '30');
+		cleanup();
+		user = showOrganizer();
+		expect(getSecondsBox()).toHaveValue('20');
+
+		await typeNumber(user, 'Seconds per TV screen', '30');
+		await user.tab();
+		cleanup();
+		user = showOrganizer();
+		expect(getSecondsBox()).toHaveValue('30');
+
+		await enterNumber(user, 'Seconds per TV screen', '45');
+		cleanup();
+		showOrganizer();
+		expect(getSecondsBox()).toHaveValue('45');
+	});
+
+	it('shows why a screen time is refused, beside it, once the Organizer is done typing', async () => {
 		const user = showOrganizer();
 
-		await user.clear(screen.getByLabelText('Seconds per TV screen'));
-		await user.type(screen.getByLabelText('Seconds per TV screen'), '0');
+		await typeNumber(user, 'Seconds per TV screen', '0');
+		expect(getRefusalIn('TV screens')).toBeEmptyDOMElement();
+		await user.keyboard('{Enter}');
 
 		expect(getRefusalIn('TV screens')).toHaveTextContent(
 			'The TV shows each screen for a whole number of seconds above zero, like 20.',
 		);
 		expect(getRefusalIn('Boards and the Draw')).toBeEmptyDOMElement();
+		cleanup();
+		showOrganizer();
+		expect(screen.getByLabelText('Seconds per TV screen')).toHaveValue('20');
 	});
 
 	it('resumes the saved Tournament when reopened', async () => {

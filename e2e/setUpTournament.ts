@@ -40,11 +40,14 @@ export const playToFinal = async (page: Page) => {
 
 /*
  * Moves the TV's cycle on to the named screen and holds it there: a second per screen moves it on, and a
- * long one then holds it, since a new time restarts the screen shown.
+ * long one then holds it, since a new time restarts the screen shown. Each time is saved with Enter, as an
+ * Organizer would.
  */
 export const holdScreen = async (organizer: Page, tv: Page, screenHeading: string) => {
 	const secondsInput = organizer.getByLabel('Seconds per TV screen');
 	await secondsInput.fill('1');
+	await secondsInput.press('Enter');
 	await tv.getByRole('heading', { name: screenHeading }).waitFor();
 	await secondsInput.fill('600');
+	await secondsInput.press('Enter');
 };
