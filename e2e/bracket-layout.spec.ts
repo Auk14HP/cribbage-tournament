@@ -10,11 +10,18 @@ import { holdScreen, playToFinal, seedDraw, startTournament } from './setUpTourn
  */
 
 const findMiddle = async (slot: Locator): Promise<number> => {
-	// A Match's box when its slot has one, else the empty slot of a Bye.
-	const box = (await slot.locator('> *').count()) > 0 ? slot.locator('> *') : slot;
+	// A Match's card when its slot has one, else the empty slot of a Bye.
+	const card = slot.getByTestId('match card');
+	const box = (await card.count()) > 0 ? card : slot;
 	const { y, height } = (await box.boundingBox())!;
 	return y + height / 2;
 };
+
+// A list's slots, the Bye places included: a Bye's empty slot is hidden from the TV's reading.
+const listSlots = (list: Locator) => list.getByRole('listitem', { includeHidden: true }).all();
+
+// Every Round's list, the final's included, across the screen. Each list is as wide as its column.
+const findRoundLists = (tv: Page) => tv.getByRole('list', { name: /^(Round \d+|Final)$/ });
 
 // Each list's slots, the Bye places included, in the order the columns appear across the screen.
 const listColumns = async (tv: Page, rounds: number) => {
@@ -23,10 +30,10 @@ const listColumns = async (tv: Page, rounds: number) => {
 	const columns: { round: number; side: 'left' | 'right'; slots: Locator[] }[] = [];
 	for (let round = 1; round < rounds; round++) {
 		const [left, right] = await listRound(round).all();
-		columns.push({ round, side: 'left', slots: await left.locator('> li').all() });
-		columns.push({ round, side: 'right', slots: await right.locator('> li').all() });
+		columns.push({ round, side: 'left', slots: await listSlots(left) });
+		columns.push({ round, side: 'right', slots: await listSlots(right) });
 	}
-	return { columns, final: await listRound(rounds).locator('> li').all() };
+	return { columns, final: await listSlots(listRound(rounds)) };
 };
 
 for (const { players, rounds } of [
@@ -78,7 +85,7 @@ for (const { players, rounds } of [
 				}
 
 				const { columns, final } = await listColumns(tv, rounds);
-				const lists = await tv.locator('section > ul').all();
+				const lists = await findRoundLists(tv).all();
 				const tops = await Promise.all(
 					lists.map(async (list) => (await list.boundingBox())!.y),
 				);
@@ -112,27 +119,20 @@ for (const { players, rounds } of [
 				const finalMiddle = await findMiddle(final[0]);
 				expect(Math.abs(finalMiddle - middle), 'the final').toBeLessThan(2);
 
-				for (const column of await tv.locator('section').all()) {
+				for (const column of lists) {
 					const { x, width } = (await column.boundingBox())!;
 					expect(x + width, 'a column runs off the right of the TV').toBeLessThanOrEqual(
 						tvSize.width,
 					);
 				}
-				const slots = [...columns.flatMap((c) => c.slots), ...final];
-				for (const box of await Promise.all(
-					slots.map((slot) => slot.locator('> *').all()),
-				)) {
-					for (const match of box) {
-						const { x, y, width, height } = (await match.boundingBox())!;
-						expect(
-							y + height,
-							'a Match runs off the bottom of the TV',
-						).toBeLessThanOrEqual(tvSize.height);
-						expect(
-							x + width,
-							'a Match runs off the right of the TV',
-						).toBeLessThanOrEqual(tvSize.width);
-					}
+				for (const card of await tv.getByTestId('match card').all()) {
+					const { x, y, width, height } = (await card.boundingBox())!;
+					expect(y + height, 'a Match runs off the bottom of the TV').toBeLessThanOrEqual(
+						tvSize.height,
+					);
+					expect(x + width, 'a Match runs off the right of the TV').toBeLessThanOrEqual(
+						tvSize.width,
+					);
 				}
 			});
 		}
