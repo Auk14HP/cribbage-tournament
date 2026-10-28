@@ -447,6 +447,7 @@ const MatchBox = ({
 	isOnPath: boolean;
 }) => (
 	<div
+		data-testid="match card"
 		className={`w-full rounded-[1vh] border-[0.3vh] px-[0.6vw] py-[0.3vh] font-semibold ${champion ? 'border-yellow-300 bg-yellow-300 text-black' : getPathShade('card', isOnPath)}`}
 	>
 		{match.board !== undefined && (
