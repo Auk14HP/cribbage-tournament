@@ -2,7 +2,7 @@
  * The display route: read-only, shown on the TV. Redraws whenever the saved Tournament changes.
  * Sizes are in vh so text scales with the TV: large and high-contrast, readable from across the room.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import type { Store } from './storage';
 import {
 	getMatchesOnBoards,
@@ -64,8 +64,44 @@ const Cycle = ({
 		);
 		return () => clearTimeout(timer);
 	}, [shown, screens.length, tournament.screenSeconds]);
-	return cycledScreens[screens[shown]](tournament);
+	// Keyed like the timer, so the ring starts again exactly when the screen's time does.
+	return (
+		<>
+			{cycledScreens[screens[shown]](tournament)}
+			<CountdownRing
+				key={`${shown} ${tournament.screenSeconds}`}
+				seconds={tournament.screenSeconds}
+			/>
+		</>
+	);
 };
+
+/*
+ * A ring in the bottom-right corner that fills over the screen's time, so the room sees a change coming.
+ * It sits in the page's right padding, clear of every Match and Now playing card on a landscape TV.
+ * Decorative, so hidden from assistive technology. The duration reaches the animation through an
+ * inherited CSS variable.
+ */
+const CountdownRing = ({ seconds }: { seconds: number }) => (
+	<svg
+		data-testid="countdown ring"
+		aria-hidden
+		viewBox="0 0 36 36"
+		style={{ '--countdown-duration': `${seconds}s` } as CSSProperties}
+		className="fixed right-[1vw] bottom-[1vh] h-[3vh] w-[3vh] -rotate-90"
+	>
+		<circle {...ringCircle} className="stroke-gray-700" />
+		<circle
+			{...ringCircle}
+			pathLength={1}
+			strokeDasharray={1}
+			className="animate-countdown stroke-white"
+		/>
+	</svg>
+);
+
+// The ring's track and its filling share one circle.
+const ringCircle = { cx: 18, cy: 18, r: 15, fill: 'none', strokeWidth: 6 };
 
 /*
  * Columns and text sizes for Now playing, by how many Matches are being played: as large as fits, down to

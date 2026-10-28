@@ -1,1 +1,18 @@
 @import 'tailwindcss';
+
+/*
+ * The TV's countdown ring fills over each screen's time. Inline, so the utility reads
+ * --countdown-duration where it is used, set from the Tournament's screenSeconds.
+ */
+@theme inline {
+	--animate-countdown: countdown var(--countdown-duration) linear forwards;
+
+	@keyframes countdown {
+		from {
+			stroke-dashoffset: 1;
+		}
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+}

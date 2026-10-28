@@ -153,6 +153,36 @@ describe('the TV cycle', () => {
 		waitSeconds(1);
 		expect(readHeading()).toBe('Now playing');
 	});
+
+	it('shows a countdown ring that fills over each screen’s time and starts again with each screen and each new time', () => {
+		vi.useFakeTimers();
+		const store = showDisplay();
+		expect(readHeading()).toBe('Tonight’s Players');
+		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
+		let tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], 3);
+		act(() => store.save(tournament));
+		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
+
+		tournament = expectOk(start(tournament));
+		act(() => store.save(tournament));
+		const first = screen.getByTestId('countdown ring');
+		expect(first).toHaveAttribute('aria-hidden', 'true');
+		expect(first).toHaveStyle({ '--countdown-duration': '20s' });
+		waitSeconds(19);
+		expect(screen.getByTestId('countdown ring')).toBe(first);
+		waitSeconds(1);
+		const second = screen.getByTestId('countdown ring');
+		expect(second).not.toBe(first);
+		expect(second).toHaveStyle({ '--countdown-duration': '20s' });
+
+		// A new time restarts the screen on show, and the ring with it.
+		waitSeconds(10);
+		tournament = expectOk(setScreenSeconds(tournament, '5'));
+		act(() => store.save(tournament));
+		const restarted = screen.getByTestId('countdown ring');
+		expect(restarted).not.toBe(second);
+		expect(restarted).toHaveStyle({ '--countdown-duration': '5s' });
+	});
 });
 
 describe('the champion screen', () => {
@@ -170,10 +200,12 @@ describe('the champion screen', () => {
 		// With no Losers Bracket played, the night has one champion.
 		expect(readHeading()).toBe('Tonight’s Champion');
 		expect(screen.getByText(champion.name)).toBeInTheDocument();
+		expect(screen.getByTestId('countdown ring')).toBeInTheDocument();
 
 		waitSeconds(20);
 		expect(readHeading()).toBe('Winners Bracket');
 		expect(screen.getByText(`Champion: ${champion.name}`)).toBeInTheDocument();
+		expect(screen.getByTestId('countdown ring')).toBeInTheDocument();
 
 		waitSeconds(20);
 		expect(readHeading()).toBe('Tonight’s Champion');
