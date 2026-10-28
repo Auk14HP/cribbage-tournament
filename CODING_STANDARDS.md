@@ -22,6 +22,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - Size the organizer route in rem (Tailwind's default scale): rem follows the browser's font-size setting, so an Organizer who enlarges text gets a larger app. Use px only where scaling would be wrong, such as a hairline border.
 - Size the display route in vh, so text and boxes scale with the TV. Spacing that must fit the TV's width, such as the page's side padding, the gaps between columns and the bracket lines across them, is in vw. The display is read from across the room by an audience mostly 55+: large, high-contrast text.
 - Show a refusal beside the controls that caused it, where the Organizer is already looking.
+- Keep a control still when a line above it comes and goes: give the line its height even when empty (`min-h-6`, as `Refusal` does). Leaving a box can save it and show a line, such as "Placards 1 to N", in the moment the Organizer clicks the button below; a button that moves under the press misses the click.
 - Keep Tailwind classes that must change together, such as every use of one colour that means one thing, in one named object, each class written out whole so Tailwind finds it.
 
 ## The Tournament core
@@ -36,7 +37,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - Route tests (React Testing Library, jsdom) render a route against the real storage adapter and drive it through visible labels and roles: what the Organizer sees and can do.
 - Behaviour across two windows belongs in `e2e/` (Playwright).
 - Find an element, in a route test or an e2e test, by [Testing Library's query priority](https://testing-library.com/docs/queries/about#priority), as a person finds it. Use role, label, placeholder, text or display value first, then alt text or title. A `data-testid` comes last, for an element nothing on screen names, such as the decorative countdown ring. Playwright has the same queries (`getByRole`, `getByLabel`, `getByText`, `getByTestId`). A CSS selector couples the test to markup, so reach for a test ID instead.
-- Set-up that two tests in a file share becomes a module-level test helper (`showOrganizer`, `setUpDraw`), so each test shows only what it is about.
+- Set-up that two tests in a file share becomes a module-level test helper (`showOrganizer`, `setUpDraw`), so each test shows only what it is about. Once a helper exists, call it wherever its steps appear: `typeNumber` then Enter is `enterNumber`.
 - A test of when something happens checks both sides of the moment: the old state just before it, the new one at it (still the Winners Bracket at 19 seconds, Now playing at 20).
 - Find a Match in a test by its Players, not by its Board or its place in a list: how Boards are assigned may change.
 - A test written after its code earns its place by failing once the behaviour is broken: break it, watch the test go red, restore.
