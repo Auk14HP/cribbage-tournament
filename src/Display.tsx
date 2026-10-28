@@ -354,8 +354,8 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 /*
  * One Round column, or half of one: its slots share the column's height equally. Columns start at their
  * content's width but may shrink below it, so long names never push a column off the TV, and a header
- * never wraps, so every column's Matches start level. No column shrinks narrower than its header: 11vh
- * is a little wider than "Round 4" at the header's 2.5vh.
+ * never wraps, so every column's Matches start level. No column shrinks narrower than its header: a
+ * name may break anywhere, so the header is the widest thing in the column that cannot.
  */
 const BracketColumn = ({
 	name,
@@ -366,7 +366,7 @@ const BracketColumn = ({
 	slots: readonly (BracketSlot | undefined)[];
 	champion?: Player;
 }) => (
-	<section className="flex min-w-[11vh] flex-auto flex-col">
+	<section className="flex min-w-min flex-auto flex-col">
 		<h2 className="text-center text-[2.5vh] font-bold whitespace-nowrap text-gray-300">
 			{name}
 		</h2>
@@ -427,7 +427,10 @@ const MatchBox = ({
 	</div>
 );
 
-// One Player's name in a Match card, or a dash while they are still to come.
+/*
+ * One Player's name in a Match card, or a dash while they are still to come. One line, cut short with an
+ * ellipsis. It may break anywhere, so it never holds its column wider than it needs.
+ */
 const MatchPlayer = ({ player, shade }: { player: Player | undefined; shade: string }) => (
-	<span className={`block truncate ${shade}`}>{player?.name ?? '—'}</span>
+	<span className={`line-clamp-1 break-all ${shade}`}>{player?.name ?? '—'}</span>
 );
