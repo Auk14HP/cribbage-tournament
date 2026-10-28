@@ -5,7 +5,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 ## Naming
 
 - Give every function a verb-first name (`createTournament`, `findNameRefusal`), including helpers and test helpers, so it is never mistaken for a value. A predicate starts with `is` or `has`. ESLint has no rule that can check this.
-- Name a value for what it holds: a locator for the element it finds (`championHeading`), not the screen that element suggests.
+- Name a value for what it holds: a locator for the element it finds (`championHeading`), not the screen that element suggests. One of several found in turn carries its place and what it is (`firstCountdownRing`, not `first`). A locator that finds a different element each time it is used is named for the one it finds then (`nextWinnerButton`, used in a loop).
 - React components and hooks keep React's conventions: a component is a PascalCase noun (`Organizer`), a hook starts with `use` (`useTournament`).
 
 ## Readability
@@ -20,7 +20,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 
 - Style with Tailwind utility classes in the component. `src/style.css` holds only the Tailwind import, any app-wide defaults under `@layer base`, and `@theme` animations with their `@keyframes`: an animation can't be written as a utility class. Set an animation's duration from the component (an inline style or a CSS variable it reads), not with one class per duration.
 - Size the organizer route in rem (Tailwind's default scale): rem follows the browser's font-size setting, so an Organizer who enlarges text gets a larger app. Use px only where scaling would be wrong, such as a hairline border.
-- Size the display route in vh, so text scales with the TV. It is read from across the room by an audience mostly 55+: large, high-contrast text.
+- Size the display route in vh, so text and boxes scale with the TV. Spacing that must fit the TV's width, such as the page's side padding, the gaps between columns and the bracket lines across them, is in vw. The display is read from across the room by an audience mostly 55+: large, high-contrast text.
 - Show a refusal beside the controls that caused it, where the Organizer is already looking.
 - Keep Tailwind classes that must change together, such as every use of one colour that means one thing, in one named object, each class written out whole so Tailwind finds it.
 
@@ -35,6 +35,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - Core tests drive commands and assert on what the Tournament then holds, describing a Tournament in the Organizer's terms.
 - Route tests (React Testing Library, jsdom) render a route against the real storage adapter and drive it through visible labels and roles: what the Organizer sees and can do.
 - Behaviour across two windows belongs in `e2e/` (Playwright).
+- Find an element, in a route test or an e2e test, by [Testing Library's query priority](https://testing-library.com/docs/queries/about#priority), as a person finds it. Use role, label, placeholder, text or display value first, then alt text or title. A `data-testid` comes last, for an element nothing on screen names, such as the decorative countdown ring. Playwright has the same queries (`getByRole`, `getByLabel`, `getByText`, `getByTestId`). A CSS selector couples the test to markup, so reach for a test ID instead.
 - Set-up that two tests in a file share becomes a module-level test helper (`showOrganizer`, `setUpDraw`), so each test shows only what it is about.
 - A test of when something happens checks both sides of the moment: the old state just before it, the new one at it (still the Winners Bracket at 19 seconds, Now playing at 20).
 - Find a Match in a test by its Players, not by its Board or its place in a list: how Boards are assigned may change.

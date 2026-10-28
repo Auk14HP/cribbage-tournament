@@ -10,6 +10,7 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 - **Make an issue a sub-issue of a parent**: `gh issue create --parent <parent> ...`, or `gh issue edit <parent> --add-sub-issue <child>` afterwards (`gh` 2.94+). Older `gh`: `gh api --method POST repos/<owner>/<repo>/issues/<parent>/sub_issues -F sub_issue_id=<child-db-id>` (database id, as in **Blocking** below). Without sub-issues, put `Part of #<parent>` at the top of the child body.
 - **Sign every comment**: start each comment you post, on an issue or a PR, with `🤖 `. You post under the user's account, so the emoji is what tells your words from theirs.
 - **Comment on an issue**: `gh issue comment <number> --body "🤖 ..."`
+- **Edit an issue's body**: write the whole body to a file, then `gh issue edit <number> --body-file <file>`. Shell string substitution mangles Markdown punctuation such as parentheses.
 - **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **Close**: `gh issue close <number> --comment "..."`
 
