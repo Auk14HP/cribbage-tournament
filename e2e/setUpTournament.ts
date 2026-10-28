@@ -27,12 +27,14 @@ export const startTournament = async (page: Page, players: number) => {
 
 /*
  * Every Match goes to its first-named Player, the first on the list each time, until there is a champion.
- * Found by its place in the list, not its Players, since any Match will do.
+ * Found by its place in the list, not its Players, since any Match will do. A locator is looked up afresh
+ * each time it is used, so the one button it names is the next to click until none is left.
  */
 export const playToFinal = async (page: Page) => {
-	const winnerButton = page.getByRole('list', { name: 'Matches' }).getByRole('button').first();
-	while ((await winnerButton.count()) > 0) {
-		await winnerButton.click();
+	const matches = page.getByRole('list', { name: 'Matches' });
+	const nextWinnerButton = matches.getByRole('button').first();
+	while ((await nextWinnerButton.count()) > 0) {
+		await nextWinnerButton.click();
 	}
 };
 

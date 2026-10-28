@@ -165,23 +165,23 @@ describe('the TV cycle', () => {
 
 		tournament = expectOk(start(tournament));
 		act(() => store.save(tournament));
-		const first = screen.getByTestId('countdown ring');
-		expect(first).toHaveAttribute('aria-hidden', 'true');
-		expect(first).toHaveStyle({ '--countdown-duration': '20s' });
+		const firstCountdownRing = screen.getByTestId('countdown ring');
+		expect(firstCountdownRing).toHaveAttribute('aria-hidden', 'true');
+		expect(firstCountdownRing).toHaveStyle({ '--countdown-duration': '20s' });
 		waitSeconds(19);
-		expect(screen.getByTestId('countdown ring')).toBe(first);
+		expect(screen.getByTestId('countdown ring')).toBe(firstCountdownRing);
 		waitSeconds(1);
-		const second = screen.getByTestId('countdown ring');
-		expect(second).not.toBe(first);
-		expect(second).toHaveStyle({ '--countdown-duration': '20s' });
+		const secondCountdownRing = screen.getByTestId('countdown ring');
+		expect(secondCountdownRing).not.toBe(firstCountdownRing);
+		expect(secondCountdownRing).toHaveStyle({ '--countdown-duration': '20s' });
 
 		// A new time restarts the screen on show, and the ring with it.
 		waitSeconds(10);
 		tournament = expectOk(setScreenSeconds(tournament, '5'));
 		act(() => store.save(tournament));
-		const restarted = screen.getByTestId('countdown ring');
-		expect(restarted).not.toBe(second);
-		expect(restarted).toHaveStyle({ '--countdown-duration': '5s' });
+		const restartedCountdownRing = screen.getByTestId('countdown ring');
+		expect(restartedCountdownRing).not.toBe(secondCountdownRing);
+		expect(restartedCountdownRing).toHaveStyle({ '--countdown-duration': '5s' });
 	});
 });
 

@@ -29,7 +29,13 @@ const openTv = async (organizer: Page, tvSize: { width: number; height: number }
 	return tv;
 };
 
-const findBracketMatches = (tv: Page) => tv.locator('section li > *');
+/*
+ * Each Match's slot on the Winners Bracket, found by its Round's list as the TV reads it out. A slot holds its
+ * Match card and is at least as large, so a slot clear of the ring means a card clear of it. A Bye's empty
+ * place is hidden, so it isn't found.
+ */
+const findBracketSlots = (tv: Page) =>
+	tv.getByRole('list', { name: /^(Round \d+|Final)$/ }).getByRole('listitem');
 
 for (const tvSize of [
 	{ width: 1920, height: 1080 },
@@ -47,7 +53,7 @@ for (const tvSize of [
 			const tv = await openTv(organizer, tvSize);
 
 			await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
-			await expectClearOfRing(tv, findBracketMatches(tv));
+			await expectClearOfRing(tv, findBracketSlots(tv));
 
 			await holdScreen(organizer, tv, 'Now playing');
 			const cards = tv.getByRole('list', { name: 'Matches' }).getByRole('listitem');
@@ -61,7 +67,7 @@ for (const tvSize of [
 			const tv = await openTv(organizer, tvSize);
 
 			await holdScreen(organizer, tv, 'Winners Bracket');
-			await expectClearOfRing(tv, findBracketMatches(tv));
+			await expectClearOfRing(tv, findBracketSlots(tv));
 		});
 	});
 }
