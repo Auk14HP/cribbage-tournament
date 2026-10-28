@@ -3,6 +3,7 @@ import {
 	makeDraw,
 	getMatchesOnBoards,
 	createTournament,
+	recordForfeit,
 	recordWinner,
 	registerPlayer,
 	removePlayer,
@@ -13,6 +14,8 @@ import {
 	hasLostInWinnersBracket,
 	getNowPlaying,
 	setScreenSeconds,
+	undoResult,
+	getUndoableResults,
 	type MatchOnBoard,
 	type Player,
 	type Tournament,
@@ -504,6 +507,182 @@ describe('recording winners', () => {
 			ok: false,
 			reason: 'That Match already has a winner.',
 		});
+	});
+});
+
+describe('Forfeits', () => {
+	it('lets the opponent of a Player who leaves win, advancing them as any winner does', () => {
+		// 5 Players: Ann and Bob play on Board 1, Cat waits at Board 2 for its winner.
+		let tournament = startTournament(5, 4);
+		const [first, waiting] = getMatchesOnBoards(tournament);
+		const [ann, bob] = first.players as [Player, Player];
+		const cat = waiting.players[0];
+
+		tournament = expectOk(recordForfeit(tournament, first.match, bob.id));
+
+		expect(getWinnersBracketPicture(tournament)!.rounds[0][0]).toMatchObject({ winner: ann });
+		expect(getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann))).toMatchObject({
+			board: 2,
+			players: [ann, cat],
+		});
+		expect(hasLostInWinnersBracket(tournament, bob.id)).toBe(true);
+	});
+
+	it('refuses a Forfeit by a Player outside the Match, or in a Match still waiting for a Player', () => {
+		const tournament = startTournament(3, 2);
+		const [first, waiting] = getMatchesOnBoards(tournament);
+		const bye = waiting.players[0];
+
+		expect(recordForfeit(tournament, first.match, bye.id)).toEqual({
+			ok: false,
+			reason: 'That Player isn’t in that Match.',
+		});
+		expect(recordForfeit(tournament, waiting.match, bye.id)).toEqual({
+			ok: false,
+			reason: 'That Match is still waiting for a Player.',
+		});
+	});
+});
+
+describe('undoing a result', () => {
+	it('re-opens the Match at its own Board, freeing the Board its winner waited at alone', () => {
+		// 8 Players: four first-Round Matches on Boards 1 to 4.
+		let tournament = startTournament(8, 4);
+		const drawn = getMatchesOnBoards(tournament);
+		const two = drawn.find((m) => m.board === 2)!;
+		const [winner] = two.players as [Player, Player];
+		tournament = expectOk(recordWinner(tournament, two.match, winner.id));
+		// Board 2 frees, and Board 2 is the lowest free, so its winner waits there for Board 1's winner.
+		expect(getMatchesOnBoards(tournament).find((m) => m.board === 2)!.players).toEqual([
+			winner,
+			{ winnerOfBoard: 1 },
+		]);
+
+		tournament = expectOk(undoResult(tournament, two.match));
+
+		expect(getMatchesOnBoards(tournament)).toEqual(drawn);
+		expect(getWinnersBracketPicture(tournament)!.rounds[0][1]!.winner).toBeUndefined();
+	});
+
+	it('keeps the next Match’s Board for an opponent already waiting there, and lets the other Player be recorded instead', () => {
+		// 5 Players: Ann and Bob play on Board 1, Cat waits at Board 2 for its winner.
+		let tournament = startTournament(5, 4);
+		const drawn = getMatchesOnBoards(tournament);
+		const [first, waiting] = drawn;
+		const [ann, bob] = first.players as [Player, Player];
+		const cat = waiting.players[0];
+		tournament = expectOk(recordWinner(tournament, first.match, ann.id));
+
+		tournament = expectOk(undoResult(tournament, first.match));
+
+		expect(getMatchesOnBoards(tournament)).toEqual(drawn);
+		tournament = expectOk(recordWinner(tournament, first.match, bob.id));
+		expect(getMatchesOnBoards(tournament).find((m) => isPlaying(m, cat))).toMatchObject({
+			board: 2,
+			players: [bob, cat],
+		});
+		expect(getWinnersBracketPicture(tournament)!.rounds[0][0]).toMatchObject({ winner: bob });
+		expect(hasLostInWinnersBracket(tournament, ann.id)).toBe(true);
+		expect(hasLostInWinnersBracket(tournament, bob.id)).toBe(false);
+	});
+
+	it('returns the Match to its own Board when it is free, even if a lower-numbered one is too', () => {
+		// 8 Players: four first-Round Matches on Boards 1 to 4.
+		let tournament = startTournament(8, 4);
+		const findMatchOn = (board: number) =>
+			getMatchesOnBoards(tournament).find((m) => m.board === board)!;
+		const recordFirstPlayerWin = (board: number) => {
+			const { match, players } = findMatchOn(board);
+			tournament = expectOk(recordWinner(tournament, match, (players[0] as Player).id));
+		};
+		const three = findMatchOn(3);
+		// Boards 1 and 4's winners wait at their own Boards, and Boards 2 and 3's winners join them.
+		for (const board of [1, 4, 2, 3]) {
+			recordFirstPlayerWin(board);
+		}
+		expect(getMatchesOnBoards(tournament).map((m) => m.board)).toEqual([1, 4]);
+
+		tournament = expectOk(undoResult(tournament, three.match));
+
+		expect(getMatchesOnBoards(tournament).map((m) => m.board)).toEqual([1, 3, 4]);
+		expect(findMatchOn(3).players).toEqual(three.players);
+	});
+
+	it('gives the Match the lowest-numbered free Board once its own Board is taken', () => {
+		// 5 Players: Ann and Bob play on Board 1, Cat waits at Board 2 for its winner, Dan and Eve play on Board 3.
+		let tournament = startTournament(5, 4);
+		const [first, , byes] = getMatchesOnBoards(tournament);
+		const [ann, bob] = first.players as [Player, Player];
+		const [dan] = byes.players as [Player, Player];
+		tournament = expectOk(recordWinner(tournament, first.match, ann.id));
+		// Boards 1 and 3 are free, so Dan waits in the final at Board 1.
+		tournament = expectOk(recordWinner(tournament, byes.match, dan.id));
+		expect(getMatchesOnBoards(tournament).find((m) => isPlaying(m, dan))!.board).toBe(1);
+
+		tournament = expectOk(undoResult(tournament, first.match));
+
+		expect(getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann, bob))!.board).toBe(3);
+	});
+
+	it('refuses to undo a result once its winner has played their next Match, or a Match with no result', () => {
+		// 5 Players: Ann and Bob play on Board 1, Cat waits at Board 2 for its winner.
+		let tournament = startTournament(5, 4);
+		const [first, waiting] = getMatchesOnBoards(tournament);
+		const [ann] = first.players as [Player, Player];
+		expect(undoResult(tournament, first.match)).toEqual({
+			ok: false,
+			reason: 'That Match has no result to undo.',
+		});
+		tournament = expectOk(recordWinner(tournament, first.match, ann.id));
+		tournament = expectOk(recordWinner(tournament, waiting.match, ann.id));
+
+		expect(undoResult(tournament, first.match)).toEqual({
+			ok: false,
+			reason: 'That result can’t be undone: its winner has already played their next Match.',
+		});
+		expect(undoResult(tournament, waiting.match).ok).toBe(true);
+	});
+
+	it('takes the champion back out when the final’s result is undone, so the final can be won again', () => {
+		const started = startTournament(2, 1);
+		const [final] = getMatchesOnBoards(started);
+		const [a, b] = final.players as [Player, Player];
+		let tournament = expectOk(recordWinner(started, final.match, a.id));
+		expect(tournament.phase).toBe('finished');
+
+		tournament = expectOk(undoResult(tournament, final.match));
+
+		expect(tournament.phase).toBe('inProgress');
+		expect(getWinnersBracketPicture(tournament)!.champion).toBeUndefined();
+		expect(getMatchesOnBoards(tournament)).toEqual([final]);
+		tournament = expectOk(recordWinner(tournament, final.match, b.id));
+		expect(getWinnersBracketPicture(tournament)!.champion).toEqual(b);
+	});
+
+	it('lists the results that can still be undone, latest first, with how each was decided', () => {
+		// 5 Players: Ann and Bob play on Board 1, Cat waits at Board 2 for its winner, Dan and Eve play on Board 3.
+		let tournament = startTournament(5, 4);
+		const [first, waiting, byes] = getMatchesOnBoards(tournament);
+		const [ann, bob] = first.players as [Player, Player];
+		const cat = waiting.players[0];
+		const [dan, eve] = byes.players as [Player, Player];
+		expect(getUndoableResults(tournament)).toEqual([]);
+
+		tournament = expectOk(recordForfeit(tournament, first.match, bob.id));
+		tournament = expectOk(recordWinner(tournament, byes.match, eve.id));
+
+		expect(getUndoableResults(tournament)).toEqual([
+			{ match: byes.match, board: 3, winner: eve, loser: dan, isForfeit: false },
+			{ match: first.match, board: 1, winner: ann, loser: bob, isForfeit: true },
+		]);
+
+		tournament = expectOk(recordWinner(tournament, waiting.match, cat.id));
+
+		// Ann has played her next Match, so her Forfeit win can no longer be undone.
+		expect(getUndoableResults(tournament)).toEqual([
+			{ match: waiting.match, board: 2, winner: cat, loser: ann, isForfeit: false },
+			{ match: byes.match, board: 3, winner: eve, loser: dan, isForfeit: false },
+		]);
 	});
 });
 

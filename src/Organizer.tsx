@@ -8,7 +8,9 @@ import type { Store } from './storage';
 import {
 	makeDraw,
 	getMatchesOnBoards,
+	getUndoableResults,
 	createTournament,
+	recordForfeit,
 	recordWinner,
 	registerPlayer,
 	removePlayer,
@@ -16,11 +18,14 @@ import {
 	setBoardCount,
 	setScreenSeconds,
 	start,
+	undoResult,
 	getWinnersBracketPicture,
+	type BoardNumber,
 	type MatchPlace,
 	type Phase,
 	type Player,
 	type PlayerId,
+	type RecordedResult,
 	type Tournament,
 	type WinnerOf,
 } from './tournament';
@@ -32,6 +37,11 @@ const dangerButton = `${button} text-red-700`;
 const primaryButton =
 	'rounded bg-blue-700 px-4 py-2 text-lg font-semibold text-white hover:bg-blue-800';
 const confirmButton = 'rounded px-3 py-1.5 font-semibold text-white';
+// A confirm button's colour: red for an action that can't simply be taken back, blue otherwise.
+const confirmColours = {
+	destructive: 'bg-red-700 hover:bg-red-800',
+	safe: 'bg-blue-700 hover:bg-blue-800',
+};
 const textInput = 'rounded border border-gray-400 px-3 py-1.5';
 
 const headings: Record<Phase, string> = {
@@ -251,7 +261,8 @@ const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Ap
 
 /*
  * The Matches holding a Board: the ones the Draw seats while the TV holds Tonight’s Draw, then the ones
- * being played. Once Started, tapping a Player's name records them as the winner.
+ * being played. Once Started, tapping a Player's name records them as the winner, and a Forfeit records
+ * their opponent's. Results that can still be undone are listed, latest first, to correct a mistake.
  */
 const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const matches = getMatchesOnBoards(tournament);
@@ -260,6 +271,10 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 	const [refusal, setRefusal] = useState('');
 	const recordWinnerOf = (match: MatchPlace, player: Player) => {
 		const reason = apply(recordWinner(tournament, match, player.id));
+		setRefusal(reason);
+	};
+	const recordForfeitBy = (match: MatchPlace, player: Player) => {
+		const reason = apply(recordForfeit(tournament, match, player.id));
 		setRefusal(reason);
 	};
 	const pressStart = () => {
@@ -281,6 +296,8 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 								// Once Started, a Match with both Players known can be won by tapping either.
 								const canWin = playing && 'name' in b;
 								const onWin = (player: Player) => recordWinnerOf(match, player);
+								const onForfeit = (player: Player) =>
+									recordForfeitBy(match, player);
 								return (
 									<li key={board} className={matchRow}>
 										<span className="font-semibold">Board {board}</span>
@@ -291,6 +308,13 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 										<div>
 											<MatchPlayer player={b} canWin={canWin} onWin={onWin} />
 										</div>
+										{canWin && (
+											<ForfeitButton
+												board={board}
+												players={[a, b as Player]}
+												onForfeit={onForfeit}
+											/>
+										)}
 									</li>
 								);
 							})}
@@ -316,11 +340,110 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 						<Refusal reason={refusal} />
 					</>
 				)}
+				{/* Below the TV screens box, so the list growing never moves that box. */}
 				<ScreenTiming tournament={tournament} apply={apply} />
+				<Results tournament={tournament} apply={apply} />
 			</section>
 		</div>
 	);
 };
+
+/*
+ * Asks which Player is leaving a Match before recording the Forfeit, since the names in the row record a
+ * winner: the one picked here loses.
+ */
+const ForfeitButton = ({
+	board,
+	players,
+	onForfeit,
+}: {
+	board: BoardNumber;
+	players: readonly [Player, Player];
+	onForfeit: (player: Player) => void;
+}) => {
+	const dialog = useRef<HTMLDialogElement>(null);
+	const messageId = useId();
+	return (
+		<>
+			<button
+				type="button"
+				className={dangerButton}
+				onClick={() => dialog.current?.showModal()}
+			>
+				Forfeit
+			</button>
+			<dialog ref={dialog} aria-labelledby={messageId} className={dialogBox}>
+				<p id={messageId} className="text-lg">
+					Who is leaving Board {board}? Their opponent wins the Match.
+				</p>
+				<div className="mt-6 flex justify-end gap-2">
+					<button
+						type="button"
+						className={button}
+						onClick={() => dialog.current?.close()}
+					>
+						Cancel
+					</button>
+					{players.map((player) => (
+						<button
+							key={player.id}
+							type="button"
+							className={`${confirmButton} ${confirmColours.destructive}`}
+							onClick={() => {
+								dialog.current?.close();
+								onForfeit(player);
+							}}
+						>
+							{player.name}
+						</button>
+					))}
+				</div>
+			</dialog>
+		</>
+	);
+};
+
+// The results that can still be undone, latest first, each with its own Undo. None until a result is recorded.
+const Results = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
+	const results = getUndoableResults(tournament);
+	const [refusal, setRefusal] = useState('');
+	const undoResultOf = (match: MatchPlace) => {
+		const reason = apply(undoResult(tournament, match));
+		setRefusal(reason);
+	};
+	if (results.length === 0 && !refusal) {
+		return null;
+	}
+	return (
+		<section className="mt-8">
+			<h2 className="text-xl font-bold">Results</h2>
+			<p className="mt-1 text-gray-700">Undo a result to correct it.</p>
+			<ul aria-label="Results" className="mt-2">
+				{results.map((result) => (
+					<li
+						key={`${result.match.round}-${result.match.place}`}
+						className="flex items-center gap-2 border-b border-gray-300 py-1.5"
+					>
+						<span className="flex-1">{describeResult(result)}</span>
+						<button
+							type="button"
+							className={button}
+							onClick={() => undoResultOf(result.match)}
+						>
+							Undo
+						</button>
+					</li>
+				))}
+			</ul>
+			<Refusal reason={refusal} />
+		</section>
+	);
+};
+
+const describeResult = ({ board, winner, loser, isForfeit }: RecordedResult): string =>
+	isForfeit
+		? `Board ${board}: ${loser.name} forfeited to ${winner.name}`
+		: `Board ${board}: ${winner.name} beat ${loser.name}`;
 
 /*
  * How long the TV shows each screen it cycles through once Started. Like the Boards, saved when the Organizer
@@ -350,7 +473,9 @@ const ScreenTiming = ({ tournament, apply }: { tournament: Tournament; apply: Ap
  * Player sits against the "vs", like a scoreboard, so it is as close to one name as to the other.
  */
 const matchRow =
-	'grid grid-cols-[6rem_11rem_3rem_1fr] items-center border-b border-gray-300 py-1.5 text-lg';
+	'grid grid-cols-[6rem_11rem_3rem_1fr_auto] items-center border-b border-gray-300 py-1.5 text-lg';
+
+const dialogBox = 'm-auto max-w-lg rounded-lg p-6 shadow-xl backdrop:bg-black/40';
 
 // One Player in a Match row: a button to tap once the Match can be won, otherwise their name.
 const MatchPlayer = ({
@@ -395,11 +520,7 @@ const ConfirmDialog = ({
 }) => {
 	const messageId = useId();
 	return (
-		<dialog
-			ref={ref}
-			aria-labelledby={messageId}
-			className="m-auto max-w-lg rounded-lg p-6 shadow-xl backdrop:bg-black/40"
-		>
+		<dialog ref={ref} aria-labelledby={messageId} className={dialogBox}>
 			<p id={messageId} className="text-lg">
 				{message}
 			</p>
@@ -409,7 +530,7 @@ const ConfirmDialog = ({
 				</button>
 				<button
 					type="button"
-					className={`${confirmButton} ${isDestructive ? 'bg-red-700 hover:bg-red-800' : 'bg-blue-700 hover:bg-blue-800'}`}
+					className={`${confirmButton} ${isDestructive ? confirmColours.destructive : confirmColours.safe}`}
 					onClick={() => {
 						ref.current?.close();
 						onConfirm();

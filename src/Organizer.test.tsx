@@ -65,6 +65,32 @@ const answerDialog = async (user: User, button: string) => {
 const getRefusalIn = (section: string) =>
 	within(screen.getByRole('region', { name: section })).getByRole('alert');
 
+// Registers the named Players, sets out the Boards and makes the Draw, confirming it.
+const makeTheDraw = async (user: User, names: string[], boards: string) => {
+	for (const name of names) {
+		await register(user, name);
+	}
+	await setBoardCount(user, boards);
+	await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
+	await answerDialog(user, 'Make the Draw');
+};
+
+// The rows of the Matches list. Each recorded result re-renders it, so it is looked up afresh each time.
+const listMatchRows = () =>
+	within(screen.getByRole('list', { name: 'Matches' })).getAllByRole('listitem');
+
+// The names on a Match row's winner buttons: both its Players, once it is being played.
+const listWinnerNames = (row: HTMLElement) =>
+	within(row)
+		.queryAllByRole('button')
+		.map((b) => b.textContent!)
+		.filter((name) => name !== 'Forfeit');
+
+const listResults = () =>
+	within(screen.getByRole('list', { name: 'Results' }))
+		.getAllByRole('listitem')
+		.map((item) => item.textContent);
+
 const listPlayerNames = () =>
 	within(screen.getByRole('list', { name: 'Players' }))
 		.queryAllByRole('listitem')
@@ -241,23 +267,15 @@ describe('the organizer route', () => {
 
 	it('records each Match’s winner with one tap, through to the champion', async () => {
 		const user = showOrganizer();
-		for (const name of ['Dave K.', 'Big Dave', 'Sue']) {
-			await register(user, name);
-		}
-		await setBoardCount(user, '2');
-		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
-		await answerDialog(user, 'Make the Draw');
-		// Each recorded winner re-renders the list, so it is looked up afresh after every tap.
-		const listMatches = () =>
-			within(screen.getByRole('list', { name: 'Matches' })).getAllByRole('listitem');
-		const [first, waiting] = listMatches();
+		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
+		const [first, waiting] = listMatchRows();
 		const bye = waiting.textContent!.match(/^Board 2(.+) vs Winner of Board 1$/)![1];
 		// Before Start, no winner can be recorded.
 		expect(within(first).queryAllByRole('button')).toEqual([]);
 		await user.click(screen.getByRole('button', { name: 'Start' }));
 
 		// Board 2's Bye Player waits for Board 1's winner, so only Board 1 can be won yet.
-		const [boardOne, boardTwo] = listMatches();
+		const [boardOne, boardTwo] = listMatchRows();
 		expect(within(boardTwo).queryAllByRole('button')).toEqual([]);
 		const [winner, loser] = within(boardOne)
 			.getAllByRole('button')
@@ -265,7 +283,7 @@ describe('the organizer route', () => {
 		await user.click(within(boardOne).getByRole('button', { name: winner }));
 
 		// The winner joins the Bye Player at Board 2, and Board 1 frees.
-		const matches = listMatches();
+		const matches = listMatchRows();
 		expect(matches).toHaveLength(1);
 		const [final] = matches;
 		expect(final).toHaveTextContent(/^Board 2/);
@@ -275,6 +293,55 @@ describe('the organizer route', () => {
 
 		expect(screen.queryByRole('list', { name: 'Matches' })).not.toBeInTheDocument();
 		expect(screen.getByText(`Champion: ${bye}`)).toBeInTheDocument();
+	});
+
+	it('records a Forfeit once the Organizer says who is leaving, and their opponent wins', async () => {
+		const user = showOrganizer();
+		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
+		await user.click(screen.getByRole('button', { name: 'Start' }));
+		// 3 Players: two play on Board 1, and the Bye Player waits at Board 2 for its winner.
+		const [playing, waiting] = listMatchRows();
+		const [stays, leaves] = listWinnerNames(playing);
+		const bye = ['Dave K.', 'Big Dave', 'Sue'].find(
+			(name) => name !== stays && name !== leaves,
+		)!;
+		expect(within(waiting).queryByRole('button', { name: 'Forfeit' })).not.toBeInTheDocument();
+
+		await user.click(within(playing).getByRole('button', { name: 'Forfeit' }));
+		expect(screen.getByRole('dialog')).toHaveTextContent(
+			'Who is leaving Board 1? Their opponent wins the Match.',
+		);
+		await answerDialog(user, 'Cancel');
+		expect(listMatchRows()).toHaveLength(2);
+
+		await user.click(within(playing).getByRole('button', { name: 'Forfeit' }));
+		await answerDialog(user, leaves);
+
+		const [final] = listMatchRows();
+		expect(listMatchRows()).toHaveLength(1);
+		expect(listWinnerNames(final).sort()).toEqual([stays, bye].sort());
+		expect(listResults()).toEqual([`Board 1: ${leaves} forfeited to ${stays}Undo`]);
+	});
+
+	it('undoes a result, re-opening the Match so the other Player can be recorded as its winner', async () => {
+		const user = showOrganizer();
+		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
+		await user.click(screen.getByRole('button', { name: 'Start' }));
+		const [playing] = listMatchRows();
+		const [winner, loser] = listWinnerNames(playing);
+		await user.click(within(playing).getByRole('button', { name: winner }));
+		expect(listMatchRows()).toHaveLength(1);
+		expect(listResults()).toEqual([`Board 1: ${winner} beat ${loser}Undo`]);
+
+		await user.click(screen.getByRole('button', { name: 'Undo' }));
+
+		expect(listMatchRows()).toHaveLength(2);
+		const [reopened] = listMatchRows();
+		expect(reopened).toHaveTextContent(/^Board 1/);
+		expect(listWinnerNames(reopened)).toEqual([winner, loser]);
+		expect(screen.queryByRole('list', { name: 'Results' })).not.toBeInTheDocument();
+		await user.click(within(reopened).getByRole('button', { name: loser }));
+		expect(listResults()).toEqual([`Board 1: ${loser} beat ${winner}Undo`]);
 	});
 
 	it('sets how long the TV shows each screen, from 20 seconds, before or after Start', async () => {
@@ -287,12 +354,7 @@ describe('the organizer route', () => {
 		showOrganizer();
 		expect(getSecondsBox()).toHaveValue('30');
 
-		for (const name of ['Dave K.', 'Big Dave']) {
-			await register(user, name);
-		}
-		await setBoardCount(user, '1');
-		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
-		await answerDialog(user, 'Make the Draw');
+		await makeTheDraw(user, ['Dave K.', 'Big Dave'], '1');
 		await user.click(screen.getByRole('button', { name: 'Start' }));
 		await enterNumber(user, 'Seconds per TV screen', '45');
 		cleanup();

@@ -34,6 +34,14 @@ export interface MatchPlace {
 	readonly place: number;
 }
 
+export interface MatchResult {
+	readonly match: MatchPlace;
+	readonly winner: PlayerId;
+	readonly board: BoardNumber;
+	// The loser left before playing it.
+	readonly isForfeit: boolean;
+}
+
 export interface WinnersBracket {
 	/*
 	 * The first Round, in bracket order. Each entry is a first-Round Match or a Bye, and sends one Player on
@@ -45,8 +53,11 @@ export interface WinnersBracket {
 	 * Bye Player who sits there waiting for their opponent.
 	 */
 	readonly onBoards: readonly { readonly match: MatchPlace; readonly board: BoardNumber }[];
-	// Each Match's winner, in the order they were recorded.
-	readonly results: readonly { readonly match: MatchPlace; readonly winner: PlayerId }[];
+	/*
+	 * Each Match's winner, in the order they were recorded, and the Board it was played at: undoing the
+	 * result returns the Match there if it is still free.
+	 */
+	readonly results: readonly MatchResult[];
 }
 
 /*
@@ -69,7 +80,7 @@ export interface Tournament {
 }
 
 // Bump whenever the Tournament's shape changes, so a Tournament saved in an older shape loads as blank.
-export const tournamentVersion = 5;
+export const tournamentVersion = 6;
 
 export const createTournament = (): Tournament => ({
 	phase: 'registration',
@@ -300,43 +311,137 @@ export const recordWinner = (
 	match: MatchPlace,
 	winner: PlayerId,
 ): Result<Tournament> => {
+	const refusal = findResultRefusal(tournament, match, winner);
+	if (refusal) {
+		return { ok: false, reason: refusal };
+	}
+	return { ok: true, value: settleMatch(tournament, match, winner, false) };
+};
+
+// Records a Forfeit: the Player leaves before playing the Match, and their opponent wins it.
+export const recordForfeit = (
+	tournament: Tournament,
+	match: MatchPlace,
+	leaver: PlayerId,
+): Result<Tournament> => {
+	const refusal = findResultRefusal(tournament, match, leaver);
+	if (refusal) {
+		return { ok: false, reason: refusal };
+	}
+	const opponent = findOpponent(tournament.winnersBracket!, match, leaver);
+	return { ok: true, value: settleMatch(tournament, match, opponent, true) };
+};
+
+// Why a result can't be recorded for that Player in that Match, or undefined if it can.
+const findResultRefusal = (
+	tournament: Tournament,
+	match: MatchPlace,
+	player: PlayerId,
+): string | undefined => {
 	if (tournament.phase === 'finished') {
-		return { ok: false, reason: 'The Tournament is finished.' };
+		return 'The Tournament is finished.';
 	}
 	if (tournament.phase !== 'inProgress') {
-		return { ok: false, reason: 'Press Start before recording a winner.' };
+		return 'Press Start before recording a winner.';
 	}
 	const bracket = tournament.winnersBracket!;
 	if (findWinner(bracket, match) !== undefined) {
-		return { ok: false, reason: 'That Match already has a winner.' };
+		return 'That Match already has a winner.';
 	}
 	const players = findPlayers(bracket, match);
 	if (players.some((p) => typeof p !== 'number')) {
-		return { ok: false, reason: 'That Match is still waiting for a Player.' };
+		return 'That Match is still waiting for a Player.';
 	}
-	if (!players.includes(winner)) {
-		return { ok: false, reason: 'That Player isn’t in that Match.' };
+	if (!players.includes(player)) {
+		return 'That Player isn’t in that Match.';
 	}
+	return undefined;
+};
+
+// Records the winner of a Match whose result can be recorded, moving them on to their next Match.
+const settleMatch = (
+	tournament: Tournament,
+	match: MatchPlace,
+	winner: PlayerId,
+	isForfeit: boolean,
+): Tournament => {
+	const bracket = tournament.winnersBracket!;
+	const board = findBoard(bracket, match)!;
 	let next: WinnersBracket = {
 		...bracket,
 		onBoards: bracket.onBoards.filter((on) => !isSameMatch(on.match, match)),
-		results: [...bracket.results, { match, winner }],
+		results: [...bracket.results, { match, winner, board, isForfeit }],
 	};
+	const following = findFollowing(bracket, match);
 	// The final's winner is the champion, and finishes the Tournament.
-	if (match.round === countRounds(bracket)) {
-		return { ok: true, value: { ...tournament, phase: 'finished', winnersBracket: next } };
+	if (!following) {
+		return { ...tournament, phase: 'finished', winnersBracket: next };
 	}
-	const following = { round: match.round + 1, place: Math.floor(match.place / 2) };
 	if (findBoard(next, following) === undefined) {
 		/*
 		 * There is always a free Board: each winner recorded frees a Board and takes at most one, so
 		 * no more Boards are ever in use than the Draw needed.
 		 */
-		const board = tournament.boards.find((b) => !next.onBoards.some((on) => on.board === b))!;
-		next = { ...next, onBoards: [...next.onBoards, { match: following, board }] };
+		const free = findFreeBoard(tournament, next)!;
+		next = { ...next, onBoards: [...next.onBoards, { match: following, board: free }] };
 	}
-	return { ok: true, value: { ...tournament, winnersBracket: next } };
+	return { ...tournament, winnersBracket: next };
 };
+
+/*
+ * Undoes a Match's recorded result, so it can be played again or its winner corrected. The winner leaves
+ * their next Match, which frees its Board unless their opponent already waits there, and the Match takes a
+ * Board again.
+ */
+export const undoResult = (tournament: Tournament, match: MatchPlace): Result<Tournament> => {
+	const bracket = tournament.winnersBracket;
+	const result = bracket?.results.find((r) => isSameMatch(r.match, match));
+	if (!bracket || !result) {
+		return { ok: false, reason: 'That Match has no result to undo.' };
+	}
+	if (hasPlayedOn(bracket, match)) {
+		return {
+			ok: false,
+			reason: 'That result can’t be undone: its winner has already played their next Match.',
+		};
+	}
+	let next: WinnersBracket = {
+		...bracket,
+		results: bracket.results.filter((r) => !isSameMatch(r.match, match)),
+	};
+	const following = findFollowing(bracket, match);
+	if (following && findPlayers(next, following).every((p) => typeof p !== 'number')) {
+		next = {
+			...next,
+			onBoards: next.onBoards.filter((on) => !isSameMatch(on.match, following)),
+		};
+	}
+	/*
+	 * There is always a free Board: the Matches now hold Boards as if the result had never been recorded,
+	 * and recording winners never needs more Boards than the Draw did.
+	 */
+	const isOwnBoardFree = !next.onBoards.some((on) => on.board === result.board);
+	const board = isOwnBoardFree ? result.board : findFreeBoard(tournament, next)!;
+	next = { ...next, onBoards: [...next.onBoards, { match, board }] };
+	// Undoing the final takes the champion back out, so the Tournament is in progress again.
+	return { ok: true, value: { ...tournament, phase: 'inProgress', winnersBracket: next } };
+};
+
+// Whether a Match's winner has played their next Match, so its result can no longer be undone.
+const hasPlayedOn = (bracket: WinnersBracket, match: MatchPlace): boolean => {
+	const following = findFollowing(bracket, match);
+	return following !== undefined && findWinner(bracket, following) !== undefined;
+};
+
+// The Match a Match's winner goes on to, or undefined for the final.
+const findFollowing = (bracket: WinnersBracket, match: MatchPlace): MatchPlace | undefined =>
+	match.round === countRounds(bracket)
+		? undefined
+		: { round: match.round + 1, place: Math.floor(match.place / 2) };
+
+// The lowest-numbered Board no Match holds, or undefined if every Board is taken.
+const findFreeBoard = (tournament: Tournament, bracket: WinnersBracket): BoardNumber | undefined =>
+	tournament.boards.find((b) => !bracket.onBoards.some((on) => on.board === b));
 
 const isSameMatch = (a: MatchPlace, b: MatchPlace): boolean =>
 	a.round === b.round && a.place === b.place;
@@ -370,6 +475,12 @@ const findPlayers = (
 		return findWinner(bracket, earlier) ?? earlier;
 	};
 	return [findPlayerFrom(0), findPlayerFrom(1)];
+};
+
+// The other Player in a Match whose two Players are known.
+const findOpponent = (bracket: WinnersBracket, match: MatchPlace, player: PlayerId): PlayerId => {
+	const players = findPlayers(bracket, match) as readonly PlayerId[];
+	return players.find((p) => p !== player)!;
 };
 
 // A Player still to come: the winner of the Match on that Board, or of a Match not yet started.
@@ -487,6 +598,39 @@ export const hasLostInWinnersBracket = (tournament: Tournament, player: PlayerId
 	return bracket.results.some(
 		(r) => findPlayers(bracket, r.match).includes(player) && r.winner !== player,
 	);
+};
+
+export interface RecordedResult {
+	readonly match: MatchPlace;
+	// Where it was played.
+	readonly board: BoardNumber;
+	readonly winner: Player;
+	readonly loser: Player;
+	readonly isForfeit: boolean;
+}
+
+/*
+ * The results the Organizer can still undo, latest first: each one whose winner hasn't yet played their
+ * next Match.
+ */
+export const getUndoableResults = (tournament: Tournament): readonly RecordedResult[] => {
+	const bracket = tournament.winnersBracket;
+	if (!bracket) {
+		return [];
+	}
+	return bracket.results
+		.filter((r) => !hasPlayedOn(bracket, r.match))
+		.map(({ match, board, winner, isForfeit }) => {
+			const loser = findOpponent(bracket, match, winner);
+			return {
+				match,
+				board,
+				winner: findPlayer(tournament, winner),
+				loser: findPlayer(tournament, loser),
+				isForfeit,
+			};
+		})
+		.reverse();
 };
 
 const listIndexes = (count: number): number[] => Array.from({ length: count }, (_, i) => i);
