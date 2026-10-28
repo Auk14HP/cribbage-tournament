@@ -390,8 +390,8 @@ const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 /*
  * One Round column, or half of one: its slots share the column's height equally. Columns start at their
  * content's width but may shrink below it, so long names never push a column off the TV, and a header
- * never wraps, so every column's Matches start level. No column shrinks narrower than its header: a
- * name may break anywhere, so the header is the widest thing in the column that cannot.
+ * never wraps, so every column's Matches start level. No column shrinks narrower than its header or a
+ * Board label: a name may break anywhere, so these are the widest things in the column that cannot.
  */
 const BracketColumn = ({
 	name,
@@ -451,7 +451,7 @@ const MatchBox = ({
 		className={`w-full rounded-[1vh] border-[0.3vh] px-[0.6vw] py-[0.3vh] font-semibold ${champion ? 'border-yellow-300 bg-yellow-300 text-black' : getPathShade('card', isOnPath)}`}
 	>
 		{match.board !== undefined && (
-			<span className="block text-yellow-300">Board {match.board}</span>
+			<span className="block whitespace-nowrap text-yellow-300">Board {match.board}</span>
 		)}
 		<MatchPlayer
 			player={match.players[0]}

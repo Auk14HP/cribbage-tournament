@@ -39,6 +39,19 @@ export const playToFinal = async (page: Page) => {
 };
 
 /*
+ * Records winners, as playToFinal does, until the final is the only Match left holding a Board: both its
+ * Players known, its result still to come.
+ */
+export const playUntilTheFinal = async (page: Page) => {
+	const matches = page.getByRole('list', { name: 'Matches' });
+	const rows = matches.getByRole('listitem');
+	const nextWinnerButton = matches.getByRole('button').first();
+	while ((await rows.count()) > 1) {
+		await nextWinnerButton.click();
+	}
+};
+
+/*
  * Moves the TV's cycle on to the named screen and holds it there: a second per screen moves it on, and a
  * long one then holds it, since a new time restarts the screen shown. Each time is saved with Enter, as an
  * Organizer would.

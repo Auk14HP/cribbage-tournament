@@ -1,12 +1,18 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { holdScreen, playToFinal, seedDraw, startTournament } from './setUpTournament';
+import {
+	holdScreen,
+	playToFinal,
+	playUntilTheFinal,
+	seedDraw,
+	startTournament,
+} from './setUpTournament';
 
 /*
  * The Winners Bracket's layout on a TV, measured from where the browser drew each Match: every Round header
- * is one line, every column's Matches start level, every Match sits level with the middle of the two that
+ * and Board label is one line, every column's Matches start level, every Match sits level with the middle of the two that
  * feed it, and nothing runs off the screen. A Bye's place in the first Round has no Match, so its empty
- * slot is measured instead. Measured at Start and after the final, when winners' names fill later Rounds,
- * on a 16:9 TV and on a narrower one.
+ * slot is measured instead. Measured at Start; at the final, when the narrow final column names its Board;
+ * and after the final, when winners' names fill later Rounds. On a 16:9 TV and on a narrower one.
  */
 
 const findMiddle = async (slot: Locator): Promise<number> => {
@@ -41,24 +47,27 @@ for (const { players, rounds } of [
 	{ players: 32, rounds: 5 },
 	{ players: 5, rounds: 3 },
 ]) {
-	for (const isFinished of [false, true]) {
+	for (const moment of ['at Start', 'at the final', 'after the final'] as const) {
 		for (const tvSize of [
 			{ width: 1920, height: 1080 },
 			{ width: 1258, height: 955 },
 		]) {
-			test(`with ${players} Players ${isFinished ? 'after the final' : 'at Start'} on a ${tvSize.width}×${tvSize.height} TV, the bracket lines up, all on screen`, async ({
+			test(`with ${players} Players ${moment} on a ${tvSize.width}×${tvSize.height} TV, the bracket lines up, all on screen`, async ({
 				context,
 				page: organizer,
 			}) => {
 				await seedDraw(context);
 				await startTournament(organizer, players);
-				if (isFinished) {
+				if (moment === 'at the final') {
+					await playUntilTheFinal(organizer);
+				}
+				if (moment === 'after the final') {
 					await playToFinal(organizer);
 				}
 				const tv = await context.newPage();
 				await tv.setViewportSize(tvSize);
 				await tv.goto('/display');
-				if (isFinished) {
+				if (moment === 'after the final') {
 					// Once finished, the TV opens on the champion.
 					await holdScreen(organizer, tv, 'Winners Bracket');
 				}
@@ -82,6 +91,16 @@ for (const { players, rounds } of [
 						spill,
 						`the ${await header.textContent()} header spills out of its column`,
 					).toBe(0);
+				}
+
+				// Each Board label one line, however narrow its column.
+				for (const label of await tv.getByText(/^Board \d+$/).all()) {
+					const lines = await label.evaluate(
+						(element) =>
+							element.getBoundingClientRect().height /
+							parseFloat(getComputedStyle(element).lineHeight),
+					);
+					expect(lines, `${await label.textContent()} wraps`).toBeLessThan(1.5);
 				}
 
 				const { columns, final } = await listColumns(tv, rounds);
