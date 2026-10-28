@@ -315,8 +315,7 @@ describe('the organizer route', () => {
 		user = showOrganizer();
 		expect(getSecondsBox()).toHaveValue('30');
 
-		await typeNumber(user, 'Seconds per TV screen', '45');
-		await user.keyboard('{Enter}');
+		await enterNumber(user, 'Seconds per TV screen', '45');
 		cleanup();
 		showOrganizer();
 		expect(getSecondsBox()).toHaveValue('45');
