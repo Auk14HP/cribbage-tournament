@@ -33,9 +33,13 @@ export const startTournament = async (page: Page, players: number) => {
  */
 const playUntilMatchesLeft = async (page: Page, matchesLeft: number) => {
 	const matches = page.getByRole('list', { name: 'Matches' });
-	const rows = matches.getByRole('listitem');
+	const matchesOnBoards = matches.getByRole('listitem');
 	const nextWinnerButton = matches.getByRole('button').first();
-	while ((await rows.count()) > matchesLeft) {
+	/*
+	 * Counts Matches, not buttons: the final still has its buttons when it is the only Match left. While
+	 * more than one Match holds a Board, at least one has both Players known, so there is a button to click.
+	 */
+	while ((await matchesOnBoards.count()) > matchesLeft) {
 		await nextWinnerButton.click();
 	}
 };
