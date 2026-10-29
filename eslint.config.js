@@ -76,7 +76,7 @@ export default defineConfig([
 	},
 	/*
 	 * One file per screen in each route (#42). The cap keeps a screen from regrowing to the size that
-	 * prompted the split: past it, move a part out to its own file. A route's one test file is exempt.
+	 * prompted the split: past it, move a part out to its own file. Test files are exempt.
 	 */
 	{
 		files: ['src/organizer/**/*.{ts,tsx}', 'src/display/**/*.{ts,tsx}'],

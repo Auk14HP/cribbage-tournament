@@ -12,8 +12,8 @@ import {
 } from '../tournament';
 import { describePlayersRegistered } from '../wording';
 import { button, dangerButton, primaryButton, textInput } from './classes';
-import { ConfirmDialog, Refusal, type Apply } from './controls';
-import { NumberBox, ScreenTiming } from './ScreenTiming';
+import { ConfirmDialog, NumberBox, Refusal, type Apply } from './controls';
+import { ScreenTiming } from './ScreenTiming';
 
 export const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const [name, setName] = useState('');
