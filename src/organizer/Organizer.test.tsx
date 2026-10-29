@@ -4,8 +4,8 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Organizer } from './Organizer';
-import { createLocalStorageStore } from './storage';
-import { tournamentVersion, type Tournament } from './tournament';
+import { createLocalStorageStore } from '../storage';
+import { tournamentVersion, type Tournament } from '../tournament';
 
 const key = 'organizer-test';
 
