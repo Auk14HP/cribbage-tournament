@@ -26,30 +26,23 @@ export const startTournament = async (page: Page, players: number) => {
 };
 
 /*
- * Every Match goes to its first-named Player, the first on the list each time, until there is a champion.
- * Found by its place in the list, not its Players, since any Match will do. A locator is looked up afresh
- * each time it is used, so the one button it names is the next to click until none is left.
+ * Every Match goes to its first-named Player, the first on the list each time, until the Matches list is down
+ * to the given number: 0 plays to the champion, 1 stops at the final, both its Players known. Found by its
+ * place in the list, not its Players, since any Match will do. A locator is looked up afresh each time it is
+ * used, so the one button it names is the next to click.
  */
-export const playToFinal = async (page: Page) => {
+const playUntilMatchesLeft = async (page: Page, matchesLeft: number) => {
 	const matches = page.getByRole('list', { name: 'Matches' });
+	const rows = matches.getByRole('listitem');
 	const nextWinnerButton = matches.getByRole('button').first();
-	while ((await nextWinnerButton.count()) > 0) {
+	while ((await rows.count()) > matchesLeft) {
 		await nextWinnerButton.click();
 	}
 };
 
-/*
- * Records winners, as playToFinal does, until the final is the only Match left holding a Board: both its
- * Players known, its result still to come.
- */
-export const playUntilTheFinal = async (page: Page) => {
-	const matches = page.getByRole('list', { name: 'Matches' });
-	const rows = matches.getByRole('listitem');
-	const nextWinnerButton = matches.getByRole('button').first();
-	while ((await rows.count()) > 1) {
-		await nextWinnerButton.click();
-	}
-};
+export const playToFinal = (page: Page) => playUntilMatchesLeft(page, 0);
+
+export const playUntilTheFinal = (page: Page) => playUntilMatchesLeft(page, 1);
 
 /*
  * Moves the TV's cycle on to the named screen and holds it there: a second per screen moves it on, and a

@@ -268,10 +268,10 @@ describe('the organizer route', () => {
 	it('records each Match’s winner with one tap, through to the champion', async () => {
 		const user = showOrganizer();
 		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
-		const [first, waiting] = listMatchRows();
+		const [firstRow, waiting] = listMatchRows();
 		const bye = waiting.textContent!.match(/^Board 2(.+) vs Winner of Board 1$/)![1];
 		// Before Start, no winner can be recorded.
-		expect(within(first).queryAllByRole('button')).toEqual([]);
+		expect(within(firstRow).queryAllByRole('button')).toEqual([]);
 		await user.click(screen.getByRole('button', { name: 'Start' }));
 
 		// Board 2's Bye Player waits for Board 1's winner, so only Board 1 can be won yet.
@@ -295,7 +295,7 @@ describe('the organizer route', () => {
 		expect(screen.getByText(`Champion: ${bye}`)).toBeInTheDocument();
 	});
 
-	it('records a Forfeit once the Organizer says who is leaving, and their opponent wins', async () => {
+	it('records a Forfeit once the Organizer says who is forfeiting, and their opponent wins', async () => {
 		const user = showOrganizer();
 		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
 		await user.click(screen.getByRole('button', { name: 'Start' }));
@@ -309,7 +309,7 @@ describe('the organizer route', () => {
 
 		await user.click(within(playing).getByRole('button', { name: 'Forfeit' }));
 		expect(screen.getByRole('dialog')).toHaveTextContent(
-			'Who is leaving Board 1? Their opponent wins the Match.',
+			'Who is forfeiting the Match on Board 1?',
 		);
 		await answerDialog(user, 'Cancel');
 		expect(listMatchRows()).toHaveLength(2);

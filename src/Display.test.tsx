@@ -81,10 +81,10 @@ describe('the Winners Bracket screen', () => {
 		const store = showDisplay();
 		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue'], 2);
 		let tournament = expectOk(start(drawn));
-		const [first, waiting] = getMatchesOnBoards(tournament);
-		const [a, b] = first.players as [Player, Player];
+		const [firstMatch, waiting] = getMatchesOnBoards(tournament);
+		const [a, b] = firstMatch.players as [Player, Player];
 		const bye = waiting.players[0];
-		const recordWinnerOf = (match: typeof first.match, winner: Player) => {
+		const recordWinnerOf = (match: typeof firstMatch.match, winner: Player) => {
 			tournament = expectOk(recordWinner(tournament, match, winner.id));
 			act(() => store.save(tournament));
 		};
@@ -103,7 +103,7 @@ describe('the Winners Bracket screen', () => {
 		expect(listRound('Final')).toEqual([`Board 2—${bye.name}`]);
 		expect(screen.queryByText(/Champion/)).not.toBeInTheDocument();
 
-		recordWinnerOf(first.match, a);
+		recordWinnerOf(firstMatch.match, a);
 		expect(listRound('Final')).toEqual([`Board 2${a.name}${bye.name}`]);
 	});
 });
@@ -130,14 +130,14 @@ describe('the TV cycle', () => {
 		 * 5 Players: a first-Round Match on Board 1, a Bye Player at Board 2 waiting for its winner, and a
 		 * Match between the other two Bye Players on Board 3. The waiting Player isn't playing yet.
 		 */
-		const [first, , byes] = getMatchesOnBoards(tournament);
-		const describeCard = ({ board, players: [a, b] }: typeof first) =>
+		const [firstMatch, , byes] = getMatchesOnBoards(tournament);
+		const describeCard = ({ board, players: [a, b] }: typeof firstMatch) =>
 			`Board ${board}${a.name}${(b as Player).name}`;
 		const cards = within(screen.getByRole('list', { name: 'Matches' })).getAllByRole(
 			'listitem',
 		);
 		expect(cards.map((card) => card.textContent)).toEqual([
-			describeCard(first),
+			describeCard(firstMatch),
 			describeCard(byes),
 		]);
 

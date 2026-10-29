@@ -48,22 +48,25 @@ test('screens', async ({ context, page: organizer }) => {
 	}
 	// The first Match on the list that can be won goes to its first-named Player each time.
 	const results = process.env.RESULTS === 'all' ? Infinity : Number(process.env.RESULTS);
-	const first = organizer.getByRole('list', { name: 'Matches' }).getByRole('button').first();
-	for (let recorded = 0; recorded < results && (await first.count()) > 0; recorded++) {
-		await first.click();
+	const nextWinnerButton = organizer
+		.getByRole('list', { name: 'Matches' })
+		.getByRole('button')
+		.first();
+	for (let recorded = 0; recorded < results && (await nextWinnerButton.count()) > 0; recorded++) {
+		await nextWinnerButton.click();
 	}
 	// The TV cycles each second, so wait for the screen to shoot: the bracket, then the champion once finished.
 	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 	await shoot('results');
-	if ((await first.count()) === 0) {
+	if ((await nextWinnerButton.count()) === 0) {
 		await tv.getByRole('heading', { name: 'Tonight’s Champion' }).waitFor();
 		await shoot('champion');
 	}
-	if (!process.env.FORFEIT || (await first.count()) === 0) {
+	if (!process.env.FORFEIT || (await nextWinnerButton.count()) === 0) {
 		return;
 	}
 	// The first Match on the list that can be won is forfeited by its first-named Player.
-	const leaver = await first.textContent();
+	const leaver = await nextWinnerButton.textContent();
 	const forfeitButton = organizer
 		.getByRole('list', { name: 'Matches' })
 		.getByRole('button', { name: 'Forfeit' })

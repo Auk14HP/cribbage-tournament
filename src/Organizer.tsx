@@ -21,6 +21,7 @@ import {
 	undoResult,
 	getWinnersBracketPicture,
 	type BoardNumber,
+	type MatchOnBoard,
 	type MatchPlace,
 	type Phase,
 	type Player,
@@ -292,32 +293,15 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 						<h2 className="text-xl font-bold">Matches</h2>
 						{playing && <p className="mt-1 text-gray-700">Tap a Match’s winner.</p>}
 						<ul aria-label="Matches" className="mt-2">
-							{matches.map(({ board, match, players: [a, b] }) => {
-								// Once Started, a Match with both Players known can be won by tapping either.
-								const canWin = playing && 'name' in b;
-								const onWin = (player: Player) => recordWinnerOf(match, player);
-								const onForfeit = (player: Player) =>
-									recordForfeitBy(match, player);
-								return (
-									<li key={board} className={matchRow}>
-										<span className="font-semibold">Board {board}</span>
-										<div className="text-right">
-											<MatchPlayer player={a} canWin={canWin} onWin={onWin} />
-										</div>
-										<span className="text-center"> vs </span>
-										<div>
-											<MatchPlayer player={b} canWin={canWin} onWin={onWin} />
-										</div>
-										{canWin && (
-											<ForfeitButton
-												board={board}
-												players={[a, b as Player]}
-												onForfeit={onForfeit}
-											/>
-										)}
-									</li>
-								);
-							})}
+							{matches.map((matchOnBoard) => (
+								<MatchRow
+									key={matchOnBoard.board}
+									matchOnBoard={matchOnBoard}
+									playing={playing}
+									onWin={recordWinnerOf}
+									onForfeit={recordForfeitBy}
+								/>
+							))}
 						</ul>
 					</>
 				)}
@@ -349,7 +333,7 @@ const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) =
 };
 
 /*
- * Asks which Player is leaving a Match before recording the Forfeit, since the names in the row record a
+ * Asks which Player is forfeiting a Match before recording the Forfeit, since the names in the row record a
  * winner: the one picked here loses.
  */
 const ForfeitButton = ({
@@ -374,7 +358,7 @@ const ForfeitButton = ({
 			</button>
 			<dialog ref={dialog} aria-labelledby={messageId} className={dialogBox}>
 				<p id={messageId} className="text-lg">
-					Who is leaving Board {board}? Their opponent wins the Match.
+					Who is forfeiting the Match on Board {board}?
 				</p>
 				<div className="mt-6 flex justify-end gap-2">
 					<button
@@ -476,6 +460,45 @@ const matchRow =
 	'grid grid-cols-[6rem_11rem_3rem_1fr_auto] items-center border-b border-gray-300 py-1.5 text-lg';
 
 const dialogBox = 'm-auto max-w-lg rounded-lg p-6 shadow-xl backdrop:bg-black/40';
+
+/*
+ * One Match's row: its Board and both Players. Once Started, a Match with both Players known can be won by
+ * tapping either, or forfeited.
+ */
+const MatchRow = ({
+	matchOnBoard: {
+		board,
+		match,
+		players: [a, b],
+	},
+	playing,
+	onWin,
+	onForfeit,
+}: {
+	matchOnBoard: MatchOnBoard;
+	playing: boolean;
+	onWin: (match: MatchPlace, player: Player) => void;
+	onForfeit: (match: MatchPlace, player: Player) => void;
+}) => {
+	const canWin = playing && 'name' in b;
+	const winMatch = (player: Player) => onWin(match, player);
+	const forfeitMatch = (player: Player) => onForfeit(match, player);
+	return (
+		<li className={matchRow}>
+			<span className="font-semibold">Board {board}</span>
+			<div className="text-right">
+				<MatchPlayer player={a} canWin={canWin} onWin={winMatch} />
+			</div>
+			<span className="text-center"> vs </span>
+			<div>
+				<MatchPlayer player={b} canWin={canWin} onWin={winMatch} />
+			</div>
+			{canWin && (
+				<ForfeitButton board={board} players={[a, b as Player]} onForfeit={forfeitMatch} />
+			)}
+		</li>
+	);
+};
 
 // One Player in a Match row: a button to tap once the Match can be won, otherwise their name.
 const MatchPlayer = ({

@@ -340,9 +340,9 @@ describe('recording winners', () => {
 
 	it('finishes the Tournament once the final has a winner, and refuses any more winners or a Start', () => {
 		const tournament = startTournament(3, 2);
-		const [first, waiting] = getMatchesOnBoards(tournament);
-		const [a] = first.players as [Player, Player];
-		const afterFirst = expectOk(recordWinner(tournament, first.match, a.id));
+		const [firstMatch, waiting] = getMatchesOnBoards(tournament);
+		const [a] = firstMatch.players as [Player, Player];
+		const afterFirst = expectOk(recordWinner(tournament, firstMatch.match, a.id));
 		expect(afterFirst.phase).toBe('inProgress');
 
 		const finished = expectOk(recordWinner(afterFirst, waiting.match, a.id));
@@ -486,9 +486,9 @@ describe('recording winners', () => {
 
 	it('refuses a winner before Start, twice for one Match, from outside the Match, or before both Players are known', () => {
 		const drawn = expectOk(makeSeededDraw(3, 2));
-		const [first, waiting] = getMatchesOnBoards(drawn);
-		const [a, b] = first.players as [Player, Player];
-		expect(recordWinner(drawn, first.match, a.id)).toEqual({
+		const [firstMatch, waiting] = getMatchesOnBoards(drawn);
+		const [a, b] = firstMatch.players as [Player, Player];
+		expect(recordWinner(drawn, firstMatch.match, a.id)).toEqual({
 			ok: false,
 			reason: 'Press Start before recording a winner.',
 		});
@@ -498,12 +498,12 @@ describe('recording winners', () => {
 			ok: false,
 			reason: 'That Match is still waiting for a Player.',
 		});
-		expect(recordWinner(tournament, first.match, waiting.players[0].id)).toEqual({
+		expect(recordWinner(tournament, firstMatch.match, waiting.players[0].id)).toEqual({
 			ok: false,
 			reason: 'That Player isn’t in that Match.',
 		});
-		const recorded = expectOk(recordWinner(tournament, first.match, a.id));
-		expect(recordWinner(recorded, first.match, b.id)).toEqual({
+		const recorded = expectOk(recordWinner(tournament, firstMatch.match, a.id));
+		expect(recordWinner(recorded, firstMatch.match, b.id)).toEqual({
 			ok: false,
 			reason: 'That Match already has a winner.',
 		});
@@ -514,11 +514,11 @@ describe('Forfeits', () => {
 	it('lets the opponent of a Player who leaves win, advancing them as any winner does', () => {
 		// 5 Players: Ann and Bob play on Board 1, Cat waits at Board 2 for its winner.
 		let tournament = startTournament(5, 4);
-		const [first, waiting] = getMatchesOnBoards(tournament);
-		const [ann, bob] = first.players as [Player, Player];
+		const [firstMatch, waiting] = getMatchesOnBoards(tournament);
+		const [ann, bob] = firstMatch.players as [Player, Player];
 		const cat = waiting.players[0];
 
-		tournament = expectOk(recordForfeit(tournament, first.match, bob.id));
+		tournament = expectOk(recordForfeit(tournament, firstMatch.match, bob.id));
 
 		expect(getWinnersBracketPicture(tournament)!.rounds[0][0]).toMatchObject({ winner: ann });
 		expect(getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann))).toMatchObject({
@@ -530,10 +530,10 @@ describe('Forfeits', () => {
 
 	it('refuses a Forfeit by a Player outside the Match, or in a Match still waiting for a Player', () => {
 		const tournament = startTournament(3, 2);
-		const [first, waiting] = getMatchesOnBoards(tournament);
+		const [firstMatch, waiting] = getMatchesOnBoards(tournament);
 		const bye = waiting.players[0];
 
-		expect(recordForfeit(tournament, first.match, bye.id)).toEqual({
+		expect(recordForfeit(tournament, firstMatch.match, bye.id)).toEqual({
 			ok: false,
 			reason: 'That Player isn’t in that Match.',
 		});
@@ -568,15 +568,15 @@ describe('undoing a result', () => {
 		// 5 Players: Ann and Bob play on Board 1, Cat waits at Board 2 for its winner.
 		let tournament = startTournament(5, 4);
 		const drawn = getMatchesOnBoards(tournament);
-		const [first, waiting] = drawn;
-		const [ann, bob] = first.players as [Player, Player];
+		const [firstMatch, waiting] = drawn;
+		const [ann, bob] = firstMatch.players as [Player, Player];
 		const cat = waiting.players[0];
-		tournament = expectOk(recordWinner(tournament, first.match, ann.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id));
 
-		tournament = expectOk(undoResult(tournament, first.match));
+		tournament = expectOk(undoResult(tournament, firstMatch.match));
 
 		expect(getMatchesOnBoards(tournament)).toEqual(drawn);
-		tournament = expectOk(recordWinner(tournament, first.match, bob.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, bob.id));
 		expect(getMatchesOnBoards(tournament).find((m) => isPlaying(m, cat))).toMatchObject({
 			board: 2,
 			players: [bob, cat],
@@ -611,15 +611,15 @@ describe('undoing a result', () => {
 	it('gives the Match the lowest-numbered free Board once its own Board is taken', () => {
 		// 5 Players: Ann and Bob play on Board 1, Cat waits at Board 2 for its winner, Dan and Eve play on Board 3.
 		let tournament = startTournament(5, 4);
-		const [first, , byes] = getMatchesOnBoards(tournament);
-		const [ann, bob] = first.players as [Player, Player];
+		const [firstMatch, , byes] = getMatchesOnBoards(tournament);
+		const [ann, bob] = firstMatch.players as [Player, Player];
 		const [dan] = byes.players as [Player, Player];
-		tournament = expectOk(recordWinner(tournament, first.match, ann.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id));
 		// Boards 1 and 3 are free, so Dan waits in the final at Board 1.
 		tournament = expectOk(recordWinner(tournament, byes.match, dan.id));
 		expect(getMatchesOnBoards(tournament).find((m) => isPlaying(m, dan))!.board).toBe(1);
 
-		tournament = expectOk(undoResult(tournament, first.match));
+		tournament = expectOk(undoResult(tournament, firstMatch.match));
 
 		expect(getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann, bob))!.board).toBe(3);
 	});
@@ -627,16 +627,16 @@ describe('undoing a result', () => {
 	it('refuses to undo a result once its winner has played their next Match, or a Match with no result', () => {
 		// 5 Players: Ann and Bob play on Board 1, Cat waits at Board 2 for its winner.
 		let tournament = startTournament(5, 4);
-		const [first, waiting] = getMatchesOnBoards(tournament);
-		const [ann] = first.players as [Player, Player];
-		expect(undoResult(tournament, first.match)).toEqual({
+		const [firstMatch, waiting] = getMatchesOnBoards(tournament);
+		const [ann] = firstMatch.players as [Player, Player];
+		expect(undoResult(tournament, firstMatch.match)).toEqual({
 			ok: false,
 			reason: 'That Match has no result to undo.',
 		});
-		tournament = expectOk(recordWinner(tournament, first.match, ann.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id));
 		tournament = expectOk(recordWinner(tournament, waiting.match, ann.id));
 
-		expect(undoResult(tournament, first.match)).toEqual({
+		expect(undoResult(tournament, firstMatch.match)).toEqual({
 			ok: false,
 			reason: 'That result can’t be undone: its winner has already played their next Match.',
 		});
@@ -662,18 +662,18 @@ describe('undoing a result', () => {
 	it('lists the results that can still be undone, latest first, with how each was decided', () => {
 		// 5 Players: Ann and Bob play on Board 1, Cat waits at Board 2 for its winner, Dan and Eve play on Board 3.
 		let tournament = startTournament(5, 4);
-		const [first, waiting, byes] = getMatchesOnBoards(tournament);
-		const [ann, bob] = first.players as [Player, Player];
+		const [firstMatch, waiting, byes] = getMatchesOnBoards(tournament);
+		const [ann, bob] = firstMatch.players as [Player, Player];
 		const cat = waiting.players[0];
 		const [dan, eve] = byes.players as [Player, Player];
 		expect(getUndoableResults(tournament)).toEqual([]);
 
-		tournament = expectOk(recordForfeit(tournament, first.match, bob.id));
+		tournament = expectOk(recordForfeit(tournament, firstMatch.match, bob.id));
 		tournament = expectOk(recordWinner(tournament, byes.match, eve.id));
 
 		expect(getUndoableResults(tournament)).toEqual([
 			{ match: byes.match, board: 3, winner: eve, loser: dan, isForfeit: false },
-			{ match: first.match, board: 1, winner: ann, loser: bob, isForfeit: true },
+			{ match: firstMatch.match, board: 1, winner: ann, loser: bob, isForfeit: true },
 		]);
 
 		tournament = expectOk(recordWinner(tournament, waiting.match, cat.id));
@@ -690,8 +690,8 @@ describe('the Winners Bracket picture', () => {
 	it('puts Bye Players in Round 2, and shows who has advanced and who is still playing', () => {
 		// 5 Players in an 8-place bracket: one first-Round Match, three Byes.
 		let tournament = startTournament(5, 4);
-		const [first, waiting, byes] = getMatchesOnBoards(tournament);
-		const [ann, bob] = first.players as [Player, Player];
+		const [firstMatch, waiting, byes] = getMatchesOnBoards(tournament);
+		const [ann, bob] = firstMatch.players as [Player, Player];
 		const cat = waiting.players[0];
 		const [dan, eve] = byes.players as [Player, Player];
 
@@ -706,7 +706,7 @@ describe('the Winners Bracket picture', () => {
 			],
 		});
 
-		tournament = expectOk(recordWinner(tournament, first.match, bob.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, bob.id));
 
 		expect(getWinnersBracketPicture(tournament)!.rounds.slice(0, 2)).toEqual([
 			[{ players: [ann, bob], winner: bob }, undefined, undefined, undefined],
@@ -722,8 +722,8 @@ describe('Now playing', () => {
 	it('lists each Match being played, with its Board and both Players, but not a Player waiting', () => {
 		// 5 Players: Ann and Bob play on Board 1, Cat waits at Board 2 for its winner, Dan and Eve play on Board 3.
 		let tournament = startTournament(5, 4);
-		const [first, waiting, byes] = getMatchesOnBoards(tournament);
-		const [ann, bob] = first.players as [Player, Player];
+		const [firstMatch, waiting, byes] = getMatchesOnBoards(tournament);
+		const [ann, bob] = firstMatch.players as [Player, Player];
 		const cat = waiting.players[0];
 		const [dan, eve] = byes.players as [Player, Player];
 		const listNowPlaying = () =>
@@ -734,7 +734,7 @@ describe('Now playing', () => {
 			[3, dan.name, eve.name],
 		]);
 
-		tournament = expectOk(recordWinner(tournament, first.match, ann.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id));
 		expect(listNowPlaying()).toEqual([
 			[2, ann.name, cat.name],
 			[3, dan.name, eve.name],
@@ -752,13 +752,13 @@ describe('who has lost in the Winners Bracket', () => {
 	it('counts only a Player beaten in a Match, not one with a Bye or still to play', () => {
 		// 5 Players: Ann and Bob play the one first-Round Match; Cat has a Bye and waits for its winner.
 		let tournament = startTournament(5, 4);
-		const [first, waiting] = getMatchesOnBoards(tournament);
-		const [ann, bob] = first.players as [Player, Player];
+		const [firstMatch, waiting] = getMatchesOnBoards(tournament);
+		const [ann, bob] = firstMatch.players as [Player, Player];
 		const cat = waiting.players[0];
 
 		expect(hasLostInWinnersBracket(tournament, ann.id)).toBe(false);
 
-		tournament = expectOk(recordWinner(tournament, first.match, bob.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, bob.id));
 
 		expect(hasLostInWinnersBracket(tournament, ann.id)).toBe(true);
 		expect(hasLostInWinnersBracket(tournament, bob.id)).toBe(false);

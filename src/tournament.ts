@@ -38,7 +38,7 @@ export interface MatchResult {
 	readonly match: MatchPlace;
 	readonly winner: PlayerId;
 	readonly board: BoardNumber;
-	// The loser left before playing it.
+	// The loser left before finishing it.
 	readonly isForfeit: boolean;
 }
 
@@ -318,7 +318,7 @@ export const recordWinner = (
 	return { ok: true, value: settleMatch(tournament, match, winner, false) };
 };
 
-// Records a Forfeit: the Player leaves before playing the Match, and their opponent wins it.
+// Records a Forfeit: the Player leaves before finishing the Match, and their opponent wins it.
 export const recordForfeit = (
 	tournament: Tournament,
 	match: MatchPlace,
