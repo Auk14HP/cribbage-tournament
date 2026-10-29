@@ -10,14 +10,17 @@ import {
 	renamePlayer,
 	setBoardCount,
 	start,
-	getWinnersBracketPicture,
-	hasLostInWinnersBracket,
+	getBracketPicture,
+	hasLostIn,
 	getNowPlaying,
 	setScreenSeconds,
 	undoResult,
 	getUndoableResults,
+	isLosersBracketOpenTo,
+	getWaitingForBoard,
 	type MatchOnBoard,
 	type Player,
+	type StayingAnswer,
 	type Tournament,
 	type WinnerOf,
 } from './tournament';
@@ -332,9 +335,9 @@ describe('recording winners', () => {
 		const [final] = getMatchesOnBoards(tournament);
 		const [a] = final.players as [Player, Player];
 
-		const after = expectOk(recordWinner(tournament, final.match, a.id));
+		const after = expectOk(recordWinner(tournament, final.match, a.id, 'leaving'));
 
-		expect(getWinnersBracketPicture(after)!.champion).toEqual(a);
+		expect(getBracketPicture(after, 'winners')!.champion).toEqual(a);
 		expect(getMatchesOnBoards(after)).toEqual([]);
 	});
 
@@ -342,13 +345,13 @@ describe('recording winners', () => {
 		const tournament = startTournament(3, 2);
 		const [firstMatch, waiting] = getMatchesOnBoards(tournament);
 		const [a] = firstMatch.players as [Player, Player];
-		const afterFirst = expectOk(recordWinner(tournament, firstMatch.match, a.id));
+		const afterFirst = expectOk(recordWinner(tournament, firstMatch.match, a.id, 'leaving'));
 		expect(afterFirst.phase).toBe('inProgress');
 
-		const finished = expectOk(recordWinner(afterFirst, waiting.match, a.id));
+		const finished = expectOk(recordWinner(afterFirst, waiting.match, a.id, 'leaving'));
 
 		expect(finished.phase).toBe('finished');
-		expect(getWinnersBracketPicture(finished)!.champion).toEqual(a);
+		expect(getBracketPicture(finished, 'winners')!.champion).toEqual(a);
 		expect(recordWinner(finished, waiting.match, a.id)).toEqual({
 			ok: false,
 			reason: 'The Tournament is finished.',
@@ -378,7 +381,7 @@ describe('recording winners', () => {
 		const dan = findMatchOn(3).players[0];
 		const recordWin = (board: number, winner: Player) => {
 			const { match } = findMatchOn(board);
-			tournament = expectOk(recordWinner(tournament, match, winner.id));
+			tournament = expectOk(recordWinner(tournament, match, winner.id, 'leaving'));
 		};
 
 		recordWin(3, dan);
@@ -399,11 +402,11 @@ describe('recording winners', () => {
 		recordWin(2, ann);
 		// Ann joins Dan at Board 3 for the final, and Board 2 frees.
 		expect(listSeats()).toEqual([[3, ann.name, dan.name]]);
-		expect(getWinnersBracketPicture(tournament)!.champion).toBeUndefined();
+		expect(getBracketPicture(tournament, 'winners')!.champion).toBeUndefined();
 
 		recordWin(3, dan);
 		expect(listSeats()).toEqual([]);
-		expect(getWinnersBracketPicture(tournament)!.champion).toEqual(dan);
+		expect(getBracketPicture(tournament, 'winners')!.champion).toEqual(dan);
 	});
 
 	it('seats a winner at the lowest-numbered free Board to wait for their opponent, who comes to them', () => {
@@ -421,7 +424,9 @@ describe('recording winners', () => {
 			(findMatchOn(board).players[side] as Player).name;
 		const recordFirstPlayerWin = (board: number) => {
 			const { match, players } = findMatchOn(board);
-			tournament = expectOk(recordWinner(tournament, match, (players[0] as Player).id));
+			tournament = expectOk(
+				recordWinner(tournament, match, (players[0] as Player).id, 'leaving'),
+			);
 		};
 		const [a1, a2, a3, a4] = [1, 2, 3, 4].map((board) => getNameAt(board, 0));
 
@@ -475,12 +480,12 @@ describe('recording winners', () => {
 				}
 				// The second-named Player wins, so a Player who waited isn't always the one who goes through.
 				const winner = ready.players[1] as Player;
-				tournament = expectOk(recordWinner(tournament, ready.match, winner.id));
+				tournament = expectOk(recordWinner(tournament, ready.match, winner.id, 'leaving'));
 				played++;
 			}
 			// Every Match knocks one Player out, until one is left: the champion.
 			expect(played).toBe(field - 1);
-			expect(getWinnersBracketPicture(tournament)!.champion).toBeDefined();
+			expect(getBracketPicture(tournament, 'winners')!.champion).toBeDefined();
 		},
 	);
 
@@ -502,7 +507,7 @@ describe('recording winners', () => {
 			ok: false,
 			reason: 'That Player isn’t in that Match.',
 		});
-		const recorded = expectOk(recordWinner(tournament, firstMatch.match, a.id));
+		const recorded = expectOk(recordWinner(tournament, firstMatch.match, a.id, 'leaving'));
 		expect(recordWinner(recorded, firstMatch.match, b.id)).toEqual({
 			ok: false,
 			reason: 'That Match already has a winner.',
@@ -518,14 +523,16 @@ describe('Forfeits', () => {
 		const [ann, bob] = firstMatch.players as [Player, Player];
 		const cat = waiting.players[0];
 
-		tournament = expectOk(recordForfeit(tournament, firstMatch.match, bob.id));
+		tournament = expectOk(recordForfeit(tournament, firstMatch.match, bob.id, 'leaving'));
 
-		expect(getWinnersBracketPicture(tournament)!.rounds[0][0]).toMatchObject({ winner: ann });
+		expect(getBracketPicture(tournament, 'winners')!.rounds[0][0]).toMatchObject({
+			winner: ann,
+		});
 		expect(getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann))).toMatchObject({
 			board: 2,
 			players: [ann, cat],
 		});
-		expect(hasLostInWinnersBracket(tournament, bob.id)).toBe(true);
+		expect(hasLostIn(tournament, 'winners', bob.id)).toBe(true);
 	});
 
 	it('refuses a Forfeit by a Player outside the Match, or in a Match still waiting for a Player', () => {
@@ -551,7 +558,7 @@ describe('undoing a result', () => {
 		const drawn = getMatchesOnBoards(tournament);
 		const two = drawn.find((m) => m.board === 2)!;
 		const [winner] = two.players as [Player, Player];
-		tournament = expectOk(recordWinner(tournament, two.match, winner.id));
+		tournament = expectOk(recordWinner(tournament, two.match, winner.id, 'leaving'));
 		// Board 2 frees, and Board 2 is the lowest free, so its winner waits there for Board 1's winner.
 		expect(getMatchesOnBoards(tournament).find((m) => m.board === 2)!.players).toEqual([
 			winner,
@@ -561,7 +568,7 @@ describe('undoing a result', () => {
 		tournament = expectOk(undoResult(tournament, two.match));
 
 		expect(getMatchesOnBoards(tournament)).toEqual(drawn);
-		expect(getWinnersBracketPicture(tournament)!.rounds[0][1]!.winner).toBeUndefined();
+		expect(getBracketPicture(tournament, 'winners')!.rounds[0][1]!.winner).toBeUndefined();
 	});
 
 	it('keeps the next Match’s Board for an opponent already waiting there, and lets the other Player be recorded instead', () => {
@@ -571,19 +578,21 @@ describe('undoing a result', () => {
 		const [firstMatch, waiting] = drawn;
 		const [ann, bob] = firstMatch.players as [Player, Player];
 		const cat = waiting.players[0];
-		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id, 'leaving'));
 
 		tournament = expectOk(undoResult(tournament, firstMatch.match));
 
 		expect(getMatchesOnBoards(tournament)).toEqual(drawn);
-		tournament = expectOk(recordWinner(tournament, firstMatch.match, bob.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, bob.id, 'leaving'));
 		expect(getMatchesOnBoards(tournament).find((m) => isPlaying(m, cat))).toMatchObject({
 			board: 2,
 			players: [bob, cat],
 		});
-		expect(getWinnersBracketPicture(tournament)!.rounds[0][0]).toMatchObject({ winner: bob });
-		expect(hasLostInWinnersBracket(tournament, ann.id)).toBe(true);
-		expect(hasLostInWinnersBracket(tournament, bob.id)).toBe(false);
+		expect(getBracketPicture(tournament, 'winners')!.rounds[0][0]).toMatchObject({
+			winner: bob,
+		});
+		expect(hasLostIn(tournament, 'winners', ann.id)).toBe(true);
+		expect(hasLostIn(tournament, 'winners', bob.id)).toBe(false);
 	});
 
 	it('returns the Match to its own Board when it is free, even if a lower-numbered one is too', () => {
@@ -593,7 +602,9 @@ describe('undoing a result', () => {
 			getMatchesOnBoards(tournament).find((m) => m.board === board)!;
 		const recordFirstPlayerWin = (board: number) => {
 			const { match, players } = findMatchOn(board);
-			tournament = expectOk(recordWinner(tournament, match, (players[0] as Player).id));
+			tournament = expectOk(
+				recordWinner(tournament, match, (players[0] as Player).id, 'leaving'),
+			);
 		};
 		const three = findMatchOn(3);
 		// Boards 1 and 4's winners wait at their own Boards, and Boards 2 and 3's winners join them.
@@ -614,9 +625,9 @@ describe('undoing a result', () => {
 		const [firstMatch, , byes] = getMatchesOnBoards(tournament);
 		const [ann, bob] = firstMatch.players as [Player, Player];
 		const [dan] = byes.players as [Player, Player];
-		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id, 'leaving'));
 		// Boards 1 and 3 are free, so Dan waits in the final at Board 1.
-		tournament = expectOk(recordWinner(tournament, byes.match, dan.id));
+		tournament = expectOk(recordWinner(tournament, byes.match, dan.id, 'leaving'));
 		expect(getMatchesOnBoards(tournament).find((m) => isPlaying(m, dan))!.board).toBe(1);
 
 		tournament = expectOk(undoResult(tournament, firstMatch.match));
@@ -633,8 +644,8 @@ describe('undoing a result', () => {
 			ok: false,
 			reason: 'That Match has no result to undo.',
 		});
-		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id));
-		tournament = expectOk(recordWinner(tournament, waiting.match, ann.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id, 'leaving'));
+		tournament = expectOk(recordWinner(tournament, waiting.match, ann.id, 'leaving'));
 
 		expect(undoResult(tournament, firstMatch.match)).toEqual({
 			ok: false,
@@ -647,16 +658,16 @@ describe('undoing a result', () => {
 		const started = startTournament(2, 1);
 		const [final] = getMatchesOnBoards(started);
 		const [a, b] = final.players as [Player, Player];
-		let tournament = expectOk(recordWinner(started, final.match, a.id));
+		let tournament = expectOk(recordWinner(started, final.match, a.id, 'leaving'));
 		expect(tournament.phase).toBe('finished');
 
 		tournament = expectOk(undoResult(tournament, final.match));
 
 		expect(tournament.phase).toBe('inProgress');
-		expect(getWinnersBracketPicture(tournament)!.champion).toBeUndefined();
+		expect(getBracketPicture(tournament, 'winners')!.champion).toBeUndefined();
 		expect(getMatchesOnBoards(tournament)).toEqual([final]);
-		tournament = expectOk(recordWinner(tournament, final.match, b.id));
-		expect(getWinnersBracketPicture(tournament)!.champion).toEqual(b);
+		tournament = expectOk(recordWinner(tournament, final.match, b.id, 'leaving'));
+		expect(getBracketPicture(tournament, 'winners')!.champion).toEqual(b);
 	});
 
 	it('lists the results that can still be undone, latest first, with how each was decided', () => {
@@ -668,15 +679,15 @@ describe('undoing a result', () => {
 		const [dan, eve] = byes.players as [Player, Player];
 		expect(getUndoableResults(tournament)).toEqual([]);
 
-		tournament = expectOk(recordForfeit(tournament, firstMatch.match, bob.id));
-		tournament = expectOk(recordWinner(tournament, byes.match, eve.id));
+		tournament = expectOk(recordForfeit(tournament, firstMatch.match, bob.id, 'leaving'));
+		tournament = expectOk(recordWinner(tournament, byes.match, eve.id, 'leaving'));
 
 		expect(getUndoableResults(tournament)).toEqual([
 			{ match: byes.match, board: 3, winner: eve, loser: dan, isForfeit: false },
 			{ match: firstMatch.match, board: 1, winner: ann, loser: bob, isForfeit: true },
 		]);
 
-		tournament = expectOk(recordWinner(tournament, waiting.match, cat.id));
+		tournament = expectOk(recordWinner(tournament, waiting.match, cat.id, 'leaving'));
 
 		// Ann has played her next Match, so her Forfeit win can no longer be undone.
 		expect(getUndoableResults(tournament)).toEqual([
@@ -695,7 +706,7 @@ describe('the Winners Bracket picture', () => {
 		const cat = waiting.players[0];
 		const [dan, eve] = byes.players as [Player, Player];
 
-		expect(getWinnersBracketPicture(tournament)).toEqual({
+		expect(getBracketPicture(tournament, 'winners')).toEqual({
 			rounds: [
 				[{ players: [ann, bob], board: 1 }, undefined, undefined, undefined],
 				[
@@ -706,9 +717,9 @@ describe('the Winners Bracket picture', () => {
 			],
 		});
 
-		tournament = expectOk(recordWinner(tournament, firstMatch.match, bob.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, bob.id, 'leaving'));
 
-		expect(getWinnersBracketPicture(tournament)!.rounds.slice(0, 2)).toEqual([
+		expect(getBracketPicture(tournament, 'winners')!.rounds.slice(0, 2)).toEqual([
 			[{ players: [ann, bob], winner: bob }, undefined, undefined, undefined],
 			[
 				{ players: [bob, cat], board: 2 },
@@ -734,7 +745,7 @@ describe('Now playing', () => {
 			[3, dan.name, eve.name],
 		]);
 
-		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id, 'leaving'));
 		expect(listNowPlaying()).toEqual([
 			[2, ann.name, cat.name],
 			[3, dan.name, eve.name],
@@ -756,21 +767,369 @@ describe('who has lost in the Winners Bracket', () => {
 		const [ann, bob] = firstMatch.players as [Player, Player];
 		const cat = waiting.players[0];
 
-		expect(hasLostInWinnersBracket(tournament, ann.id)).toBe(false);
+		expect(hasLostIn(tournament, 'winners', ann.id)).toBe(false);
 
-		tournament = expectOk(recordWinner(tournament, firstMatch.match, bob.id));
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, bob.id, 'leaving'));
 
-		expect(hasLostInWinnersBracket(tournament, ann.id)).toBe(true);
-		expect(hasLostInWinnersBracket(tournament, bob.id)).toBe(false);
-		expect(hasLostInWinnersBracket(tournament, cat.id)).toBe(false);
+		expect(hasLostIn(tournament, 'winners', ann.id)).toBe(true);
+		expect(hasLostIn(tournament, 'winners', bob.id)).toBe(false);
+		expect(hasLostIn(tournament, 'winners', cat.id)).toBe(false);
 
 		const bobAndCat = getMatchesOnBoards(tournament).find((m) => isPlaying(m, bob, cat))!;
-		tournament = expectOk(recordWinner(tournament, bobAndCat.match, cat.id));
+		tournament = expectOk(recordWinner(tournament, bobAndCat.match, cat.id, 'leaving'));
 
-		expect(hasLostInWinnersBracket(tournament, bob.id)).toBe(true);
-		expect(hasLostInWinnersBracket(tournament, cat.id)).toBe(false);
+		expect(hasLostIn(tournament, 'winners', bob.id)).toBe(true);
+		expect(hasLostIn(tournament, 'winners', cat.id)).toBe(false);
 	});
 });
+
+describe('the Losers Bracket', () => {
+	it('asks whether a Player losing their first Match is staying, in whichever Round, Forfeits included', () => {
+		/*
+		 * 5 Players: Ann and Bob play the one first-Round Match, Cat has a Bye and waits for its winner,
+		 * and Dan and Eve, both Byes, meet in Round 2.
+		 */
+		let tournament = startTournament(5, 4);
+		const [firstMatch, waiting] = getMatchesOnBoards(tournament);
+		const [ann, bob] = firstMatch.players as [Player, Player];
+		const cat = waiting.players[0];
+
+		expect(isLosersBracketOpenTo(tournament, bob.id)).toBe(true);
+		expect(recordWinner(tournament, firstMatch.match, ann.id)).toEqual({
+			ok: false,
+			reason: `Say whether ${bob.name} is staying for the Losers Bracket.`,
+		});
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id, 'staying'));
+
+		// Cat's first Match is in Round 2, and a Forfeit counts. Ann has played, so losing now isn't asked.
+		const annAndCat = getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann, cat))!;
+		expect(isLosersBracketOpenTo(tournament, cat.id)).toBe(true);
+		expect(isLosersBracketOpenTo(tournament, ann.id)).toBe(false);
+		expect(recordForfeit(tournament, annAndCat.match, cat.id)).toEqual({
+			ok: false,
+			reason: `Say whether ${cat.name} is staying for the Losers Bracket.`,
+		});
+		expect(recordForfeit(tournament, annAndCat.match, cat.id, 'leaving').ok).toBe(true);
+		expect(recordWinner(tournament, annAndCat.match, cat.id).ok).toBe(true);
+	});
+
+	it('is drawn from those staying once every Match the Draw started has a result, its Matches waiting for a Board when none is free', () => {
+		/*
+		 * 6 Players on 3 Boards: Ann and Bob, and Cat and Dan, play first-Round Matches; Eve and Fay, both
+		 * Byes, meet in Round 2.
+		 */
+		let tournament = startTournament(6, 3);
+		const [annAndBob, catAndDan, eveAndFay] = getMatchesOnBoards(tournament);
+		const [ann, bob] = annAndBob.players as [Player, Player];
+		const [cat, dan] = catAndDan.players as [Player, Player];
+		const [eve, fay] = eveAndFay.players as [Player, Player];
+		tournament = expectOk(recordWinner(tournament, annAndBob.match, ann.id, 'staying'));
+		tournament = expectOk(recordWinner(tournament, catAndDan.match, cat.id, 'staying'));
+		expect(getBracketPicture(tournament, 'losers')).toBeUndefined();
+
+		tournament = expectOk(recordWinner(tournament, eveAndFay.match, eve.id, 'staying'));
+
+		/*
+		 * The Winners Bracket holds 2 Boards: Ann and Cat's Match, and Eve waiting for the final. Bob, Dan
+		 * and Fay make a Losers Bracket of one Match and a Bye: the Match takes the third Board, and the Bye
+		 * Player waits for a Board of their own.
+		 */
+		const [[losersMatch], [losersFinal]] = getBracketPicture(tournament, 'losers')!.rounds;
+		const byePlayer = losersFinal!.players.find(Boolean)!;
+		expect([...losersMatch!.players, byePlayer].map((p) => p!.name).sort()).toEqual(
+			[bob, dan, fay].map((p) => p.name).sort(),
+		);
+		const [losersA, losersB] = losersMatch!.players as [Player, Player];
+		expect(listSeats(tournament)).toEqual([
+			[1, ann.name, cat.name],
+			[2, eve.name, 'Winner of Board 1'],
+			[3, losersA.name, losersB.name],
+		]);
+		expect(listWaiting(tournament)).toEqual([[byePlayer.name, 'Winner of Board 3']]);
+
+		// Board 1 frees, and the longest-waiting Match takes it. Ann goes to Eve's Board for the final.
+		const annAndCat = getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann, cat))!;
+		tournament = expectOk(recordWinner(tournament, annAndCat.match, ann.id));
+		expect(listSeats(tournament)).toEqual([
+			[1, byePlayer.name, 'Winner of Board 3'],
+			[2, ann.name, eve.name],
+			[3, losersA.name, losersB.name],
+		]);
+		expect(listWaiting(tournament)).toEqual([]);
+	});
+
+	it('is not played with fewer than two Players staying, and the Tournament finishes with the Winners Bracket', () => {
+		// 4 Players: Ann and Bob, and Cat and Dan, play the first Round.
+		let tournament = startTournament(4, 2);
+		const [annAndBob, catAndDan] = getMatchesOnBoards(tournament);
+		const [ann] = annAndBob.players as [Player, Player];
+		const [cat] = catAndDan.players as [Player, Player];
+		tournament = expectOk(recordWinner(tournament, annAndBob.match, ann.id, 'staying'));
+		tournament = expectOk(recordWinner(tournament, catAndDan.match, cat.id, 'leaving'));
+
+		expect(getBracketPicture(tournament, 'losers')).toBeUndefined();
+		expect(getMatchesOnBoards(tournament).map((m) => m.board)).toEqual([1]);
+		const [final] = getMatchesOnBoards(tournament);
+		tournament = expectOk(recordWinner(tournament, final.match, ann.id));
+		expect(tournament.phase).toBe('finished');
+	});
+
+	it('finishes the Tournament only once both brackets have a champion', () => {
+		// 4 Players: Ann beats Bob and Cat beats Dan, and Bob and Dan both stay to meet in the Losers Bracket.
+		let tournament = startTournament(4, 2);
+		const [annAndBob, catAndDan] = getMatchesOnBoards(tournament);
+		const [ann, bob] = annAndBob.players as [Player, Player];
+		const [cat, dan] = catAndDan.players as [Player, Player];
+		tournament = expectOk(recordWinner(tournament, annAndBob.match, ann.id, 'staying'));
+		tournament = expectOk(recordWinner(tournament, catAndDan.match, cat.id, 'staying'));
+		const winnersFinal = getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann, cat))!;
+		const losersFinal = getMatchesOnBoards(tournament).find((m) => isPlaying(m, bob, dan))!;
+
+		tournament = expectOk(recordWinner(tournament, winnersFinal.match, cat.id));
+		expect(getBracketPicture(tournament, 'winners')!.champion).toEqual(cat);
+		expect(tournament.phase).toBe('inProgress');
+
+		expect(hasLostIn(tournament, 'losers', dan.id)).toBe(false);
+		tournament = expectOk(recordWinner(tournament, losersFinal.match, bob.id));
+		expect(hasLostIn(tournament, 'losers', dan.id)).toBe(true);
+		expect(hasLostIn(tournament, 'winners', dan.id)).toBe(true);
+		expect(hasLostIn(tournament, 'losers', bob.id)).toBe(false);
+		expect(getBracketPicture(tournament, 'losers')!.champion).toEqual(bob);
+		expect(tournament.phase).toBe('finished');
+	});
+
+	it('holds a place for a Bye Player whose first Match is still to come, theirs if they lose and stay', () => {
+		const heldPlace = setUpHeldPlace(['staying', 'staying']);
+		const { ann, cat, dan, losersMatch } = heldPlace;
+		let { tournament } = heldPlace;
+		const [staying, other] = losersMatch.map((p) => p.name);
+		expect(listSeats(tournament)).toEqual([
+			[1, dan.name, 'Winner of Board 2'],
+			[2, ann.name, cat.name],
+			[3, staying, `Place held for ${cat.name}`],
+			[4, other, 'Winner of Board 3'],
+		]);
+		const annAndCat = getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann, cat))!;
+		const losersFirstMatch = getMatchesOnBoards(tournament).find((m) => m.board === 3)!;
+		expect(recordWinner(tournament, losersFirstMatch.match, losersMatch[0].id)).toEqual({
+			ok: false,
+			reason: 'That Match is still waiting for a Player.',
+		});
+		expect(isLosersBracketOpenTo(tournament, cat.id)).toBe(true);
+
+		tournament = expectOk(recordWinner(tournament, annAndCat.match, ann.id, 'staying'));
+
+		// Cat comes to the held place at Board 3, and Ann joins Dan for the final.
+		expect(listSeats(tournament)).toEqual([
+			[1, ann.name, dan.name],
+			[3, cat.name, staying],
+			[4, other, 'Winner of Board 3'],
+		]);
+	});
+
+	it.each([
+		{ result: 'wins their first Match', catWins: true, answer: undefined },
+		{
+			result: 'loses their first Match and leaves',
+			catWins: false,
+			answer: 'leaving' as const,
+		},
+	])(
+		'gives the held place’s opponent a Bye when the Bye Player $result',
+		({ catWins, answer }) => {
+			const heldPlace = setUpHeldPlace(['staying', 'staying']);
+			const { ann, cat, dan, losersMatch } = heldPlace;
+			let { tournament } = heldPlace;
+			const [byeNow, byeAtDraw] = losersMatch.map((p) => p.name);
+			const annAndCat = getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann, cat))!;
+			const winner = catWins ? cat : ann;
+
+			tournament = expectOk(recordWinner(tournament, annAndCat.match, winner.id, answer));
+
+			// Board 3 frees: its Player goes on to meet the Bye Player waiting at Board 4.
+			expect(listSeats(tournament)).toEqual([
+				[1, winner.name, dan.name],
+				[4, byeNow, byeAtDraw],
+			]);
+			const [, [losersFinal]] = getBracketPicture(tournament, 'losers')!.rounds;
+			expect(losersFinal!.players.map((p) => p!.name)).toEqual([byeNow, byeAtDraw]);
+		},
+	);
+
+	it('refuses to undo a first-Match result once the Losers Bracket is drawn, and lists only the others', () => {
+		// 4 Players: Ann beats Bob and Cat beats Dan, and Bob and Dan both stay to meet in the Losers Bracket.
+		let tournament = startTournament(4, 2);
+		const [annAndBob, catAndDan] = getMatchesOnBoards(tournament);
+		const [ann, bob] = annAndBob.players as [Player, Player];
+		const [cat, dan] = catAndDan.players as [Player, Player];
+		tournament = expectOk(recordWinner(tournament, annAndBob.match, ann.id, 'staying'));
+		tournament = expectOk(recordWinner(tournament, catAndDan.match, cat.id, 'staying'));
+
+		expect(undoResult(tournament, annAndBob.match)).toEqual({
+			ok: false,
+			reason: 'That result can’t be undone: the Losers Bracket has been drawn.',
+		});
+		expect(getUndoableResults(tournament)).toEqual([]);
+
+		const losersFinal = getMatchesOnBoards(tournament).find((m) => isPlaying(m, bob, dan))!;
+		const winnersFinal = getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann, cat))!;
+		tournament = expectOk(recordWinner(tournament, losersFinal.match, dan.id));
+		tournament = expectOk(recordWinner(tournament, winnersFinal.match, ann.id));
+		const undoable = getUndoableResults(tournament).map((r) => [r.winner.name, r.loser.name]);
+		expect(undoable).toEqual([
+			[ann.name, cat.name],
+			[dan.name, bob.name],
+		]);
+		expect(undoResult(tournament, losersFinal.match).ok).toBe(true);
+	});
+
+	it('lets a first-Match result be undone when no Losers Bracket was drawn, drawing one if two then stay', () => {
+		// 4 Players: Ann beats Bob, who stays, and Cat beats Dan, who leaves: no Losers Bracket.
+		let tournament = startTournament(4, 2);
+		const [annAndBob, catAndDan] = getMatchesOnBoards(tournament);
+		const [ann, bob] = annAndBob.players as [Player, Player];
+		const [cat, dan] = catAndDan.players as [Player, Player];
+		tournament = expectOk(recordWinner(tournament, annAndBob.match, ann.id, 'staying'));
+		tournament = expectOk(recordWinner(tournament, catAndDan.match, cat.id, 'leaving'));
+
+		tournament = expectOk(undoResult(tournament, catAndDan.match));
+		expect(isLosersBracketOpenTo(tournament, dan.id)).toBe(true);
+		tournament = expectOk(recordWinner(tournament, catAndDan.match, cat.id, 'staying'));
+
+		const [[losersFinal]] = getBracketPicture(tournament, 'losers')!.rounds;
+		expect(losersFinal!.players.map((p) => p!.name).sort()).toEqual(
+			[bob.name, dan.name].sort(),
+		);
+		expect(getMatchesOnBoards(tournament).some((m) => isPlaying(m, ann, cat))).toBe(true);
+	});
+
+	it('makes the Losers Draw at random, the same every time from the same seeded random source', () => {
+		const drawLosersWith = (seed: number) => {
+			const tournament = playDrawStaying(startTournament(26, 13, seed));
+			return getBracketPicture(tournament, 'losers')!.rounds[0];
+		};
+
+		expect(drawLosersWith(42)).toEqual(drawLosersWith(42));
+		expect(drawLosersWith(42)).not.toEqual(drawLosersWith(43));
+		// Not in the order the Players registered.
+		const drawnIds = drawLosersWith(42).flatMap((m) => m?.players.map((p) => p!.id) ?? []);
+		expect(drawnIds).not.toEqual([...drawnIds].sort((a, b) => a - b));
+	});
+
+	it('gives each Board that frees to the longest-waiting Match, whichever its bracket', () => {
+		/*
+		 * 10 Players on 5 Boards: two first-Round Matches, and three Round 2 Matches between Bye Players.
+		 * Once all five are played, the Winners Bracket holds 3 Boards, and the five losers, all staying,
+		 * make a Losers Bracket needing 3: its last Match waits.
+		 */
+		let tournament = playDrawStaying(startTournament(10, 5));
+		const [waitingLosers] = getWaitingForBoard(tournament);
+		expect(waitingLosers.match.bracket).toBe('losers');
+		const [a, b] = waitingLosers.players as [Player, Player];
+		expect(recordWinner(tournament, waitingLosers.match, a.id)).toEqual({
+			ok: false,
+			reason: `${a.name} and ${b.name} are still waiting for a Board.`,
+		});
+		const ready = getMatchesOnBoards(tournament).find(
+			(m) => m.match.round === 3 && m.players.every((p) => 'name' in p),
+		)!;
+		const winner = ready.players[0] as Player;
+		const otherSemiFinal = getMatchesOnBoards(tournament).find(
+			(m) => m.match.round === 3 && m !== ready,
+		)!;
+
+		tournament = expectOk(recordWinner(tournament, ready.match, winner.id));
+
+		// The waiting Losers Match takes the Board, and the winner's next Match waits behind it.
+		const nowOnBoard = getMatchesOnBoards(tournament).find((m) => m.board === ready.board)!;
+		expect(nowOnBoard.match).toEqual(waitingLosers.match);
+		expect(listWaiting(tournament)).toEqual([
+			[winner.name, `Winner of Board ${otherSemiFinal.board}`],
+		]);
+		const roundTwo = getMatchesOnBoards(tournament).find(
+			(m) => m.match.bracket === 'winners' && m.match.round === 2,
+		)!;
+
+		tournament = expectOk(recordWinner(tournament, roundTwo.match, roundTwo.players[0].id));
+
+		const final = getMatchesOnBoards(tournament).find((m) => m.board === roundTwo.board)!;
+		expect(final.players[0]).toEqual(winner);
+		expect(listWaiting(tournament)).toEqual([]);
+	});
+
+	it('waits for the held place when only one Player is staying, and is not played with none', () => {
+		const one = setUpHeldPlace(['staying', 'leaving']);
+		expect(getBracketPicture(one.tournament, 'losers')).toBeUndefined();
+		expect(isLosersBracketOpenTo(one.tournament, one.cat.id)).toBe(true);
+		const annAndCat = getMatchesOnBoards(one.tournament).find((m) =>
+			isPlaying(m, one.ann, one.cat),
+		)!;
+		const catStays = expectOk(
+			recordWinner(one.tournament, annAndCat.match, one.ann.id, 'staying'),
+		);
+		const [[losersFinal]] = getBracketPicture(catStays, 'losers')!.rounds;
+		expect(losersFinal!.players.map((p) => p!.name).sort()).toEqual(
+			[one.bob.name, one.cat.name].sort(),
+		);
+		const catWins = expectOk(recordWinner(one.tournament, annAndCat.match, one.cat.id));
+		expect(getBracketPicture(catWins, 'losers')).toBeUndefined();
+		expect(listSeats(catWins)).toEqual([[1, one.cat.name, one.dan.name]]);
+
+		const none = setUpHeldPlace(['leaving', 'leaving']);
+		expect(isLosersBracketOpenTo(none.tournament, none.cat.id)).toBe(false);
+		const noneAnnAndCat = getMatchesOnBoards(none.tournament).find((m) =>
+			isPlaying(m, none.ann, none.cat),
+		)!;
+		expect(recordWinner(none.tournament, noneAnnAndCat.match, none.ann.id).ok).toBe(true);
+	});
+});
+
+/*
+ * 5 Players on 4 Boards, Started, up to the Losers Draw: Ann beats Bob in the one first-Round Match, Cat
+ * has a Bye and waits for Ann, and Dan beats Eve in Round 2, where they met as Byes. Bob and Eve answer
+ * whether they are staying; Cat's first Match is still to come. The Losers Bracket's first-Round Match is
+ * given by its Player first.
+ */
+const setUpHeldPlace = (answers: readonly [StayingAnswer, StayingAnswer]) => {
+	let tournament = startTournament(5, 4);
+	const [annAndBob, waiting, danAndEve] = getMatchesOnBoards(tournament);
+	const [ann, bob] = annAndBob.players as [Player, Player];
+	const cat = waiting.players[0];
+	const [dan, eve] = danAndEve.players as [Player, Player];
+	tournament = expectOk(recordWinner(tournament, annAndBob.match, ann.id, answers[0]));
+	tournament = expectOk(recordWinner(tournament, danAndEve.match, dan.id, answers[1]));
+	const [[firstMatch]] = getBracketPicture(tournament, 'losers')?.rounds ?? [[]];
+	const inFirstMatch = firstMatch?.players.find(Boolean);
+	const losersMatch = inFirstMatch?.id === eve.id ? [eve, bob] : [bob, eve];
+	return { tournament, ann, bob, cat, dan, eve, losersMatch };
+};
+
+/*
+ * Records every Match the Draw started, its first-named Player winning and the loser staying for the
+ * Losers Bracket.
+ */
+const playDrawStaying = (started: Tournament): Tournament => {
+	let tournament = started;
+	const opening = getMatchesOnBoards(tournament).filter((m) =>
+		m.players.every((p) => 'name' in p),
+	);
+	for (const { match, players } of opening) {
+		tournament = expectOk(recordWinner(tournament, match, players[0].id, 'staying'));
+	}
+	return tournament;
+};
+
+// Each Match holding a Board, in Board order, by its Board and its Players' names.
+const listSeats = (tournament: Tournament) =>
+	getMatchesOnBoards(tournament).map(({ board, players: [a, b] }) => [
+		board,
+		a.name,
+		getPlayerName(b),
+	]);
+
+// Each Match waiting for a Board, longest-waiting first, by its Players' names.
+const listWaiting = (tournament: Tournament) =>
+	getWaitingForBoard(tournament).map(({ players: [a, b] }) => [a.name, getPlayerName(b)]);
 
 // Whether all the given Players are seated in a Match, wherever the Draw put it.
 const isPlaying = (match: MatchOnBoard, ...players: Player[]): boolean =>

@@ -1,16 +1,18 @@
 import { useId, useRef, useState } from 'react';
 import {
 	getMatchesOnBoards,
-	getWinnersBracketPicture,
+	getBracketPicture,
+	isLosersBracketOpenTo,
 	recordForfeit,
 	recordWinner,
 	start,
 	type BoardNumber,
 	type MatchOnBoard,
 	type MatchPlace,
+	type Opponent,
 	type Player,
+	type StayingAnswer,
 	type Tournament,
-	type WinnerOf,
 } from '../tournament';
 import { getPlayerName } from '../wording';
 import {
@@ -24,24 +26,50 @@ import {
 import { Refusal, type Apply } from './controls';
 import { Results } from './Results';
 import { ScreenTiming } from './ScreenTiming';
+import { StayingDialog } from './StayingDialog';
+import { WaitingForBoard } from './WaitingForBoard';
+
+// A result waiting on the loser's answer to whether they are staying for the Losers Bracket.
+interface Asking {
+	readonly loser: Player;
+	readonly record: (answer: StayingAnswer) => void;
+}
 
 /*
  * The Matches holding a Board: the ones the Draw seats while the TV holds Tonight’s Draw, then the ones
  * being played. Once Started, tapping a Player's name records them as the winner, and a Forfeit records
- * their opponent's. Results that can still be undone are listed, latest first, to correct a mistake.
+ * their opponent's. A Player losing their first Match is asked first whether they are staying for the
+ * Losers Bracket. Matches waiting for a Board are listed beneath. Results that can still be undone are
+ * listed, latest first, to correct a mistake.
  */
 export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const matches = getMatchesOnBoards(tournament);
-	const { champion } = getWinnersBracketPicture(tournament)!;
+	const { champion } = getBracketPicture(tournament, 'winners')!;
+	const losersChampion = getBracketPicture(tournament, 'losers')?.champion;
 	const playing = tournament.phase === 'inProgress';
 	const [refusal, setRefusal] = useState('');
-	const recordWinnerOf = (match: MatchPlace, player: Player) => {
-		const reason = apply(recordWinner(tournament, match, player.id));
-		setRefusal(reason);
+	const [asking, setAsking] = useState<Asking>();
+	const stayingDialog = useRef<HTMLDialogElement>(null);
+	// Records the result at once, or once the loser has said whether they are staying.
+	const recordOrAsk = (loser: Player, record: (answer?: StayingAnswer) => void) => {
+		if (!isLosersBracketOpenTo(tournament, loser.id)) {
+			record();
+			return;
+		}
+		setAsking({ loser, record });
+		stayingDialog.current?.showModal();
 	};
-	const recordForfeitBy = (match: MatchPlace, player: Player) => {
-		const reason = apply(recordForfeit(tournament, match, player.id));
-		setRefusal(reason);
+	const recordWinnerOf = (match: MatchPlace, winner: Player, loser: Player) => {
+		recordOrAsk(loser, (answer) => {
+			const reason = apply(recordWinner(tournament, match, winner.id, answer));
+			setRefusal(reason);
+		});
+	};
+	const recordForfeitBy = (match: MatchPlace, leaver: Player) => {
+		recordOrAsk(leaver, (answer) => {
+			const reason = apply(recordForfeit(tournament, match, leaver.id, answer));
+			setRefusal(reason);
+		});
 	};
 	const pressStart = () => {
 		const reason = apply(start(tournament));
@@ -52,6 +80,11 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 			<section className="flex-1">
 				{champion && (
 					<p className="text-2xl font-bold text-green-800">Champion: {champion.name}</p>
+				)}
+				{losersChampion && (
+					<p className="text-2xl font-bold text-green-800">
+						Losers Bracket champion: {losersChampion.name}
+					</p>
 				)}
 				{matches.length > 0 && (
 					<>
@@ -71,6 +104,12 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 					</>
 				)}
 				{playing && <Refusal reason={refusal} />}
+				<WaitingForBoard tournament={tournament} />
+				<StayingDialog
+					ref={stayingDialog}
+					loser={asking?.loser}
+					onAnswer={(answer) => asking?.record(answer)}
+				/>
 			</section>
 			<section className="w-80">
 				{tournament.phase === 'drawShown' && (
@@ -175,11 +214,11 @@ const MatchRow = ({
 }: {
 	matchOnBoard: MatchOnBoard;
 	playing: boolean;
-	onWin: (match: MatchPlace, player: Player) => void;
+	onWin: (match: MatchPlace, winner: Player, loser: Player) => void;
 	onForfeit: (match: MatchPlace, player: Player) => void;
 }) => {
 	const canWin = playing && 'name' in b;
-	const winMatch = (player: Player) => onWin(match, player);
+	const winMatch = (player: Player) => onWin(match, player, player === a ? (b as Player) : a);
 	const forfeitMatch = (player: Player) => onForfeit(match, player);
 	return (
 		<li className={matchRow}>
@@ -204,7 +243,7 @@ const MatchPlayer = ({
 	canWin,
 	onWin,
 }: {
-	player: Player | WinnerOf;
+	player: Opponent;
 	canWin: boolean;
 	onWin: (player: Player) => void;
 }) =>

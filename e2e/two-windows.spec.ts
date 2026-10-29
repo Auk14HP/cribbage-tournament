@@ -130,6 +130,8 @@ test('each winner the Organizer records reaches the TV’s Winners Bracket, thro
 	await expect(tvFinal).toContainText('—');
 	const winner = await matches.first().getByRole('button').first().textContent();
 	await matches.first().getByRole('button', { name: winner! }).click();
+	// With the loser leaving, there is no Losers Bracket, and the final is the last Match.
+	await organizer.getByRole('dialog').getByRole('button', { name: 'Leaving' }).click();
 	await expect(tvFinal).toContainText(winner!);
 	await expect(tvFinal).not.toContainText('—');
 

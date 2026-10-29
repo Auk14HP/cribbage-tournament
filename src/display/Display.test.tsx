@@ -8,6 +8,7 @@ import type { Result } from '../result';
 import {
 	makeDraw,
 	getMatchesOnBoards,
+	getWaitingForBoard,
 	createTournament,
 	recordWinner,
 	registerPlayer,
@@ -85,7 +86,7 @@ describe('the Winners Bracket screen', () => {
 		const [a, b] = firstMatch.players as [Player, Player];
 		const bye = waiting.players[0];
 		const recordWinnerOf = (match: typeof firstMatch.match, winner: Player) => {
-			tournament = expectOk(recordWinner(tournament, match, winner.id));
+			tournament = expectOk(recordWinner(tournament, match, winner.id, 'leaving'));
 			act(() => store.save(tournament));
 		};
 		// What a Round's column shows, a Match per item.
@@ -194,7 +195,7 @@ describe('the champion screen', () => {
 		const [final] = getMatchesOnBoards(tournament);
 		const champion = final.players[0];
 
-		tournament = expectOk(recordWinner(tournament, final.match, champion.id));
+		tournament = expectOk(recordWinner(tournament, final.match, champion.id, 'leaving'));
 		act(() => store.save(tournament));
 
 		// With no Losers Bracket played, the night has one champion.
@@ -211,6 +212,92 @@ describe('the champion screen', () => {
 		expect(readHeading()).toBe('Tonight’s Champion');
 	});
 });
+
+describe('the Losers Bracket', () => {
+	it('joins the TV cycle once drawn, after the Winners Bracket, with Matches waiting for a Board beneath Now playing', () => {
+		vi.useFakeTimers();
+		const store = showDisplay();
+		/*
+		 * 6 Players on 3 Boards: once the Draw's three Matches are played and their losers stay, the
+		 * Losers Bracket is one Match on Board 3 and a Bye Player waiting for a Board.
+		 */
+		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev'], 3);
+		const started = expectOk(start(drawn));
+		const tournament = playDrawStaying(started);
+		const [waiting] = getWaitingForBoard(tournament);
+		act(() => store.save(tournament));
+
+		expect(readHeading()).toBe('Winners Bracket');
+		waitSeconds(20);
+		expect(readHeading()).toBe('Losers Bracket');
+		// One Round 1 Match, in the bracket's left half, and a Bye in its right.
+		const [leftRoundOne] = screen.getAllByRole('list', { name: 'Round 1' });
+		expect(leftRoundOne).toHaveTextContent(/^Board 3/);
+		waitSeconds(20);
+		expect(readHeading()).toBe('Now playing');
+		const waitingList = screen.getByRole('list', { name: 'Waiting for a Board' });
+		expect(
+			within(waitingList)
+				.getAllByRole('listitem')
+				.map((i) => i.textContent),
+		).toEqual([`${waiting.players[0].name} vs Winner of Board 3`]);
+		waitSeconds(20);
+		expect(readHeading()).toBe('Winners Bracket');
+	});
+
+	it('shows a finished bracket’s champion while the other plays on, then names both champions', () => {
+		vi.useFakeTimers();
+		const store = showDisplay();
+		// 4 Players: both first-Round losers stay, and meet in the Losers Bracket.
+		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann'], 2);
+		const started = expectOk(start(drawn));
+		let tournament = playDrawStaying(started);
+		const findFinal = (bracket: 'winners' | 'losers') =>
+			getMatchesOnBoards(tournament).find((m) => m.match.bracket === bracket)!;
+		const winnersFinal = findFinal('winners');
+		const losersFinal = findFinal('losers');
+		const [winnersChampion] = winnersFinal.players as [Player, Player];
+		const [losersChampion] = losersFinal.players as [Player, Player];
+
+		tournament = expectOk(recordWinner(tournament, winnersFinal.match, winnersChampion.id));
+		act(() => store.save(tournament));
+		expect(readHeading()).toBe('Winners Bracket');
+		expect(screen.getByText(`Champion: ${winnersChampion.name}`)).toBeInTheDocument();
+		waitSeconds(20);
+		expect(readHeading()).toBe('Losers Bracket');
+		expect(screen.queryByText(/Champion/)).not.toBeInTheDocument();
+
+		tournament = expectOk(recordWinner(tournament, losersFinal.match, losersChampion.id));
+		act(() => store.save(tournament));
+		expect(readHeading()).toBe('Tonight’s Champions');
+		const winnersLine = screen.getByText('Winners Bracket').parentElement;
+		const losersLine = screen.getByText('Losers Bracket').parentElement;
+		expect(winnersLine).toHaveTextContent(winnersChampion.name);
+		expect(losersLine).toHaveTextContent(losersChampion.name);
+		waitSeconds(20);
+		expect(readHeading()).toBe('Winners Bracket');
+		waitSeconds(20);
+		expect(readHeading()).toBe('Losers Bracket');
+		expect(screen.getByText(`Champion: ${losersChampion.name}`)).toBeInTheDocument();
+		waitSeconds(20);
+		expect(readHeading()).toBe('Tonight’s Champions');
+	});
+});
+
+/*
+ * Records every Match the Draw started, its first-named Player winning and the loser staying for the
+ * Losers Bracket.
+ */
+const playDrawStaying = (started: Tournament): Tournament => {
+	let tournament = started;
+	const opening = getMatchesOnBoards(tournament).filter((m) =>
+		m.players.every((p) => 'name' in p),
+	);
+	for (const { match, players } of opening) {
+		tournament = expectOk(recordWinner(tournament, match, players[0].id, 'staying'));
+	}
+	return tournament;
+};
 
 // The display route, against the real storage adapter. Saving to the store stands in for the Organizer.
 const showDisplay = (): Store<Tournament> => {

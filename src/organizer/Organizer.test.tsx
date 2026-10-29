@@ -281,6 +281,7 @@ describe('the organizer route', () => {
 			.getAllByRole('button')
 			.map((b) => b.textContent!);
 		await user.click(within(boardOne).getByRole('button', { name: winner }));
+		await answerDialog(user, 'Leaving');
 
 		// The winner joins the Bye Player at Board 2, and Board 1 frees.
 		const matches = listMatchRows();
@@ -316,11 +317,67 @@ describe('the organizer route', () => {
 
 		await user.click(within(playing).getByRole('button', { name: 'Forfeit' }));
 		await answerDialog(user, leaves);
+		await answerDialog(user, 'Leaving');
 
 		const [final] = listMatchRows();
 		expect(listMatchRows()).toHaveLength(1);
 		expect(listWinnerNames(final).sort()).toEqual([stays, bye].sort());
 		expect(listResults()).toEqual([`Board 1: ${leaves} forfeited to ${stays}Undo`]);
+	});
+
+	it('asks whether a Player losing their first Match is staying for the Losers Bracket, recording nothing on Cancel', async () => {
+		const user = showOrganizer();
+		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
+		await user.click(screen.getByRole('button', { name: 'Start' }));
+		// 3 Players: two play on Board 1, and the Bye Player waits at Board 2 for its winner.
+		const [playing] = listMatchRows();
+		const [winner, loser] = listWinnerNames(playing);
+
+		await user.click(within(playing).getByRole('button', { name: winner }));
+		expect(screen.getByRole('dialog')).toHaveTextContent(
+			`Is ${loser} staying for the Losers Bracket?`,
+		);
+		await answerDialog(user, 'Cancel');
+		expect(listMatchRows()).toHaveLength(2);
+		expect(screen.queryByRole('list', { name: 'Results' })).not.toBeInTheDocument();
+
+		await user.click(within(playing).getByRole('button', { name: winner }));
+		await answerDialog(user, 'Staying');
+		expect(listResults()).toEqual([`Board 1: ${winner} beat ${loser}Undo`]);
+
+		// The Bye Player's first Match is the final, and a Forfeit asks too, about the Player leaving it.
+		const [final] = listMatchRows();
+		const [, bye] = listWinnerNames(final);
+		await user.click(within(final).getByRole('button', { name: 'Forfeit' }));
+		await answerDialog(user, bye);
+		expect(screen.getByRole('dialog')).toHaveTextContent(
+			`Is ${bye} staying for the Losers Bracket?`,
+		);
+		await answerDialog(user, 'Leaving');
+		expect(screen.getByText(`Champion: ${winner}`)).toBeInTheDocument();
+	});
+
+	it('lists the Matches waiting for a Board, longest-waiting first', async () => {
+		const user = showOrganizer();
+		const names = ['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev'];
+		await makeTheDraw(user, names, '3');
+		await user.click(screen.getByRole('button', { name: 'Start' }));
+		expect(screen.queryByRole('list', { name: 'Waiting for a Board' })).not.toBeInTheDocument();
+
+		/*
+		 * 6 Players on 3 Boards: once the Draw's three Matches are played and their losers stay, the
+		 * Losers Bracket is one Match on Board 3 and a Bye Player waiting for a Board.
+		 */
+		for (const row of listMatchRows()) {
+			const [winner] = listWinnerNames(row);
+			await user.click(within(row).getByRole('button', { name: winner }));
+			await answerDialog(user, 'Staying');
+		}
+
+		const waiting = within(screen.getByRole('list', { name: 'Waiting for a Board' }));
+		expect(waiting.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+			expect.stringMatching(/^.+ vs Winner of Board 3$/),
+		]);
 	});
 
 	it('undoes a result, re-opening the Match so the other Player can be recorded as its winner', async () => {
@@ -330,6 +387,7 @@ describe('the organizer route', () => {
 		const [playing] = listMatchRows();
 		const [winner, loser] = listWinnerNames(playing);
 		await user.click(within(playing).getByRole('button', { name: winner }));
+		await answerDialog(user, 'Leaving');
 		expect(listMatchRows()).toHaveLength(1);
 		expect(listResults()).toEqual([`Board 1: ${winner} beat ${loser}Undo`]);
 
@@ -341,6 +399,7 @@ describe('the organizer route', () => {
 		expect(listWinnerNames(reopened)).toEqual([winner, loser]);
 		expect(screen.queryByRole('list', { name: 'Results' })).not.toBeInTheDocument();
 		await user.click(within(reopened).getByRole('button', { name: loser }));
+		await answerDialog(user, 'Leaving');
 		expect(listResults()).toEqual([`Board 1: ${loser} beat ${winner}Undo`]);
 	});
 

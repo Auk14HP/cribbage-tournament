@@ -1,4 +1,5 @@
-import { getNowPlaying, type Tournament } from '../tournament';
+import { getNowPlaying, getWaitingForBoard, type Tournament } from '../tournament';
+import { getPlayerName } from '../wording';
 
 /*
  * Columns and text sizes for Now playing, by how many Matches are being played: as large as fits, down to
@@ -10,9 +11,13 @@ const nowPlayingLayouts = [
 	{ upTo: Infinity, grid: 'grid-cols-4', text: 'text-[4.5vh]' },
 ];
 
-// Each Match being played, its Board and both Players, in big text so a Player can find their seat.
+/*
+ * Each Match being played, its Board and both Players, in big text so a Player can find their seat. Beneath
+ * it, any Matches waiting for a Board, longest-waiting first, so their Players know they are next.
+ */
 export const NowPlaying = ({ tournament }: { tournament: Tournament }) => {
 	const matches = getNowPlaying(tournament);
+	const waiting = getWaitingForBoard(tournament);
 	const layout = nowPlayingLayouts.find(({ upTo }) => matches.length <= upTo)!;
 	return (
 		<>
@@ -32,6 +37,31 @@ export const NowPlaying = ({ tournament }: { tournament: Tournament }) => {
 					</li>
 				))}
 			</ul>
+			{waiting.length > 0 && (
+				<>
+					<h2 className="mt-[4vh] text-[5vh] leading-none font-bold">
+						Waiting for a Board
+					</h2>
+					<ol
+						aria-label="Waiting for a Board"
+						className="mt-[2vh] grid grid-cols-2 gap-x-[4vw] gap-y-[1vh] text-[4.5vh] font-semibold"
+					>
+						{waiting.map(({ match, players: [a, b] }) => (
+							<li
+								key={`${match.bracket} ${match.round} ${match.place}`}
+								className="truncate"
+							>
+								{a.name}
+								<span className="text-gray-400"> vs </span>
+								{/* A Player still to come is greyed, so it doesn't read as a Player's name. */}
+								<span className={'name' in b ? '' : 'text-gray-300 italic'}>
+									{getPlayerName(b)}
+								</span>
+							</li>
+						))}
+					</ol>
+				</>
+			)}
 		</>
 	);
 };

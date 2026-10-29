@@ -1,6 +1,8 @@
 import {
-	getWinnersBracketPicture,
+	getBracketPicture,
+	hasLostIn,
 	type BracketMatch,
+	type BracketName,
 	type Player,
 	type Tournament,
 } from '../tournament';
@@ -9,18 +11,24 @@ import { describeFinal, describeHalf, getPathShade, type BracketSlot } from './b
 // Text shrinks as the bracket grows, so a 32-place bracket's nine columns fit across the TV.
 const bracketText = ['text-[5vh]', 'text-[5vh]', 'text-[4vh]', 'text-[3.2vh]', 'text-[2.5vh]'];
 
+const titles: Record<BracketName, string> = {
+	winners: 'Winners Bracket',
+	losers: 'Losers Bracket',
+};
+
 /*
- * The whole Winners Bracket: its two halves run in from either side to the final in the middle. Each
- * Round's Matches share their column's height equally and sit in the middle of their share, so every
- * Match is centred between the two that feed it, and bracket lines join them.
+ * A whole bracket: its two halves run in from either side to the final in the middle. Each Round's Matches
+ * share their column's height equally and sit in the middle of their share, so every Match is centred
+ * between the two that feed it, and bracket lines join them.
  */
-export const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
-	const { rounds, champion } = getWinnersBracketPicture(tournament)!;
+export const Bracket = ({ tournament, name }: { tournament: Tournament; name: BracketName }) => {
+	const { rounds, champion } = getBracketPicture(tournament, name)!;
+	const isStillIn = (player: number) => !hasLostIn(tournament, name, player);
 	const earlier = rounds.slice(0, -1).map((_, round) => round);
 	return (
 		<div className="flex h-[94vh] flex-col">
 			<div className="flex items-baseline justify-between">
-				<h1 className="text-[6vh] leading-none font-bold">Winners Bracket</h1>
+				<h1 className="text-[6vh] leading-none font-bold">{titles[name]}</h1>
 				{champion && (
 					<p className="text-[6vh] leading-none font-bold text-yellow-300">
 						Champion: {champion.name}
@@ -34,19 +42,19 @@ export const WinnersBracket = ({ tournament }: { tournament: Tournament }) => {
 					<BracketColumn
 						key={`left ${round}`}
 						name={`Round ${round + 1}`}
-						slots={describeHalf(tournament, rounds, round, 'left')}
+						slots={describeHalf(isStillIn, rounds, round, 'left')}
 					/>
 				))}
 				<BracketColumn
 					name="Final"
-					slots={[describeFinal(tournament, rounds)]}
+					slots={[describeFinal(isStillIn, rounds)]}
 					champion={champion}
 				/>
 				{[...earlier].reverse().map((round) => (
 					<BracketColumn
 						key={`right ${round}`}
 						name={`Round ${round + 1}`}
-						slots={describeHalf(tournament, rounds, round, 'right')}
+						slots={describeHalf(isStillIn, rounds, round, 'right')}
 					/>
 				))}
 			</div>
@@ -101,7 +109,7 @@ const getPlayerShade = (match: BracketMatch, player: Player | undefined, champio
 
 /*
  * A Match's two Players: the winner bright, the loser faded, a Player still to come as a dash. A Match
- * holding a Board names it. A Match on the path of a Player still in the Winners Bracket has a green
+ * holding a Board names it. A Match on the path of a Player still in the bracket has a green
  * border. The final turns yellow once it has a champion.
  */
 const MatchBox = ({

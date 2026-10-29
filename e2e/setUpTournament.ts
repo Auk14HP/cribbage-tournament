@@ -26,7 +26,8 @@ export const startTournament = async (page: Page, players: number) => {
 };
 
 /*
- * Every Match goes to its first-named Player, the first on the list each time, until the Matches list is down
+ * Every Match goes to its first-named Player, the first on the list each time, its loser leaving rather than
+ * staying for a Losers Bracket, until the Matches list is down
  * to the given number: 0 plays to the champion, 1 stops at the final, both its Players known. Found by its
  * place in the list, not its Players, since any Match will do. A locator is looked up afresh each time it is
  * used, so the one button it names is the next to click.
@@ -41,6 +42,18 @@ const playUntilMatchesLeft = async (page: Page, matchesLeft: number) => {
 	 */
 	while ((await matchesOnBoards.count()) > matchesLeft) {
 		await nextWinnerButton.click();
+		await answerStayingIfAsked(page, 'Leaving');
+	}
+};
+
+/*
+ * Answers whether the loser is staying for the Losers Bracket, if they were asked: only a Player losing their
+ * first Match is.
+ */
+export const answerStayingIfAsked = async (page: Page, answer: 'Staying' | 'Leaving') => {
+	const stayingDialog = page.getByRole('dialog', { name: /staying for the Losers Bracket/ });
+	if (await stayingDialog.isVisible()) {
+		await stayingDialog.getByRole('button', { name: answer }).click();
 	}
 };
 
