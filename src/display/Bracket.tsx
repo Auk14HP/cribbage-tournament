@@ -4,17 +4,14 @@ import {
 	type BracketMatch,
 	type BracketName,
 	type Player,
+	type PlayerId,
 	type Tournament,
 } from '../tournament';
+import { bracketTitles } from '../wording';
 import { describeFinal, describeHalf, getPathShade, type BracketSlot } from './bracketLines';
 
 // Text shrinks as the bracket grows, so a 32-place bracket's nine columns fit across the TV.
 const bracketText = ['text-[5vh]', 'text-[5vh]', 'text-[4vh]', 'text-[3.2vh]', 'text-[2.5vh]'];
-
-const titles: Record<BracketName, string> = {
-	winners: 'Winners Bracket',
-	losers: 'Losers Bracket',
-};
 
 /*
  * A whole bracket: its two halves run in from either side to the final in the middle. Each Round's Matches
@@ -23,12 +20,12 @@ const titles: Record<BracketName, string> = {
  */
 export const Bracket = ({ tournament, name }: { tournament: Tournament; name: BracketName }) => {
 	const { rounds, champion } = getBracketPicture(tournament, name)!;
-	const isStillIn = (player: number) => !hasLostIn(tournament, name, player);
+	const isStillIn = (player: PlayerId) => !hasLostIn(tournament, name, player);
 	const earlier = rounds.slice(0, -1).map((_, round) => round);
 	return (
 		<div className="flex h-[94vh] flex-col">
 			<div className="flex items-baseline justify-between">
-				<h1 className="text-[6vh] leading-none font-bold">{titles[name]}</h1>
+				<h1 className="text-[6vh] leading-none font-bold">{bracketTitles[name]}</h1>
 				{champion && (
 					<p className="text-[6vh] leading-none font-bold text-yellow-300">
 						Champion: {champion.name}

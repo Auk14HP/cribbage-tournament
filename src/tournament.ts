@@ -396,7 +396,7 @@ const findAnswerRefusal = (
  * so a Bye Player's first Match is in Round 2.
  */
 export const isLosersBracketOpenTo = (tournament: Tournament, player: PlayerId): boolean => {
-	if (tournament.results.some((r) => findPlayers(tournament, r.match).includes(player))) {
+	if (listResultsOf(tournament, player).length > 0) {
 		return false;
 	}
 	const { losersBracket } = tournament;
@@ -418,7 +418,7 @@ const isHeldFor = (entrant: Entrant, player: PlayerId): boolean =>
  * A first-Round entry as it stands. A held place is settled once its Player's first Match has a result:
  * to them if they lost it and stayed, and otherwise their opponent has a Bye.
  */
-const findEntry = (tournament: Tournament, match: MatchPlace): FirstRoundMatch | Bye => {
+const findSettledEntry = (tournament: Tournament, match: MatchPlace): FirstRoundMatch | Bye => {
 	const entry = getBracket(tournament, match.bracket)!.firstRound[match.place];
 	if (isBye(entry)) {
 		return entry;
@@ -435,10 +435,8 @@ const settleEntrant = (tournament: Tournament, entrant: Entrant): Entrant | 'bye
 	if (typeof entrant === 'number') {
 		return entrant;
 	}
-	const firstMatch = tournament.results.find(
-		(r) =>
-			r.match.bracket === 'winners' &&
-			findPlayers(tournament, r.match).includes(entrant.heldFor),
+	const firstMatch = listResultsOf(tournament, entrant.heldFor).find(
+		(r) => r.match.bracket === 'winners',
 	);
 	if (!firstMatch) {
 		return entrant;
@@ -625,13 +623,11 @@ const findUndoRefusal = (tournament: Tournament, match: MatchPlace): string | un
 // Whether a Winners Bracket Match is the first Match either of its Players played.
 const isFirstMatch = (tournament: Tournament, match: MatchPlace): boolean =>
 	match.bracket === 'winners' &&
-	findPlayers(tournament, match).some(
+	// A Match with a result has both its Players known.
+	(findPlayers(tournament, match) as readonly PlayerId[]).some(
 		(player) =>
-			!tournament.results.some(
-				(r) =>
-					r.match.bracket === 'winners' &&
-					r.match.round < match.round &&
-					findPlayers(tournament, r.match).includes(player),
+			!listResultsOf(tournament, player).some(
+				(r) => r.match.bracket === 'winners' && r.match.round < match.round,
 			),
 	);
 
@@ -656,11 +652,11 @@ const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 		onBoards.push(returning);
 	}
 	const isSeated = (match: MatchPlace) => onBoards.some((on) => isSameMatch(on.match, match));
-	const wasWaiting = (match: MatchPlace) =>
+	const isAlreadyWaiting = (match: MatchPlace) =>
 		tournament.waitingForBoard.some((m) => isSameMatch(m, match));
 	const waiting = [
 		...tournament.waitingForBoard.filter((match) => isLive(match) && !isSeated(match)),
-		...live.filter((match) => !isSeated(match) && !wasWaiting(match)),
+		...live.filter((match) => !isSeated(match) && !isAlreadyWaiting(match)),
 	];
 	let free = tournament.boards.find(isFree);
 	while (free !== undefined && waiting.length > 0) {
@@ -685,7 +681,7 @@ const listLiveMatches = (tournament: Tournament): MatchPlace[] =>
 				.map((place): MatchPlace => ({ bracket: name, round: r + 1, place }))
 				.filter(
 					(match) =>
-						!(match.round === 1 && isBye(findEntry(tournament, match))) &&
+						!(match.round === 1 && isBye(findSettledEntry(tournament, match))) &&
 						findWinner(tournament, match) === undefined &&
 						findPlayers(tournament, match).some((p) => typeof p === 'number'),
 				),
@@ -717,12 +713,12 @@ const findWinner = (tournament: Tournament, match: MatchPlace): PlayerId | undef
 const findPlayers = (tournament: Tournament, match: MatchPlace): readonly [Seat, Seat] => {
 	const { bracket, round, place } = match;
 	if (round === 1) {
-		return (findEntry(tournament, match) as FirstRoundMatch).players;
+		return (findSettledEntry(tournament, match) as FirstRoundMatch).players;
 	}
 	const findPlayerFrom = (side: number): Seat => {
 		const earlier = { bracket, round: round - 1, place: 2 * place + side };
 		if (round === 2) {
-			const entry = findEntry(tournament, earlier);
+			const entry = findSettledEntry(tournament, earlier);
 			if (isBye(entry)) {
 				return entry.bye;
 			}
@@ -841,7 +837,7 @@ export interface BracketMatch {
 export interface BracketPicture {
 	/*
 	 * Each Round's Matches, in bracket order, from the first Round to the final. A Bye's place in the first
-	 * Round is undefined: its Player is in Round 2.
+	 * Round is undefined: its Player is in Round 2. A first Round of nothing but Byes is left out.
 	 */
 	readonly rounds: readonly (readonly (BracketMatch | undefined)[])[];
 	// The final's winner, once it is recorded.
@@ -873,12 +869,18 @@ export const getBracketPicture = (
 	};
 	const rounds = listIndexes(countRounds(bracket)).map((r) =>
 		listIndexes(bracket.firstRound.length / 2 ** r).map((place) =>
-			r === 0 && isBye(findEntry(tournament, { bracket: name, round: 1, place }))
+			r === 0 && isBye(findSettledEntry(tournament, { bracket: name, round: 1, place }))
 				? undefined
 				: pictureMatch({ bracket: name, round: r + 1, place }),
 		),
 	);
-	return { rounds, champion: rounds.at(-1)![0]!.winner };
+	/*
+	 * A held place that became a Bye can leave a first Round of nothing but Byes: the bracket was drawn for
+	 * one more Player than came. It is left out, so the bracket looks the size of its field.
+	 */
+	const isFirstRoundEmpty = rounds.length > 1 && rounds[0].every((m) => m === undefined);
+	const shownRounds = isFirstRoundEmpty ? rounds.slice(1) : rounds;
+	return { rounds: shownRounds, champion: rounds.at(-1)![0]!.winner };
 };
 
 /*
@@ -890,11 +892,8 @@ export const hasLostIn = (
 	bracket: BracketName,
 	player: PlayerId,
 ): boolean =>
-	tournament.results.some(
-		(r) =>
-			r.match.bracket === bracket &&
-			findPlayers(tournament, r.match).includes(player) &&
-			r.winner !== player,
+	listResultsOf(tournament, player).some(
+		(r) => r.match.bracket === bracket && r.winner !== player,
 	);
 
 export interface RecordedResult {
@@ -921,6 +920,10 @@ export const getUndoableResults = (tournament: Tournament): readonly RecordedRes
 			};
 		})
 		.reverse();
+
+// Every result of a Match a Player played, in either bracket, in the order recorded.
+const listResultsOf = (tournament: Tournament, player: PlayerId): MatchResult[] =>
+	tournament.results.filter((r) => findPlayers(tournament, r.match).includes(player));
 
 const listIndexes = (count: number): number[] => Array.from({ length: count }, (_, i) => i);
 

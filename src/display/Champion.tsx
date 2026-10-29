@@ -1,4 +1,5 @@
-import { getBracketPicture, type Player, type Tournament } from '../tournament';
+import { getBracketPicture, type BracketName, type Player, type Tournament } from '../tournament';
+import { bracketTitles } from '../wording';
 
 /*
  * Once the Tournament is finished: the champions, as large as the TV allows. The Winners Bracket's is the
@@ -20,16 +21,16 @@ export const Champion = ({ tournament }: { tournament: Tournament }) => {
 	return (
 		<div className="flex h-[94vh] flex-col items-center justify-center text-center">
 			<h1 className="text-[8vh] leading-none font-bold">Tonight’s Champions</h1>
-			<BracketChampion bracket="Winners Bracket" champion={winnersChampion} />
-			<BracketChampion bracket="Losers Bracket" champion={losersChampion} />
+			<BracketChampion bracket="winners" champion={winnersChampion} />
+			<BracketChampion bracket="losers" champion={losersChampion} />
 		</div>
 	);
 };
 
 // One bracket's champion on the champions screen, under the bracket's name.
-const BracketChampion = ({ bracket, champion }: { bracket: string; champion: Player }) => (
+const BracketChampion = ({ bracket, champion }: { bracket: BracketName; champion: Player }) => (
 	<p className="mt-[6vh]">
-		<span className="block text-[5vh] font-bold text-gray-300">{bracket}</span>
+		<span className="block text-[5vh] font-bold text-gray-300">{bracketTitles[bracket]}</span>
 		<span className="block text-[11vh] leading-none font-bold text-yellow-300">
 			{champion.name}
 		</span>

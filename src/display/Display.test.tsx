@@ -16,6 +16,7 @@ import {
 	setScreenSeconds,
 	start,
 	tournamentVersion,
+	type BracketName,
 	type Player,
 	type Tournament,
 } from '../tournament';
@@ -252,7 +253,7 @@ describe('the Losers Bracket', () => {
 		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann'], 2);
 		const started = expectOk(start(drawn));
 		let tournament = playDrawStaying(started);
-		const findFinal = (bracket: 'winners' | 'losers') =>
+		const findFinal = (bracket: BracketName) =>
 			getMatchesOnBoards(tournament).find((m) => m.match.bracket === bracket)!;
 		const winnersFinal = findFinal('winners');
 		const losersFinal = findFinal('losers');

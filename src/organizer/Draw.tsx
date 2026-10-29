@@ -217,21 +217,24 @@ const MatchRow = ({
 	onWin: (match: MatchPlace, winner: Player, loser: Player) => void;
 	onForfeit: (match: MatchPlace, player: Player) => void;
 }) => {
-	const canWin = playing && 'name' in b;
-	const winMatch = (player: Player) => onWin(match, player, player === a ? (b as Player) : a);
+	// Only a Match with both Players known can be won: each one's loss is the other's win.
+	const opponent = 'name' in b ? b : undefined;
+	const canWin = playing && opponent !== undefined;
+	const winForFirst = () => opponent && onWin(match, a, opponent);
+	const winForSecond = () => opponent && onWin(match, opponent, a);
 	const forfeitMatch = (player: Player) => onForfeit(match, player);
 	return (
 		<li className={matchRow}>
 			<span className="font-semibold">Board {board}</span>
 			<div className="text-right">
-				<MatchPlayer player={a} canWin={canWin} onWin={winMatch} />
+				<MatchPlayer player={a} canWin={canWin} onWin={winForFirst} />
 			</div>
 			<span className="text-center"> vs </span>
 			<div>
-				<MatchPlayer player={b} canWin={canWin} onWin={winMatch} />
+				<MatchPlayer player={b} canWin={canWin} onWin={winForSecond} />
 			</div>
 			{canWin && (
-				<ForfeitButton board={board} players={[a, b as Player]} onForfeit={forfeitMatch} />
+				<ForfeitButton board={board} players={[a, opponent]} onForfeit={forfeitMatch} />
 			)}
 		</li>
 	);
@@ -245,10 +248,10 @@ const MatchPlayer = ({
 }: {
 	player: Opponent;
 	canWin: boolean;
-	onWin: (player: Player) => void;
+	onWin: () => void;
 }) =>
 	canWin && 'name' in player ? (
-		<WinnerButton player={player} onWin={() => onWin(player)} />
+		<WinnerButton player={player} onWin={onWin} />
 	) : (
 		// Padded as a button is, so names line up whether they can be tapped or not.
 		<span className="border border-transparent px-3">{getPlayerName(player)}</span>

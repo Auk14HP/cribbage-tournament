@@ -1,5 +1,5 @@
 // Wording shared by the organizer and display routes.
-import type { Opponent } from './tournament';
+import type { BracketName, Opponent } from './tournament';
 
 export const describePlayersRegistered = (count: number): string =>
 	`${count} ${count === 1 ? 'Player' : 'Players'} registered`;
@@ -18,4 +18,9 @@ export const getPlayerName = (player: Opponent): string => {
 	return player.winnerOfBoard === undefined
 		? 'Opponent to come'
 		: `Winner of Board ${player.winnerOfBoard}`;
+};
+
+export const bracketTitles: Record<BracketName, string> = {
+	winners: 'Winners Bracket',
+	losers: 'Losers Bracket',
 };
