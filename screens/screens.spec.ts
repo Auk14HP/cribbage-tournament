@@ -6,7 +6,8 @@ import { test } from '@playwright/test';
  *   ... DRAW=1                              and Tonight's Draw
  *   ... DRAW=1 START=1                      and after Start, then Now playing
  *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
- * Writes test-results/screens/{organizer,tv}-{registration,draw,started,now-playing,results,champion}.png: the organizer at
+ *   ... DRAW=1 START=1 RESULTS=3 FORFEIT=1  and the Forfeit dialog, then after that Forfeit
+ * Writes test-results/screens/{organizer,tv}-{registration,draw,started,now-playing,results,champion,forfeit-dialog,forfeit}.png: the organizer at
  * 1280×720, the TV at 1920×1080.
  */
 const players = process.env.PLAYERS ?? '26';
@@ -47,15 +48,31 @@ test('screens', async ({ context, page: organizer }) => {
 	}
 	// The first Match on the list that can be won goes to its first-named Player each time.
 	const results = process.env.RESULTS === 'all' ? Infinity : Number(process.env.RESULTS);
-	const first = organizer.getByRole('list', { name: 'Matches' }).getByRole('button').first();
-	for (let recorded = 0; recorded < results && (await first.count()) > 0; recorded++) {
-		await first.click();
+	const nextWinnerButton = organizer
+		.getByRole('list', { name: 'Matches' })
+		.getByRole('button')
+		.first();
+	for (let recorded = 0; recorded < results && (await nextWinnerButton.count()) > 0; recorded++) {
+		await nextWinnerButton.click();
 	}
 	// The TV cycles each second, so wait for the screen to shoot: the bracket, then the champion once finished.
 	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 	await shoot('results');
-	if ((await first.count()) === 0) {
+	if ((await nextWinnerButton.count()) === 0) {
 		await tv.getByRole('heading', { name: 'Tonight’s Champion' }).waitFor();
 		await shoot('champion');
 	}
+	if (!process.env.FORFEIT || (await nextWinnerButton.count()) === 0) {
+		return;
+	}
+	// The first Match on the list that can be won is forfeited by its first-named Player.
+	const leaver = await nextWinnerButton.textContent();
+	const forfeitButton = organizer
+		.getByRole('list', { name: 'Matches' })
+		.getByRole('button', { name: 'Forfeit' })
+		.first();
+	await forfeitButton.click();
+	await shoot('forfeit-dialog');
+	await organizer.getByRole('dialog').getByRole('button', { name: leaver! }).click();
+	await shoot('forfeit');
 });

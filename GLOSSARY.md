@@ -45,7 +45,7 @@ A free pass through a bracket's first **Round**, given at random when the field 
 _Avoid_: Walkover, skip
 
 **Forfeit**:
-A **Match** result recorded when a **Player** leaves before playing it; their opponent wins.
+A **Match** result recorded when a **Player** leaves before finishing it, whether or not it has begun; their opponent wins.
 _Avoid_: Withdrawal, DNF, no-show
 
 ### The room
