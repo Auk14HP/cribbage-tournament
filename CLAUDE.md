@@ -6,11 +6,13 @@
 
 `npm run check` must pass to commit (pre-commit hook). CI also runs `npm run e2e`, the two-window browser tests the hook skips; run it before pushing a UI change.
 
+Commits made after the branch's last `code-review` (a fix the user asks for, a follow-up) get their own `code-review` before they are pushed.
+
 ## Agent skills
 
 ### Issue tracker
 
-Issues and specs live in GitHub Issues for Auk14HP/cribbage-tournament, managed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues and specs live in GitHub Issues for Auk14HP/cribbage-tournament, managed via the `gh` CLI. See `docs/agents/issue-tracker.md`, and its "When a change revises agreed behaviour" section whenever a change edits `GLOSSARY.md` or departs from an issue's wording.
 
 ### Triage labels
 

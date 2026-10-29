@@ -5,7 +5,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 ## Naming
 
 - Give every function a verb-first name (`createTournament`, `findNameRefusal`), including helpers and test helpers, so it is never mistaken for a value. A predicate starts with `is` or `has`. ESLint has no rule that can check this.
-- Name a value for what it holds: a locator for the element it finds (`championHeading`), not the screen that element suggests. One of several found in turn carries its place and what it is (`firstCountdownRing`, not `first`). A locator that finds a different element each time it is used is named for the one it finds then (`nextWinnerButton`, used in a loop).
+- Name every value for what it holds, in code and tests alike: a locator for the element it finds (`championHeading`), not the screen that element suggests. One of several, taken by its place, carries its place and what it is: `firstMatch`, `firstRow`, `firstCountdownRing`, never `first` alone. A locator that finds a different element each time it is used is named for the one it finds then (`nextWinnerButton`, used in a loop).
 - React components and hooks keep React's conventions: a component is a PascalCase noun (`Organizer`), a hook starts with `use` (`useTournament`).
 
 ## Readability
@@ -15,6 +15,10 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 ## Components
 
 - Define a helper at module level when it reads no props, state or hooks, passing in what it needs. Only what reads the component's own state lives inside it.
+
+## Wording
+
+- A dialog asks one question about one subject, and its buttons answer it: "Who is forfeiting the Match on Board 3?" with a button per Player, not a question that also explains what follows for someone else.
 
 ## Styling
 

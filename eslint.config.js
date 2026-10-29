@@ -64,6 +64,13 @@ export default defineConfig([
 						'VariableDeclarator[id.name=/^render[A-Z]/] > ArrowFunctionExpression',
 					message: 'Make this its own component instead of a renderX helper.',
 				},
+				// A row that works anything out, such as its own callbacks, is a component, not a map body.
+				{
+					selector:
+						"JSXExpressionContainer > CallExpression[callee.property.name='map'] > ArrowFunctionExpression > BlockStatement",
+					message:
+						'Make each item its own component: a JSX map callback returns that component directly.',
+				},
 			],
 		},
 	},
