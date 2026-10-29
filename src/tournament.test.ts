@@ -1017,10 +1017,14 @@ describe('the Losers Bracket', () => {
 		expect(getBracketPicture(tournament, 'losers')!.rounds.map((r) => r.length)).toEqual([
 			4, 2, 1,
 		]);
+		// Cat's Match: Cat, the one Bye Player still to play, against the first-Round Match's winner.
 		const catsMatch = getMatchesOnBoards(tournament).find(
-			(m) => m.match.bracket === 'winners' && m.players.every((p) => 'name' in p),
+			(m) =>
+				m.match.bracket === 'winners' &&
+				m.players.every((p) => 'name' in p) &&
+				m.players.filter((p) => isByePlayerIn(tournament, p)).length === 1,
 		)!;
-		const [, cat] = catsMatch.players as [Player, Player];
+		const cat = catsMatch.players.find((p) => isByePlayerIn(tournament, p)) as Player;
 
 		tournament = expectOk(recordWinner(tournament, catsMatch.match, cat.id));
 
@@ -1029,6 +1033,35 @@ describe('the Losers Bracket', () => {
 		expect(rounds.map((r) => r.length)).toEqual([2, 1]);
 		expect(rounds[0].every((m) => m!.players.every(Boolean))).toBe(true);
 	});
+
+	it.each([
+		{ result: 'loses and stays', catWins: false },
+		{ result: 'wins', catWins: true },
+	])(
+		'plays through a held place to both champions when the Bye Player $result',
+		({ catWins }) => {
+			// 9 Players: four losers stay, and Cat, the Bye Player still to play, has a place held.
+			let tournament = playDrawStaying(startTournament(9, 5));
+			for (;;) {
+				const ready = getMatchesOnBoards(tournament).find((m) =>
+					m.players.every((p) => 'name' in p),
+				);
+				if (!ready) {
+					break;
+				}
+				const [a, b] = ready.players as [Player, Player];
+				// Cat is the second-named Player of the one Match left unplayed by the Draw.
+				const isCatsMatch =
+					ready.match.bracket === 'winners' && isByePlayerIn(tournament, b);
+				const winner = isCatsMatch && catWins ? b : a;
+				const loser = winner === a ? b : a;
+				const answer = isLosersBracketOpenTo(tournament, loser.id) ? 'staying' : undefined;
+				tournament = expectOk(recordWinner(tournament, ready.match, winner.id, answer));
+			}
+			expect(tournament.phase).toBe('finished');
+			expect(getBracketPicture(tournament, 'losers')!.champion).toBeDefined();
+		},
+	);
 
 	it('makes the Losers Draw at random, the same every time from the same seeded random source', () => {
 		const drawLosersWith = (seed: number) => {
@@ -1049,13 +1082,8 @@ describe('the Losers Bracket', () => {
 		 * Once all five are played, the Winners Bracket holds 3 Boards, and the five losers, all staying,
 		 * make a Losers Bracket needing 3: its last Match waits.
 		 */
-		const started = startTournament(10, 5);
-		const firstRound = getBracketPicture(started, 'winners')!.rounds[0];
-		// A Player with a Bye: not in a first-Round Match.
-		const isByePlayer = (player: Opponent) =>
-			'name' in player &&
-			!firstRound.some((m) => m?.players.some((p) => p?.id === player.id));
-		let tournament = playDrawStaying(started);
+		let tournament = playDrawStaying(startTournament(10, 5));
+		const isByePlayer = (player: Opponent) => isByePlayerIn(tournament, player);
 		const [waitingLosers] = getWaitingForBoard(tournament);
 		expect(waitingLosers.match.bracket).toBe('losers');
 		const [a, b] = waitingLosers.players as [Player, Player];
@@ -1069,7 +1097,7 @@ describe('the Losers Bracket', () => {
 		)!;
 		const winner = ready.players[0] as Player;
 		const otherSemiFinal = getMatchesOnBoards(tournament).find(
-			(m) => m.match.bracket === 'winners' && !('name' in m.players[1]),
+			(m) => m.match.bracket === 'winners' && m.players.filter(isByePlayer).length === 1,
 		)!;
 
 		tournament = expectOk(recordWinner(tournament, ready.match, winner.id));
@@ -1154,6 +1182,12 @@ const playDrawStaying = (started: Tournament): Tournament => {
 		tournament = expectOk(recordWinner(tournament, match, players[0].id, 'staying'));
 	}
 	return tournament;
+};
+
+// Whether a Player had a Bye: they aren't in any first-Round Match of the Winners Bracket.
+const isByePlayerIn = (tournament: Tournament, player: Opponent): boolean => {
+	const [firstRound] = getBracketPicture(tournament, 'winners')!.rounds;
+	return 'name' in player && !firstRound.some((m) => m?.players.some((p) => p?.id === player.id));
 };
 
 // Each Match holding a Board, in Board order, by its Board and its Players' names.

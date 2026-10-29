@@ -396,7 +396,8 @@ const findAnswerRefusal = (
  * so a Bye Player's first Match is in Round 2.
  */
 export const isLosersBracketOpenTo = (tournament: Tournament, player: PlayerId): boolean => {
-	if (listResultsOf(tournament, player).length > 0) {
+	// A Player who has played no Winners Bracket Match has played none.
+	if (listResultsOf(tournament, 'winners', player).length > 0) {
 		return false;
 	}
 	const { losersBracket } = tournament;
@@ -435,9 +436,7 @@ const settleEntrant = (tournament: Tournament, entrant: Entrant): Entrant | 'bye
 	if (typeof entrant === 'number') {
 		return entrant;
 	}
-	const firstMatch = listResultsOf(tournament, entrant.heldFor).find(
-		(r) => r.match.bracket === 'winners',
-	);
+	const [firstMatch] = listResultsOf(tournament, 'winners', entrant.heldFor);
 	if (!firstMatch) {
 		return entrant;
 	}
@@ -626,9 +625,7 @@ const isFirstMatch = (tournament: Tournament, match: MatchPlace): boolean =>
 	// A Match with a result has both its Players known.
 	(findPlayers(tournament, match) as readonly PlayerId[]).some(
 		(player) =>
-			!listResultsOf(tournament, player).some(
-				(r) => r.match.bracket === 'winners' && r.match.round < match.round,
-			),
+			!listResultsOf(tournament, 'winners', player).some((r) => r.match.round < match.round),
 	);
 
 // Whether a Match's winner has played their next Match, so its result can no longer be undone.
@@ -880,7 +877,7 @@ export const getBracketPicture = (
 	 */
 	const isFirstRoundEmpty = rounds.length > 1 && rounds[0].every((m) => m === undefined);
 	const shownRounds = isFirstRoundEmpty ? rounds.slice(1) : rounds;
-	return { rounds: shownRounds, champion: rounds.at(-1)![0]!.winner };
+	return { rounds: shownRounds, champion: shownRounds.at(-1)![0]!.winner };
 };
 
 /*
@@ -891,10 +888,7 @@ export const hasLostIn = (
 	tournament: Tournament,
 	bracket: BracketName,
 	player: PlayerId,
-): boolean =>
-	listResultsOf(tournament, player).some(
-		(r) => r.match.bracket === bracket && r.winner !== player,
-	);
+): boolean => listResultsOf(tournament, bracket, player).some((r) => r.winner !== player);
 
 export interface RecordedResult {
 	readonly match: MatchPlace;
@@ -921,9 +915,19 @@ export const getUndoableResults = (tournament: Tournament): readonly RecordedRes
 		})
 		.reverse();
 
-// Every result of a Match a Player played, in either bracket, in the order recorded.
-const listResultsOf = (tournament: Tournament, player: PlayerId): MatchResult[] =>
-	tournament.results.filter((r) => findPlayers(tournament, r.match).includes(player));
+/*
+ * Every result of a Match a Player played in a bracket, in the order recorded. The bracket is checked
+ * first: settling a Losers Bracket held place reads Winners Bracket results, so reading a Losers Match's
+ * Players from here would settle it again, without end.
+ */
+const listResultsOf = (
+	tournament: Tournament,
+	bracket: BracketName,
+	player: PlayerId,
+): MatchResult[] =>
+	tournament.results.filter(
+		(r) => r.match.bracket === bracket && findPlayers(tournament, r.match).includes(player),
+	);
 
 const listIndexes = (count: number): number[] => Array.from({ length: count }, (_, i) => i);
 
