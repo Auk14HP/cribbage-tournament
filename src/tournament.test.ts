@@ -1017,7 +1017,7 @@ describe('the Losers Bracket', () => {
 		expect(getBracketPicture(tournament, 'losers')!.rounds.map((r) => r.length)).toEqual([
 			4, 2, 1,
 		]);
-		const { catsMatch, cat } = findCatsMatch(tournament);
+		const { byePlayer: cat, firstMatch: catsMatch } = findByePlayerStillToPlay(tournament);
 
 		tournament = expectOk(recordWinner(tournament, catsMatch.match, cat.id));
 
@@ -1035,7 +1035,7 @@ describe('the Losers Bracket', () => {
 		({ catWins }) => {
 			// 9 Players: four losers stay, and Cat, the Bye Player still to play, has a place held.
 			let tournament = playDrawStaying(startTournament(9, 5));
-			const { cat } = findCatsMatch(tournament);
+			const { byePlayer: cat } = findByePlayerStillToPlay(tournament);
 			for (;;) {
 				const ready = getMatchesOnBoards(tournament).find((m) =>
 					m.players.every((p) => 'name' in p),
@@ -1192,18 +1192,18 @@ const hasOneByePlayer = (tournament: Tournament, match: MatchOnBoard): boolean =
 	match.players.filter((p) => isByePlayerIn(tournament, p)).length === 1;
 
 /*
- * Cat's Match, in a Tournament whose Draw left one: Cat, the one Bye Player still to play their first
- * Match, against the first-Round Match's winner.
+ * The one Bye Player still to play their first Match, waiting for the first-Round Match's winner, and
+ * that Match of theirs: in a Tournament whose Draw has an odd number of first-Round Matches.
  */
-const findCatsMatch = (tournament: Tournament) => {
-	const catsMatch = getMatchesOnBoards(tournament).find(
+const findByePlayerStillToPlay = (tournament: Tournament) => {
+	const firstMatch = getMatchesOnBoards(tournament).find(
 		(m) =>
 			m.match.bracket === 'winners' &&
 			m.players.every((p) => 'name' in p) &&
 			hasOneByePlayer(tournament, m),
 	)!;
-	const cat = catsMatch.players.find((p) => isByePlayerIn(tournament, p)) as Player;
-	return { catsMatch, cat };
+	const byePlayer = firstMatch.players.find((p) => isByePlayerIn(tournament, p)) as Player;
+	return { byePlayer, firstMatch };
 };
 
 // Each Match holding a Board, in Board order, by its Board and its Players' names.
