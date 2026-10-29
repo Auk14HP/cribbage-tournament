@@ -1,8 +1,8 @@
 import './style.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Display } from './Display';
-import { Organizer } from './Organizer';
+import { Display } from './display/Display';
+import { Organizer } from './organizer/Organizer';
 import { createLocalStorageStore } from './storage';
 import { setUpTestTournament } from './testTournament';
 import { tournamentVersion, type Tournament } from './tournament';

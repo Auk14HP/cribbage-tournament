@@ -3,8 +3,8 @@ import '@testing-library/jest-dom/vitest';
 import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Display } from './Display';
-import { createLocalStorageStore, type Store } from './storage';
-import type { Result } from './result';
+import { createLocalStorageStore, type Store } from '../storage';
+import type { Result } from '../result';
 import {
 	makeDraw,
 	getMatchesOnBoards,
@@ -17,7 +17,7 @@ import {
 	tournamentVersion,
 	type Player,
 	type Tournament,
-} from './tournament';
+} from '../tournament';
 
 const key = 'display-test';
 
