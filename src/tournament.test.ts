@@ -922,7 +922,7 @@ describe('the Losers Bracket', () => {
 
 		tournament = expectOk(recordWinner(tournament, annAndCat.match, ann.id, 'staying'));
 
-		// Cat comes to the held place at Board 3, and Ann joins Dan for the final.
+		// Cat comes to the Held Place at Board 3, and Ann joins Dan for the final.
 		expect(listSeats(tournament)).toEqual([
 			[1, ann.name, dan.name],
 			[3, cat.name, staying],
@@ -938,7 +938,7 @@ describe('the Losers Bracket', () => {
 			answer: 'leaving' as const,
 		},
 	])(
-		'gives the held place’s opponent a Bye when the Bye Player $result',
+		'gives the Held Place’s opponent a Bye when the Bye Player $result',
 		({ catWins, answer }) => {
 			const heldPlace = setUpHeldPlace(['staying', 'staying']);
 			const { ann, cat, dan, losersMatch } = heldPlace;
@@ -1007,24 +1007,17 @@ describe('the Losers Bracket', () => {
 		expect(getMatchesOnBoards(tournament).some((m) => isPlaying(m, ann, cat))).toBe(true);
 	});
 
-	it('leaves out a first Round nobody plays in, once a held place becomes a Bye', () => {
+	it('leaves out a first Round nobody plays in, once a Held Place becomes a Bye', () => {
 		/*
 		 * 9 Players: one first-Round Match, whose winner meets Cat, a Bye Player, and three Round 2 Matches
-		 * between Bye Players. Their four losers stay, so with Cat's held place the Losers Bracket has eight
-		 * places: one first-Round Match, against the held place, and three Byes.
+		 * between Bye Players. Their four losers stay, so with Cat's Held Place the Losers Bracket has eight
+		 * places: one first-Round Match, against the Held Place, and three Byes.
 		 */
 		let tournament = playDrawStaying(startTournament(9, 5));
 		expect(getBracketPicture(tournament, 'losers')!.rounds.map((r) => r.length)).toEqual([
 			4, 2, 1,
 		]);
-		// Cat's Match: Cat, the one Bye Player still to play, against the first-Round Match's winner.
-		const catsMatch = getMatchesOnBoards(tournament).find(
-			(m) =>
-				m.match.bracket === 'winners' &&
-				m.players.every((p) => 'name' in p) &&
-				m.players.filter((p) => isByePlayerIn(tournament, p)).length === 1,
-		)!;
-		const cat = catsMatch.players.find((p) => isByePlayerIn(tournament, p)) as Player;
+		const { catsMatch, cat } = findCatsMatch(tournament);
 
 		tournament = expectOk(recordWinner(tournament, catsMatch.match, cat.id));
 
@@ -1038,10 +1031,11 @@ describe('the Losers Bracket', () => {
 		{ result: 'loses and stays', catWins: false },
 		{ result: 'wins', catWins: true },
 	])(
-		'plays through a held place to both champions when the Bye Player $result',
+		'plays through a Held Place to both champions when the Bye Player $result',
 		({ catWins }) => {
 			// 9 Players: four losers stay, and Cat, the Bye Player still to play, has a place held.
 			let tournament = playDrawStaying(startTournament(9, 5));
+			const { cat } = findCatsMatch(tournament);
 			for (;;) {
 				const ready = getMatchesOnBoards(tournament).find((m) =>
 					m.players.every((p) => 'name' in p),
@@ -1050,15 +1044,17 @@ describe('the Losers Bracket', () => {
 					break;
 				}
 				const [a, b] = ready.players as [Player, Player];
-				// Cat is the second-named Player of the one Match left unplayed by the Draw.
-				const isCatsMatch =
-					ready.match.bracket === 'winners' && isByePlayerIn(tournament, b);
-				const winner = isCatsMatch && catWins ? b : a;
+				// Cat's Winners Bracket Matches go the way this case asks, every other to its first-named Player.
+				const otherPlayer = a.id === cat.id ? b : a;
+				const isCatsMatch = ready.match.bracket === 'winners' && isPlaying(ready, cat);
+				const catsResult = catWins ? cat : otherPlayer;
+				const winner = isCatsMatch ? catsResult : a;
 				const loser = winner === a ? b : a;
 				const answer = isLosersBracketOpenTo(tournament, loser.id) ? 'staying' : undefined;
 				tournament = expectOk(recordWinner(tournament, ready.match, winner.id, answer));
 			}
 			expect(tournament.phase).toBe('finished');
+			expect(hasLostIn(tournament, 'winners', cat.id)).toBe(!catWins);
 			expect(getBracketPicture(tournament, 'losers')!.champion).toBeDefined();
 		},
 	);
@@ -1083,7 +1079,6 @@ describe('the Losers Bracket', () => {
 		 * make a Losers Bracket needing 3: its last Match waits.
 		 */
 		let tournament = playDrawStaying(startTournament(10, 5));
-		const isByePlayer = (player: Opponent) => isByePlayerIn(tournament, player);
 		const [waitingLosers] = getWaitingForBoard(tournament);
 		expect(waitingLosers.match.bracket).toBe('losers');
 		const [a, b] = waitingLosers.players as [Player, Player];
@@ -1093,11 +1088,13 @@ describe('the Losers Bracket', () => {
 		});
 		// Two Bye Pairs' winners meet, while the other semi-final's Player waits for an opponent.
 		const ready = getMatchesOnBoards(tournament).find(
-			(m) => m.match.bracket === 'winners' && m.players.every(isByePlayer),
+			(m) =>
+				m.match.bracket === 'winners' &&
+				m.players.every((p) => isByePlayerIn(tournament, p)),
 		)!;
 		const winner = ready.players[0] as Player;
 		const otherSemiFinal = getMatchesOnBoards(tournament).find(
-			(m) => m.match.bracket === 'winners' && m.players.filter(isByePlayer).length === 1,
+			(m) => m.match.bracket === 'winners' && hasOneByePlayer(tournament, m),
 		)!;
 
 		tournament = expectOk(recordWinner(tournament, ready.match, winner.id));
@@ -1112,7 +1109,7 @@ describe('the Losers Bracket', () => {
 		const roundTwo = getMatchesOnBoards(tournament).find(
 			(m) =>
 				m.match.bracket === 'winners' &&
-				m.players.every((p) => 'name' in p && !isByePlayer(p)),
+				m.players.every((p) => 'name' in p && !isByePlayerIn(tournament, p)),
 		)!;
 
 		tournament = expectOk(recordWinner(tournament, roundTwo.match, roundTwo.players[0].id));
@@ -1122,7 +1119,7 @@ describe('the Losers Bracket', () => {
 		expect(listWaiting(tournament)).toEqual([]);
 	});
 
-	it('waits for the held place when only one Player is staying, and is not played with none', () => {
+	it('waits for the Held Place when only one Player is staying, and is not played with none', () => {
 		const one = setUpHeldPlace(['staying', 'leaving']);
 		expect(getBracketPicture(one.tournament, 'losers')).toBeUndefined();
 		expect(isLosersBracketOpenTo(one.tournament, one.cat.id)).toBe(true);
@@ -1188,6 +1185,25 @@ const playDrawStaying = (started: Tournament): Tournament => {
 const isByePlayerIn = (tournament: Tournament, player: Opponent): boolean => {
 	const [firstRound] = getBracketPicture(tournament, 'winners')!.rounds;
 	return 'name' in player && !firstRound.some((m) => m?.players.some((p) => p?.id === player.id));
+};
+
+// Whether exactly one of a Match's Players had a Bye.
+const hasOneByePlayer = (tournament: Tournament, match: MatchOnBoard): boolean =>
+	match.players.filter((p) => isByePlayerIn(tournament, p)).length === 1;
+
+/*
+ * Cat's Match, in a Tournament whose Draw left one: Cat, the one Bye Player still to play their first
+ * Match, against the first-Round Match's winner.
+ */
+const findCatsMatch = (tournament: Tournament) => {
+	const catsMatch = getMatchesOnBoards(tournament).find(
+		(m) =>
+			m.match.bracket === 'winners' &&
+			m.players.every((p) => 'name' in p) &&
+			hasOneByePlayer(tournament, m),
+	)!;
+	const cat = catsMatch.players.find((p) => isByePlayerIn(tournament, p)) as Player;
+	return { catsMatch, cat };
 };
 
 // Each Match holding a Board, in Board order, by its Board and its Players' names.

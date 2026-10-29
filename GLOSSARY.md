@@ -37,7 +37,7 @@ One column of a bracket: every **Match** that is the same number of wins away fr
 _Avoid_: Stage, level
 
 **Draw**:
-The random pairing of **Players** into a bracket's first **Round**, including who gets a **Bye**; each bracket has exactly one Draw. It seats each **Match** with a Player known at a **Board**, a Bye Player waiting for a first-Round Match's winner included, or leaves it **Waiting for a Board** when none is free.
+The random pairing of **Players** into a bracket's first **Round**, including who gets a **Bye**. Each bracket has exactly one Draw.
 _Avoid_: Seeding, pairing, shuffle
 
 **Held Place**:
@@ -45,7 +45,7 @@ A place in the **Losers Bracket**'s **Draw** kept open for the **Bye** Player wh
 _Avoid_: Placeholder, reserved spot
 
 **Bye**:
-A free pass through a bracket's first **Round**, given at random when the field doesn't fill the bracket, or left by a **Held Place** its Player doesn't take. A Bye is not a **Match** and is not a loss. Bye Players meet each other in the second Round, so they play from the start; only with an odd number of first-Round Matches does one Bye Player wait, at a **Board** of their own, for a first-Round Match's winner.
+A free pass through a bracket's first **Round**, given at random when the field doesn't fill the bracket, or left by a **Held Place** its Player doesn't take; it is not a **Match** and not a loss. Bye Players meet each other in the second Round, except one who waits at a **Board** of their own for a first-Round Match's winner when the first Round has an odd number of Matches.
 _Avoid_: Walkover, skip
 
 **Forfeit**:

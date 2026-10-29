@@ -218,10 +218,10 @@ const MatchRow = ({
 	onForfeit: (match: MatchPlace, player: Player) => void;
 }) => {
 	// Only a Match with both Players known can be won: each one's loss is the other's win.
-	const knownSecond = 'name' in b ? b : undefined;
-	const canWin = playing && knownSecond !== undefined;
-	const winForFirst = () => knownSecond && onWin(match, a, knownSecond);
-	const winForSecond = () => knownSecond && onWin(match, knownSecond, a);
+	const knownSecondPlayer = 'name' in b ? b : undefined;
+	const canWin = playing && knownSecondPlayer !== undefined;
+	const winForFirst = () => knownSecondPlayer && onWin(match, a, knownSecondPlayer);
+	const winForSecond = () => knownSecondPlayer && onWin(match, knownSecondPlayer, a);
 	const forfeitMatch = (player: Player) => onForfeit(match, player);
 	return (
 		<li className={matchRow}>
@@ -234,7 +234,11 @@ const MatchRow = ({
 				<MatchPlayer player={b} canWin={canWin} onWin={winForSecond} />
 			</div>
 			{canWin && (
-				<ForfeitButton board={board} players={[a, knownSecond]} onForfeit={forfeitMatch} />
+				<ForfeitButton
+					board={board}
+					players={[a, knownSecondPlayer]}
+					onForfeit={forfeitMatch}
+				/>
 			)}
 		</li>
 	);

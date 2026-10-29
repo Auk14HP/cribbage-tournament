@@ -310,7 +310,7 @@ const arrangeBracket = (drawn: readonly Entrant[]): Bracket => {
 	const firstRound = listIndexes(places).map((place): FirstRoundMatch | Bye =>
 		place < firstRoundMatches
 			? { players: [drawn[next++], drawn[next++]] }
-			: // A held place is drawn first, so it is always in a Match.
+			: // A Held Place is drawn first, so it is always in a Match.
 				{ bye: drawn[next++] as PlayerId },
 	);
 	return { firstRound };
@@ -416,7 +416,7 @@ const isHeldFor = (entrant: Entrant, player: PlayerId): boolean =>
 	typeof entrant !== 'number' && entrant.heldFor === player;
 
 /*
- * A first-Round entry as it stands. A held place is settled once its Player's first Match has a result:
+ * A first-Round entry as it stands. A Held Place is settled once its Player's first Match has a result:
  * to them if they lost it and stayed, and otherwise their opponent has a Bye.
  */
 const findSettledEntry = (tournament: Tournament, match: MatchPlace): FirstRoundMatch | Bye => {
@@ -431,7 +431,7 @@ const findSettledEntry = (tournament: Tournament, match: MatchPlace): FirstRound
 	return { players: [a, b] };
 };
 
-// A held place's Player, a Bye if they aren't coming, or the place still held.
+// A Held Place's Player, a Bye if they aren't coming, or the place still held.
 const settleEntrant = (tournament: Tournament, entrant: Entrant): Entrant | 'bye' => {
 	if (typeof entrant === 'number') {
 		return entrant;
@@ -872,7 +872,7 @@ export const getBracketPicture = (
 		),
 	);
 	/*
-	 * A held place that became a Bye can leave a first Round of nothing but Byes: the bracket was drawn for
+	 * A Held Place that became a Bye can leave a first Round of nothing but Byes: the bracket was drawn for
 	 * one more Player than came. It is left out, so the bracket looks the size of its field.
 	 */
 	const isFirstRoundEmpty = rounds.length > 1 && rounds[0].every((m) => m === undefined);
@@ -917,7 +917,7 @@ export const getUndoableResults = (tournament: Tournament): readonly RecordedRes
 
 /*
  * Every result of a Match a Player played in a bracket, in the order recorded. The bracket is checked
- * first: settling a Losers Bracket held place reads Winners Bracket results, so reading a Losers Match's
+ * first: settling a Losers Bracket Held Place reads Winners Bracket results, so reading a Losers Match's
  * Players from here would settle it again, without end.
  */
 const listResultsOf = (
