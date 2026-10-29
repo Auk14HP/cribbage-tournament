@@ -215,8 +215,20 @@ describe('the organizer route', () => {
 		await answerDialog(user, 'Make the Draw');
 
 		expect(getRefusalIn('Boards and the Draw')).toHaveTextContent(
-			'The Draw seats every Player at a Board, so it needs 1 Board, and there are none.',
+			'The Draw needs at least one Board.',
 		);
+	});
+
+	it('makes the Draw with fewer Boards than Matches, listing the rest as waiting for a Board', async () => {
+		const user = showOrganizer();
+		// 3 Players on 1 Board: the first-Round Match takes it, and the Bye Player waits for one.
+		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '1');
+
+		expect(listMatchRows()).toHaveLength(1);
+		const waiting = within(screen.getByRole('list', { name: 'Waiting for a Board' }));
+		expect(waiting.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+			expect.stringMatching(/^.+ vs Winner of .+ \/ .+$/),
+		]);
 	});
 
 	it('makes the Draw once confirmed, closing registration and showing the Matches it seats, then Starts', async () => {
@@ -243,10 +255,8 @@ describe('the organizer route', () => {
 			'listitem',
 		);
 		expect(matches).toHaveLength(2);
-		expect(matches[1]).toHaveTextContent(/^Board 2.+ vs Winner of Board 1$/);
-		const waits = ['Dave K.', 'Big Dave', 'Sue'].find((name) =>
-			matches[1].textContent!.includes(name),
-		)!;
+		expect(matches[1]).toHaveTextContent(/^Board 2.+ vs Winner of .+ \/ .+$/);
+		const waits = matches[1].textContent!.match(/^Board 2(.+) vs Winner of/)![1];
 		for (const name of ['Dave K.', 'Big Dave', 'Sue'].filter((n) => n !== waits)) {
 			expect(matches[0]).toHaveTextContent(name);
 		}
@@ -269,7 +279,7 @@ describe('the organizer route', () => {
 		const user = showOrganizer();
 		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
 		const [firstRow, waiting] = listMatchRows();
-		const bye = waiting.textContent!.match(/^Board 2(.+) vs Winner of Board 1$/)![1];
+		const bye = waiting.textContent!.match(/^Board 2(.+) vs Winner of .+$/)![1];
 		// Before Start, no winner can be recorded.
 		expect(within(firstRow).queryAllByRole('button')).toEqual([]);
 		await user.click(screen.getByRole('button', { name: 'Start' }));
@@ -366,7 +376,7 @@ describe('the organizer route', () => {
 
 		/*
 		 * 6 Players on 3 Boards: once the Draw's three Matches are played and their losers stay, the
-		 * Losers Bracket is one Match on Board 3 and a Bye Player waiting for a Board.
+		 * Losers Bracket is one Match on a Board and a Bye Player waiting for one.
 		 */
 		for (const row of listMatchRows()) {
 			const [winner] = listWinnerNames(row);
@@ -376,7 +386,7 @@ describe('the organizer route', () => {
 
 		const waiting = within(screen.getByRole('list', { name: 'Waiting for a Board' }));
 		expect(waiting.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
-			expect.stringMatching(/^.+ vs Winner of Board 3$/),
+			expect.stringMatching(/^.+ vs Winner of .+ \/ .+$/),
 		]);
 	});
 

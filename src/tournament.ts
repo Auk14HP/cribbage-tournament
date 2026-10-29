@@ -268,6 +268,9 @@ export const makeDraw = (tournament: Tournament, random: Random): Result<Tournam
 	if (tournament.players.length < 2) {
 		return { ok: false, reason: 'The Draw needs at least two Players.' };
 	}
+	if (tournament.boards.length === 0) {
+		return { ok: false, reason: 'The Draw needs at least one Board.' };
+	}
 	const drawn = shuffle(
 		tournament.players.map((p) => p.id),
 		random,
@@ -283,12 +286,7 @@ export const makeDraw = (tournament: Tournament, random: Random): Result<Tournam
 		winnersBracket,
 		losersDrawOrder,
 	};
-	// Every Board is free at the Draw, so Matches take them lowest-numbered first, in bracket order.
-	const opening = listLiveMatches(drawnTournament);
-	const boardsRefusal = findBoardsShortRefusal(opening.length, tournament.boards.length);
-	if (boardsRefusal) {
-		return { ok: false, reason: boardsRefusal };
-	}
+	// Every Board is free at the Draw, so Matches take them lowest-numbered first; the rest wait for one.
 	return { ok: true, value: reseat(drawnTournament) };
 };
 
@@ -324,16 +322,6 @@ export const start = (tournament: Tournament): Result<Tournament> => {
 		return { ok: false, reason: 'The Tournament has already started.' };
 	}
 	return { ok: true, value: { ...tournament, phase: 'inProgress' } };
-};
-
-// Every Match the Draw seats needs a Board at the Draw: there is no waiting for one yet.
-const findBoardsShortRefusal = (matches: number, boards: number): string | undefined => {
-	if (boards >= matches) {
-		return undefined;
-	}
-	const set =
-		boards === 0 ? 'there are none' : `there ${boards === 1 ? 'is' : 'are'} only ${boards}`;
-	return `The Draw seats every Player at a Board, so it needs ${matches} ${matches === 1 ? 'Board' : 'Boards'}, and ${set}.`;
 };
 
 /*
@@ -637,8 +625,10 @@ const hasPlayedOn = (tournament: Tournament, match: MatchPlace): boolean => {
 /*
  * Brings the Boards in line with the Matches: each Match with a Player known and no winner yet holds a
  * Board, or waits for one. A Match that no longer needs one gives it up. A Match newly needing one joins
- * the end of the queue, in bracket order, and each free Board goes to the longest-waiting Match,
- * lowest-numbered first. A Match being re-opened may ask for its own Board back, and gets it if it is free.
+ * the end of the queue, in bracket order, and each free Board goes to the first, lowest-numbered first.
+ * When there are too few free Boards for the queue, Matches ready to play, both Players known, go ahead of
+ * those still waiting on a Player. A Match being re-opened may ask for its own Board back, and gets it if
+ * it is free.
  */
 const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 	const live = listLiveMatches(tournament);
@@ -651,16 +641,24 @@ const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 	const isSeated = (match: MatchPlace) => onBoards.some((on) => isSameMatch(on.match, match));
 	const isAlreadyWaiting = (match: MatchPlace) =>
 		tournament.waitingForBoard.some((m) => isSameMatch(m, match));
-	const waiting = [
+	const needing = [
 		...tournament.waitingForBoard.filter((match) => isLive(match) && !isSeated(match)),
 		...live.filter((match) => !isSeated(match) && !isAlreadyWaiting(match)),
 	];
+	const freeCount = tournament.boards.filter(isFree).length;
+	const waiting = needing.length <= freeCount ? needing : orderReadyFirst(tournament, needing);
 	let free = tournament.boards.find(isFree);
 	while (free !== undefined && waiting.length > 0) {
 		onBoards.push({ match: waiting.shift()!, board: free });
 		free = tournament.boards.find(isFree);
 	}
 	return { ...tournament, onBoards, waitingForBoard: waiting };
+};
+
+// Matches ready to play first, both Players known, then those still waiting on a Player, each in turn.
+const orderReadyFirst = (tournament: Tournament, matches: readonly MatchPlace[]): MatchPlace[] => {
+	const isReady = (match: MatchPlace) => findBothPlayers(tournament, match) !== undefined;
+	return [...matches.filter(isReady), ...matches.filter((match) => !isReady(match))];
 };
 
 /*
@@ -725,6 +723,17 @@ const findPlayers = (tournament: Tournament, match: MatchPlace): readonly [Seat,
 	return [findPlayerFrom(0), findPlayerFrom(1)];
 };
 
+// A Match's two Players once both are known, ready to play, or undefined while one is still to come.
+const findBothPlayers = (
+	tournament: Tournament,
+	match: MatchPlace,
+): readonly [PlayerId, PlayerId] | undefined => {
+	const players = findPlayers(tournament, match);
+	return players.every((p) => typeof p === 'number')
+		? (players as readonly [PlayerId, PlayerId])
+		: undefined;
+};
+
 // One side of a Match: a Player known, the earlier Match that sends them, or a place held for them.
 type Seat = PlayerId | MatchPlace | HeldPlace;
 
@@ -734,9 +743,9 @@ const findOpponent = (tournament: Tournament, match: MatchPlace, player: PlayerI
 	return players.find((p) => p !== player)!;
 };
 
-// A Player still to come: the winner of the Match on that Board, or of a Match not yet started.
+// A Player still to come: the winner of a Match between those two Players, or of one not yet set.
 export interface WinnerOf {
-	readonly winnerOfBoard?: BoardNumber;
+	readonly winnerOf?: readonly [Player, Player];
 }
 
 // A Player who may yet come: the Bye Player a Losers Bracket place is held for.
@@ -782,7 +791,8 @@ const findSeatedPlayers = (
 		if ('heldFor' in from) {
 			return { placeHeldFor: findPlayer(tournament, from.heldFor) };
 		}
-		return { winnerOfBoard: findBoard(tournament, from) };
+		const players = findBothPlayers(tournament, from);
+		return { winnerOf: players?.map((p) => findPlayer(tournament, p)) as [Player, Player] };
 	};
 	const [a, b] = findPlayers(tournament, match).map(findSeated);
 	return 'name' in a ? [a, b] : [b as Player, a];

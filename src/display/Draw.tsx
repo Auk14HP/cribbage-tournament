@@ -1,9 +1,11 @@
 import { getMatchesOnBoards, type Tournament } from '../tournament';
 import { getPlayerName } from '../wording';
+import { WaitingForBoard } from './WaitingForBoard';
 
 /*
  * Every Match holding a Board, so each Player can find their seat, including a Bye Player waiting there
- * for a Match's winner. Sized so a 32-place bracket fits one screen: up to four rows of Matches.
+ * for a Match's winner, and beneath them any Matches waiting for a Board. Sized so a 32-place bracket fits
+ * one screen: up to four rows of Matches.
  */
 export const Draw = ({ tournament }: { tournament: Tournament }) => {
 	const matches = getMatchesOnBoards(tournament);
@@ -31,6 +33,7 @@ export const Draw = ({ tournament }: { tournament: Tournament }) => {
 					</li>
 				))}
 			</ul>
+			<WaitingForBoard tournament={tournament} />
 		</>
 	);
 };

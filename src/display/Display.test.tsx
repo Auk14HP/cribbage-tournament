@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Display } from './Display';
 import { createLocalStorageStore, type Store } from '../storage';
 import type { Result } from '../result';
+import { getPlayerName } from '../wording';
 import {
 	makeDraw,
 	getMatchesOnBoards,
@@ -64,17 +65,34 @@ describe('Tonight’s Draw screen', () => {
 			'listitem',
 		);
 		expect(cards.map((card) => card.textContent)).toEqual(
-			draw.map(
-				({ board, players: [a, b] }) =>
-					`Board ${board}${a.name}${'name' in b ? b.name : 'Winner of Board 1'}`,
-			),
+			draw.map(({ board, players: [a, b] }) => `Board ${board}${a.name}${getPlayerName(b)}`),
 		);
-		expect(cards[1]).toHaveTextContent(/Winner of Board 1$/);
+		const [firstA, firstB] = draw[0].players;
+		expect(cards[1]).toHaveTextContent(`Winner of ${firstA.name} / ${getPlayerName(firstB)}`);
 
 		const started = expectOk(start(tournament));
 		act(() => store.save(started));
 
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Winners Bracket');
+	});
+
+	it('lists the Matches waiting for a Board beneath, when the Draw opens more Matches than there are Boards', () => {
+		const store = showDisplay();
+		/*
+		 * 5 Players on 2 Boards: the first-Round Match and the Bye Players' Match take the Boards, and the
+		 * Bye Player waiting for a winner waits for a Board too.
+		 */
+		const tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], 2);
+
+		act(() => store.save(tournament));
+
+		const [waiting] = getWaitingForBoard(tournament);
+		const waitingList = screen.getByRole('list', { name: 'Waiting for a Board' });
+		expect(
+			within(waitingList)
+				.getAllByRole('listitem')
+				.map((i) => i.textContent),
+		).toEqual([`${waiting.players[0].name} vs ${getPlayerName(waiting.players[1])}`]);
 	});
 });
 
@@ -220,7 +238,8 @@ describe('the Losers Bracket', () => {
 		const store = showDisplay();
 		/*
 		 * 6 Players on 3 Boards: once the Draw's three Matches are played and their losers stay, the
-		 * Losers Bracket is one Match on Board 3 and a Bye Player waiting for a Board.
+		 * Losers Bracket is one Match, on Board 2 ahead of the Winners final's Player waiting alone, and a
+		 * Bye Player waiting for a Board.
 		 */
 		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev'], 3);
 		const started = expectOk(start(drawn));
@@ -233,7 +252,7 @@ describe('the Losers Bracket', () => {
 		expect(readHeading()).toBe('Losers Bracket');
 		// One Round 1 Match, in the bracket's left half, and a Bye in its right.
 		const [leftRoundOne] = screen.getAllByRole('list', { name: 'Round 1' });
-		expect(leftRoundOne).toHaveTextContent(/^Board 3/);
+		expect(leftRoundOne).toHaveTextContent(/^Board 2/);
 		waitSeconds(20);
 		expect(readHeading()).toBe('Now playing');
 		const waitingList = screen.getByRole('list', { name: 'Waiting for a Board' });
@@ -241,7 +260,7 @@ describe('the Losers Bracket', () => {
 			within(waitingList)
 				.getAllByRole('listitem')
 				.map((i) => i.textContent),
-		).toEqual([`${waiting.players[0].name} vs Winner of Board 3`]);
+		).toEqual([`${waiting.players[0].name} vs ${getPlayerName(waiting.players[1])}`]);
 		waitSeconds(20);
 		expect(readHeading()).toBe('Winners Bracket');
 	});

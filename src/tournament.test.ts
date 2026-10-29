@@ -207,9 +207,8 @@ describe('making the Draw', () => {
 			expect(players.map((p) => p.name).sort()).toEqual(
 				tournament.players.map((p) => p.name).sort(),
 			);
-			for (const { winnerOfBoard } of winners) {
-				const awaited = matches.find((m) => m.board === winnerOfBoard)!;
-				expect(awaited.players.every((p) => 'name' in p)).toBe(true);
+			for (const { winnerOf } of winners) {
+				expect(matches.some((m) => isPlaying(m, ...winnerOf!))).toBe(true);
 			}
 		},
 	);
@@ -221,7 +220,7 @@ describe('making the Draw', () => {
 		const [a, b] = match.players as [Player, Player];
 		const [bye] = tournament.players.filter((p) => p !== a && p !== b);
 		expect(match.board).toBe(1);
-		expect(waiting).toMatchObject({ board: 2, players: [bye, { winnerOfBoard: 1 }] });
+		expect(waiting).toMatchObject({ board: 2, players: [bye, { winnerOf: [a, b] }] });
 	});
 
 	it('makes the same Draw every time from the same seeded random source, and a different one from another', () => {
@@ -249,23 +248,42 @@ describe('making the Draw', () => {
 		});
 	});
 
-	it('refuses the Draw until there is a Board for every Player to sit at', () => {
+	it('seats Matches with both Players known first, and queues the rest for a Board', () => {
 		// 26 Players: 13 Matches, 10 in the first Round and 3 between Bye Players in Round 2.
-		expect(makeSeededDraw(26, 12)).toEqual({
+		const even = expectOk(makeSeededDraw(26, 12));
+
+		expect(getMatchesOnBoards(even).map((m) => m.board)).toEqual(
+			Array.from({ length: 12 }, (_, i) => i + 1),
+		);
+		const started = expectOk(start(even));
+		const queue = getWaitingForBoard(started);
+		expect(queue).toHaveLength(1);
+		const [a, b] = queue[0].players as [Player, Player];
+		expect(recordWinner(started, queue[0].match, a.id)).toEqual({
 			ok: false,
-			reason: 'The Draw seats every Player at a Board, so it needs 13 Boards, and there are only 12.',
+			reason: `${a.name} and ${b.name} are still waiting for a Board.`,
 		});
-		// 21 Players: 10 Matches, and a Board for the Bye Player waiting for a winner.
-		expect(makeSeededDraw(21, 10)).toEqual({
-			ok: false,
-			reason: 'The Draw seats every Player at a Board, so it needs 11 Boards, and there are only 10.',
-		});
+
+		/*
+		 * 25 Players: 9 first-Round Matches and 3 between Bye Players fill the 12 Boards, ahead of the Bye
+		 * Player waiting for the last first-Round Match's winner.
+		 */
+		const odd = expectOk(makeSeededDraw(25, 12));
+
+		const seated = getMatchesOnBoards(odd);
+		expect(seated.every((m) => m.players.every((p) => 'name' in p))).toBe(true);
+		const [waiting] = listWaiting(odd);
+		const [, awaited] = /^Winner of (.+)$/.exec(waiting[1])!;
+		expect(seated.map(({ players: [a, b] }) => `${a.name} / ${getPlayerName(b)}`)).toContain(
+			awaited,
+		);
+	});
+
+	it('refuses the Draw with no Boards set out', () => {
 		expect(makeSeededDraw(2, 0)).toEqual({
 			ok: false,
-			reason: 'The Draw seats every Player at a Board, so it needs 1 Board, and there are none.',
+			reason: 'The Draw needs at least one Board.',
 		});
-		expect(makeSeededDraw(26, 13).ok).toBe(true);
-		expect(makeSeededDraw(21, 11).ok).toBe(true);
 	});
 
 	it('closes registration: a late arrival is refused, and the drawn Players can’t be renamed or removed', () => {
@@ -386,18 +404,21 @@ describe('recording winners', () => {
 		};
 
 		recordWin(3, dan);
-		// Board 3 frees and is the lowest free, so Dan waits there in the final for Board 2's winner.
+		/*
+		 * Board 3 frees and is the lowest free, so Dan waits there in the final for Board 2's winner, whose
+		 * Match is still waiting on a Player.
+		 */
 		expect(listSeats()).toEqual([
 			[1, ann.name, bob.name],
-			[2, cat.name, 'Winner of Board 1'],
-			[3, dan.name, 'Winner of Board 2'],
+			[2, cat.name, `Winner of ${ann.name} / ${bob.name}`],
+			[3, dan.name, 'Opponent to come'],
 		]);
 
 		recordWin(1, ann);
 		// Ann joins Cat at Board 2, and Board 1 frees. Once both are known, they're named in bracket order.
 		expect(listSeats()).toEqual([
 			[2, ann.name, cat.name],
-			[3, dan.name, 'Winner of Board 2'],
+			[3, dan.name, `Winner of ${ann.name} / ${cat.name}`],
 		]);
 
 		recordWin(2, ann);
@@ -437,7 +458,7 @@ describe('recording winners', () => {
 			[1, a1, getNameAt(1, 1)],
 			[2, a2, getNameAt(2, 1)],
 			[3, a3, getNameAt(3, 1)],
-			[4, a4, 'Winner of Board 3'],
+			[4, a4, `Winner of ${a3} / ${getNameAt(3, 1)}`],
 		]);
 
 		recordFirstPlayerWin(3);
@@ -458,9 +479,9 @@ describe('recording winners', () => {
 
 		recordFirstPlayerWin(1);
 		expect(listSeats()).toEqual([
-			[1, a1, 'Winner of Board 2'],
+			[1, a1, `Winner of ${a2} / ${getNameAt(2, 1)}`],
 			[2, a2, getNameAt(2, 1)],
-			[3, a3, 'Winner of Board 1'],
+			[3, a3, 'Opponent to come'],
 		]);
 	});
 
@@ -563,7 +584,7 @@ describe('undoing a result', () => {
 		// Board 2 frees, and Board 2 is the lowest free, so its winner waits there for Board 1's winner.
 		expect(getMatchesOnBoards(tournament).find((m) => m.board === 2)!.players).toEqual([
 			winner,
-			{ winnerOfBoard: 1 },
+			{ winnerOf: drawn.find((m) => m.board === 1)!.players },
 		]);
 
 		tournament = expectOk(undoResult(tournament, two.match));
@@ -832,7 +853,8 @@ describe('the Losers Bracket', () => {
 
 		/*
 		 * The Winners Bracket holds 2 Boards: Ann and Cat's Match, and Eve waiting for the final. Bob, Dan
-		 * and Fay make a Losers Bracket of one Match and a Bye: the Match takes the third Board, and the Bye
+		 * and Fay make a Losers Bracket of one Match and a Bye. The two Boards Cat and Eve won at free, and
+		 * the Losers Match, ready to play, takes the lower one ahead of Eve, who waits at the other. The Bye
 		 * Player waits for a Board of their own.
 		 */
 		const [[losersMatch], [losersFinal]] = getBracketPicture(tournament, 'losers')!.rounds;
@@ -843,18 +865,19 @@ describe('the Losers Bracket', () => {
 		const [losersA, losersB] = losersMatch!.players as [Player, Player];
 		expect(listSeats(tournament)).toEqual([
 			[1, ann.name, cat.name],
-			[2, eve.name, 'Winner of Board 1'],
-			[3, losersA.name, losersB.name],
+			[2, losersA.name, losersB.name],
+			[3, eve.name, `Winner of ${ann.name} / ${cat.name}`],
 		]);
-		expect(listWaiting(tournament)).toEqual([[byePlayer.name, 'Winner of Board 3']]);
+		const losersWinner = `Winner of ${losersA.name} / ${losersB.name}`;
+		expect(listWaiting(tournament)).toEqual([[byePlayer.name, losersWinner]]);
 
 		// Board 1 frees, and the longest-waiting Match takes it. Ann goes to Eve's Board for the final.
 		const annAndCat = getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann, cat))!;
 		tournament = expectOk(recordWinner(tournament, annAndCat.match, ann.id));
 		expect(listSeats(tournament)).toEqual([
-			[1, byePlayer.name, 'Winner of Board 3'],
-			[2, ann.name, eve.name],
-			[3, losersA.name, losersB.name],
+			[1, byePlayer.name, losersWinner],
+			[2, losersA.name, losersB.name],
+			[3, ann.name, eve.name],
 		]);
 		expect(listWaiting(tournament)).toEqual([]);
 	});
@@ -905,10 +928,10 @@ describe('the Losers Bracket', () => {
 		let { tournament } = heldPlace;
 		const [staying, other] = losersMatch.map((p) => p.name);
 		expect(listSeats(tournament)).toEqual([
-			[1, dan.name, 'Winner of Board 2'],
+			[1, dan.name, `Winner of ${ann.name} / ${cat.name}`],
 			[2, ann.name, cat.name],
 			[3, staying, `Place held for ${cat.name}`],
-			[4, other, 'Winner of Board 3'],
+			[4, other, 'Opponent to come'],
 		]);
 		const annAndCat = getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann, cat))!;
 		const losersFirstMatch = getMatchesOnBoards(tournament).find((m) =>
@@ -926,7 +949,7 @@ describe('the Losers Bracket', () => {
 		expect(listSeats(tournament)).toEqual([
 			[1, ann.name, dan.name],
 			[3, cat.name, staying],
-			[4, other, 'Winner of Board 3'],
+			[4, other, `Winner of ${cat.name} / ${staying}`],
 		]);
 	});
 
@@ -1072,20 +1095,29 @@ describe('the Losers Bracket', () => {
 		expect(drawnIds).not.toEqual([...drawnIds].sort((a, b) => a - b));
 	});
 
-	it('gives each Board that frees to the longest-waiting Match, whichever its bracket', () => {
+	it('seats Matches ready to play ahead of a Player waiting alone, and gives each Board that frees to the queue, whichever its bracket', () => {
 		/*
 		 * 10 Players on 5 Boards: two first-Round Matches, and three Round 2 Matches between Bye Players.
 		 * Once all five are played, the Winners Bracket holds 3 Boards, and the five losers, all staying,
-		 * make a Losers Bracket needing 3: its last Match waits.
+		 * make a Losers Bracket of one first-Round Match and three Byes. Its first-Round Match and the Bye
+		 * pair's Match, both ready to play, take the 2 free Boards ahead of the Bye Player waiting for a
+		 * winner, though that Bye Player comes first in the bracket.
 		 */
 		let tournament = playDrawStaying(startTournament(10, 5));
+		const losersOnBoards = getMatchesOnBoards(tournament).filter(
+			(m) => m.match.bracket === 'losers',
+		);
+		expect(losersOnBoards.map((m) => m.players.every((p) => 'name' in p))).toEqual([
+			true,
+			true,
+		]);
 		const [waitingLosers] = getWaitingForBoard(tournament);
 		expect(waitingLosers.match.bracket).toBe('losers');
-		const [a, b] = waitingLosers.players as [Player, Player];
-		expect(recordWinner(tournament, waitingLosers.match, a.id)).toEqual({
-			ok: false,
-			reason: `${a.name} and ${b.name} are still waiting for a Board.`,
-		});
+		const losersFirstMatch = losersOnBoards.find((m) => m.match.round === 1)!;
+		const [c, d] = losersFirstMatch.players as [Player, Player];
+		expect(listWaiting(tournament)).toEqual([
+			[waitingLosers.players[0].name, `Winner of ${c.name} / ${d.name}`],
+		]);
 		// Two Bye Pairs' winners meet, while the other semi-final's Player waits for an opponent.
 		const ready = getMatchesOnBoards(tournament).find(
 			(m) =>
@@ -1093,18 +1125,13 @@ describe('the Losers Bracket', () => {
 				m.players.every((p) => isByePlayerIn(tournament, p)),
 		)!;
 		const winner = ready.players[0] as Player;
-		const otherSemiFinal = getMatchesOnBoards(tournament).find(
-			(m) => m.match.bracket === 'winners' && hasOneByePlayer(tournament, m),
-		)!;
 
 		tournament = expectOk(recordWinner(tournament, ready.match, winner.id));
 
 		// The waiting Losers Match takes the Board, and the winner's next Match waits behind it.
 		const nowOnBoard = getMatchesOnBoards(tournament).find((m) => m.board === ready.board)!;
 		expect(nowOnBoard.match).toEqual(waitingLosers.match);
-		expect(listWaiting(tournament)).toEqual([
-			[winner.name, `Winner of Board ${otherSemiFinal.board}`],
-		]);
+		expect(listWaiting(tournament)).toEqual([[winner.name, 'Opponent to come']]);
 		// The first-Round winners' Match, its Players both known.
 		const roundTwo = getMatchesOnBoards(tournament).find(
 			(m) =>
