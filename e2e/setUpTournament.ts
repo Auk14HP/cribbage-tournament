@@ -1,4 +1,4 @@
-import type { BrowserContext, Page } from '@playwright/test';
+import { expect, type BrowserContext, type Page } from '@playwright/test';
 
 // Set-up shared by the TV layout tests.
 
@@ -18,15 +18,20 @@ export const seedDraw = async (context: BrowserContext) => {
 	});
 };
 
+export const confirmDraw = async (organizer: Page) => {
+	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
+	await organizer.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
+};
+
 export const startTournament = async (page: Page, players: number) => {
 	await page.goto(`/?players=${players}&boards=${Math.ceil(players / 2)}`);
-	await page.getByRole('button', { name: 'Make the Draw' }).click();
-	await page.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
+	await confirmDraw(page);
 	await page.getByRole('button', { name: 'Start', exact: true }).click();
 };
 
 /*
- * Every Match goes to its first-named Player, the first on the list each time, until the Matches list is down
+ * Every Match goes to its first-named Player, the first on the list each time, its loser leaving rather than
+ * staying for a Losers Bracket, until the Matches list is down
  * to the given number: 0 plays to the champion, 1 stops at the final, both its Players known. Found by its
  * place in the list, not its Players, since any Match will do. A locator is looked up afresh each time it is
  * used, so the one button it names is the next to click.
@@ -41,6 +46,18 @@ const playUntilMatchesLeft = async (page: Page, matchesLeft: number) => {
 	 */
 	while ((await matchesOnBoards.count()) > matchesLeft) {
 		await nextWinnerButton.click();
+		await answerStayingIfAsked(page, 'Leaving');
+	}
+};
+
+/*
+ * Answers whether the loser is staying for the Losers Bracket, if they were asked: only a Player losing their
+ * first Match is.
+ */
+export const answerStayingIfAsked = async (page: Page, answer: 'Staying' | 'Leaving') => {
+	const stayingDialog = page.getByRole('dialog', { name: /staying for the Losers Bracket/ });
+	if (await stayingDialog.isVisible()) {
+		await stayingDialog.getByRole('button', { name: answer }).click();
 	}
 };
 
@@ -48,16 +65,25 @@ export const playToFinal = (page: Page) => playUntilMatchesLeft(page, 0);
 
 export const playUntilTheFinal = (page: Page) => playUntilMatchesLeft(page, 1);
 
+// Past the one-second screen, so a long hold saved too late has shown itself.
+const millisPastOneSecondScreen = 1500;
+
 /*
  * Moves the TV's cycle on to the named screen and holds it there: a second per screen moves it on, and a
- * long one then holds it, since a new time restarts the screen shown. Each time is saved with Enter, as an
- * Organizer would.
+ * long one then holds it, since a new time restarts the screen shown. The long one can land after the second
+ * is up, holding the wrong screen, so the screen is checked once after saving and a miss goes round again.
+ * Each time is saved with Enter, as an Organizer would.
  */
 export const holdScreen = async (organizer: Page, tv: Page, screenHeading: string) => {
 	const secondsInput = organizer.getByLabel('Seconds per TV screen');
-	await secondsInput.fill('1');
-	await secondsInput.press('Enter');
-	await tv.getByRole('heading', { name: screenHeading }).waitFor();
-	await secondsInput.fill('600');
-	await secondsInput.press('Enter');
+	const heading = tv.getByRole('heading', { name: screenHeading });
+	await expect(async () => {
+		await secondsInput.fill('1');
+		await secondsInput.press('Enter');
+		await heading.waitFor();
+		await secondsInput.fill('600');
+		await secondsInput.press('Enter');
+		await tv.waitForTimeout(millisPastOneSecondScreen);
+		expect(await heading.isVisible()).toBe(true);
+	}).toPass({ timeout: 20_000 });
 };

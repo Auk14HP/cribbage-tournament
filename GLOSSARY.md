@@ -25,7 +25,7 @@ The main single-elimination bracket every **Player** enters; its final winner is
 _Avoid_: Main bracket, championship bracket
 
 **Losers Bracket**:
-A separate single-elimination bracket for **Players** who lost their first **Match** in the **Winners Bracket**, in whichever **Round** it was, and chose to keep playing. Every **Player** can get at least two Matches in a Tournament.
+A separate single-elimination bracket for **Players** who lost their first **Match** in the **Winners Bracket**, in whichever **Round** it was, and are staying to keep playing. Every **Player** can get at least two Matches in a Tournament.
 _Avoid_: Consolation bracket, second-chance bracket
 
 **Match**:
@@ -37,11 +37,15 @@ One column of a bracket: every **Match** that is the same number of wins away fr
 _Avoid_: Stage, level
 
 **Draw**:
-The random pairing of **Players** into a bracket's first **Round**, including who gets a **Bye**. The Draw seats every Player at a **Board**: each **Match** whose two Players it already knows gets one, and so does a Bye Player who waits for a first-Round Match's winner. Each bracket has exactly one Draw.
+The random pairing of **Players** into a bracket's first **Round**, including who gets a **Bye**. Each bracket has exactly one Draw.
 _Avoid_: Seeding, pairing, shuffle
 
+**Held Place**:
+A place in the **Losers Bracket**'s **Draw** kept open for the **Bye** Player whose first **Match** is still to come, which becomes a Bye for their opponent unless they lose it and stay.
+_Avoid_: Placeholder, reserved spot
+
 **Bye**:
-A free pass through a bracket's first **Round**, given at random when the field doesn't fill the bracket. A Bye is not a **Match** and is not a loss. Bye Players meet each other in the second Round, so they play from the start; only with an odd number of first-Round Matches does one Bye Player wait, at a **Board** of their own, for a first-Round Match's winner.
+A free pass through a bracket's first **Round**, given at random when the field doesn't fill the bracket, or left by a **Held Place** its Player doesn't take; it is not a **Match** and not a loss. Bye Players meet each other in the second Round, except one who waits for a first-Round Match's winner when the first Round has an odd number of Matches.
 _Avoid_: Walkover, skip
 
 **Forfeit**:
@@ -51,5 +55,9 @@ _Avoid_: Withdrawal, DNF, no-show
 ### The room
 
 **Board**:
-A numbered cribbage board set out in the room, where a **Match** is assigned to be played. Boards are numbered from 1 up by tent-number placards, like the ones a restaurant hands out to deliver food to a table. Several Boards can share one physical table, and there are only as many Boards as the room has cribbage boards. A Match takes the lowest-numbered free Board as soon as one of its Players is known, who sits there waiting for their opponent; the opponent comes to them. So a winner usually stays at the Board they just won at.
+A numbered cribbage board set out in the room, where a **Match** is assigned to be played. Boards are numbered from 1 up by tent-number placards, like the ones a restaurant hands out to deliver food to a table. Several Boards can share one physical table, and there are only as many Boards as the room has cribbage boards. A Match takes the lowest-numbered free Board as soon as one of its Players is known, or joins **Waiting for a Board** when none is free. Its Player sits there waiting for their opponent; the opponent comes to them. So a winner usually stays at the Board they just won at.
 _Avoid_: Table, spot, station, placard
+
+**Waiting for a Board**:
+The line of **Matches**, from both brackets, that need a **Board** while none is free. Matches ready to play, both **Players** known, go ahead of those still waiting on a Player, and a Player waiting alone at a **Board** gives it up to one; otherwise it is first come, first served.
+_Avoid_: Waitlist, backlog

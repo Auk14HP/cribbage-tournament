@@ -6,11 +6,11 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import type { Store } from '../storage';
 import type { Tournament } from '../tournament';
 import { useTournament } from '../useTournament';
+import { Bracket } from './Bracket';
 import { Champion } from './Champion';
 import { Draw } from './Draw';
 import { NowPlaying } from './NowPlaying';
 import { Players } from './Players';
-import { WinnersBracket } from './WinnersBracket';
 
 export const Display = ({ store }: { store: Store<Tournament> }) => {
 	const tournament = useTournament(store);
@@ -19,10 +19,18 @@ export const Display = ({ store }: { store: Store<Tournament> }) => {
 			{tournament.phase === 'registration' && <Players tournament={tournament} />}
 			{tournament.phase === 'drawShown' && <Draw tournament={tournament} />}
 			{tournament.phase === 'inProgress' && (
-				<Cycle key="inProgress" tournament={tournament} screens={playingScreens} />
+				<Cycle
+					key="inProgress"
+					tournament={tournament}
+					screens={listPlayingScreens(tournament)}
+				/>
 			)}
 			{tournament.phase === 'finished' && (
-				<Cycle key="finished" tournament={tournament} screens={finishedScreens} />
+				<Cycle
+					key="finished"
+					tournament={tournament}
+					screens={listFinishedScreens(tournament)}
+				/>
 			)}
 		</main>
 	);
@@ -30,16 +38,27 @@ export const Display = ({ store }: { store: Store<Tournament> }) => {
 
 // The screens the TV cycles through, each for the Tournament's screenSeconds.
 const cycledScreens = {
-	winnersBracket: (tournament: Tournament) => <WinnersBracket tournament={tournament} />,
+	winnersBracket: (tournament: Tournament) => <Bracket tournament={tournament} name="winners" />,
+	losersBracket: (tournament: Tournament) => <Bracket tournament={tournament} name="losers" />,
 	nowPlaying: (tournament: Tournament) => <NowPlaying tournament={tournament} />,
 	champion: (tournament: Tournament) => <Champion tournament={tournament} />,
 };
 
 type CycledScreen = keyof typeof cycledScreens;
 
-// Once Started, from the Winners Bracket. Once finished, from the champion, so the night ends on them.
-const playingScreens: readonly CycledScreen[] = ['winnersBracket', 'nowPlaying'];
-const finishedScreens: readonly CycledScreen[] = ['champion', 'winnersBracket'];
+// The Losers Bracket's screen, once it is drawn: skipped when there is none.
+const listBracketScreens = (tournament: Tournament): CycledScreen[] =>
+	tournament.losersBracket ? ['winnersBracket', 'losersBracket'] : ['winnersBracket'];
+
+// Once Started, from the Winners Bracket. Once finished, from the champions, so the night ends on them.
+const listPlayingScreens = (tournament: Tournament): CycledScreen[] => [
+	...listBracketScreens(tournament),
+	'nowPlaying',
+];
+const listFinishedScreens = (tournament: Tournament): CycledScreen[] => [
+	'champion',
+	...listBracketScreens(tournament),
+];
 
 /*
  * Shows each screen in turn, from the first. A new screenSeconds restarts the current screen's time, so

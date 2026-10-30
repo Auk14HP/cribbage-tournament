@@ -5,9 +5,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Display } from './Display';
 import { createLocalStorageStore, type Store } from '../storage';
 import type { Result } from '../result';
+import { listWaitingText } from '../screenTestHelpers';
+import { isReadyToPlay } from '../testHelpers';
+import { getPlayerName } from '../wording';
 import {
 	makeDraw,
 	getMatchesOnBoards,
+	getWaitingForBoard,
 	createTournament,
 	recordWinner,
 	registerPlayer,
@@ -15,6 +19,7 @@ import {
 	setScreenSeconds,
 	start,
 	tournamentVersion,
+	type BracketName,
 	type Player,
 	type Tournament,
 } from '../tournament';
@@ -62,17 +67,34 @@ describe('Tonight’s Draw screen', () => {
 			'listitem',
 		);
 		expect(cards.map((card) => card.textContent)).toEqual(
-			draw.map(
-				({ board, players: [a, b] }) =>
-					`Board ${board}${a.name}${'name' in b ? b.name : 'Winner of Board 1'}`,
-			),
+			draw.map(({ board, players: [a, b] }) => `Board ${board}${a.name}${getPlayerName(b)}`),
 		);
-		expect(cards[1]).toHaveTextContent(/Winner of Board 1$/);
+		const [byePlayer] = draw.find((m) => !('name' in m.players[1]))!.players;
+		const byeCard = cards.find((card) => card.textContent!.includes(byePlayer.name))!;
+		const firstMatch = draw.find((m) => m.match.round === 1)!;
+		const [a, b] = firstMatch.players as [Player, Player];
+		expect(byeCard).toHaveTextContent(`Winner of ${a.name} / ${b.name}`);
 
 		const started = expectOk(start(tournament));
 		act(() => store.save(started));
 
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Winners Bracket');
+	});
+
+	it('lists the Matches waiting for a Board beneath, when the Draw opens more Matches than there are Boards', () => {
+		const store = showDisplay();
+		/*
+		 * 5 Players on 2 Boards: the first-Round Match and the Bye Players' Match take the Boards, and the
+		 * Bye Player waiting for a winner waits for a Board too.
+		 */
+		const tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], 2);
+
+		act(() => store.save(tournament));
+
+		const [waiting] = getWaitingForBoard(tournament);
+		expect(listWaitingText()).toEqual([
+			`${waiting.players[0].name} vs ${getPlayerName(waiting.players[1])}`,
+		]);
 	});
 });
 
@@ -81,11 +103,12 @@ describe('the Winners Bracket screen', () => {
 		const store = showDisplay();
 		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue'], 2);
 		let tournament = expectOk(start(drawn));
-		const [firstMatch, waiting] = getMatchesOnBoards(tournament);
+		const seated = getMatchesOnBoards(tournament);
+		const firstMatch = seated.find(isReadyToPlay)!;
 		const [a, b] = firstMatch.players as [Player, Player];
-		const bye = waiting.players[0];
+		const [bye] = seated.find((m) => m !== firstMatch)!.players;
 		const recordWinnerOf = (match: typeof firstMatch.match, winner: Player) => {
-			tournament = expectOk(recordWinner(tournament, match, winner.id));
+			tournament = expectOk(recordWinner(tournament, match, winner.id, 'leaving'));
 			act(() => store.save(tournament));
 		};
 		// What a Round's column shows, a Match per item.
@@ -130,7 +153,9 @@ describe('the TV cycle', () => {
 		 * 5 Players: a first-Round Match on Board 1, a Bye Player at Board 2 waiting for its winner, and a
 		 * Match between the other two Bye Players on Board 3. The waiting Player isn't playing yet.
 		 */
-		const [firstMatch, , byes] = getMatchesOnBoards(tournament);
+		const playing = getMatchesOnBoards(tournament).filter(isReadyToPlay);
+		const firstMatch = playing.find((m) => m.match.round === 1)!;
+		const byes = playing.find((m) => m !== firstMatch)!;
 		const describeCard = ({ board, players: [a, b] }: typeof firstMatch) =>
 			`Board ${board}${a.name}${(b as Player).name}`;
 		const cards = within(screen.getByRole('list', { name: 'Matches' })).getAllByRole(
@@ -194,7 +219,7 @@ describe('the champion screen', () => {
 		const [final] = getMatchesOnBoards(tournament);
 		const champion = final.players[0];
 
-		tournament = expectOk(recordWinner(tournament, final.match, champion.id));
+		tournament = expectOk(recordWinner(tournament, final.match, champion.id, 'leaving'));
 		act(() => store.save(tournament));
 
 		// With no Losers Bracket played, the night has one champion.
@@ -211,6 +236,90 @@ describe('the champion screen', () => {
 		expect(readHeading()).toBe('Tonight’s Champion');
 	});
 });
+
+describe('the Losers Bracket', () => {
+	it('joins the TV cycle once drawn, after the Winners Bracket, with Matches waiting for a Board beneath Now playing', () => {
+		vi.useFakeTimers();
+		const store = showDisplay();
+		/*
+		 * 6 Players on 3 Boards: once the Draw's three Matches are played and their losers stay, the
+		 * Losers Bracket is one Match on a Board and a Bye Player waiting for one.
+		 */
+		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev'], 3);
+		const started = expectOk(start(drawn));
+		const tournament = playDrawStaying(started);
+		const [waiting] = getWaitingForBoard(tournament);
+		act(() => store.save(tournament));
+
+		expect(readHeading()).toBe('Winners Bracket');
+		waitSeconds(20);
+		expect(readHeading()).toBe('Losers Bracket');
+		// One Round 1 Match, in the bracket's left half, and a Bye in its right.
+		const [leftRoundOne] = screen.getAllByRole('list', { name: 'Round 1' });
+		const losersMatch = getMatchesOnBoards(tournament).find(
+			(m) => m.match.bracket === 'losers',
+		)!;
+		expect(leftRoundOne).toHaveTextContent(`Board ${losersMatch.board}`);
+		waitSeconds(20);
+		expect(readHeading()).toBe('Now playing');
+		expect(listWaitingText()).toEqual([
+			`${waiting.players[0].name} vs ${getPlayerName(waiting.players[1])}`,
+		]);
+		waitSeconds(20);
+		expect(readHeading()).toBe('Winners Bracket');
+	});
+
+	it('shows a finished bracket’s champion while the other plays on, then names both champions', () => {
+		vi.useFakeTimers();
+		const store = showDisplay();
+		// 4 Players: both first-Round losers stay, and meet in the Losers Bracket.
+		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann'], 2);
+		const started = expectOk(start(drawn));
+		let tournament = playDrawStaying(started);
+		const findFinal = (bracket: BracketName) =>
+			getMatchesOnBoards(tournament).find((m) => m.match.bracket === bracket)!;
+		const winnersFinal = findFinal('winners');
+		const losersFinal = findFinal('losers');
+		const [winnersChampion] = winnersFinal.players as [Player, Player];
+		const [losersChampion] = losersFinal.players as [Player, Player];
+
+		tournament = expectOk(recordWinner(tournament, winnersFinal.match, winnersChampion.id));
+		act(() => store.save(tournament));
+		expect(readHeading()).toBe('Winners Bracket');
+		expect(screen.getByText(`Champion: ${winnersChampion.name}`)).toBeInTheDocument();
+		waitSeconds(20);
+		expect(readHeading()).toBe('Losers Bracket');
+		expect(screen.queryByText(/Champion/)).not.toBeInTheDocument();
+
+		tournament = expectOk(recordWinner(tournament, losersFinal.match, losersChampion.id));
+		act(() => store.save(tournament));
+		expect(readHeading()).toBe('Tonight’s Champions');
+		const winnersLine = screen.getByText('Winners Bracket').parentElement;
+		const losersLine = screen.getByText('Losers Bracket').parentElement;
+		expect(winnersLine).toHaveTextContent(winnersChampion.name);
+		expect(losersLine).toHaveTextContent(losersChampion.name);
+		waitSeconds(20);
+		expect(readHeading()).toBe('Winners Bracket');
+		waitSeconds(20);
+		expect(readHeading()).toBe('Losers Bracket');
+		expect(screen.getByText(`Champion: ${losersChampion.name}`)).toBeInTheDocument();
+		waitSeconds(20);
+		expect(readHeading()).toBe('Tonight’s Champions');
+	});
+});
+
+/*
+ * Records every Match the Draw started, its first-named Player winning and the loser staying for the
+ * Losers Bracket.
+ */
+const playDrawStaying = (started: Tournament): Tournament => {
+	let tournament = started;
+	const opening = getMatchesOnBoards(tournament).filter(isReadyToPlay);
+	for (const { match, players } of opening) {
+		tournament = expectOk(recordWinner(tournament, match, players[0].id, 'staying'));
+	}
+	return tournament;
+};
 
 // The display route, against the real storage adapter. Saving to the store stands in for the Organizer.
 const showDisplay = (): Store<Tournament> => {

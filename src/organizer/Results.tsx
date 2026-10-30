@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+	getMatchKey,
 	getUndoableResults,
 	undoResult,
 	type MatchPlace,
@@ -27,7 +28,7 @@ export const Results = ({ tournament, apply }: { tournament: Tournament; apply: 
 			<ul aria-label="Results" className="mt-2">
 				{results.map((result) => (
 					<li
-						key={`${result.match.round}-${result.match.place}`}
+						key={getMatchKey(result.match)}
 						className="flex items-center gap-2 border-b border-gray-300 py-1.5"
 					>
 						<span className="flex-1">{describeResult(result)}</span>
