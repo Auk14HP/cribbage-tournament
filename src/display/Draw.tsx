@@ -27,7 +27,7 @@ export const Draw = ({ tournament }: { tournament: Tournament }) => {
 						</span>
 						{/* A winner still to come is greyed, so it doesn't read as a Player's name, and may take two lines. */}
 						<span
-							className={`block font-semibold ${matchCards.text} ${'name' in match.players[1] ? 'truncate' : 'line-clamp-2 text-gray-300 italic'}`}
+							className={`font-semibold ${matchCards.text} ${'name' in match.players[1] ? 'block truncate' : 'line-clamp-2 text-gray-300 italic'}`}
 						>
 							{getPlayerName(match.players[1])}
 						</span>

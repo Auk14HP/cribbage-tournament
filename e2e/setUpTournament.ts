@@ -18,10 +18,14 @@ export const seedDraw = async (context: BrowserContext) => {
 	});
 };
 
+export const confirmDraw = async (organizer: Page) => {
+	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
+	await organizer.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
+};
+
 export const startTournament = async (page: Page, players: number) => {
 	await page.goto(`/?players=${players}&boards=${Math.ceil(players / 2)}`);
-	await page.getByRole('button', { name: 'Make the Draw' }).click();
-	await page.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
+	await confirmDraw(page);
 	await page.getByRole('button', { name: 'Start', exact: true }).click();
 };
 
@@ -62,7 +66,7 @@ export const playToFinal = (page: Page) => playUntilMatchesLeft(page, 0);
 export const playUntilTheFinal = (page: Page) => playUntilMatchesLeft(page, 1);
 
 // Past the one-second screen, so a long hold saved too late has shown itself.
-const pastOneSecondScreen = 1500;
+const millisPastOneSecondScreen = 1500;
 
 /*
  * Moves the TV's cycle on to the named screen and holds it there: a second per screen moves it on, and a
@@ -79,7 +83,7 @@ export const holdScreen = async (organizer: Page, tv: Page, screenHeading: strin
 		await heading.waitFor();
 		await secondsInput.fill('600');
 		await secondsInput.press('Enter');
-		await tv.waitForTimeout(pastOneSecondScreen);
+		await tv.waitForTimeout(millisPastOneSecondScreen);
 		expect(await heading.isVisible()).toBe(true);
 	}).toPass({ timeout: 20_000 });
 };

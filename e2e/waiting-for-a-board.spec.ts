@@ -1,17 +1,23 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
-import { holdScreen } from './setUpTournament';
+import { confirmDraw, holdScreen } from './setUpTournament';
 
 /*
  * The fields that ask most of the TV at each size Now playing can take: the whole Waiting for a Board list
  * stays on screen, on Tonight's Draw and on Now playing, and the page doesn't outgrow it.
  */
+const tvHeight = 1080;
+
+const expectPageFitsTv = async (tv: Page) => {
+	const pageHeight = await tv.evaluate(() => document.documentElement.scrollHeight);
+	expect(pageHeight).toBeLessThanOrEqual(tvHeight);
+};
+
 const expectWaitingOnScreen = async (tv: Page, waitingMatchCount: number) => {
 	const waiting = tv.getByRole('list', { name: 'Waiting for a Board' }).getByRole('listitem');
 	await expect(waiting).toHaveCount(waitingMatchCount);
 	const lastEntry = await waiting.last().boundingBox();
-	expect(lastEntry!.y + lastEntry!.height).toBeLessThanOrEqual(1080);
-	const pageHeight = await tv.evaluate(() => document.documentElement.scrollHeight);
-	expect(pageHeight).toBeLessThanOrEqual(1080);
+	expect(lastEntry!.y + lastEntry!.height).toBeLessThanOrEqual(tvHeight);
+	await expectPageFitsTv(tv);
 };
 
 // 32 Players open 16 Matches, and those without a Board wait for one.
@@ -19,15 +25,22 @@ const openingMatchCount = 16;
 
 const openTv = async (context: BrowserContext) => {
 	const tv = await context.newPage();
-	await tv.setViewportSize({ width: 1920, height: 1080 });
+	await tv.setViewportSize({ width: 1920, height: tvHeight });
 	await tv.goto('/display');
 	return tv;
 };
 
 const makeDraw = async (organizer: Page, tv: Page) => {
-	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
-	await organizer.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
+	await confirmDraw(organizer);
 	await tv.getByRole('heading', { name: 'Tonight’s Draw' }).waitFor();
+};
+
+const registerLongNames = async (organizer: Page, players: number) => {
+	const playerName = organizer.getByLabel('Player name');
+	for (let player = 1; player <= players; player++) {
+		await playerName.fill(`Bartholomew Featherstonehaugh ${player}`);
+		await playerName.press('Enter');
+	}
 };
 
 for (const boards of [2, 5, 6, 7, 13]) {
@@ -55,11 +68,7 @@ test('Long names stay on one line on Tonight’s Draw', async ({ context, page: 
 	const boards = 13;
 	await organizer.goto(`/?players=0&boards=${boards}`);
 	const tv = await openTv(context);
-	const playerName = organizer.getByLabel('Player name');
-	for (let player = 1; player <= 32; player++) {
-		await playerName.fill(`Bartholomew Featherstonehaugh ${player}`);
-		await playerName.press('Enter');
-	}
+	await registerLongNames(organizer, 32);
 
 	await makeDraw(organizer, tv);
 
@@ -76,11 +85,24 @@ test('A Bye Player’s card shows the whole Match they wait for', async ({
 
 	await makeDraw(organizer, tv);
 
-	const awaited = tv.getByText(/^Winner of /);
-	const isCutShort = await awaited.evaluate(
+	const awaitedMatchLine = tv.getByText(/^Winner of /);
+	const isCutShort = await awaitedMatchLine.evaluate(
 		(line) => line.scrollWidth > line.clientWidth || line.scrollHeight > line.clientHeight,
 	);
 	expect(isCutShort).toBe(false);
-	const pageHeight = await tv.evaluate(() => document.documentElement.scrollHeight);
-	expect(pageHeight).toBeLessThanOrEqual(1080);
+	await expectPageFitsTv(tv);
+});
+
+test('A very long Match a Bye Player waits for takes two lines at most', async ({
+	context,
+	page: organizer,
+}) => {
+	// 31 Players on 16 Boards: the page has no room for a third line.
+	await organizer.goto('/?players=0&boards=16');
+	const tv = await openTv(context);
+	await registerLongNames(organizer, 31);
+
+	await makeDraw(organizer, tv);
+
+	await expectPageFitsTv(tv);
 });
