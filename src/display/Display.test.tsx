@@ -5,7 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Display } from './Display';
 import { createLocalStorageStore, type Store } from '../storage';
 import type { Result } from '../result';
-import { isReadyToPlay, listWaitingText } from '../testHelpers';
+import { listWaitingText } from '../screenTestHelpers';
+import { isReadyToPlay } from '../testHelpers';
 import { getPlayerName } from '../wording';
 import {
 	makeDraw,

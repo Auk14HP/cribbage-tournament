@@ -1,5 +1,6 @@
 import { getMatchesOnBoards, type Tournament } from '../tournament';
 import { getPlayerName } from '../wording';
+import { matchCards } from './matchCards';
 import { WaitingForBoard } from './WaitingForBoard';
 
 /*
@@ -12,21 +13,21 @@ export const Draw = ({ tournament }: { tournament: Tournament }) => {
 	return (
 		<>
 			<h1 className="text-[6vh] leading-none font-bold">Tonight’s Draw</h1>
-			<ul aria-label="Matches" className="mt-[3vh] grid grid-cols-4 gap-[1.5vh]">
+			<ul aria-label="Matches" className={`mt-[3vh] grid ${matchCards.grid}`}>
 				{matches.map((match) => (
 					<li
 						key={match.board}
-						className="rounded-[1vh] border-[0.3vh] border-gray-500 px-[1.5vw] py-[0.8vh] leading-tight"
+						className={`rounded-[1vh] border-[0.3vh] border-gray-500 px-[1.5vw] leading-tight ${matchCards.card}`}
 					>
-						<span className="block text-[3.8vh] font-bold text-yellow-300">
+						<span className={`block font-bold text-yellow-300 ${matchCards.text}`}>
 							Board {match.board}
 						</span>
-						<span className="block text-[3.8vh] font-semibold">
+						<span className={`block font-semibold ${matchCards.text}`}>
 							{match.players[0].name}
 						</span>
 						{/* A winner still to come is greyed, so it doesn't read as a Player's name. */}
 						<span
-							className={`block text-[3.8vh] font-semibold ${'name' in match.players[1] ? '' : 'text-gray-300 italic'}`}
+							className={`block font-semibold ${matchCards.text} ${'name' in match.players[1] ? '' : 'text-gray-300 italic'}`}
 						>
 							{getPlayerName(match.players[1])}
 						</span>

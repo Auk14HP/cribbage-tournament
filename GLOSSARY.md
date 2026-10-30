@@ -59,5 +59,5 @@ A numbered cribbage board set out in the room, where a **Match** is assigned to 
 _Avoid_: Table, spot, station, placard
 
 **Waiting for a Board**:
-The line of **Matches**, from both brackets, that need a **Board** while none is free. Matches ready to play, both **Players** known, go ahead of those still waiting on a Player; otherwise it is first come, first served.
+The line of **Matches**, from both brackets, that need a **Board** while none is free. Matches ready to play, both **Players** known, go ahead of those still waiting on a Player, and a Player waiting alone at a **Board** gives it up to one; otherwise it is first come, first served.
 _Avoid_: Waitlist, backlog

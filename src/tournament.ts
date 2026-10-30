@@ -627,8 +627,9 @@ const hasPlayedOn = (tournament: Tournament, match: MatchPlace): boolean => {
  * Board, or waits for one. A Match that no longer needs one gives it up. A Match newly needing one joins
  * the end of the queue, in bracket order, and each free Board goes to the first, lowest-numbered first.
  * When there are too few free Boards for the queue, Matches ready to play, both Players known, go ahead of
- * those still waiting on a Player. A Match being re-opened may ask for its own Board back, and gets it if
- * it is free.
+ * those still waiting on a Player, and a Player waiting alone at a Board gives it up to one, latest seated
+ * first, so a Board never sits idle while two Players are ready. A Match being re-opened may ask for its own
+ * Board back, and gets it if it is free.
  */
 const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 	const live = listLiveMatches(tournament);
@@ -645,21 +646,31 @@ const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 		...tournament.waitingForBoard.filter((match) => isLive(match) && !isSeated(match)),
 		...live.filter((match) => !isSeated(match) && !isAlreadyWaiting(match)),
 	];
-	const freeBoards = tournament.boards.filter(isFree);
-	const queue = inTurn.length <= freeBoards.length ? inTurn : orderReadyFirst(tournament, inTurn);
+	const isReady = (match: MatchPlace) => isReadyToPlay(tournament, match);
+	const readyWithoutBoard =
+		inTurn.filter(isReady).length - tournament.boards.filter(isFree).length;
+	const seatedAlone = onBoards.filter((on) => !isReady(on.match));
+	const givingUp = seatedAlone.slice(Math.max(0, seatedAlone.length - readyWithoutBoard));
+	const staying = onBoards.filter((on) => !givingUp.includes(on));
+	const freeBoards = tournament.boards.filter(
+		(board) => !staying.some((on) => on.board === board),
+	);
+	const needing = [...inTurn, ...givingUp.map((on) => on.match)];
+	const queue =
+		needing.length <= freeBoards.length ? needing : orderReadyFirst(tournament, needing);
 	const seated = queue
 		.slice(0, freeBoards.length)
 		.map((match, index) => ({ match, board: freeBoards[index] }));
 	return {
 		...tournament,
-		onBoards: [...onBoards, ...seated],
+		onBoards: [...staying, ...seated],
 		waitingForBoard: queue.slice(freeBoards.length),
 	};
 };
 
 // Matches ready to play first, both Players known, then those still waiting on a Player, each in turn.
 const orderReadyFirst = (tournament: Tournament, matches: readonly MatchPlace[]): MatchPlace[] => {
-	const isReady = (match: MatchPlace) => findBothPlayers(tournament, match) !== undefined;
+	const isReady = (match: MatchPlace) => isReadyToPlay(tournament, match);
 	return [...matches.filter(isReady), ...matches.filter((match) => !isReady(match))];
 };
 
@@ -735,6 +746,9 @@ const findBothPlayers = (
 		? (players as readonly [PlayerId, PlayerId])
 		: undefined;
 };
+
+const isReadyToPlay = (tournament: Tournament, match: MatchPlace): boolean =>
+	findBothPlayers(tournament, match) !== undefined;
 
 // One side of a Match: a Player known, the earlier Match that sends them, or a place held for them.
 type Seat = PlayerId | MatchPlace | HeldPlace;

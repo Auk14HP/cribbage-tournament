@@ -4,7 +4,7 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Organizer } from './Organizer';
-import { listWaitingText } from '../testHelpers';
+import { listWaitingText } from '../screenTestHelpers';
 import { createLocalStorageStore } from '../storage';
 import { tournamentVersion, type Tournament } from '../tournament';
 
@@ -84,13 +84,14 @@ const listMatchRows = () =>
 const isWaitingForWinner = (row: HTMLElement) => row.textContent!.includes(' vs Winner of ');
 
 // The row of the Bye Player waiting for a winner.
-const findWaitingRow = () => listMatchRows().find(isWaitingForWinner)!;
+const findRowAwaitingWinner = () => listMatchRows().find(isWaitingForWinner)!;
 
 // The row of the one Match with both Players known, in a Draw of 3 Players.
 const findPlayingRow = () => listMatchRows().find((row) => !isWaitingForWinner(row))!;
 
 // The name of the Bye Player waiting for a winner.
-const readByePlayer = () => findWaitingRow().textContent!.match(/^Board \d+(.+) vs Winner of/)![1];
+const readByePlayerName = () =>
+	findRowAwaitingWinner().textContent!.match(/^Board \d+(.+) vs Winner of/)![1];
 
 // The names on a Match row's winner buttons: both its Players, once it is being played.
 const listWinnerNames = (row: HTMLElement) =>
@@ -260,11 +261,11 @@ describe('the organizer route', () => {
 
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tonight’s Draw');
 		expect(screen.queryByLabelText('Player name')).not.toBeInTheDocument();
-		// 3 Players: one first-Round Match on Board 1, and the Bye Player sits at Board 2 to wait for its winner.
+		// 3 Players: one first-Round Match, and the Bye Player sits at a Board of their own to wait for its winner.
 		expect(listMatchRows()).toHaveLength(2);
-		expect(findWaitingRow()).toHaveTextContent(/^Board \d+.+ vs Winner of .+ \/ .+$/);
-		const byePlayer = readByePlayer();
-		for (const name of ['Dave K.', 'Big Dave', 'Sue'].filter((n) => n !== byePlayer)) {
+		expect(findRowAwaitingWinner()).toHaveTextContent(/^Board \d+.+ vs Winner of .+ \/ .+$/);
+		const byePlayerName = readByePlayerName();
+		for (const name of ['Dave K.', 'Big Dave', 'Sue'].filter((n) => n !== byePlayerName)) {
 			expect(findPlayingRow()).toHaveTextContent(name);
 		}
 
@@ -284,18 +285,20 @@ describe('the organizer route', () => {
 	it('records each Match’s winner with one tap, through to the champion', async () => {
 		const user = showOrganizer();
 		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
-		const byePlayer = readByePlayer();
+		const byePlayerName = readByePlayerName();
 		// Before Start, no winner can be recorded.
-		expect(within(findPlayingRow()).queryAllByRole('button')).toEqual([]);
+		const drawnRow = findPlayingRow();
+		expect(within(drawnRow).queryAllByRole('button')).toEqual([]);
 		await user.click(screen.getByRole('button', { name: 'Start' }));
 
 		// Board 2's Bye Player waits for Board 1's winner, so only Board 1 can be won yet.
-		const boardOne = findPlayingRow();
-		expect(within(findWaitingRow()).queryAllByRole('button')).toEqual([]);
-		const [winner, loser] = within(boardOne)
+		const playingRow = findPlayingRow();
+		const waitingRow = findRowAwaitingWinner();
+		expect(within(waitingRow).queryAllByRole('button')).toEqual([]);
+		const [winner, loser] = within(playingRow)
 			.getAllByRole('button')
 			.map((b) => b.textContent!);
-		await user.click(within(boardOne).getByRole('button', { name: winner }));
+		await user.click(within(playingRow).getByRole('button', { name: winner }));
 		await answerDialog(user, 'Leaving');
 
 		// The winner joins the Bye Player at Board 2, and Board 1 frees.
@@ -305,10 +308,10 @@ describe('the organizer route', () => {
 		expect(final).toHaveTextContent(/^Board 2/);
 		expect(final).toHaveTextContent(winner);
 		expect(final).not.toHaveTextContent(loser);
-		await user.click(within(final).getByRole('button', { name: byePlayer }));
+		await user.click(within(final).getByRole('button', { name: byePlayerName }));
 
 		expect(screen.queryByRole('list', { name: 'Matches' })).not.toBeInTheDocument();
-		expect(screen.getByText(`Champion: ${byePlayer}`)).toBeInTheDocument();
+		expect(screen.getByText(`Champion: ${byePlayerName}`)).toBeInTheDocument();
 	});
 
 	it('records a Forfeit once the Organizer says who is forfeiting, and their opponent wins', async () => {
@@ -317,7 +320,7 @@ describe('the organizer route', () => {
 		await user.click(screen.getByRole('button', { name: 'Start' }));
 		// 3 Players: two play on Board 1, and the Bye Player waits at Board 2 for its winner.
 		const playing = findPlayingRow();
-		const waiting = findWaitingRow();
+		const waiting = findRowAwaitingWinner();
 		const [stays, leaves] = listWinnerNames(playing);
 		const bye = ['Dave K.', 'Big Dave', 'Sue'].find(
 			(name) => name !== stays && name !== leaves,

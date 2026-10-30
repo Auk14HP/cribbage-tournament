@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { holdScreen } from './setUpTournament';
 
 /*
  * The most a 32-place bracket can ask of the TV: four rows of Matches on 13 Boards and three more waiting.
@@ -9,6 +10,8 @@ const expectWaitingOnScreen = async (tv: Page) => {
 	await expect(waiting).toHaveCount(3);
 	const lastEntry = await waiting.last().boundingBox();
 	expect(lastEntry!.y + lastEntry!.height).toBeLessThanOrEqual(1080);
+	const pageHeight = await tv.evaluate(() => document.documentElement.scrollHeight);
+	expect(pageHeight).toBeLessThanOrEqual(1080);
 };
 
 test('Waiting for a Board stays on the TV at 32 Players on 13 Boards', async ({
@@ -26,7 +29,7 @@ test('Waiting for a Board stays on the TV at 32 Players on 13 Boards', async ({
 	await expectWaitingOnScreen(tv);
 
 	await organizer.getByRole('button', { name: 'Start', exact: true }).click();
-	await organizer.getByLabel('Seconds per TV screen').fill('1');
-	await tv.getByRole('heading', { name: 'Now playing' }).waitFor();
+	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
+	await holdScreen(organizer, tv, 'Now playing');
 	await expectWaitingOnScreen(tv);
 });
