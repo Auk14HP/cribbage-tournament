@@ -745,7 +745,7 @@ describe('a Player waiting alone when Boards run short', () => {
 		 * and its two Matches ready to play need more Boards than are free.
 		 */
 		let tournament = startTournament(10, 4);
-		const recordFirstNamed = (match: MatchOnBoard) => {
+		const recordFirstNamedWin = (match: MatchOnBoard) => {
 			const [winner, loser] = match.players as [Player, Player];
 			const answer = isLosersBracketOpenTo(tournament, loser.id) ? 'staying' : undefined;
 			tournament = expectOk(recordWinner(tournament, match.match, winner.id, answer));
@@ -753,21 +753,29 @@ describe('a Player waiting alone when Boards run short', () => {
 		const findReadyInRound = (round: number) =>
 			getMatchesOnBoards(tournament).find((m) => m.match.round === round && isReadyToPlay(m));
 		for (let match = findReadyInRound(2); match; match = findReadyInRound(2)) {
-			recordFirstNamed(match);
+			recordFirstNamedWin(match);
 		}
-		const seatedFirst = getMatchesOnBoards(tournament).find(
+		const aloneInRoundThree = getMatchesOnBoards(tournament).find(
 			(m) => m.match.round === 3 && !isReadyToPlay(m),
-		)!.players[0];
-		recordFirstNamed(findReadyInRound(3)!);
+		)!;
+		const seatedFirst = aloneInRoundThree.players[0];
+		recordFirstNamedWin(findReadyInRound(3)!);
 		const [seatedLatest] = listPlayersInRound(tournament, 4);
+		const isSeated = (player: Player) => {
+			const seated = getMatchesOnBoards(tournament);
+			return seated.some((m) => isPlaying(m, player));
+		};
+		expect(isSeated(seatedFirst)).toBe(true);
+		expect(isSeated(seatedLatest)).toBe(true);
+
 		for (let match = findReadyInRound(1); match; match = findReadyInRound(1)) {
-			recordFirstNamed(match);
+			recordFirstNamedWin(match);
 		}
 
-		expect(
-			getMatchesOnBoards(tournament).some((m) => isPlaying(m, seatedFirst as Player)),
-		).toBe(true);
-		expect(listWaiting(tournament).map(([name]) => name)).toContain(seatedLatest.name);
+		expect(isSeated(seatedFirst)).toBe(true);
+		expect(isSeated(seatedLatest)).toBe(false);
+		const waitingNames = listWaiting(tournament).map(([name]) => name);
+		expect(waitingNames).toContain(seatedLatest.name);
 	});
 
 	it.each([
@@ -963,7 +971,7 @@ describe('the Losers Bracket', () => {
 
 	it('is not played with fewer than two Players staying, and the Tournament finishes with the Winners Bracket', () => {
 		// 4 Players: Ann and Bob, and Cat and Dan, play the first Round.
-		const { started, ann, cat, annAndBob, catAndDan } = setUpFourPlayers();
+		const { started, ann, cat, annAndBob, catAndDan } = startFourPlayerTournament();
 		let tournament = started;
 		tournament = expectOk(recordWinner(tournament, annAndBob.match, ann.id, 'staying'));
 		tournament = expectOk(recordWinner(tournament, catAndDan.match, cat.id, 'leaving'));
@@ -977,7 +985,7 @@ describe('the Losers Bracket', () => {
 
 	it('finishes the Tournament only once both brackets have a champion', () => {
 		// 4 Players: Ann beats Bob and Cat beats Dan, and Bob and Dan both stay to meet in the Losers Bracket.
-		const { started, ann, bob, cat, dan, annAndBob, catAndDan } = setUpFourPlayers();
+		const { started, ann, bob, cat, dan, annAndBob, catAndDan } = startFourPlayerTournament();
 		let tournament = started;
 		tournament = expectOk(recordWinner(tournament, annAndBob.match, ann.id, 'staying'));
 		tournament = expectOk(recordWinner(tournament, catAndDan.match, cat.id, 'staying'));
@@ -1060,7 +1068,7 @@ describe('the Losers Bracket', () => {
 
 	it('refuses to undo a first-Match result once the Losers Bracket is drawn, and lists only the others', () => {
 		// 4 Players: Ann beats Bob and Cat beats Dan, and Bob and Dan both stay to meet in the Losers Bracket.
-		const { started, ann, bob, cat, dan, annAndBob, catAndDan } = setUpFourPlayers();
+		const { started, ann, bob, cat, dan, annAndBob, catAndDan } = startFourPlayerTournament();
 		let tournament = started;
 		tournament = expectOk(recordWinner(tournament, annAndBob.match, ann.id, 'staying'));
 		tournament = expectOk(recordWinner(tournament, catAndDan.match, cat.id, 'staying'));
@@ -1085,7 +1093,7 @@ describe('the Losers Bracket', () => {
 
 	it('lets a first-Match result be undone when no Losers Bracket was drawn, drawing one if two then stay', () => {
 		// 4 Players: Ann beats Bob, who stays, and Cat beats Dan, who leaves: no Losers Bracket.
-		const { started, ann, bob, cat, dan, annAndBob, catAndDan } = setUpFourPlayers();
+		const { started, ann, bob, cat, dan, annAndBob, catAndDan } = startFourPlayerTournament();
 		let tournament = started;
 		tournament = expectOk(recordWinner(tournament, annAndBob.match, ann.id, 'staying'));
 		tournament = expectOk(recordWinner(tournament, catAndDan.match, cat.id, 'leaving'));
@@ -1312,7 +1320,7 @@ const listWaiting = (tournament: Tournament) =>
 	getWaitingForBoard(tournament).map(({ players: [a, b] }) => [a.name, getPlayerName(b)]);
 
 // 4 Players on 2 Boards, Started: Ann and Bob, and Cat and Dan, play the first Round.
-const setUpFourPlayers = () => {
+const startFourPlayerTournament = () => {
 	const started = startTournament(4, 2);
 	const [ann, bob, cat, dan] = listPlayersInRound(started, 1);
 	const annAndBob = findMatchOf(started, ann);

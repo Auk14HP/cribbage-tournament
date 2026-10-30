@@ -670,10 +670,8 @@ const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 
 // Matches ready to play first, both Players known, then those still waiting on a Player, each in turn.
 const orderReadyFirst = (tournament: Tournament, matches: readonly MatchPlace[]): MatchPlace[] => {
-	return [
-		...matches.filter((match) => isReadyToPlay(tournament, match)),
-		...matches.filter((match) => !isReadyToPlay(tournament, match)),
-	];
+	const ready = matches.filter((match) => isReadyToPlay(tournament, match));
+	return [...ready, ...matches.filter((match) => !ready.includes(match))];
 };
 
 /*

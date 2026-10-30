@@ -1,4 +1,4 @@
-import type { BrowserContext, Page } from '@playwright/test';
+import { expect, type BrowserContext, type Page } from '@playwright/test';
 
 // Set-up shared by the TV layout tests.
 
@@ -63,14 +63,20 @@ export const playUntilTheFinal = (page: Page) => playUntilMatchesLeft(page, 1);
 
 /*
  * Moves the TV's cycle on to the named screen and holds it there: a second per screen moves it on, and a
- * long one then holds it, since a new time restarts the screen shown. Each time is saved with Enter, as an
- * Organizer would.
+ * long one then holds it, since a new time restarts the screen shown. The long one can land after the second
+ * is up, so the screen is checked after saving, and missed ones go round again. Each time is saved with
+ * Enter, as an Organizer would.
  */
 export const holdScreen = async (organizer: Page, tv: Page, screenHeading: string) => {
 	const secondsInput = organizer.getByLabel('Seconds per TV screen');
-	await secondsInput.fill('1');
-	await secondsInput.press('Enter');
-	await tv.getByRole('heading', { name: screenHeading }).waitFor();
-	await secondsInput.fill('600');
-	await secondsInput.press('Enter');
+	const heading = tv.getByRole('heading', { name: screenHeading });
+	await expect(async () => {
+		await secondsInput.fill('1');
+		await secondsInput.press('Enter');
+		await heading.waitFor();
+		await secondsInput.fill('600');
+		await secondsInput.press('Enter');
+		await tv.waitForTimeout(1500);
+		await expect(heading).toBeVisible({ timeout: 0 });
+	}).toPass();
 };

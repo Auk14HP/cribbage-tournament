@@ -2,25 +2,28 @@ import { getNowPlaying, getWaitingForBoard, type Tournament } from '../tournamen
 import { matchCards } from './matchCards';
 import { WaitingForBoard } from './WaitingForBoard';
 
-const largeCards = { grid: 'grid-cols-2 gap-[2vh]', text: 'text-[8vh]', card: 'py-[1vh]' };
-const mediumCards = { grid: 'grid-cols-3 gap-[2vh]', text: 'text-[6vh]', card: 'py-[1vh]' };
+const roomy = { gap: 'gap-[2vh]', card: 'py-[1vh]' };
+const largeCards = { grid: `grid-cols-2 ${roomy.gap}`, text: 'text-[8vh]', card: roomy.card };
+const mediumCards = { grid: `grid-cols-3 ${roomy.gap}`, text: 'text-[6vh]', card: roomy.card };
+const smallCards = { grid: `grid-cols-4 ${roomy.gap}`, text: 'text-[4.5vh]', card: roomy.card };
 
 /*
  * Columns and text sizes for Now playing, by how many Matches are being played: as large as fits, down to
- * a 32-place bracket's 16 first-Round Matches in four rows of four.
+ * a 32-place bracket's 16 first-Round Matches in four rows of four. With Matches waiting for a Board, as
+ * large as still leaves room for them beneath.
  */
-const nowPlayingLayouts = [
-	{ upTo: 4, ...largeCards },
-	{ upTo: 9, ...mediumCards },
-	{ upTo: Infinity, grid: 'grid-cols-4 gap-[2vh]', text: 'text-[4.5vh]', card: 'py-[1vh]' },
-];
-
-// With Matches waiting for a Board, as large as still leaves room for them beneath.
-const layoutsAboveWaiting = [
-	{ upTo: 2, waitingUpTo: Infinity, ...largeCards },
-	{ upTo: 6, waitingUpTo: 9, ...mediumCards },
-	{ upTo: Infinity, waitingUpTo: Infinity, ...matchCards },
-];
+const chooseLayout = (playingCount: number, waitingCount: number) => {
+	if (waitingCount === 0) {
+		if (playingCount <= 4) {
+			return largeCards;
+		}
+		return playingCount <= 9 ? mediumCards : smallCards;
+	}
+	if (playingCount <= 2) {
+		return largeCards;
+	}
+	return playingCount <= 6 && waitingCount <= 9 ? mediumCards : matchCards;
+};
 
 /*
  * Each Match being played, its Board and both Players, in big text so a Player can find their seat. Beneath
@@ -28,13 +31,8 @@ const layoutsAboveWaiting = [
  */
 export const NowPlaying = ({ tournament }: { tournament: Tournament }) => {
 	const matches = getNowPlaying(tournament);
-	const waiting = getWaitingForBoard(tournament).length;
-	const layout =
-		waiting > 0
-			? layoutsAboveWaiting.find(
-					({ upTo, waitingUpTo }) => matches.length <= upTo && waiting <= waitingUpTo,
-				)!
-			: nowPlayingLayouts.find(({ upTo }) => matches.length <= upTo)!;
+	const waitingCount = getWaitingForBoard(tournament).length;
+	const layout = chooseLayout(matches.length, waitingCount);
 	return (
 		<>
 			<h1 className="text-[6vh] leading-none font-bold">Now playing</h1>

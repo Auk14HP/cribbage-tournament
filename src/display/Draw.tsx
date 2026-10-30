@@ -22,12 +22,12 @@ export const Draw = ({ tournament }: { tournament: Tournament }) => {
 						<span className={`block font-bold text-yellow-300 ${matchCards.text}`}>
 							Board {match.board}
 						</span>
-						<span className={`block font-semibold ${matchCards.text}`}>
+						<span className={`block truncate font-semibold ${matchCards.text}`}>
 							{match.players[0].name}
 						</span>
 						{/* A winner still to come is greyed, so it doesn't read as a Player's name. */}
 						<span
-							className={`block font-semibold ${matchCards.text} ${'name' in match.players[1] ? '' : 'text-gray-300 italic'}`}
+							className={`block truncate font-semibold ${matchCards.text} ${'name' in match.players[1] ? '' : 'text-gray-300 italic'}`}
 						>
 							{getPlayerName(match.players[1])}
 						</span>
