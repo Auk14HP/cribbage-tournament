@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Organizer } from './Organizer';
 import { listWaitingText } from '../screenTestHelpers';
 import { createLocalStorageStore } from '../storage';
@@ -394,6 +394,52 @@ describe('the organizer route', () => {
 		}
 
 		expect(listWaitingText()).toEqual([expect.stringMatching(/^.+ vs Winner of .+ \/ .+$/)]);
+	});
+
+	it('lists each bracket’s results apart, latest first, though their Rounds and places match', async () => {
+		const user = showOrganizer();
+		const logError = vi.spyOn(console, 'error');
+		const names = ['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev'];
+		await makeTheDraw(user, names, '4');
+		await user.click(screen.getByRole('button', { name: 'Start' }));
+		// 6 Players: the Draw's three Matches, each loser staying for the Losers Bracket.
+		const losers: string[] = [];
+		for (const row of listMatchRows()) {
+			const [winner, loser] = listWinnerNames(row);
+			losers.push(loser);
+			await user.click(within(row).getByRole('button', { name: winner }));
+			await answerDialog(user, 'Staying');
+		}
+		const isLosersRow = (row: HTMLElement) => {
+			const [first] = listWinnerNames(row);
+			return losers.includes(first);
+		};
+		const isWinnersRow = (row: HTMLElement) =>
+			listWinnerNames(row).length > 0 && !isLosersRow(row);
+		const recordFirstNamedWinIn = async (row: HTMLElement) => {
+			const [winner] = listWinnerNames(row);
+			await user.click(within(row).getByRole('button', { name: winner }));
+		};
+
+		// Round 2 of the Winners Bracket, then the Losers Bracket's first Round and its Round 2 final.
+		await recordFirstNamedWinIn(listMatchRows().find(isWinnersRow)!);
+		await recordFirstNamedWinIn(listMatchRows().find(isLosersRow)!);
+		const [winnerOfFinal, loserOfFinal] = listWinnerNames(listMatchRows().find(isLosersRow)!);
+		await recordFirstNamedWinIn(listMatchRows().find(isLosersRow)!);
+
+		const results = listResults();
+		expect(results[0]).toContain(`${winnerOfFinal} beat ${loserOfFinal}`);
+		expect(new Set(results).size).toBe(results.length);
+		// The Winners final: its two Players' earlier result can no longer be undone, so its row goes.
+		const [champion, runnerUp] = listWinnerNames(listMatchRows().find(isWinnersRow)!);
+		await recordFirstNamedWinIn(listMatchRows().find(isWinnersRow)!);
+
+		const afterFinal = listResults();
+		expect(afterFinal[0]).toContain(`${champion} beat ${runnerUp}`);
+		expect(afterFinal).toHaveLength(2);
+		const warnings = logError.mock.calls.map(([message]) => String(message));
+		expect(warnings.filter((message) => message.includes('same key'))).toEqual([]);
+		logError.mockRestore();
 	});
 
 	it('undoes a result, re-opening the Match so the other Player can be recorded as its winner', async () => {
