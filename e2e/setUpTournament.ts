@@ -61,11 +61,14 @@ export const playToFinal = (page: Page) => playUntilMatchesLeft(page, 0);
 
 export const playUntilTheFinal = (page: Page) => playUntilMatchesLeft(page, 1);
 
+// Past the one-second screen, so a long hold saved too late has shown itself.
+const pastOneSecondScreen = 1500;
+
 /*
  * Moves the TV's cycle on to the named screen and holds it there: a second per screen moves it on, and a
  * long one then holds it, since a new time restarts the screen shown. The long one can land after the second
- * is up, so the screen is checked after saving, and missed ones go round again. Each time is saved with
- * Enter, as an Organizer would.
+ * is up, holding the wrong screen, so the screen is checked once after saving and a miss goes round again.
+ * Each time is saved with Enter, as an Organizer would.
  */
 export const holdScreen = async (organizer: Page, tv: Page, screenHeading: string) => {
 	const secondsInput = organizer.getByLabel('Seconds per TV screen');
@@ -76,7 +79,7 @@ export const holdScreen = async (organizer: Page, tv: Page, screenHeading: strin
 		await heading.waitFor();
 		await secondsInput.fill('600');
 		await secondsInput.press('Enter');
-		await tv.waitForTimeout(1500);
-		await expect(heading).toBeVisible({ timeout: 0 });
-	}).toPass();
+		await tv.waitForTimeout(pastOneSecondScreen);
+		expect(await heading.isVisible()).toBe(true);
+	}).toPass({ timeout: 20_000 });
 };
