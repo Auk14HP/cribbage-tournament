@@ -641,18 +641,20 @@ const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 	const isSeated = (match: MatchPlace) => onBoards.some((on) => isSameMatch(on.match, match));
 	const isAlreadyWaiting = (match: MatchPlace) =>
 		tournament.waitingForBoard.some((m) => isSameMatch(m, match));
-	const needing = [
+	const inTurn = [
 		...tournament.waitingForBoard.filter((match) => isLive(match) && !isSeated(match)),
 		...live.filter((match) => !isSeated(match) && !isAlreadyWaiting(match)),
 	];
-	const freeCount = tournament.boards.filter(isFree).length;
-	const waiting = needing.length <= freeCount ? needing : orderReadyFirst(tournament, needing);
-	let free = tournament.boards.find(isFree);
-	while (free !== undefined && waiting.length > 0) {
-		onBoards.push({ match: waiting.shift()!, board: free });
-		free = tournament.boards.find(isFree);
-	}
-	return { ...tournament, onBoards, waitingForBoard: waiting };
+	const freeBoards = tournament.boards.filter(isFree);
+	const queue = inTurn.length <= freeBoards.length ? inTurn : orderReadyFirst(tournament, inTurn);
+	const seated = queue
+		.slice(0, freeBoards.length)
+		.map((match, place) => ({ match, board: freeBoards[place] }));
+	return {
+		...tournament,
+		onBoards: [...onBoards, ...seated],
+		waitingForBoard: queue.slice(freeBoards.length),
+	};
 };
 
 // Matches ready to play first, both Players known, then those still waiting on a Player, each in turn.
@@ -792,7 +794,10 @@ const findSeatedPlayers = (
 			return { placeHeldFor: findPlayer(tournament, from.heldFor) };
 		}
 		const players = findBothPlayers(tournament, from);
-		return { winnerOf: players?.map((p) => findPlayer(tournament, p)) as [Player, Player] };
+		return {
+			winnerOf:
+				players && (players.map((p) => findPlayer(tournament, p)) as [Player, Player]),
+		};
 	};
 	const [a, b] = findPlayers(tournament, match).map(findSeated);
 	return 'name' in a ? [a, b] : [b as Player, a];
@@ -804,7 +809,7 @@ export interface MatchWaitingForBoard {
 	readonly players: readonly [Player, Opponent];
 }
 
-// Every Match waiting for a Board, longest-waiting first: the next Board to free goes to the first.
+// Every Match waiting for a Board, in turn: the next Board to free goes to the first.
 export const getWaitingForBoard = (tournament: Tournament): readonly MatchWaitingForBoard[] =>
 	tournament.waitingForBoard.map((match) => ({
 		match,

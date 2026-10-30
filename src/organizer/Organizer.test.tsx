@@ -79,6 +79,15 @@ const makeTheDraw = async (user: User, names: string[], boards: string) => {
 const listMatchRows = () =>
 	within(screen.getByRole('list', { name: 'Matches' })).getAllByRole('listitem');
 
+// Whether a Match row is a Bye Player waiting for a first-Round Match's winner.
+const isWaitingForWinner = (row: HTMLElement) => row.textContent!.includes(' vs Winner of ');
+
+// Each Match in the Waiting for a Board list, as the screen reads.
+const listWaitingText = () => {
+	const list = within(screen.getByRole('list', { name: 'Waiting for a Board' }));
+	return list.getAllByRole('listitem').map((item) => item.textContent);
+};
+
 // The names on a Match row's winner buttons: both its Players, once it is being played.
 const listWinnerNames = (row: HTMLElement) =>
 	within(row)
@@ -225,10 +234,7 @@ describe('the organizer route', () => {
 		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '1');
 
 		expect(listMatchRows()).toHaveLength(1);
-		const waiting = within(screen.getByRole('list', { name: 'Waiting for a Board' }));
-		expect(waiting.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
-			expect.stringMatching(/^.+ vs Winner of .+ \/ .+$/),
-		]);
+		expect(listWaitingText()).toEqual([expect.stringMatching(/^.+ vs Winner of .+ \/ .+$/)]);
 	});
 
 	it('makes the Draw once confirmed, closing registration and showing the Matches it seats, then Starts', async () => {
@@ -255,12 +261,14 @@ describe('the organizer route', () => {
 			'listitem',
 		);
 		expect(matches).toHaveLength(2);
-		expect(matches[1]).toHaveTextContent(/^Board 2.+ vs Winner of .+ \/ .+$/);
-		const waits = matches[1].textContent!.match(/^Board 2(.+) vs Winner of/)![1];
+		const waitingRow = matches.find(isWaitingForWinner)!;
+		expect(waitingRow).toHaveTextContent(/^Board 2.+ vs Winner of .+ \/ .+$/);
+		const firstMatchRow = matches.find((row) => row !== waitingRow)!;
+		const waits = waitingRow.textContent!.match(/^Board \d+(.+) vs Winner of/)![1];
 		for (const name of ['Dave K.', 'Big Dave', 'Sue'].filter((n) => n !== waits)) {
-			expect(matches[0]).toHaveTextContent(name);
+			expect(firstMatchRow).toHaveTextContent(name);
 		}
-		expect(matches[0]).toHaveTextContent(/^Board 1/);
+		expect(firstMatchRow).toHaveTextContent(/^Board 1/);
 
 		await user.click(screen.getByRole('button', { name: 'Start' }));
 
@@ -278,8 +286,10 @@ describe('the organizer route', () => {
 	it('records each Match’s winner with one tap, through to the champion', async () => {
 		const user = showOrganizer();
 		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
-		const [firstRow, waiting] = listMatchRows();
-		const bye = waiting.textContent!.match(/^Board 2(.+) vs Winner of .+$/)![1];
+		const drawnRows = listMatchRows();
+		const waiting = drawnRows.find(isWaitingForWinner)!;
+		const firstRow = drawnRows.find((row) => row !== waiting)!;
+		const bye = waiting.textContent!.match(/^Board \d+(.+) vs Winner of .+$/)![1];
 		// Before Start, no winner can be recorded.
 		expect(within(firstRow).queryAllByRole('button')).toEqual([]);
 		await user.click(screen.getByRole('button', { name: 'Start' }));
@@ -384,10 +394,7 @@ describe('the organizer route', () => {
 			await answerDialog(user, 'Staying');
 		}
 
-		const waiting = within(screen.getByRole('list', { name: 'Waiting for a Board' }));
-		expect(waiting.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
-			expect.stringMatching(/^.+ vs Winner of .+ \/ .+$/),
-		]);
+		expect(listWaitingText()).toEqual([expect.stringMatching(/^.+ vs Winner of .+ \/ .+$/)]);
 	});
 
 	it('undoes a result, re-opening the Match so the other Player can be recorded as its winner', async () => {

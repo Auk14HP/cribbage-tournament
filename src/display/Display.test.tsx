@@ -8,6 +8,7 @@ import type { Result } from '../result';
 import { getPlayerName } from '../wording';
 import {
 	makeDraw,
+	getBracketPicture,
 	getMatchesOnBoards,
 	getWaitingForBoard,
 	createTournament,
@@ -67,8 +68,11 @@ describe('Tonight’s Draw screen', () => {
 		expect(cards.map((card) => card.textContent)).toEqual(
 			draw.map(({ board, players: [a, b] }) => `Board ${board}${a.name}${getPlayerName(b)}`),
 		);
-		const [firstA, firstB] = draw[0].players;
-		expect(cards[1]).toHaveTextContent(`Winner of ${firstA.name} / ${getPlayerName(firstB)}`);
+		const [byePlayer] = draw.find((m) => !('name' in m.players[1]))!.players;
+		const byeCard = cards.find((card) => card.textContent!.includes(byePlayer.name))!;
+		const [[firstMatch]] = getBracketPicture(tournament, 'winners')!.rounds;
+		const [a, b] = firstMatch!.players as [Player, Player];
+		expect(byeCard).toHaveTextContent(`Winner of ${a.name} / ${b.name}`);
 
 		const started = expectOk(start(tournament));
 		act(() => store.save(started));
@@ -87,12 +91,9 @@ describe('Tonight’s Draw screen', () => {
 		act(() => store.save(tournament));
 
 		const [waiting] = getWaitingForBoard(tournament);
-		const waitingList = screen.getByRole('list', { name: 'Waiting for a Board' });
-		expect(
-			within(waitingList)
-				.getAllByRole('listitem')
-				.map((i) => i.textContent),
-		).toEqual([`${waiting.players[0].name} vs ${getPlayerName(waiting.players[1])}`]);
+		expect(listWaitingText()).toEqual([
+			`${waiting.players[0].name} vs ${getPlayerName(waiting.players[1])}`,
+		]);
 	});
 });
 
@@ -238,8 +239,7 @@ describe('the Losers Bracket', () => {
 		const store = showDisplay();
 		/*
 		 * 6 Players on 3 Boards: once the Draw's three Matches are played and their losers stay, the
-		 * Losers Bracket is one Match, on Board 2 ahead of the Winners final's Player waiting alone, and a
-		 * Bye Player waiting for a Board.
+		 * Losers Bracket is one Match on a Board and a Bye Player waiting for one.
 		 */
 		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev'], 3);
 		const started = expectOk(start(drawn));
@@ -252,15 +252,15 @@ describe('the Losers Bracket', () => {
 		expect(readHeading()).toBe('Losers Bracket');
 		// One Round 1 Match, in the bracket's left half, and a Bye in its right.
 		const [leftRoundOne] = screen.getAllByRole('list', { name: 'Round 1' });
-		expect(leftRoundOne).toHaveTextContent(/^Board 2/);
+		const losersMatch = getMatchesOnBoards(tournament).find(
+			(m) => m.match.bracket === 'losers',
+		)!;
+		expect(leftRoundOne).toHaveTextContent(`Board ${losersMatch.board}`);
 		waitSeconds(20);
 		expect(readHeading()).toBe('Now playing');
-		const waitingList = screen.getByRole('list', { name: 'Waiting for a Board' });
-		expect(
-			within(waitingList)
-				.getAllByRole('listitem')
-				.map((i) => i.textContent),
-		).toEqual([`${waiting.players[0].name} vs ${getPlayerName(waiting.players[1])}`]);
+		expect(listWaitingText()).toEqual([
+			`${waiting.players[0].name} vs ${getPlayerName(waiting.players[1])}`,
+		]);
 		waitSeconds(20);
 		expect(readHeading()).toBe('Winners Bracket');
 	});
@@ -335,6 +335,12 @@ const setUpDraw = (names: readonly string[], boards: number): Tournament => {
 	const typed = String(boards);
 	tournament = expectOk(setBoardCount(tournament, typed));
 	return expectOk(makeDraw(tournament, Math.random));
+};
+
+// Each Match in the Waiting for a Board list, as the screen reads.
+const listWaitingText = () => {
+	const list = within(screen.getByRole('list', { name: 'Waiting for a Board' }));
+	return list.getAllByRole('listitem').map((item) => item.textContent);
 };
 
 const readHeading = () => screen.getByRole('heading', { level: 1 }).textContent;

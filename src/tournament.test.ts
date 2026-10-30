@@ -250,12 +250,12 @@ describe('making the Draw', () => {
 
 	it('seats Matches with both Players known first, and queues the rest for a Board', () => {
 		// 26 Players: 13 Matches, 10 in the first Round and 3 between Bye Players in Round 2.
-		const even = expectOk(makeSeededDraw(26, 12));
+		const drawOf26 = expectOk(makeSeededDraw(26, 12));
 
-		expect(getMatchesOnBoards(even).map((m) => m.board)).toEqual(
+		expect(getMatchesOnBoards(drawOf26).map((m) => m.board)).toEqual(
 			Array.from({ length: 12 }, (_, i) => i + 1),
 		);
-		const started = expectOk(start(even));
+		const started = expectOk(start(drawOf26));
 		const queue = getWaitingForBoard(started);
 		expect(queue).toHaveLength(1);
 		const [a, b] = queue[0].players as [Player, Player];
@@ -268,11 +268,11 @@ describe('making the Draw', () => {
 		 * 25 Players: 9 first-Round Matches and 3 between Bye Players fill the 12 Boards, ahead of the Bye
 		 * Player waiting for the last first-Round Match's winner.
 		 */
-		const odd = expectOk(makeSeededDraw(25, 12));
+		const drawOf25 = expectOk(makeSeededDraw(25, 12));
 
-		const seated = getMatchesOnBoards(odd);
-		expect(seated.every((m) => m.players.every((p) => 'name' in p))).toBe(true);
-		const [waiting] = listWaiting(odd);
+		const seated = getMatchesOnBoards(drawOf25);
+		expect(seated.every(isReadyToPlay)).toBe(true);
+		const [waiting] = listWaiting(drawOf25);
 		const [, awaited] = /^Winner of (.+)$/.exec(waiting[1])!;
 		expect(seated.map(({ players: [a, b] }) => `${a.name} / ${getPlayerName(b)}`)).toContain(
 			awaited,
@@ -496,7 +496,7 @@ describe('recording winners', () => {
 				const seats = matches.map((m) => m.board);
 				expect(new Set(seats).size).toBe(seats.length);
 				expect(seats.every((b) => b >= 1 && b <= boards)).toBe(true);
-				const ready = matches.find((m) => m.players.every((p) => 'name' in p));
+				const ready = matches.find(isReadyToPlay);
 				if (!ready) {
 					break;
 				}
@@ -1060,9 +1060,7 @@ describe('the Losers Bracket', () => {
 			let tournament = playDrawStaying(startTournament(9, 5));
 			const { byePlayer: cat } = findByePlayerStillToPlay(tournament);
 			for (;;) {
-				const ready = getMatchesOnBoards(tournament).find((m) =>
-					m.players.every((p) => 'name' in p),
-				);
+				const ready = getMatchesOnBoards(tournament).find((m) => isReadyToPlay(m));
 				if (!ready) {
 					break;
 				}
@@ -1107,16 +1105,14 @@ describe('the Losers Bracket', () => {
 		const losersOnBoards = getMatchesOnBoards(tournament).filter(
 			(m) => m.match.bracket === 'losers',
 		);
-		expect(losersOnBoards.map((m) => m.players.every((p) => 'name' in p))).toEqual([
-			true,
-			true,
-		]);
+		expect(losersOnBoards).toHaveLength(2);
+		expect(losersOnBoards.every(isReadyToPlay)).toBe(true);
 		const [waitingLosers] = getWaitingForBoard(tournament);
 		expect(waitingLosers.match.bracket).toBe('losers');
 		const losersFirstMatch = losersOnBoards.find((m) => m.match.round === 1)!;
-		const [c, d] = losersFirstMatch.players as [Player, Player];
+		const [losersA, losersB] = losersFirstMatch.players as [Player, Player];
 		expect(listWaiting(tournament)).toEqual([
-			[waitingLosers.players[0].name, `Winner of ${c.name} / ${d.name}`],
+			[waitingLosers.players[0].name, `Winner of ${losersA.name} / ${losersB.name}`],
 		]);
 		// Two Bye Pairs' winners meet, while the other semi-final's Player waits for an opponent.
 		const ready = getMatchesOnBoards(tournament).find(
@@ -1199,9 +1195,7 @@ const setUpHeldPlace = (answers: readonly [StayingAnswer, StayingAnswer]) => {
  */
 const playDrawStaying = (started: Tournament): Tournament => {
 	let tournament = started;
-	const opening = getMatchesOnBoards(tournament).filter((m) =>
-		m.players.every((p) => 'name' in p),
-	);
+	const opening = getMatchesOnBoards(tournament).filter((m) => isReadyToPlay(m));
 	for (const { match, players } of opening) {
 		tournament = expectOk(recordWinner(tournament, match, players[0].id, 'staying'));
 	}
@@ -1224,10 +1218,7 @@ const hasOneByePlayer = (tournament: Tournament, match: MatchOnBoard): boolean =
  */
 const findByePlayerStillToPlay = (tournament: Tournament) => {
 	const firstMatch = getMatchesOnBoards(tournament).find(
-		(m) =>
-			m.match.bracket === 'winners' &&
-			m.players.every((p) => 'name' in p) &&
-			hasOneByePlayer(tournament, m),
+		(m) => m.match.bracket === 'winners' && isReadyToPlay(m) && hasOneByePlayer(tournament, m),
 	)!;
 	const byePlayer = firstMatch.players.find((p) => isByePlayerIn(tournament, p)) as Player;
 	return { byePlayer, firstMatch };
@@ -1241,9 +1232,12 @@ const listSeats = (tournament: Tournament) =>
 		getPlayerName(b),
 	]);
 
-// Each Match waiting for a Board, longest-waiting first, by its Players' names.
+// Each Match waiting for a Board, in turn, by its Players' names.
 const listWaiting = (tournament: Tournament) =>
 	getWaitingForBoard(tournament).map(({ players: [a, b] }) => [a.name, getPlayerName(b)]);
+
+// Whether both a Match's Players are known.
+const isReadyToPlay = (match: MatchOnBoard): boolean => match.players.every((p) => 'name' in p);
 
 // Whether all the given Players are seated in a Match, wherever the Draw put it.
 const isPlaying = (match: MatchOnBoard, ...players: Player[]): boolean =>

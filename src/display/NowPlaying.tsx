@@ -13,7 +13,7 @@ const nowPlayingLayouts = [
 
 /*
  * Each Match being played, its Board and both Players, in big text so a Player can find their seat. Beneath
- * it, any Matches waiting for a Board, longest-waiting first, so their Players know they are next.
+ * it, any Matches waiting for a Board, in turn, so their Players know they are next.
  */
 export const NowPlaying = ({ tournament }: { tournament: Tournament }) => {
 	const matches = getNowPlaying(tournament);
