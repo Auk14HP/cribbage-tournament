@@ -2,22 +2,24 @@ import { getNowPlaying, getWaitingForBoard, type Tournament } from '../tournamen
 import { matchCards } from './matchCards';
 import { WaitingForBoard } from './WaitingForBoard';
 
+const largeCards = { grid: 'grid-cols-2 gap-[2vh]', text: 'text-[8vh]', card: 'py-[1vh]' };
+const mediumCards = { grid: 'grid-cols-3 gap-[2vh]', text: 'text-[6vh]', card: 'py-[1vh]' };
+
 /*
  * Columns and text sizes for Now playing, by how many Matches are being played: as large as fits, down to
  * a 32-place bracket's 16 first-Round Matches in four rows of four.
  */
-const spaced = { gaps: 'gap-[2vh]', card: 'py-[1vh]' };
 const nowPlayingLayouts = [
-	{ upTo: 4, grid: `grid-cols-2 ${spaced.gaps}`, text: 'text-[8vh]', card: spaced.card },
-	{ upTo: 9, grid: `grid-cols-3 ${spaced.gaps}`, text: 'text-[6vh]', card: spaced.card },
-	{ upTo: Infinity, grid: `grid-cols-4 ${spaced.gaps}`, text: 'text-[4.5vh]', card: spaced.card },
+	{ upTo: 4, ...largeCards },
+	{ upTo: 9, ...mediumCards },
+	{ upTo: Infinity, grid: 'grid-cols-4 gap-[2vh]', text: 'text-[4.5vh]', card: 'py-[1vh]' },
 ];
 
 // With Matches waiting for a Board, as large as still leaves room for them beneath.
 const layoutsAboveWaiting = [
-	{ upTo: 2, grid: `grid-cols-2 ${spaced.gaps}`, text: 'text-[8vh]', card: spaced.card },
-	{ upTo: 6, grid: `grid-cols-3 ${spaced.gaps}`, text: 'text-[6vh]', card: spaced.card },
-	{ upTo: Infinity, ...matchCards },
+	{ upTo: 2, waitingUpTo: Infinity, ...largeCards },
+	{ upTo: 6, waitingUpTo: 9, ...mediumCards },
+	{ upTo: Infinity, waitingUpTo: Infinity, ...matchCards },
 ];
 
 /*
@@ -26,9 +28,13 @@ const layoutsAboveWaiting = [
  */
 export const NowPlaying = ({ tournament }: { tournament: Tournament }) => {
 	const matches = getNowPlaying(tournament);
-	const hasWaiting = getWaitingForBoard(tournament).length > 0;
-	const layouts = hasWaiting ? layoutsAboveWaiting : nowPlayingLayouts;
-	const layout = layouts.find(({ upTo }) => matches.length <= upTo)!;
+	const waiting = getWaitingForBoard(tournament).length;
+	const layout =
+		waiting > 0
+			? layoutsAboveWaiting.find(
+					({ upTo, waitingUpTo }) => matches.length <= upTo && waiting <= waitingUpTo,
+				)!
+			: nowPlayingLayouts.find(({ upTo }) => matches.length <= upTo)!;
 	return (
 		<>
 			<h1 className="text-[6vh] leading-none font-bold">Now playing</h1>

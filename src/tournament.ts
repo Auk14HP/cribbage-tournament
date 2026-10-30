@@ -651,9 +651,9 @@ const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 		inTurn.filter(isReady).length - tournament.boards.filter(isFree).length;
 	const seatedAlone = onBoards.filter((on) => !isReady(on.match));
 	const givingUp = seatedAlone.slice(Math.max(0, seatedAlone.length - readyWithoutBoard));
-	const staying = onBoards.filter((on) => !givingUp.includes(on));
+	const keepingBoards = onBoards.filter((on) => !givingUp.includes(on));
 	const freeBoards = tournament.boards.filter(
-		(board) => !staying.some((on) => on.board === board),
+		(board) => !keepingBoards.some((on) => on.board === board),
 	);
 	const needing = [...inTurn, ...givingUp.map((on) => on.match)];
 	const queue =
@@ -663,15 +663,17 @@ const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 		.map((match, index) => ({ match, board: freeBoards[index] }));
 	return {
 		...tournament,
-		onBoards: [...staying, ...seated],
+		onBoards: [...keepingBoards, ...seated],
 		waitingForBoard: queue.slice(freeBoards.length),
 	};
 };
 
 // Matches ready to play first, both Players known, then those still waiting on a Player, each in turn.
 const orderReadyFirst = (tournament: Tournament, matches: readonly MatchPlace[]): MatchPlace[] => {
-	const isReady = (match: MatchPlace) => isReadyToPlay(tournament, match);
-	return [...matches.filter(isReady), ...matches.filter((match) => !isReady(match))];
+	return [
+		...matches.filter((match) => isReadyToPlay(tournament, match)),
+		...matches.filter((match) => !isReadyToPlay(tournament, match)),
+	];
 };
 
 /*
