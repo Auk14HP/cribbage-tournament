@@ -1,4 +1,4 @@
-import { getWaitingForBoard, type Tournament } from '../tournament';
+import { getMatchKey, getWaitingForBoard, type Tournament } from '../tournament';
 import { getPlayerName } from '../wording';
 
 // The Matches waiting for a Board, in turn. None while every Match has a Board.
@@ -14,7 +14,7 @@ export const WaitingForBoard = ({ tournament }: { tournament: Tournament }) => {
 			<ol aria-label="Waiting for a Board" className="mt-2">
 				{waiting.map(({ match, players: [a, b] }) => (
 					<li
-						key={`${match.bracket} ${match.round} ${match.place}`}
+						key={getMatchKey(match)}
 						className="border-b border-gray-300 py-1.5 text-lg"
 					>
 						{a.name} vs {getPlayerName(b)}

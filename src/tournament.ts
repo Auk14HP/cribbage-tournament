@@ -705,6 +705,10 @@ const findFollowing = (tournament: Tournament, match: MatchPlace): MatchPlace | 
 const isSameMatch = (a: MatchPlace, b: MatchPlace): boolean =>
 	a.bracket === b.bracket && a.round === b.round && a.place === b.place;
 
+// Tells a Match from every other, in either bracket: Rounds and places repeat between the two.
+export const getMatchKey = ({ bracket, round, place }: MatchPlace): string =>
+	`${bracket} ${round} ${place}`;
+
 // The bracket holds twice as many Players as its first Round has places, halving each Round to the final.
 const countRounds = (bracket: Bracket): number => Math.log2(2 * bracket.firstRound.length);
 

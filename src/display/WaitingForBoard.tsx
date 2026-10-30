@@ -1,4 +1,4 @@
-import { getWaitingForBoard, type Tournament } from '../tournament';
+import { getMatchKey, getWaitingForBoard, type Tournament } from '../tournament';
 import { getPlayerName } from '../wording';
 import { matchCards } from './matchCards';
 
@@ -23,7 +23,7 @@ export const WaitingForBoard = ({ tournament }: { tournament: Tournament }) => {
 				className={`mt-[1.5vh] grid gap-x-[3vw] gap-y-[0.5vh] font-semibold ${columnClass} ${matchCards.text}`}
 			>
 				{waiting.map(({ match, players: [a, b] }) => (
-					<li key={`${match.bracket} ${match.round} ${match.place}`} className="truncate">
+					<li key={getMatchKey(match)} className="truncate">
 						{a.name}
 						<span className="text-gray-400"> vs </span>
 						{/* A Player still to come is greyed, so it doesn't read as a Player's name. */}
