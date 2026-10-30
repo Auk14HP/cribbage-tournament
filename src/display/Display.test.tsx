@@ -5,10 +5,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Display } from './Display';
 import { createLocalStorageStore, type Store } from '../storage';
 import type { Result } from '../result';
+import { isReadyToPlay, listWaitingText } from '../testHelpers';
 import { getPlayerName } from '../wording';
 import {
 	makeDraw,
-	getBracketPicture,
 	getMatchesOnBoards,
 	getWaitingForBoard,
 	createTournament,
@@ -70,8 +70,8 @@ describe('Tonight’s Draw screen', () => {
 		);
 		const [byePlayer] = draw.find((m) => !('name' in m.players[1]))!.players;
 		const byeCard = cards.find((card) => card.textContent!.includes(byePlayer.name))!;
-		const [[firstMatch]] = getBracketPicture(tournament, 'winners')!.rounds;
-		const [a, b] = firstMatch!.players as [Player, Player];
+		const firstMatch = draw.find((m) => m.match.round === 1)!;
+		const [a, b] = firstMatch.players as [Player, Player];
 		expect(byeCard).toHaveTextContent(`Winner of ${a.name} / ${b.name}`);
 
 		const started = expectOk(start(tournament));
@@ -102,9 +102,10 @@ describe('the Winners Bracket screen', () => {
 		const store = showDisplay();
 		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue'], 2);
 		let tournament = expectOk(start(drawn));
-		const [firstMatch, waiting] = getMatchesOnBoards(tournament);
+		const seated = getMatchesOnBoards(tournament);
+		const firstMatch = seated.find(isReadyToPlay)!;
 		const [a, b] = firstMatch.players as [Player, Player];
-		const bye = waiting.players[0];
+		const [bye] = seated.find((m) => m !== firstMatch)!.players;
 		const recordWinnerOf = (match: typeof firstMatch.match, winner: Player) => {
 			tournament = expectOk(recordWinner(tournament, match, winner.id, 'leaving'));
 			act(() => store.save(tournament));
@@ -151,7 +152,9 @@ describe('the TV cycle', () => {
 		 * 5 Players: a first-Round Match on Board 1, a Bye Player at Board 2 waiting for its winner, and a
 		 * Match between the other two Bye Players on Board 3. The waiting Player isn't playing yet.
 		 */
-		const [firstMatch, , byes] = getMatchesOnBoards(tournament);
+		const playing = getMatchesOnBoards(tournament).filter(isReadyToPlay);
+		const firstMatch = playing.find((m) => m.match.round === 1)!;
+		const byes = playing.find((m) => m !== firstMatch)!;
 		const describeCard = ({ board, players: [a, b] }: typeof firstMatch) =>
 			`Board ${board}${a.name}${(b as Player).name}`;
 		const cards = within(screen.getByRole('list', { name: 'Matches' })).getAllByRole(
@@ -310,9 +313,7 @@ describe('the Losers Bracket', () => {
  */
 const playDrawStaying = (started: Tournament): Tournament => {
 	let tournament = started;
-	const opening = getMatchesOnBoards(tournament).filter((m) =>
-		m.players.every((p) => 'name' in p),
-	);
+	const opening = getMatchesOnBoards(tournament).filter(isReadyToPlay);
 	for (const { match, players } of opening) {
 		tournament = expectOk(recordWinner(tournament, match, players[0].id, 'staying'));
 	}
@@ -335,12 +336,6 @@ const setUpDraw = (names: readonly string[], boards: number): Tournament => {
 	const typed = String(boards);
 	tournament = expectOk(setBoardCount(tournament, typed));
 	return expectOk(makeDraw(tournament, Math.random));
-};
-
-// Each Match in the Waiting for a Board list, as the screen reads.
-const listWaitingText = () => {
-	const list = within(screen.getByRole('list', { name: 'Waiting for a Board' }));
-	return list.getAllByRole('listitem').map((item) => item.textContent);
 };
 
 const readHeading = () => screen.getByRole('heading', { level: 1 }).textContent;

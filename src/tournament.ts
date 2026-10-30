@@ -99,7 +99,7 @@ export interface Tournament {
 	readonly losersBracket?: Bracket | null;
 	// Each Match holding a Board, in the order the Matches took their Boards.
 	readonly onBoards: readonly BoardTaken[];
-	// Each Match with a Player known but no Board free, longest-waiting first.
+	// Each Match with a Player known but no Board free, in turn.
 	readonly waitingForBoard: readonly MatchPlace[];
 	/*
 	 * Every Match's winner, in the order they were recorded, and the Board it was played at: undoing the
@@ -649,7 +649,7 @@ const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 	const queue = inTurn.length <= freeBoards.length ? inTurn : orderReadyFirst(tournament, inTurn);
 	const seated = queue
 		.slice(0, freeBoards.length)
-		.map((match, place) => ({ match, board: freeBoards[place] }));
+		.map((match, index) => ({ match, board: freeBoards[index] }));
 	return {
 		...tournament,
 		onBoards: [...onBoards, ...seated],

@@ -1,7 +1,7 @@
 import { getWaitingForBoard, type Tournament } from '../tournament';
 import { getPlayerName } from '../wording';
 
-// The Matches waiting for a Board, longest-waiting first. None while every Match has a Board.
+// The Matches waiting for a Board, in turn. None while every Match has a Board.
 export const WaitingForBoard = ({ tournament }: { tournament: Tournament }) => {
 	const waiting = getWaitingForBoard(tournament);
 	if (waiting.length === 0) {
