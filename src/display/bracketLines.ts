@@ -75,13 +75,13 @@ const getHalf = (matches: RoundMatches, side: Side): RoundMatches => {
 };
 
 // A decided Match whose winner hasn't lost since: the path of a Player still in the bracket.
-const isWonByPlayerStillIn = (
+const isWonByPlayerStillInBracket = (
 	isStillInBracket: IsStillInBracket,
 	match: BracketMatch | undefined,
 ) => match?.winner !== undefined && isStillInBracket(match.winner.id);
 
-const isFedByPlayerStillIn = (isStillInBracket: IsStillInBracket, feeders: RoundMatches) =>
-	feeders.some((match) => isWonByPlayerStillIn(isStillInBracket, match));
+const isFedByPlayerStillInBracket = (isStillInBracket: IsStillInBracket, feeders: RoundMatches) =>
+	feeders.some((match) => isWonByPlayerStillInBracket(isStillInBracket, match));
 
 // The line into a Match from the places that feed it on one side. A Match fed only by Byes has none.
 const drawLineIn = (
@@ -93,7 +93,7 @@ const drawLineIn = (
 	if (!feeders.some(Boolean)) {
 		return '';
 	}
-	const isPath = isFedByPlayerStillIn(isStillInBracket, feeders);
+	const isPath = isFedByPlayerStillInBracket(isStillInBracket, feeders);
 	return drawLine(end, side, 'straight', isPath);
 };
 
@@ -122,12 +122,12 @@ export const describeHalf = (
 			return undefined;
 		}
 		const feeders = earlier.slice(2 * place, 2 * place + 2);
-		const isPath = isWonByPlayerStillIn(isStillInBracket, match);
+		const isPath = isWonByPlayerStillInBracket(isStillInBracket, match);
 		const pairShape = place % 2 === 0 ? 'down' : 'up';
 		const shape = half.length === 1 ? 'straight' : pairShape;
 		const lineOut = drawLine('after', otherSide[side], shape, isPath);
 		const lineIn = drawLineIn(isStillInBracket, feeders, side, 'before');
-		const isFedByPath = isFedByPlayerStillIn(isStillInBracket, feeders);
+		const isFedByPath = isFedByPlayerStillInBracket(isStillInBracket, feeders);
 		return { match, lines: `${lineOut} ${lineIn}`, isOnPath: isPath || isFedByPath };
 	});
 };
@@ -143,9 +143,9 @@ export const describeFinal = (
 	const fromRight = getHalf(beforeFinal, 'right');
 	const lineInLeft = drawLineIn(isStillInBracket, fromLeft, 'left', 'before');
 	const lineInRight = drawLineIn(isStillInBracket, fromRight, 'right', 'after');
-	const isPath = isWonByPlayerStillIn(isStillInBracket, match);
+	const isPath = isWonByPlayerStillInBracket(isStillInBracket, match);
 	const isFedByPath =
-		isFedByPlayerStillIn(isStillInBracket, fromLeft) ||
-		isFedByPlayerStillIn(isStillInBracket, fromRight);
+		isFedByPlayerStillInBracket(isStillInBracket, fromLeft) ||
+		isFedByPlayerStillInBracket(isStillInBracket, fromRight);
 	return { match, lines: `${lineInLeft} ${lineInRight}`, isOnPath: isPath || isFedByPath };
 };

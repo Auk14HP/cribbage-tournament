@@ -109,7 +109,7 @@ describe('the Winners Bracket screen', () => {
 		const seatedMatches = getMatchesOnBoards(tournament);
 		const firstMatch = seatedMatches.find(isReadyToPlay)!;
 		const [playerA, playerB] = firstMatch.players as [Player, Player];
-		const [bye] = seatedMatches.find((m) => m !== firstMatch)!.players;
+		const [byePlayer] = seatedMatches.find((m) => m !== firstMatch)!.players;
 		const recordWinnerOf = (match: typeof firstMatch.match, winner: Player) => {
 			tournament = expectOk(recordWinner(tournament, match, winner.id, 'leaving'));
 			act(() => store.save(tournament));
@@ -126,11 +126,11 @@ describe('the Winners Bracket screen', () => {
 		// 3 Players in a 4-place bracket: one first-Round Match, and a Bye Player waiting in the final.
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Winners Bracket');
 		expect(listRound('Round 1')).toEqual([`Board 1${playerA.name}${playerB.name}`]);
-		expect(listRound('Final')).toEqual([`Board 2—${bye.name}`]);
+		expect(listRound('Final')).toEqual([`Board 2—${byePlayer.name}`]);
 		expect(screen.queryByText(/Champion/)).not.toBeInTheDocument();
 
 		recordWinnerOf(firstMatch.match, playerA);
-		expect(listRound('Final')).toEqual([`Board 2${playerA.name}${bye.name}`]);
+		expect(listRound('Final')).toEqual([`Board 2${playerA.name}${byePlayer.name}`]);
 	});
 });
 

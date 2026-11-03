@@ -2,7 +2,7 @@ import { test, type Locator } from '@playwright/test';
 import { answerIsLoserStayingDialogIfAsked } from '../e2e/setUpTournament';
 
 // Whether the element shows within the time, rather than failing the run when it doesn't.
-const checkShownWithin = async (element: Locator, timeout: number) => {
+const isShownWithin = async (element: Locator, timeout: number) => {
 	try {
 		await element.waitFor({ timeout });
 		return true;
@@ -76,7 +76,7 @@ test('screens', async ({ context, page: organizer }) => {
 	await shoot('results');
 	// With a Losers Bracket drawn, its screen, then Now playing with any Matches waiting for a Board beneath.
 	const losersHeading = tv.getByRole('heading', { name: 'Losers Bracket' });
-	const isLosersBracketShown = await checkShownWithin(losersHeading, 5000);
+	const isLosersBracketShown = await isShownWithin(losersHeading, 5000);
 	if (isLosersBracketShown && (await nextWinnerButton.count()) > 0) {
 		await shoot('losers-bracket');
 		await tv.getByRole('heading', { name: 'Now playing' }).waitFor();

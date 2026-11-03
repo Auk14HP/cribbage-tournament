@@ -48,7 +48,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 	const losersChampion = getBracketPicture(tournament, 'losers')?.champion;
 	const playing = tournament.phase === 'inProgress';
 	const [refusal, setRefusal] = useState('');
-	const [awaitingAnswer, setAwaitingAnswer] = useState<ResultAwaitingStayingAnswer>();
+	const [pendingResult, setPendingResult] = useState<ResultAwaitingStayingAnswer>();
 	const stayingDialog = useRef<HTMLDialogElement>(null);
 	// Records the result at once, or once the loser has said whether they are staying.
 	const recordOrAsk = (loser: Player, record: (answer?: StayingAnswer) => void) => {
@@ -56,7 +56,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 			record();
 			return;
 		}
-		setAwaitingAnswer({ loser, record });
+		setPendingResult({ loser, record });
 		stayingDialog.current?.showModal();
 	};
 	const recordWinnerOf = (match: MatchPlace, winner: Player, loser: Player) => {
@@ -107,8 +107,8 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 				<WaitingForBoard tournament={tournament} />
 				<StayingDialog
 					ref={stayingDialog}
-					loser={awaitingAnswer?.loser}
-					onAnswer={(answer) => awaitingAnswer?.record(answer)}
+					loser={pendingResult?.loser}
+					onAnswer={(answer) => pendingResult?.record(answer)}
 				/>
 			</section>
 			<section className="w-80">
