@@ -1,14 +1,16 @@
-// The Winners Bracket's lines between Matches, and the green of a winner's path along them.
-import { hasLostInWinnersBracket, type BracketMatch, type Tournament } from '../tournament';
+// A bracket's lines between Matches, and the green of a winner's path along them.
+import type { BracketMatch, PlayerId } from '../tournament';
 
 type Side = 'left' | 'right';
 type LineShape = 'straight' | 'down' | 'up';
 // One Round's Matches, or half of them, in bracket order. A Bye's place in the first Round is undefined.
 type RoundMatches = readonly (BracketMatch | undefined)[];
+// Whether a Player is still in the bracket: they haven't lost a Match in it.
+export type IsStillInBracket = (player: PlayerId) => boolean;
 
 /*
  * The colours of a winner's path, kept in one place: a Match card's border, and a bracket line on a
- * slot's ::after or ::before. Green is the path a Player still in the Winners Bracket took, from each
+ * slot's ::after or ::before. Green is the path a Player still in the bracket took, from each
  * Match they won to the Match they're in now; everything else is grey. Each class is written out whole
  * so Tailwind finds it.
  */
@@ -72,19 +74,26 @@ const getHalf = (matches: RoundMatches, side: Side): RoundMatches => {
 	return side === 'left' ? matches.slice(0, middle) : matches.slice(middle);
 };
 
-// A decided Match whose winner hasn't lost since: the path of a Player still in the Winners Bracket.
-const isWonByPlayerStillIn = (tournament: Tournament, match: BracketMatch | undefined) =>
-	match?.winner !== undefined && !hasLostInWinnersBracket(tournament, match.winner.id);
+// A decided Match whose winner hasn't lost since: the path of a Player still in the bracket.
+const isWonByPlayerStillInBracket = (
+	isStillInBracket: IsStillInBracket,
+	match: BracketMatch | undefined,
+) => match?.winner !== undefined && isStillInBracket(match.winner.id);
 
-const isFedByPlayerStillIn = (tournament: Tournament, feeders: RoundMatches) =>
-	feeders.some((match) => isWonByPlayerStillIn(tournament, match));
+const isFedByPlayerStillInBracket = (isStillInBracket: IsStillInBracket, feeders: RoundMatches) =>
+	feeders.some((match) => isWonByPlayerStillInBracket(isStillInBracket, match));
 
 // The line into a Match from the places that feed it on one side. A Match fed only by Byes has none.
-const drawLineIn = (tournament: Tournament, feeders: RoundMatches, side: Side, end: LineEnd) => {
+const drawLineIn = (
+	isStillInBracket: IsStillInBracket,
+	feeders: RoundMatches,
+	side: Side,
+	end: LineEnd,
+) => {
 	if (!feeders.some(Boolean)) {
 		return '';
 	}
-	const isPath = isFedByPlayerStillIn(tournament, feeders);
+	const isPath = isFedByPlayerStillInBracket(isStillInBracket, feeders);
 	return drawLine(end, side, 'straight', isPath);
 };
 
@@ -101,7 +110,7 @@ export interface BracketSlot {
  * undefined.
  */
 export const describeHalf = (
-	tournament: Tournament,
+	isStillInBracket: IsStillInBracket,
 	rounds: readonly RoundMatches[],
 	round: number,
 	side: Side,
@@ -113,29 +122,30 @@ export const describeHalf = (
 			return undefined;
 		}
 		const feeders = earlier.slice(2 * place, 2 * place + 2);
-		const isPath = isWonByPlayerStillIn(tournament, match);
+		const isPath = isWonByPlayerStillInBracket(isStillInBracket, match);
 		const pairShape = place % 2 === 0 ? 'down' : 'up';
 		const shape = half.length === 1 ? 'straight' : pairShape;
 		const lineOut = drawLine('after', otherSide[side], shape, isPath);
-		const lineIn = drawLineIn(tournament, feeders, side, 'before');
-		const isFedByPath = isFedByPlayerStillIn(tournament, feeders);
+		const lineIn = drawLineIn(isStillInBracket, feeders, side, 'before');
+		const isFedByPath = isFedByPlayerStillInBracket(isStillInBracket, feeders);
 		return { match, lines: `${lineOut} ${lineIn}`, isOnPath: isPath || isFedByPath };
 	});
 };
 
 // The final, with a line in from each half's last Round. A two-Player bracket's final has none.
 export const describeFinal = (
-	tournament: Tournament,
+	isStillInBracket: IsStillInBracket,
 	rounds: readonly RoundMatches[],
 ): BracketSlot => {
 	const match = rounds.at(-1)![0]!;
 	const beforeFinal = rounds.at(-2) ?? [];
 	const fromLeft = getHalf(beforeFinal, 'left');
 	const fromRight = getHalf(beforeFinal, 'right');
-	const lineInLeft = drawLineIn(tournament, fromLeft, 'left', 'before');
-	const lineInRight = drawLineIn(tournament, fromRight, 'right', 'after');
-	const isPath = isWonByPlayerStillIn(tournament, match);
+	const lineInLeft = drawLineIn(isStillInBracket, fromLeft, 'left', 'before');
+	const lineInRight = drawLineIn(isStillInBracket, fromRight, 'right', 'after');
+	const isPath = isWonByPlayerStillInBracket(isStillInBracket, match);
 	const isFedByPath =
-		isFedByPlayerStillIn(tournament, fromLeft) || isFedByPlayerStillIn(tournament, fromRight);
+		isFedByPlayerStillInBracket(isStillInBracket, fromLeft) ||
+		isFedByPlayerStillInBracket(isStillInBracket, fromRight);
 	return { match, lines: `${lineInLeft} ${lineInRight}`, isOnPath: isPath || isFedByPath };
 };
