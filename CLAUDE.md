@@ -12,7 +12,7 @@ Commits made after the branch's last `code-review` (a fix the user asks for, a f
 
 ### Issue tracker
 
-Issues and specs live in GitHub Issues for Auk14HP/cribbage-tournament, managed via the `gh` CLI. See `docs/agents/issue-tracker.md`: its "Review comments on a pull request" section before replying to a PR review, and its "When a change revises agreed behaviour" section whenever a change edits `GLOSSARY.md` or departs from an issue's wording.
+Issues and specs live in GitHub Issues for Auk14HP/cribbage-tournament, managed via the `gh` CLI. See `docs/agents/issue-tracker.md`: before replying to a PR review, its "Review comments on a pull request" section; whenever a change edits `GLOSSARY.md` or departs from an issue's wording, its "When a change revises agreed behaviour" section.
 
 ### Triage labels
 

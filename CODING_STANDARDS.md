@@ -9,7 +9,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - Say which one a name means wherever two could be confused. A number of things ends in `Count` (`boardCount`); a plural (`boards`) is the things themselves. Two Players side by side are `playerA` and `playerB`, never `a` and `b`. A prop or field qualifies a generic word with its subject: `bracketName` beside a Player's `name`. A single letter is for a one-line callback's parameter alone (`matches.find((m) => …)`).
 - Name a type or state for what it holds, not for an activity: `ResultAwaitingStayingAnswer`, not `Asking`.
 - Name a test helper for the role it finds, not for the test data that fills it: `findByePlayer`, not `findCat`.
-- Name a callback whose job isn't obvious at a glance: `isShownWithin(heading, 5000)`, not `.then(() => true, () => false)`.
+- Give a step whose job isn't obvious at a glance a named helper: `isShownWithin(heading, 5000)` says what `.then(() => true, () => false)` leaves the reader to work out.
 - React components and hooks keep React's conventions: a component is a PascalCase noun (`Organizer`), a hook starts with `use` (`useTournament`).
 
 ## Readability
@@ -18,9 +18,8 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 
 ## Comments
 
-- A comment is plain explanation for a reader new to the code: first what the code does, then why, in whole sentences and the Organizer's terms. Shorthand coined while writing the code ("asks most of the TV", "is given by its Player first") reads as noise to everyone else; spell the idea out.
-- Speak from the vantage of the code the comment sits on: what it does and what it knows. A dialog's comment says "Cancel closes it without an answer", not what its caller then records.
-- Name the thing a comment describes as the code does. A comment above a pure function says nothing that sounds like a side effect.
+- A comment is plain explanation for a reader new to the code: first what the code does, then why, in whole sentences and the Organizer's terms. Spell out shorthand coined while writing: "the fields that fill the most of the TV", not "the fields that ask most of the TV".
+- Speak from the vantage of the code the comment sits on, describing only what it does and knows. A dialog's comment says "Cancel closes it without an answer", leaving what its caller records to the caller. A pure function's comment says what it returns.
 
 ## Components
 

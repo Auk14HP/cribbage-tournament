@@ -1,19 +1,21 @@
-import { afterEach, expect } from 'vitest';
-
 /*
  * Fails any test that logs an error or a warning, such as React's warning that two list rows share a key.
- * React only logs these, so without this a test passes while the screen shows stale rows.
+ * React only logs these, so without this a test passes while the screen shows stale rows. A log from a timer
+ * a test left running is blamed on the next test, or on the file when it lands before the file's last hooks
+ * finish; one landing later still goes unchecked.
  */
+import { afterAll, afterEach, expect } from 'vitest';
+
 const loggedMessages: string[] = [];
 
-// Fills in a message's %s-style placeholders, as the console does, so the failure reads like the log.
-const formatMessage = ([first, ...rest]: unknown[]) => {
-	if (typeof first !== 'string') {
-		return [first, ...rest].map(String).join(' ');
+// Returns the message with its %s-style placeholders filled in, as the console shows it.
+const formatMessage = ([template, ...values]: unknown[]) => {
+	if (typeof template !== 'string') {
+		return [template, ...values].map(String).join(' ');
 	}
-	let used = 0;
-	const text = first.replace(/%[sdio]/g, () => String(rest[used++]));
-	return [text, ...rest.slice(used).map(String)].join(' ');
+	const unusedValues = [...values];
+	const text = template.replace(/%[sdio]/g, () => String(unusedValues.shift()));
+	return [text, ...unusedValues.map(String)].join(' ');
 };
 
 for (const level of ['error', 'warn'] as const) {
@@ -24,7 +26,10 @@ for (const level of ['error', 'warn'] as const) {
 	};
 }
 
-afterEach(() => {
+const expectNothingLogged = () => {
 	const messages = loggedMessages.splice(0);
 	expect(messages, 'The test logged an error or a warning').toEqual([]);
-});
+};
+
+afterEach(expectNothingLogged);
+afterAll(expectNothingLogged);
