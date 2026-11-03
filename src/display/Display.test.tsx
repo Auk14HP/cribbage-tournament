@@ -67,13 +67,16 @@ describe('Tonight’s Draw screen', () => {
 			'listitem',
 		);
 		expect(cards.map((card) => card.textContent)).toEqual(
-			draw.map(({ board, players: [a, b] }) => `Board ${board}${a.name}${getPlayerName(b)}`),
+			draw.map(
+				({ board, players: [playerA, playerB] }) =>
+					`Board ${board}${playerA.name}${getPlayerName(playerB)}`,
+			),
 		);
 		const [byePlayer] = draw.find((m) => !('name' in m.players[1]))!.players;
 		const byeCard = cards.find((card) => card.textContent!.includes(byePlayer.name))!;
 		const firstMatch = draw.find((m) => m.match.round === 1)!;
-		const [a, b] = firstMatch.players as [Player, Player];
-		expect(byeCard).toHaveTextContent(`Winner of ${a.name} / ${b.name}`);
+		const [playerA, playerB] = firstMatch.players as [Player, Player];
+		expect(byeCard).toHaveTextContent(`Winner of ${playerA.name} / ${playerB.name}`);
 
 		const started = expectOk(start(tournament));
 		act(() => store.save(started));
@@ -103,10 +106,10 @@ describe('the Winners Bracket screen', () => {
 		const store = showDisplay();
 		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue'], 2);
 		let tournament = expectOk(start(drawn));
-		const seated = getMatchesOnBoards(tournament);
-		const firstMatch = seated.find(isReadyToPlay)!;
-		const [a, b] = firstMatch.players as [Player, Player];
-		const [bye] = seated.find((m) => m !== firstMatch)!.players;
+		const seatedMatches = getMatchesOnBoards(tournament);
+		const firstMatch = seatedMatches.find(isReadyToPlay)!;
+		const [playerA, playerB] = firstMatch.players as [Player, Player];
+		const [bye] = seatedMatches.find((m) => m !== firstMatch)!.players;
 		const recordWinnerOf = (match: typeof firstMatch.match, winner: Player) => {
 			tournament = expectOk(recordWinner(tournament, match, winner.id, 'leaving'));
 			act(() => store.save(tournament));
@@ -122,12 +125,12 @@ describe('the Winners Bracket screen', () => {
 
 		// 3 Players in a 4-place bracket: one first-Round Match, and a Bye Player waiting in the final.
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Winners Bracket');
-		expect(listRound('Round 1')).toEqual([`Board 1${a.name}${b.name}`]);
+		expect(listRound('Round 1')).toEqual([`Board 1${playerA.name}${playerB.name}`]);
 		expect(listRound('Final')).toEqual([`Board 2—${bye.name}`]);
 		expect(screen.queryByText(/Champion/)).not.toBeInTheDocument();
 
-		recordWinnerOf(firstMatch.match, a);
-		expect(listRound('Final')).toEqual([`Board 2${a.name}${bye.name}`]);
+		recordWinnerOf(firstMatch.match, playerA);
+		expect(listRound('Final')).toEqual([`Board 2${playerA.name}${bye.name}`]);
 	});
 });
 
@@ -156,8 +159,8 @@ describe('the TV cycle', () => {
 		const playing = getMatchesOnBoards(tournament).filter(isReadyToPlay);
 		const firstMatch = playing.find((m) => m.match.round === 1)!;
 		const byes = playing.find((m) => m !== firstMatch)!;
-		const describeCard = ({ board, players: [a, b] }: typeof firstMatch) =>
-			`Board ${board}${a.name}${(b as Player).name}`;
+		const describeCard = ({ board, players: [playerA, playerB] }: typeof firstMatch) =>
+			`Board ${board}${playerA.name}${(playerB as Player).name}`;
 		const cards = within(screen.getByRole('list', { name: 'Matches' })).getAllByRole(
 			'listitem',
 		);

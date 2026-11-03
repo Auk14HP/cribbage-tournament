@@ -12,12 +12,12 @@ export const WaitingForBoard = ({ tournament }: { tournament: Tournament }) => {
 			<h2 className="mt-6 text-xl font-bold">Waiting for a Board</h2>
 			<p className="mt-1 text-gray-700">The next Board to free goes to the first.</p>
 			<ol aria-label="Waiting for a Board" className="mt-2">
-				{waiting.map(({ match, players: [a, b] }) => (
+				{waiting.map(({ match, players: [playerA, playerB] }) => (
 					<li
 						key={getMatchKey(match)}
 						className="border-b border-gray-300 py-1.5 text-lg"
 					>
-						{a.name} vs {getPlayerName(b)}
+						{playerA.name} vs {getPlayerName(playerB)}
 					</li>
 				))}
 			</ol>

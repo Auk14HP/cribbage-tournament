@@ -22,13 +22,13 @@ export const WaitingForBoard = ({ tournament }: { tournament: Tournament }) => {
 				aria-label="Waiting for a Board"
 				className={`mt-[1.5vh] grid gap-x-[3vw] gap-y-[0.5vh] font-semibold ${columnClass} ${matchCards.text}`}
 			>
-				{waiting.map(({ match, players: [a, b] }) => (
+				{waiting.map(({ match, players: [playerA, playerB] }) => (
 					<li key={getMatchKey(match)} className="truncate">
-						{a.name}
+						{playerA.name}
 						<span className="text-gray-400"> vs </span>
 						{/* A Player still to come is greyed, so it doesn't read as a Player's name. */}
-						<span className={'name' in b ? '' : 'text-gray-300 italic'}>
-							{getPlayerName(b)}
+						<span className={'name' in playerB ? '' : 'text-gray-300 italic'}>
+							{getPlayerName(playerB)}
 						</span>
 					</li>
 				))}

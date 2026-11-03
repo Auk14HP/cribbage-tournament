@@ -9,10 +9,11 @@ const expectPageFitsTv = async (tv: Page) => {
 };
 
 /*
- * The fields that ask most of the TV at each size Now playing can take: the whole Waiting for a Board list
- * stays on screen, on Tonight's Draw and on Now playing, and the page doesn't outgrow it.
+ * Checks that the whole Waiting for a Board list fits on the TV and the page doesn't grow past it. The tests
+ * below use the fields that fill the most of the TV for each of Now playing's sizes, and check both Tonight's
+ * Draw and Now playing.
  */
-const expectWaitingOnScreen = async (tv: Page, waitingMatchCount: number) => {
+const expectWaitingListFitsTv = async (tv: Page, waitingMatchCount: number) => {
 	const waiting = tv.getByRole('list', { name: 'Waiting for a Board' }).getByRole('listitem');
 	await expect(waiting).toHaveCount(waitingMatchCount);
 	const lastEntry = await waiting.last().boundingBox();
@@ -43,36 +44,36 @@ const registerLongNames = async (organizer: Page, playerCount: number) => {
 	}
 };
 
-for (const boards of [2, 5, 6, 7, 13]) {
-	const waitingMatchCount = openingMatchCount - boards;
+for (const boardCount of [2, 5, 6, 7, 13]) {
+	const waitingMatchCount = openingMatchCount - boardCount;
 
-	test(`Waiting for a Board stays on the TV at 32 Players on ${boards} Boards`, async ({
+	test(`Waiting for a Board stays on the TV at 32 Players on ${boardCount} Boards`, async ({
 		context,
 		page: organizer,
 	}) => {
-		await organizer.goto(`/?players=32&boards=${boards}`);
+		await organizer.goto(`/?players=32&boards=${boardCount}`);
 		const tv = await openTv(context);
 
 		await showDrawOnTv(organizer, tv);
-		await expectWaitingOnScreen(tv, waitingMatchCount);
+		await expectWaitingListFitsTv(tv, waitingMatchCount);
 
 		await organizer.getByRole('button', { name: 'Start', exact: true }).click();
 		await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 		await holdScreen(organizer, tv, 'Now playing');
-		await expectWaitingOnScreen(tv, waitingMatchCount);
+		await expectWaitingListFitsTv(tv, waitingMatchCount);
 	});
 }
 
 test('Long names stay on one line on Tonight’s Draw', async ({ context, page: organizer }) => {
 	// 32 Players on 13 Boards leaves no slack, so one name wrapping would push the page past the TV.
-	const boards = 13;
-	await organizer.goto(`/?players=0&boards=${boards}`);
+	const boardCount = 13;
+	await organizer.goto(`/?players=0&boards=${boardCount}`);
 	const tv = await openTv(context);
 	await registerLongNames(organizer, 32);
 
 	await showDrawOnTv(organizer, tv);
 
-	await expectWaitingOnScreen(tv, openingMatchCount - boards);
+	await expectWaitingListFitsTv(tv, openingMatchCount - boardCount);
 });
 
 test('A Bye Player’s card shows the whole Match they wait for', async ({

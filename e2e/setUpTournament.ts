@@ -46,7 +46,7 @@ const playUntilMatchesLeft = async (page: Page, matchesLeft: number) => {
 	 */
 	while ((await matchesOnBoards.count()) > matchesLeft) {
 		await nextWinnerButton.click();
-		await answerStayingIfAsked(page, 'Leaving');
+		await answerIsLoserStayingDialogIfAsked(page, 'Leaving');
 	}
 };
 
@@ -54,7 +54,10 @@ const playUntilMatchesLeft = async (page: Page, matchesLeft: number) => {
  * Answers whether the loser is staying for the Losers Bracket, if they were asked: only a Player losing their
  * first Match is.
  */
-export const answerStayingIfAsked = async (page: Page, answer: 'Staying' | 'Leaving') => {
+export const answerIsLoserStayingDialogIfAsked = async (
+	page: Page,
+	answer: 'Staying' | 'Leaving',
+) => {
 	const stayingDialog = page.getByRole('dialog', { name: /staying for the Losers Bracket/ });
 	if (await stayingDialog.isVisible()) {
 		await stayingDialog.getByRole('button', { name: answer }).click();
@@ -65,8 +68,11 @@ export const playToFinal = (page: Page) => playUntilMatchesLeft(page, 0);
 
 export const playUntilTheFinal = (page: Page) => playUntilMatchesLeft(page, 1);
 
-// Past the one-second screen, so a long hold saved too late has shown itself.
-const millisPastOneSecondScreen = 1500;
+/*
+ * How long holdScreen waits before checking the held screen is still shown. Longer than one 1-second screen,
+ * so if the hold was saved too late and the TV had already moved on, the wrong screen is showing by then.
+ */
+const msBeforeCheckingHold = 1500;
 
 /*
  * Moves the TV's cycle on to the named screen and holds it there: a second per screen moves it on, and a
@@ -83,7 +89,7 @@ export const holdScreen = async (organizer: Page, tv: Page, screenHeading: strin
 		await heading.waitFor();
 		await secondsInput.fill('600');
 		await secondsInput.press('Enter');
-		await tv.waitForTimeout(millisPastOneSecondScreen);
+		await tv.waitForTimeout(msBeforeCheckingHold);
 		expect(await heading.isVisible()).toBe(true);
 	}).toPass({ timeout: 20_000 });
 };

@@ -18,14 +18,20 @@ const bracketText = ['text-[5vh]', 'text-[5vh]', 'text-[4vh]', 'text-[3.2vh]', '
  * share their column's height equally and sit in the middle of their share, so every Match is centred
  * between the two that feed it, and bracket lines join them.
  */
-export const Bracket = ({ tournament, name }: { tournament: Tournament; name: BracketName }) => {
-	const { rounds, champion } = getBracketPicture(tournament, name)!;
-	const isStillIn = (player: PlayerId) => !hasLostIn(tournament, name, player);
+export const Bracket = ({
+	tournament,
+	bracketName,
+}: {
+	tournament: Tournament;
+	bracketName: BracketName;
+}) => {
+	const { rounds, champion } = getBracketPicture(tournament, bracketName)!;
+	const isStillInBracket = (player: PlayerId) => !hasLostIn(tournament, bracketName, player);
 	const earlier = rounds.slice(0, -1).map((_, round) => round);
 	return (
 		<div className="flex h-[94vh] flex-col">
 			<div className="flex items-baseline justify-between">
-				<h1 className="text-[6vh] leading-none font-bold">{bracketTitles[name]}</h1>
+				<h1 className="text-[6vh] leading-none font-bold">{bracketTitles[bracketName]}</h1>
 				{champion && (
 					<p className="text-[6vh] leading-none font-bold text-yellow-300">
 						Champion: {champion.name}
@@ -39,19 +45,19 @@ export const Bracket = ({ tournament, name }: { tournament: Tournament; name: Br
 					<BracketColumn
 						key={`left ${round}`}
 						name={`Round ${round + 1}`}
-						slots={describeHalf(isStillIn, rounds, round, 'left')}
+						slots={describeHalf(isStillInBracket, rounds, round, 'left')}
 					/>
 				))}
 				<BracketColumn
 					name="Final"
-					slots={[describeFinal(isStillIn, rounds)]}
+					slots={[describeFinal(isStillInBracket, rounds)]}
 					champion={champion}
 				/>
 				{[...earlier].reverse().map((round) => (
 					<BracketColumn
 						key={`right ${round}`}
 						name={`Round ${round + 1}`}
-						slots={describeHalf(isStillIn, rounds, round, 'right')}
+						slots={describeHalf(isStillInBracket, rounds, round, 'right')}
 					/>
 				))}
 			</div>

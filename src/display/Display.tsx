@@ -18,19 +18,9 @@ export const Display = ({ store }: { store: Store<Tournament> }) => {
 		<main className="min-h-screen bg-black px-[4vw] py-[3vh] text-white">
 			{tournament.phase === 'registration' && <Players tournament={tournament} />}
 			{tournament.phase === 'drawShown' && <Draw tournament={tournament} />}
-			{tournament.phase === 'inProgress' && (
-				<Cycle
-					key="inProgress"
-					tournament={tournament}
-					screens={listPlayingScreens(tournament)}
-				/>
-			)}
-			{tournament.phase === 'finished' && (
-				<Cycle
-					key="finished"
-					tournament={tournament}
-					screens={listFinishedScreens(tournament)}
-				/>
+			{/* Keyed by phase, so finishing starts the cycle again from its first screen. */}
+			{(tournament.phase === 'inProgress' || tournament.phase === 'finished') && (
+				<Cycle key={tournament.phase} tournament={tournament} />
 			)}
 		</main>
 	);
@@ -38,8 +28,12 @@ export const Display = ({ store }: { store: Store<Tournament> }) => {
 
 // The screens the TV cycles through, each for the Tournament's screenSeconds.
 const cycledScreens = {
-	winnersBracket: (tournament: Tournament) => <Bracket tournament={tournament} name="winners" />,
-	losersBracket: (tournament: Tournament) => <Bracket tournament={tournament} name="losers" />,
+	winnersBracket: (tournament: Tournament) => (
+		<Bracket tournament={tournament} bracketName="winners" />
+	),
+	losersBracket: (tournament: Tournament) => (
+		<Bracket tournament={tournament} bracketName="losers" />
+	),
 	nowPlaying: (tournament: Tournament) => <NowPlaying tournament={tournament} />,
 	champion: (tournament: Tournament) => <Champion tournament={tournament} />,
 };
@@ -50,27 +44,21 @@ type CycledScreen = keyof typeof cycledScreens;
 const listBracketScreens = (tournament: Tournament): CycledScreen[] =>
 	tournament.losersBracket ? ['winnersBracket', 'losersBracket'] : ['winnersBracket'];
 
-// Once Started, from the Winners Bracket. Once finished, from the champions, so the night ends on them.
-const listPlayingScreens = (tournament: Tournament): CycledScreen[] => [
-	...listBracketScreens(tournament),
-	'nowPlaying',
-];
-const listFinishedScreens = (tournament: Tournament): CycledScreen[] => [
-	'champion',
-	...listBracketScreens(tournament),
-];
+/*
+ * The screens in the order the TV shows them. During play: the brackets, then Now playing. Once the night
+ * is finished: the champions first, then the brackets.
+ */
+const listCycledScreens = (tournament: Tournament): CycledScreen[] =>
+	tournament.phase === 'finished'
+		? ['champion', ...listBracketScreens(tournament)]
+		: [...listBracketScreens(tournament), 'nowPlaying'];
 
 /*
  * Shows each screen in turn, from the first. A new screenSeconds restarts the current screen's time, so
  * the change shows at once.
  */
-const Cycle = ({
-	tournament,
-	screens,
-}: {
-	tournament: Tournament;
-	screens: readonly CycledScreen[];
-}) => {
+const Cycle = ({ tournament }: { tournament: Tournament }) => {
+	const screens = listCycledScreens(tournament);
 	const [shown, setShown] = useState(0);
 	useEffect(() => {
 		const timer = setTimeout(

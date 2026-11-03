@@ -8,21 +8,21 @@ import { bracketTitles } from '../wording';
 export const Champion = ({ tournament }: { tournament: Tournament }) => {
 	const winnersChampion = getBracketPicture(tournament, 'winners')!.champion!;
 	const losersChampion = getBracketPicture(tournament, 'losers')?.champion;
-	if (!losersChampion) {
-		return (
-			<div className="flex h-[94vh] flex-col items-center justify-center text-center">
-				<h1 className="text-[8vh] leading-none font-bold">Tonight’s Champion</h1>
+	return (
+		<div className="flex h-[94vh] flex-col items-center justify-center text-center">
+			<h1 className="text-[8vh] leading-none font-bold">
+				{losersChampion ? 'Tonight’s Champions' : 'Tonight’s Champion'}
+			</h1>
+			{losersChampion ? (
+				<>
+					<BracketChampion bracket="winners" champion={winnersChampion} />
+					<BracketChampion bracket="losers" champion={losersChampion} />
+				</>
+			) : (
 				<p className="mt-[6vh] text-[14vh] leading-none font-bold text-yellow-300">
 					{winnersChampion.name}
 				</p>
-			</div>
-		);
-	}
-	return (
-		<div className="flex h-[94vh] flex-col items-center justify-center text-center">
-			<h1 className="text-[8vh] leading-none font-bold">Tonight’s Champions</h1>
-			<BracketChampion bracket="winners" champion={winnersChampion} />
-			<BracketChampion bracket="losers" champion={losersChampion} />
+			)}
 		</div>
 	);
 };

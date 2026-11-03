@@ -875,8 +875,8 @@ export interface BracketPicture {
 }
 
 /*
- * A whole bracket as it stands: who has advanced, who is still playing. Undefined before its Draw, or for a
- * Losers Bracket not played.
+ * A whole bracket as it stands: who has advanced, who is still playing. Undefined while that bracket has no
+ * Draw: before it is made, and when fewer than two Players stay for a Losers Bracket.
  */
 export const getBracketPicture = (
 	tournament: Tournament,
@@ -949,9 +949,9 @@ export const getUndoableResults = (tournament: Tournament): readonly RecordedRes
 		.reverse();
 
 /*
- * Every result of a Match a Player played in a bracket, in the order recorded. The bracket is checked
- * first: settling a Losers Bracket Held Place reads Winners Bracket results, so reading a Losers Match's
- * Players from here would settle it again, without end.
+ * Every result of a Match a Player played in a bracket, in the order recorded. Results are filtered by
+ * bracket before their Players are read. Working out who takes a Losers Bracket Held Place reads this list
+ * for the Winners Bracket, so reading a Losers Match's Players here would call back into it without end.
  */
 const listResultsOf = (
 	tournament: Tournament,

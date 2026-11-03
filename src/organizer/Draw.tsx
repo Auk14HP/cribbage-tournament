@@ -30,7 +30,7 @@ import { StayingDialog } from './StayingDialog';
 import { WaitingForBoard } from './WaitingForBoard';
 
 // A result waiting on the loser's answer to whether they are staying for the Losers Bracket.
-interface Asking {
+interface ResultAwaitingStayingAnswer {
 	readonly loser: Player;
 	readonly record: (answer: StayingAnswer) => void;
 }
@@ -48,7 +48,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 	const losersChampion = getBracketPicture(tournament, 'losers')?.champion;
 	const playing = tournament.phase === 'inProgress';
 	const [refusal, setRefusal] = useState('');
-	const [asking, setAsking] = useState<Asking>();
+	const [awaitingAnswer, setAwaitingAnswer] = useState<ResultAwaitingStayingAnswer>();
 	const stayingDialog = useRef<HTMLDialogElement>(null);
 	// Records the result at once, or once the loser has said whether they are staying.
 	const recordOrAsk = (loser: Player, record: (answer?: StayingAnswer) => void) => {
@@ -56,7 +56,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 			record();
 			return;
 		}
-		setAsking({ loser, record });
+		setAwaitingAnswer({ loser, record });
 		stayingDialog.current?.showModal();
 	};
 	const recordWinnerOf = (match: MatchPlace, winner: Player, loser: Player) => {
@@ -107,8 +107,8 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 				<WaitingForBoard tournament={tournament} />
 				<StayingDialog
 					ref={stayingDialog}
-					loser={asking?.loser}
-					onAnswer={(answer) => asking?.record(answer)}
+					loser={awaitingAnswer?.loser}
+					onAnswer={(answer) => awaitingAnswer?.record(answer)}
 				/>
 			</section>
 			<section className="w-80">

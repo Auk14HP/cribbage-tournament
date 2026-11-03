@@ -1252,8 +1252,8 @@ describe('the Losers Bracket', () => {
 /*
  * 5 Players on 4 Boards, Started, up to the Losers Draw: Ann beats Bob in the one first-Round Match, Cat
  * has a Bye and waits for Ann, and Dan beats Eve in Round 2, where they met as Byes. Bob and Eve answer
- * whether they are staying; Cat's first Match is still to come. The Losers Bracket's first-Round Match is
- * given by its Player first.
+ * whether they are staying; Cat's first Match is still to come. losersMatch lists the Players of the
+ * Losers Bracket's first-Round Match in the order its Draw put them.
  */
 const setUpHeldPlace = (answers: readonly [StayingAnswer, StayingAnswer]) => {
 	let tournament = startTournament(5, 4);

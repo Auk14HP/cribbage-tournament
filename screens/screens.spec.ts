@@ -1,5 +1,15 @@
-import { test } from '@playwright/test';
-import { answerStayingIfAsked } from '../e2e/setUpTournament';
+import { test, type Locator } from '@playwright/test';
+import { answerIsLoserStayingDialogIfAsked } from '../e2e/setUpTournament';
+
+// Whether the element shows within the time, rather than failing the run when it doesn't.
+const checkShownWithin = async (element: Locator, timeout: number) => {
+	try {
+		await element.waitFor({ timeout });
+		return true;
+	} catch {
+		return false;
+	}
+};
 
 /*
  * Not a test: screenshots of both routes for a Tournament of any size, set up through the test Tournament URL.
@@ -59,17 +69,14 @@ test('screens', async ({ context, page: organizer }) => {
 	// Each Player losing their first Match stays, so the Losers Bracket is played too.
 	for (let recorded = 0; recorded < results && (await nextWinnerButton.count()) > 0; recorded++) {
 		await nextWinnerButton.click();
-		await answerStayingIfAsked(organizer, 'Staying');
+		await answerIsLoserStayingDialogIfAsked(organizer, 'Staying');
 	}
 	// The TV cycles each second, so wait for the screen to shoot: the bracket, then the champion once finished.
 	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 	await shoot('results');
 	// With a Losers Bracket drawn, its screen, then Now playing with any Matches waiting for a Board beneath.
 	const losersHeading = tv.getByRole('heading', { name: 'Losers Bracket' });
-	const isLosersBracketShown = await losersHeading.waitFor({ timeout: 5000 }).then(
-		() => true,
-		() => false,
-	);
+	const isLosersBracketShown = await checkShownWithin(losersHeading, 5000);
 	if (isLosersBracketShown && (await nextWinnerButton.count()) > 0) {
 		await shoot('losers-bracket');
 		await tv.getByRole('heading', { name: 'Now playing' }).waitFor();
@@ -91,6 +98,6 @@ test('screens', async ({ context, page: organizer }) => {
 	await forfeitButton.click();
 	await shoot('forfeit-dialog');
 	await organizer.getByRole('dialog').getByRole('button', { name: leaver! }).click();
-	await answerStayingIfAsked(organizer, 'Staying');
+	await answerIsLoserStayingDialogIfAsked(organizer, 'Staying');
 	await shoot('forfeit');
 });

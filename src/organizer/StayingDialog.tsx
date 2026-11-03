@@ -3,8 +3,8 @@ import type { Player, StayingAnswer } from '../tournament';
 import { button, confirmButton, confirmColours, dialogBox } from './classes';
 
 /*
- * Asks whether a Player losing their first Match is staying for the Losers Bracket, before their result is
- * recorded. Cancel records nothing.
+ * Asks whether a Player losing their first Match is staying for the Losers Bracket. Cancel closes it without
+ * an answer.
  */
 export const StayingDialog = ({
 	ref,

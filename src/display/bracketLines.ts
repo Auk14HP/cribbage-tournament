@@ -6,7 +6,7 @@ type LineShape = 'straight' | 'down' | 'up';
 // One Round's Matches, or half of them, in bracket order. A Bye's place in the first Round is undefined.
 type RoundMatches = readonly (BracketMatch | undefined)[];
 // Whether a Player is still in the bracket: they haven't lost a Match in it.
-export type IsStillIn = (player: PlayerId) => boolean;
+export type IsStillInBracket = (player: PlayerId) => boolean;
 
 /*
  * The colours of a winner's path, kept in one place: a Match card's border, and a bracket line on a
@@ -75,18 +75,25 @@ const getHalf = (matches: RoundMatches, side: Side): RoundMatches => {
 };
 
 // A decided Match whose winner hasn't lost since: the path of a Player still in the bracket.
-const isWonByPlayerStillIn = (isStillIn: IsStillIn, match: BracketMatch | undefined) =>
-	match?.winner !== undefined && isStillIn(match.winner.id);
+const isWonByPlayerStillIn = (
+	isStillInBracket: IsStillInBracket,
+	match: BracketMatch | undefined,
+) => match?.winner !== undefined && isStillInBracket(match.winner.id);
 
-const isFedByPlayerStillIn = (isStillIn: IsStillIn, feeders: RoundMatches) =>
-	feeders.some((match) => isWonByPlayerStillIn(isStillIn, match));
+const isFedByPlayerStillIn = (isStillInBracket: IsStillInBracket, feeders: RoundMatches) =>
+	feeders.some((match) => isWonByPlayerStillIn(isStillInBracket, match));
 
 // The line into a Match from the places that feed it on one side. A Match fed only by Byes has none.
-const drawLineIn = (isStillIn: IsStillIn, feeders: RoundMatches, side: Side, end: LineEnd) => {
+const drawLineIn = (
+	isStillInBracket: IsStillInBracket,
+	feeders: RoundMatches,
+	side: Side,
+	end: LineEnd,
+) => {
 	if (!feeders.some(Boolean)) {
 		return '';
 	}
-	const isPath = isFedByPlayerStillIn(isStillIn, feeders);
+	const isPath = isFedByPlayerStillIn(isStillInBracket, feeders);
 	return drawLine(end, side, 'straight', isPath);
 };
 
@@ -103,7 +110,7 @@ export interface BracketSlot {
  * undefined.
  */
 export const describeHalf = (
-	isStillIn: IsStillIn,
+	isStillInBracket: IsStillInBracket,
 	rounds: readonly RoundMatches[],
 	round: number,
 	side: Side,
@@ -115,29 +122,30 @@ export const describeHalf = (
 			return undefined;
 		}
 		const feeders = earlier.slice(2 * place, 2 * place + 2);
-		const isPath = isWonByPlayerStillIn(isStillIn, match);
+		const isPath = isWonByPlayerStillIn(isStillInBracket, match);
 		const pairShape = place % 2 === 0 ? 'down' : 'up';
 		const shape = half.length === 1 ? 'straight' : pairShape;
 		const lineOut = drawLine('after', otherSide[side], shape, isPath);
-		const lineIn = drawLineIn(isStillIn, feeders, side, 'before');
-		const isFedByPath = isFedByPlayerStillIn(isStillIn, feeders);
+		const lineIn = drawLineIn(isStillInBracket, feeders, side, 'before');
+		const isFedByPath = isFedByPlayerStillIn(isStillInBracket, feeders);
 		return { match, lines: `${lineOut} ${lineIn}`, isOnPath: isPath || isFedByPath };
 	});
 };
 
 // The final, with a line in from each half's last Round. A two-Player bracket's final has none.
 export const describeFinal = (
-	isStillIn: IsStillIn,
+	isStillInBracket: IsStillInBracket,
 	rounds: readonly RoundMatches[],
 ): BracketSlot => {
 	const match = rounds.at(-1)![0]!;
 	const beforeFinal = rounds.at(-2) ?? [];
 	const fromLeft = getHalf(beforeFinal, 'left');
 	const fromRight = getHalf(beforeFinal, 'right');
-	const lineInLeft = drawLineIn(isStillIn, fromLeft, 'left', 'before');
-	const lineInRight = drawLineIn(isStillIn, fromRight, 'right', 'after');
-	const isPath = isWonByPlayerStillIn(isStillIn, match);
+	const lineInLeft = drawLineIn(isStillInBracket, fromLeft, 'left', 'before');
+	const lineInRight = drawLineIn(isStillInBracket, fromRight, 'right', 'after');
+	const isPath = isWonByPlayerStillIn(isStillInBracket, match);
 	const isFedByPath =
-		isFedByPlayerStillIn(isStillIn, fromLeft) || isFedByPlayerStillIn(isStillIn, fromRight);
+		isFedByPlayerStillIn(isStillInBracket, fromLeft) ||
+		isFedByPlayerStillIn(isStillInBracket, fromRight);
 	return { match, lines: `${lineInLeft} ${lineInRight}`, isOnPath: isPath || isFedByPath };
 };
