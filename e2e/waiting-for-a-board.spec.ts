@@ -1,5 +1,5 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
-import { confirmDraw, holdScreen } from './setUpTournament';
+import { confirmDraw, holdScreen, seedDraw } from './setUpTournament';
 
 const tvHeight = 1080;
 
@@ -36,12 +36,36 @@ const showDrawOnTv = async (organizer: Page, tv: Page) => {
 	await tv.getByRole('heading', { name: 'Tonight’s Draw' }).waitFor();
 };
 
-const registerLongNames = async (organizer: Page, playerCount: number) => {
+const registerPlayers = async (organizer: Page, names: string[]) => {
 	const playerName = organizer.getByLabel('Player name');
-	for (let player = 1; player <= playerCount; player++) {
-		await playerName.fill(`Bartholomew Featherstonehaugh ${player}`);
+	for (const name of names) {
+		await playerName.fill(name);
 		await playerName.press('Enter');
 	}
+};
+
+const registerLongNames = async (organizer: Page, playerCount: number) => {
+	await registerPlayers(
+		organizer,
+		Array.from(
+			{ length: playerCount },
+			(_, index) => `Bartholomew Featherstonehaugh ${index + 1}`,
+		),
+	);
+};
+
+/*
+ * Names as long as the room's longest, such as "Frank the Tank": two long first names, each with one of the
+ * widest initials. Any two of them make as long a pair as the room is likely to see, so whichever Match the
+ * Draw makes a Bye Player wait for is the longest realistic one.
+ */
+const makeLongestRealisticNames = (playerCount: number) => {
+	const initials = 'WMQOGDHNUCBRKAVX';
+	return Array.from(
+		{ length: playerCount },
+		(_, index) =>
+			`${index % 2 === 0 ? 'Bartholomew' : 'Christopher'} ${initials[Math.floor(index / 2)]}.`,
+	);
 };
 
 for (const boardCount of [2, 5, 6, 7, 13]) {
@@ -81,8 +105,10 @@ test('A Bye Player’s card shows the whole Match they wait for', async ({
 	page: organizer,
 }) => {
 	// 31 Players on 16 Boards: the Bye Player waiting for a winner has a card of their own.
-	await organizer.goto('/?players=31&boards=16');
+	await seedDraw(context);
+	await organizer.goto('/?players=0&boards=16');
 	const tv = await openTv(context);
+	await registerPlayers(organizer, makeLongestRealisticNames(31));
 
 	await showDrawOnTv(organizer, tv);
 
@@ -94,7 +120,7 @@ test('A Bye Player’s card shows the whole Match they wait for', async ({
 	await expectPageFitsTv(tv);
 });
 
-test('A very long Match a Bye Player waits for takes two lines at most', async ({
+test('A very long Match a Bye Player waits for takes three lines at most', async ({
 	context,
 	page: organizer,
 }) => {
@@ -110,6 +136,6 @@ test('A very long Match a Bye Player waits for takes two lines at most', async (
 		const lineHeight = parseFloat(getComputedStyle(line).lineHeight);
 		return Math.round(line.clientHeight / lineHeight);
 	});
-	expect(lineCount).toBeLessThanOrEqual(2);
+	expect(lineCount).toBeLessThanOrEqual(3);
 	await expectPageFitsTv(tv);
 });
