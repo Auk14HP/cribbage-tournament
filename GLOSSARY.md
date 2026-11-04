@@ -63,5 +63,5 @@ A **Board** kept for one **Player** for as long as they are in the **Tournament*
 _Avoid_: Preferred board, reserved board, fixed board, pinned board
 
 **Waiting for a Board**:
-The line of **Matches**, from both brackets, that need a **Board** while none is free. Matches ready to play, both **Players** known, go ahead of those still waiting on a Player, and a Player waiting alone at a **Board** other than their **Home Board** gives it up to one; otherwise it is first come, first served.
+The line of **Matches**, from both brackets, that need a **Board** while none is free. Matches ready to play, both **Players** known, go ahead of those still waiting on a Player, and a Player waiting alone at a **Board** other than their **Home Board** gives it up to one. A Match moved off a **Home Board** when its Player comes back to it, through an undo, goes first in line. Otherwise it is first come, first served.
 _Avoid_: Waitlist, backlog
