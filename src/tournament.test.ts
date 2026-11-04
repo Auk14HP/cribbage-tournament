@@ -305,6 +305,18 @@ describe('a Home Board through the night', () => {
 		expect(getMatchesOnBoards(tournament).map((m) => m.board)).toEqual([2, 3, 4]);
 	});
 
+	it('lists its Player’s Match there once, however many results are recorded around it', () => {
+		const started = startWithByePlayerHome();
+		let { tournament } = started;
+		const firstMatch = getMatchesOnBoards(tournament).find(isReadyToPlay)!;
+		const [winner] = firstMatch.players as [Player, Player];
+
+		tournament = expectOk(recordWinner(tournament, firstMatch.match, winner.id, 'leaving'));
+
+		const onHomeBoard = getMatchesOnBoards(tournament).filter((m) => m.board === 2);
+		expect(onHomeBoard).toHaveLength(1);
+	});
+
 	it('keeps it while its Player waits alone, though a Match ready to play waits for a Board', () => {
 		const started = startWithByePlayerHome();
 		const { homePlayer } = started;
@@ -369,11 +381,9 @@ describe('a Home Board through the night', () => {
 			const { homePlayer } = started;
 			let { tournament } = started;
 			for (let recorded = 1; tournament.phase !== 'finished'; recorded++) {
-				const seats = getMatchesOnBoards(tournament).map((m) => m.board);
-				expect(new Set(seats).size).toBe(seats.length);
-				const homeMatch = getMatchesOnBoards(tournament).find((m) =>
-					isPlaying(m, homePlayer),
-				);
+				const matchesOnBoards = getMatchesOnBoards(tournament);
+				expect(isEachBoardHeldOnce(matchesOnBoards)).toBe(true);
+				const homeMatch = matchesOnBoards.find((m) => isPlaying(m, homePlayer));
 				if (homeMatch) {
 					expect(homeMatch.board).toBe(boards);
 				}
@@ -381,11 +391,11 @@ describe('a Home Board through the night', () => {
 					m.players.some((p) => 'id' in p && p.id === homePlayer.id),
 				);
 				expect(isHomeWaiting).toBe(false);
-				const onHomeBoard = getMatchesOnBoards(tournament).find((m) => m.board === boards);
+				const onHomeBoard = matchesOnBoards.find((m) => m.board === boards);
 				if (onHomeBoard && !isPlaying(onHomeBoard, homePlayer)) {
 					expect(hasLostIn(tournament, 'winners', homePlayer.id)).toBe(true);
 				}
-				const ready = getMatchesOnBoards(tournament).find(isReadyToPlay);
+				const ready = matchesOnBoards.find(isReadyToPlay);
 				expect(ready).toBeDefined();
 				const [winner, loser] = ready!.players as [Player, Player];
 				const isOpen = isLosersBracketOpenTo(tournament, loser.id);
@@ -1631,6 +1641,12 @@ const listPlayersInRound = (tournament: Tournament, round: number): Player[] =>
 	getMatchesOnBoards(tournament)
 		.filter((m) => m.match.round === round)
 		.flatMap((m) => m.players.filter((p): p is Player => 'name' in p));
+
+// Whether no two Matches hold the same Board.
+const isEachBoardHeldOnce = (matches: readonly MatchOnBoard[]): boolean => {
+	const boardsHeld = matches.map((m) => m.board);
+	return new Set(boardsHeld).size === boardsHeld.length;
+};
 
 // The other Player in a Match holding a Board, both its Players known.
 const findOpponentIn = (match: MatchOnBoard, player: Player): Player =>

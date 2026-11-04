@@ -775,8 +775,9 @@ const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 		.slice(0, freeBoards.length)
 		.map((match, index) => ({ match, board: freeBoards[index] }));
 	/*
-	 * Matches at their Home Boards are worked out afresh each time and listed first: only the other Boards'
-	 * order matters, for which Player waiting alone gives up their Board.
+	 * Matches at their Home Boards are worked out afresh each time and listed first. Only the order of the
+	 * Matches at the other Boards matters: it decides which Player waiting alone gives up their Board to a
+	 * Match ready to play.
 	 */
 	return {
 		...tournament,
