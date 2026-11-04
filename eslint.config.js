@@ -59,6 +59,12 @@ export default defineConfig([
 					message:
 						'Name the inner result first: a call nests at most one level inside another call’s arguments (CODING_STANDARDS.md, Readability).',
 				},
+				// Playwright reads a timeout of 0 as no limit, so a wait that was meant to look once hangs instead.
+				{
+					selector: "Property[key.name='timeout'][value.value=0]",
+					message:
+						'Playwright waits forever on timeout: 0. To look once, read the state directly, as `await locator.isVisible()` does.',
+				},
 				{
 					selector:
 						'VariableDeclarator[id.name=/^render[A-Z]/] > ArrowFunctionExpression',

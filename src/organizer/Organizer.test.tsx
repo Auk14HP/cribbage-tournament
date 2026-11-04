@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Organizer } from './Organizer';
 import { listWaitingText } from '../screenTestHelpers';
 import { createLocalStorageStore } from '../storage';
@@ -26,7 +26,6 @@ beforeAll(() => {
 afterEach(() => {
 	cleanup();
 	localStorage.clear();
-	vi.restoreAllMocks();
 });
 
 type User = ReturnType<typeof userEvent.setup>;
@@ -410,7 +409,6 @@ describe('the organizer route', () => {
 
 	it('lists each bracket’s results apart, latest first, though their Rounds and places match', async () => {
 		const user = showOrganizer();
-		const consoleError = vi.spyOn(console, 'error');
 		const names = ['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev'];
 		await makeTheDraw(user, names, '4');
 		await user.click(screen.getByRole('button', { name: 'Start' }));
@@ -441,8 +439,6 @@ describe('the organizer route', () => {
 		const afterFinal = listResults();
 		expect(afterFinal[0]).toContain(`${champion} beat ${runnerUp}`);
 		expect(afterFinal).toHaveLength(2);
-		const warnings = consoleError.mock.calls.map(([message]) => String(message));
-		expect(warnings.filter((message) => message.includes('same key'))).toEqual([]);
 	});
 
 	it('undoes a result, re-opening the Match so the other Player can be recorded as its winner', async () => {

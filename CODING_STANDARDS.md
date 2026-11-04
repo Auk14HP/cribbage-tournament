@@ -6,11 +6,20 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 
 - Give every function a verb-first name (`createTournament`, `findNameRefusal`), including helpers and test helpers, so it is never mistaken for a value. A predicate starts with `is` or `has`. ESLint has no rule that can check this.
 - Name every value for what it holds, in code and tests alike: a locator for the element it finds (`championHeading`), not the screen that element suggests. One of several, taken by its place, carries its place and what it is: `firstMatch`, `firstRow`, `firstCountdownRing`, never `first` alone. A locator that finds a different element each time it is used is named for the one it finds then (`nextWinnerButton`, used in a loop).
+- Say which one a name means wherever two could be confused. A number of things ends in `Count` (`boardCount`); a plural (`boards`) is the things themselves. Two Players side by side are `playerA` and `playerB`, never `a` and `b`. A prop or field qualifies a generic word with its subject: `bracketName` beside a Player's `name`. A single letter is for a one-line callback's parameter alone (`matches.find((m) => …)`).
+- Name a type or state for what it holds, not for an activity: `ResultAwaitingStayingAnswer`, not `Asking`.
+- Name a test helper for the role it finds, not for the test data that fills it: `findByePlayer`, not `findCat`.
+- Give a step whose job isn't obvious at a glance a named helper: `isShownWithin(heading, 5000)` says what `.then(() => true, () => false)` leaves the reader to work out.
 - React components and hooks keep React's conventions: a component is a PascalCase noun (`Organizer`), a hook starts with `use` (`useTournament`).
 
 ## Readability
 
 - Don't nest a call two or more levels deep inside another call's arguments: name the inner result first, so each line does one thing and the name says what it is. Write `const dialog = within(screen.getByRole('dialog'))` and then `user.click(dialog.getByRole('button', { name }))`, not `user.click(within(screen.getByRole('dialog')).getByRole('button', { name }))`. One level is fine: `expect(screen.getByRole('heading')).toHaveTextContent('Now playing')`. A callback's body starts afresh: `matches.find((m) => m.players.every(isKnown))` nests nothing. ESLint catches a call nested in arguments two deep; a call made on a call's result, like `within(...)` above, is left to review.
+
+## Comments
+
+- A comment is plain explanation for a reader new to the code: first what the code does, then why, in whole sentences and the Organizer's terms. Spell out shorthand coined while writing: "the fields that fill the most of the TV", not "the fields that ask most of the TV".
+- Speak from the vantage of the code the comment sits on, describing only what it does and knows. A dialog's comment says "Cancel closes it without an answer", leaving what its caller records to the caller. A pure function's comment says what it returns.
 
 ## Components
 

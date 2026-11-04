@@ -18,6 +18,8 @@ PLAYERS=29 BOARDS=16 DRAW=1 START=1 RESULTS=12 npm run screens   # and after 12 
 
 Images land in `test-results/screens/` (gitignored), one per moment the script reaches; its header comment lists the file names. `npm run e2e` empties `test-results/` when it starts, so take screenshots after it, or copy them out first. Shoot the field sizes at the edges of the change: the largest field (32 fills every Board card) and an odd one where a Player waits for a winner (21).
 
+A whole TV screenshot is costly to open, and judging a screen from across the room needs only half its size. Open a half-size copy first (`sips -Z 960 test-results/screens/tv-draw.png --out <scratchpad>/tv-draw-small.png`), and a crop when checking one detail, such as whether a long name is cut (`sips -c <height> <width> --cropOffset <y> <x> <file> --out <crop>`: height before width, y before x). Open the full image only for what those can't show.
+
 When the change shows a moment the script doesn't reach yet (a Forfeit, the Losers Bracket), add that step to `screens/screens.spec.ts` behind its own variable, so the script grows with the app.
 
 ## What to look at
