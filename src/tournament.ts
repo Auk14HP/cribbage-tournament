@@ -202,7 +202,7 @@ export const removePlayer = (tournament: Tournament, playerId: PlayerId): Result
 		value: {
 			...tournament,
 			players: tournament.players.filter((p) => p.id !== playerId),
-			homeBoards: tournament.homeBoards.filter((home) => home.player !== playerId),
+			homeBoards: tournament.homeBoards.filter((homeBoard) => homeBoard.player !== playerId),
 		},
 	};
 };
@@ -244,7 +244,9 @@ export const setBoardCount = (tournament: Tournament, typedCount: string): Resul
 	 * A Home Board is cleared when its Board is no longer set out, and when only one Board is left: keeping
 	 * the only Board for one Player could leave their opponent's earlier Match with no Board to be played at.
 	 */
-	const homeBoards = tournament.homeBoards.filter((home) => count > 1 && home.board <= count);
+	const homeBoards = tournament.homeBoards.filter(
+		(homeBoard) => count > 1 && homeBoard.board <= count,
+	);
 	return {
 		ok: true,
 		value: { ...tournament, boards: listIndexes(count).map((i) => i + 1), homeBoards },
@@ -279,12 +281,12 @@ export const setHomeBoard = (
 	if (!tournament.boards.includes(board)) {
 		return { ok: false, reason: `There is no Board ${board}.` };
 	}
-	const otherHome = tournament.homeBoards.find((home) => home.player !== playerId);
-	if (otherHome) {
-		const { name } = findPlayer(tournament, otherHome.player);
+	const otherHomeBoard = tournament.homeBoards.find((homeBoard) => homeBoard.player !== playerId);
+	if (otherHomeBoard) {
+		const { name } = findPlayer(tournament, otherHomeBoard.player);
 		return {
 			ok: false,
-			reason: `Only one Player can have a Home Board: ${name} has Board ${otherHome.board}.`,
+			reason: `Only one Player can have a Home Board: ${name} has Board ${otherHomeBoard.board}.`,
 		};
 	}
 	return { ok: true, value: { ...tournament, homeBoards: [{ player: playerId, board }] } };
@@ -300,7 +302,7 @@ export const clearHomeBoard = (tournament: Tournament, playerId: PlayerId): Resu
 		ok: true,
 		value: {
 			...tournament,
-			homeBoards: tournament.homeBoards.filter((home) => home.player !== playerId),
+			homeBoards: tournament.homeBoards.filter((homeBoard) => homeBoard.player !== playerId),
 		},
 	};
 };
@@ -724,15 +726,16 @@ const hasPlayedOn = (tournament: Tournament, match: MatchPlace): boolean => {
 const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 	const live = listLiveMatches(tournament);
 	const isLive = (match: MatchPlace) => live.some((m) => isSameMatch(m, match));
-	const homeBoards = tournament.homeBoards.filter((home) =>
-		isInTournament(tournament, home.player),
+	const homeBoards = tournament.homeBoards.filter((homeBoard) =>
+		isInTournament(tournament, homeBoard.player),
 	);
 	const atHome = homeBoards.flatMap(({ player, board }): BoardTaken[] => {
 		const match = live.find((m) => findPlayers(tournament, m).includes(player));
 		return match ? [{ match, board }] : [];
 	});
 	const isAtHome = (match: MatchPlace) => atHome.some((on) => isSameMatch(on.match, match));
-	const isHomeBoard = (board: BoardNumber) => homeBoards.some((home) => home.board === board);
+	const isHomeBoard = (board: BoardNumber) =>
+		homeBoards.some((homeBoard) => homeBoard.board === board);
 	// The Boards every other Match shares.
 	const boards = tournament.boards.filter((board) => !isHomeBoard(board));
 	const isStillSeated = (on: BoardTaken) => isLive(on.match) && !isAtHome(on.match);
