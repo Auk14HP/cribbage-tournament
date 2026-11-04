@@ -166,7 +166,8 @@ describe('the organizer route', () => {
 		await register(user, 'Dave K.');
 		await register(user, 'Big Dave');
 
-		const daveK = screen.getByText('Dave K.').closest('li')!;
+		const players = within(screen.getByRole('list', { name: 'Players' }));
+		const daveK = players.getByText('Dave K.').closest('li')!;
 		await user.click(within(daveK).getByRole('button', { name: 'Remove' }));
 
 		expect(listPlayerNames()).toEqual(['Big Dave']);
@@ -233,6 +234,46 @@ describe('the organizer route', () => {
 		cleanup();
 		showOrganizer();
 		expect(screen.getByText('Placards 1 to 12')).toBeInTheDocument();
+	});
+
+	it('gives one Player a Home Board, picked from the Boards, moving it when another Player is picked', async () => {
+		const user = showOrganizer();
+		for (const name of ['Dave K.', 'Big Dave', 'Sue', 'Lou']) {
+			await register(user, name);
+		}
+		await setBoardCount(user, '4');
+
+		await user.selectOptions(screen.getByLabelText('Board'), '3');
+		await user.selectOptions(screen.getByLabelText('Home Board for'), 'Big Dave');
+		await user.selectOptions(screen.getByLabelText('Home Board for'), 'Sue');
+		cleanup();
+		showOrganizer();
+		expect(screen.getByLabelText('Home Board for')).toHaveDisplayValue('Sue');
+		expect(screen.getByLabelText('Board')).toHaveDisplayValue('3');
+
+		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
+		await answerDialog(user, 'Make the Draw');
+		const sueRow = listMatchRows().find((row) => row.textContent!.includes('Sue'))!;
+		expect(sueRow).toHaveTextContent(/^Board 3/);
+	});
+
+	it('shows why a Home Board is refused, beside the Boards, and takes it away on Nobody', async () => {
+		const user = showOrganizer();
+		await register(user, 'Dave K.');
+		await setBoardCount(user, '1');
+
+		await user.selectOptions(screen.getByLabelText('Home Board for'), 'Dave K.');
+
+		expect(getRefusalIn('Boards and the Draw')).toHaveTextContent(
+			'A Player can’t have a Home Board when there is only one Board.',
+		);
+		await setBoardCount(user, '2');
+		await user.selectOptions(screen.getByLabelText('Home Board for'), 'Dave K.');
+		expect(getRefusalIn('Boards and the Draw')).toBeEmptyDOMElement();
+		await user.selectOptions(screen.getByLabelText('Home Board for'), 'Nobody');
+		cleanup();
+		showOrganizer();
+		expect(screen.getByLabelText('Home Board for')).toHaveDisplayValue('Nobody');
 	});
 
 	it('shows why the Draw is refused', async () => {

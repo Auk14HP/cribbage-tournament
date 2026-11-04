@@ -14,6 +14,7 @@ const isShownWithin = async (element: Locator, timeout: number) => {
 /*
  * Not a test: screenshots of both routes for a Tournament of any size, set up through the test Tournament URL.
  *   PLAYERS=29 BOARDS=16 npm run screens    registration
+ *   ... HOME_BOARD=3                        with the first Player registered given Home Board 3
  *   ... DRAW=1                              and Tonight's Draw
  *   ... DRAW=1 START=1                      and after Start, then Now playing
  *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
@@ -39,6 +40,14 @@ test('screens', async ({ context, page: organizer }) => {
 		await tv.screenshot({ path: `test-results/screens/tv-${moment}.png` });
 	};
 
+	const homeBoard = process.env.HOME_BOARD;
+	if (homeBoard) {
+		const boardSelect = organizer.getByRole('combobox', { name: 'Board', exact: true });
+		await boardSelect.selectOption(homeBoard);
+		const homeBoardForSelect = organizer.getByRole('combobox', { name: 'Home Board for' });
+		// The first Player registered: the first option after Nobody.
+		await homeBoardForSelect.selectOption({ index: 1 });
+	}
 	await shoot('registration');
 	if (!process.env.DRAW) {
 		return;
