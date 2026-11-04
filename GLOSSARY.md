@@ -58,6 +58,10 @@ _Avoid_: Withdrawal, DNF, no-show
 A numbered cribbage board set out in the room, where a **Match** is assigned to be played. Boards are numbered from 1 up by tent-number placards, like the ones a restaurant hands out to deliver food to a table. Several Boards can share one physical table, and there are only as many Boards as the room has cribbage boards. A Match takes the lowest-numbered free Board as soon as one of its Players is known, or joins **Waiting for a Board** when none is free. Its Player sits there waiting for their opponent; the opponent comes to them. So a winner usually stays at the Board they just won at.
 _Avoid_: Table, spot, station, placard
 
+**Home Board**:
+A **Board** kept for one **Player** for as long as they are in the **Tournament**: every **Match** of theirs is played there, their opponent comes to them, and no other Match takes it.
+_Avoid_: Preferred board, reserved board, fixed board, pinned board
+
 **Waiting for a Board**:
-The line of **Matches**, from both brackets, that need a **Board** while none is free. Matches ready to play, both **Players** known, go ahead of those still waiting on a Player, and a Player waiting alone at a **Board** gives it up to one; otherwise it is first come, first served.
+The line of **Matches**, from both brackets, that need a **Board** while none is free. Matches ready to play, both **Players** known, go ahead of those still waiting on a Player, and a Player waiting alone at a **Board** other than their **Home Board** gives it up to one. A Match moved off a **Home Board** when its Player comes back to it, through an undo, goes first in line. Otherwise it is first come, first served.
 _Avoid_: Waitlist, backlog

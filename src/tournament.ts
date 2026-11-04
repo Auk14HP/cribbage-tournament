@@ -48,6 +48,15 @@ export interface MatchPlace {
 	readonly place: number;
 }
 
+/*
+ * A Board kept for one Player for as long as they are in the Tournament: every Match of theirs is played
+ * there, and no other Match takes it.
+ */
+export interface HomeBoard {
+	readonly player: PlayerId;
+	readonly board: BoardNumber;
+}
+
 export interface MatchResult {
 	readonly match: MatchPlace;
 	readonly winner: PlayerId;
@@ -89,6 +98,8 @@ export interface Tournament {
 	readonly nextPlayerId: PlayerId;
 	// In number order.
 	readonly boards: readonly BoardNumber[];
+	// One for each Player given a Home Board; for now no more than one Player has one.
+	readonly homeBoards: readonly HomeBoard[];
 	readonly winnersBracket?: Bracket;
 	/*
 	 * Drawn with the Winners Bracket, from the same random source, so the Losers Draw needs none of its
@@ -97,7 +108,7 @@ export interface Tournament {
 	readonly losersDrawOrder?: readonly PlayerId[];
 	// Undefined until the Losers Draw is made; null once it found fewer than two Players staying.
 	readonly losersBracket?: Bracket | null;
-	// Each Match holding a Board, in the order the Matches took their Boards.
+	// Each Match holding a Board: those at a Home Board, then the rest in the order they took their Boards.
 	readonly onBoards: readonly BoardTaken[];
 	// Each Match with a Player known but no Board free, in turn.
 	readonly waitingForBoard: readonly MatchPlace[];
@@ -111,13 +122,14 @@ export interface Tournament {
 }
 
 // Bump whenever the Tournament's shape changes, so a Tournament saved in an older shape loads as blank.
-export const tournamentVersion = 7;
+export const tournamentVersion = 8;
 
 export const createTournament = (): Tournament => ({
 	phase: 'registration',
 	players: [],
 	nextPlayerId: 1,
 	boards: [],
+	homeBoards: [],
 	onBoards: [],
 	waitingForBoard: [],
 	results: [],
@@ -144,10 +156,9 @@ export const registerPlayer = (tournament: Tournament, typedName: string): Resul
 	};
 };
 
-const noSuchPlayer: Result<Tournament> = {
-	ok: false,
-	reason: 'That Player is no longer registered.',
-};
+const notRegistered = 'That Player is no longer registered.';
+
+const noSuchPlayer: Result<Tournament> = { ok: false, reason: notRegistered };
 
 const playersDrawn: Result<Tournament> = {
 	ok: false,
@@ -191,6 +202,7 @@ export const removePlayer = (tournament: Tournament, playerId: PlayerId): Result
 		value: {
 			...tournament,
 			players: tournament.players.filter((p) => p.id !== playerId),
+			homeBoards: tournament.homeBoards.filter((homeBoard) => homeBoard.player !== playerId),
 		},
 	};
 };
@@ -228,10 +240,82 @@ export const setBoardCount = (tournament: Tournament, typedCount: string): Resul
 			reason: 'The number of Boards is a whole number above zero, like 12.',
 		};
 	}
+	/*
+	 * A Home Board is cleared when its Board is no longer set out, and when only one Board is left: keeping
+	 * the only Board for one Player could leave their opponent's earlier Match with no Board to be played at.
+	 */
+	const homeBoards = tournament.homeBoards.filter(
+		(homeBoard) => count > 1 && homeBoard.board <= count,
+	);
 	return {
 		ok: true,
-		value: { ...tournament, boards: listIndexes(count).map((i) => i + 1) },
+		value: { ...tournament, boards: listIndexes(count).map((i) => i + 1), homeBoards },
 	};
+};
+
+/*
+ * Gives a Player a Home Board, or moves theirs to another Board. Refused with only one Board: keeping it
+ * for one Player could leave their opponent's earlier Match with no Board to be played at.
+ */
+export const setHomeBoard = (
+	tournament: Tournament,
+	playerId: PlayerId,
+	board: BoardNumber,
+): Result<Tournament> => {
+	const refusal = findHomeBoardRefusal(tournament, playerId);
+	if (refusal) {
+		return { ok: false, reason: refusal };
+	}
+	if (tournament.boards.length === 0) {
+		return {
+			ok: false,
+			reason: 'Type how many Boards there are before giving a Player a Home Board.',
+		};
+	}
+	if (tournament.boards.length === 1) {
+		return {
+			ok: false,
+			reason: 'A Player can’t have a Home Board when there is only one Board.',
+		};
+	}
+	if (!tournament.boards.includes(board)) {
+		return { ok: false, reason: `There is no Board ${board}.` };
+	}
+	const otherHomeBoard = tournament.homeBoards.find((homeBoard) => homeBoard.player !== playerId);
+	if (otherHomeBoard) {
+		const { name } = findPlayer(tournament, otherHomeBoard.player);
+		return {
+			ok: false,
+			reason: `Only one Player can have a Home Board: ${name} has Board ${otherHomeBoard.board}.`,
+		};
+	}
+	return { ok: true, value: { ...tournament, homeBoards: [{ player: playerId, board }] } };
+};
+
+// Takes a Player's Home Board away, so their Matches take Boards as any others do.
+export const clearHomeBoard = (tournament: Tournament, playerId: PlayerId): Result<Tournament> => {
+	const refusal = findHomeBoardRefusal(tournament, playerId);
+	if (refusal) {
+		return { ok: false, reason: refusal };
+	}
+	return {
+		ok: true,
+		value: {
+			...tournament,
+			homeBoards: tournament.homeBoards.filter((homeBoard) => homeBoard.player !== playerId),
+		},
+	};
+};
+
+// Why a Player's Home Board can't be given or taken away, or undefined if it can.
+const findHomeBoardRefusal = (tournament: Tournament, playerId: PlayerId): string | undefined => {
+	if (tournament.phase !== 'registration') {
+		return 'A Home Board can’t change once the Draw is made.';
+	}
+	if (!isRegistered(tournament, playerId)) {
+		return notRegistered;
+	}
+	return undefined;
 };
 
 // A typed whole number above zero, or why it isn't one: nothing typed, or something else.
@@ -551,14 +635,20 @@ const listStartedMatches = (tournament: Tournament): MatchPlace[] => {
 
 // The Tournament is finished once every bracket played has a champion.
 const isFinished = (tournament: Tournament): boolean => {
-	const hasChampion = (bracket: BracketName) => {
-		const rounds = countRounds(getBracket(tournament, bracket)!);
-		return findWinner(tournament, { bracket, round: rounds, place: 0 }) !== undefined;
-	};
-	if (!hasChampion('winners')) {
+	if (!hasChampion(tournament, 'winners')) {
 		return false;
 	}
-	return tournament.losersBracket === null || hasChampion('losers');
+	return tournament.losersBracket === null || hasChampion(tournament, 'losers');
+};
+
+// Whether a bracket's final has a winner: false while the bracket is still to be drawn.
+const hasChampion = (tournament: Tournament, bracket: BracketName): boolean => {
+	const drawn = getBracket(tournament, bracket);
+	if (!drawn) {
+		return false;
+	}
+	const final: MatchPlace = { bracket, round: countRounds(drawn), place: 0 };
+	return findWinner(tournament, final) !== undefined;
 };
 
 // A bracket once drawn, or undefined: the Losers Bracket before its Draw, or with none played.
@@ -624,48 +714,96 @@ const hasPlayedOn = (tournament: Tournament, match: MatchPlace): boolean => {
 
 /*
  * Brings the Boards in line with the Matches: each Match with a Player known and no winner yet holds a
- * Board, or waits for one. A Match that no longer needs one gives it up. A Match newly needing one joins
- * the end of the queue, in bracket order, and each free Board goes to the first, lowest-numbered first.
- * When there are too few free Boards for the queue, Matches ready to play, both Players known, go ahead of
- * those still waiting on a Player, and a Player waiting alone at a Board gives it up to one, latest seated
- * first, so a Board never sits idle while two Players are ready. A Match being re-opened may ask for its own
- * Board back, and gets it if it is free.
+ * Board, or waits for one. A Match with a Home Board Player in it is at their Home Board, and no other Match
+ * takes that Board while they are in the Tournament. A Match that no longer needs a Board gives it up. A
+ * Match newly needing one joins the end of the queue, in bracket order, and each free Board goes to the
+ * first, lowest-numbered first. A Match moved off a Home Board its Player has taken back goes ahead of the
+ * queue. When there are too few free Boards for the queue, Matches ready to play, both Players known, go
+ * ahead of those still waiting on a Player, and a Player waiting alone at a Board other than their Home Board
+ * gives it up to one, latest seated first, so a Board never sits idle while two Players are ready. A Match
+ * being re-opened may ask for its own Board back, and gets it if it is free.
  */
 const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 	const live = listLiveMatches(tournament);
 	const isLive = (match: MatchPlace) => live.some((m) => isSameMatch(m, match));
-	const onBoards = tournament.onBoards.filter((on) => isLive(on.match));
+	const homeBoards = tournament.homeBoards.filter((homeBoard) =>
+		isInTournament(tournament, homeBoard.player),
+	);
+	const atHome = homeBoards.flatMap(({ player, board }): BoardTaken[] => {
+		const match = live.find((m) => findPlayers(tournament, m).includes(player));
+		return match ? [{ match, board }] : [];
+	});
+	const isAtHome = (match: MatchPlace) => atHome.some((on) => isSameMatch(on.match, match));
+	const isHomeBoard = (board: BoardNumber) =>
+		homeBoards.some((homeBoard) => homeBoard.board === board);
+	// The Boards every other Match shares.
+	const boards = tournament.boards.filter((board) => !isHomeBoard(board));
+	const isStillSeated = (on: BoardTaken) => isLive(on.match) && !isAtHome(on.match);
+	const movedOff = tournament.onBoards
+		.filter((on) => isStillSeated(on) && isHomeBoard(on.board))
+		.map((on) => on.match);
+	const onBoards = tournament.onBoards.filter(
+		(on) => isStillSeated(on) && !isHomeBoard(on.board),
+	);
 	const isFree = (board: BoardNumber) => !onBoards.some((on) => on.board === board);
-	if (returning && isFree(returning.board)) {
+	if (
+		returning &&
+		boards.includes(returning.board) &&
+		isFree(returning.board) &&
+		!isAtHome(returning.match)
+	) {
 		onBoards.push(returning);
 	}
-	const isSeated = (match: MatchPlace) => onBoards.some((on) => isSameMatch(on.match, match));
+	const isSeated = (match: MatchPlace) =>
+		isAtHome(match) ||
+		movedOff.some((m) => isSameMatch(m, match)) ||
+		onBoards.some((on) => isSameMatch(on.match, match));
 	const isAlreadyWaiting = (match: MatchPlace) =>
 		tournament.waitingForBoard.some((m) => isSameMatch(m, match));
 	const inTurn = [
+		...movedOff,
 		...tournament.waitingForBoard.filter((match) => isLive(match) && !isSeated(match)),
 		...live.filter((match) => !isSeated(match) && !isAlreadyWaiting(match)),
 	];
 	const isReady = (match: MatchPlace) => isReadyToPlay(tournament, match);
-	const readyWithoutBoard =
-		inTurn.filter(isReady).length - tournament.boards.filter(isFree).length;
+	const readyWithoutBoard = inTurn.filter(isReady).length - boards.filter(isFree).length;
 	const seatedAlone = onBoards.filter((on) => !isReady(on.match));
 	const givingUp = seatedAlone.slice(Math.max(0, seatedAlone.length - readyWithoutBoard));
 	const keepingBoards = onBoards.filter((on) => !givingUp.includes(on));
-	const freeBoards = tournament.boards.filter(
-		(board) => !keepingBoards.some((on) => on.board === board),
-	);
+	const freeBoards = boards.filter((board) => !keepingBoards.some((on) => on.board === board));
 	const needing = [...inTurn, ...givingUp.map((on) => on.match)];
 	const queue =
 		needing.length <= freeBoards.length ? needing : orderReadyFirst(tournament, needing);
 	const seated = queue
 		.slice(0, freeBoards.length)
 		.map((match, index) => ({ match, board: freeBoards[index] }));
+	/*
+	 * Matches at their Home Boards are worked out afresh each time and listed first. Only the order of the
+	 * Matches at the other Boards matters: it decides which Player waiting alone gives up their Board to a
+	 * Match ready to play.
+	 */
 	return {
 		...tournament,
-		onBoards: [...keepingBoards, ...seated],
+		onBoards: [...atHome, ...keepingBoards, ...seated],
 		waitingForBoard: queue.slice(freeBoards.length),
 	};
+};
+
+/*
+ * Whether a Player is still in the Tournament: in the Winners Bracket until they lose there or win it, and
+ * then, if they stay for the Losers Bracket, until no Losers Bracket is played, or they lose there or win it.
+ */
+const isInTournament = (tournament: Tournament, player: PlayerId): boolean => {
+	const isStillIn = (bracket: BracketName) =>
+		!hasLostIn(tournament, bracket, player) && !hasChampion(tournament, bracket);
+	if (!hasLostIn(tournament, 'winners', player)) {
+		return isStillIn('winners');
+	}
+	// Only a Player losing their first Match is asked whether they are staying.
+	const loss = listResultsOf(tournament, 'winners', player).find((r) => r.winner !== player)!;
+	return (
+		loss.loserAnswer === 'staying' && tournament.losersBracket !== null && isStillIn('losers')
+	);
 };
 
 // Matches ready to play first, both Players known, then those still waiting on a Player, each in turn.
