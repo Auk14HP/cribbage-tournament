@@ -1,5 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
-import { confirmDraw } from './setUpTournament';
+import { expect, type Page } from '@playwright/test';
+import { confirmDraw, test } from './setUpTournament';
 
 /*
  * The Organizer's window and the TV's window share one browser session (and so one local storage),

@@ -1,5 +1,5 @@
-import { test, type Locator } from '@playwright/test';
-import { answerIsLoserStayingDialogIfAsked } from '../e2e/setUpTournament';
+import type { Locator } from '@playwright/test';
+import { answerIsLoserStayingDialogIfAsked, test } from '../e2e/setUpTournament';
 
 // Whether the element shows within the time, rather than failing the run when it doesn't.
 const isShownWithin = async (element: Locator, timeout: number) => {

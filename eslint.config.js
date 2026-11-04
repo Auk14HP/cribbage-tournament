@@ -65,6 +65,16 @@ export default defineConfig([
 					message:
 						'Playwright waits forever on timeout: 0. To look once, read the state directly, as `await locator.isVisible()` does.',
 				},
+				/*
+				 * A Match's place compared as an object. The core works out places afresh on each command, so
+				 * two places for the same Match are rarely the same object, and === quietly finds no match.
+				 */
+				{
+					selector:
+						"BinaryExpression[operator=/^[!=]==?$/] > MemberExpression[property.name='match']",
+					message:
+						'Compare Matches with isSameMatch (src/tournament.ts): places worked out afresh are new objects, so === never matches a saved one.',
+				},
 				{
 					selector:
 						'VariableDeclarator[id.name=/^render[A-Z]/] > ArrowFunctionExpression',
@@ -76,6 +86,29 @@ export default defineConfig([
 						"JSXExpressionContainer > CallExpression[callee.property.name='map'] > ArrowFunctionExpression > BlockStatement",
 					message:
 						'Make each item its own component: a JSX map callback returns that component directly.',
+				},
+			],
+		},
+	},
+	/*
+	 * Browser tests and screenshots take `test` from e2e/setUpTournament.ts, which seeds every Draw, so none
+	 * of them depends on a random Draw.
+	 */
+	{
+		files: ['e2e/**/*.ts', 'screens/**/*.ts'],
+		ignores: ['e2e/setUpTournament.ts'],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					paths: [
+						{
+							name: '@playwright/test',
+							importNames: ['test'],
+							message:
+								'Import test from e2e/setUpTournament.ts: it seeds the Draw, so the test sees the same Draw every run.',
+						},
+					],
 				},
 			],
 		},

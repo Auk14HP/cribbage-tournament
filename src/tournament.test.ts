@@ -1775,9 +1775,29 @@ const createSeededRandom = (seed: number) => () => {
 	return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
 
+/*
+ * Returns the Tournament a command made, failing the test if the command was refused or left the Boards in a
+ * state no Tournament should reach. Every command a test runs goes through here, so each one is checked.
+ */
 const expectOk = (outcome: Result<Tournament>): Tournament => {
 	if (!outcome.ok) {
 		throw new Error(`Expected command to succeed, was rejected: ${outcome.reason}`);
 	}
+	expectSeatingHolds(outcome.value);
 	return outcome.value;
+};
+
+/*
+ * Checks the Boards: each Match holding a Board is at a Board set out, no Board holds two Matches, no Match
+ * holds two Boards, and no Match both holds a Board and waits for one.
+ */
+const expectSeatingHolds = (tournament: Tournament) => {
+	const matchesOnBoards = getMatchesOnBoards(tournament);
+	const boardsHeld = matchesOnBoards.map((m) => m.board);
+	expect(boardsHeld.filter((board) => !tournament.boards.includes(board))).toEqual([]);
+	expect(isEachBoardHeldOnce(matchesOnBoards)).toBe(true);
+	const seatedKeys = matchesOnBoards.map((m) => getMatchKey(m.match));
+	expect(new Set(seatedKeys).size).toBe(seatedKeys.length);
+	const waitingKeys = getWaitingForBoard(tournament).map((m) => getMatchKey(m.match));
+	expect(waitingKeys.filter((key) => seatedKeys.includes(key))).toEqual([]);
 };

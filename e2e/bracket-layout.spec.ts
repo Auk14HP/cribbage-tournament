@@ -1,10 +1,10 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import {
 	holdScreen,
 	playToFinal,
 	playUntilTheFinal,
-	seedDraw,
 	startTournament,
+	test,
 } from './setUpTournament';
 
 /*
@@ -56,7 +56,6 @@ for (const { players, rounds } of [
 				context,
 				page: organizer,
 			}) => {
-				await seedDraw(context);
 				await startTournament(organizer, players);
 				if (moment === 'at the final') {
 					await playUntilTheFinal(organizer);
