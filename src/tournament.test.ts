@@ -1793,8 +1793,10 @@ const expectOk = (outcome: Result<Tournament>): Tournament => {
  */
 const expectSeatingHolds = (tournament: Tournament) => {
 	const matchesOnBoards = getMatchesOnBoards(tournament);
-	const offBoards = matchesOnBoards.filter((m) => !tournament.boards.includes(m.board));
-	expect(offBoards).toEqual([]);
+	const matchesAtBoardsNotSetOut = matchesOnBoards.filter(
+		(m) => !tournament.boards.includes(m.board),
+	);
+	expect(matchesAtBoardsNotSetOut).toEqual([]);
 	expect(isEachBoardHeldOnce(matchesOnBoards)).toBe(true);
 	const seatedKeys = matchesOnBoards.map((m) => getMatchKey(m.match));
 	expect(new Set(seatedKeys).size).toBe(seatedKeys.length);
