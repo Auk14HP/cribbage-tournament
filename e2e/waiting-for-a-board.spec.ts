@@ -1,5 +1,5 @@
-import { expect, test, type BrowserContext, type Page } from '@playwright/test';
-import { confirmDraw, holdScreen, seedDraw } from './setUpTournament';
+import { expect, type BrowserContext, type Page } from '@playwright/test';
+import { confirmDraw, holdScreen, test } from './setUpTournament';
 
 const tvHeight = 1080;
 
@@ -71,7 +71,6 @@ const showAwaitedMatchLineOnTv = async (
 	organizer: Page,
 	names: string[],
 ) => {
-	await seedDraw(context);
 	await organizer.goto('/?players=0&boards=16');
 	const tv = await openTv(context);
 	await registerPlayers(organizer, names);

@@ -1,4 +1,5 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { test } from './setUpTournament';
 
 /*
  * The app's confirmation dialog, in a real browser: jsdom has no modal dialogs, so Escape and where

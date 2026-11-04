@@ -1,5 +1,5 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
-import { holdScreen, playToFinal, seedDraw, startTournament } from './setUpTournament';
+import { expect, type Locator, type Page } from '@playwright/test';
+import { holdScreen, playToFinal, startTournament, test } from './setUpTournament';
 
 /*
  * The TV's countdown ring sits in a corner, clear of every card: measured from where the browser drew it
@@ -42,8 +42,7 @@ for (const tvSize of [
 	{ width: 1258, height: 955 },
 ]) {
 	test.describe(`on a ${tvSize.width}×${tvSize.height} TV with 32 Players`, () => {
-		test.beforeEach(async ({ context, page: organizer }) => {
-			await seedDraw(context);
+		test.beforeEach(async ({ page: organizer }) => {
 			await startTournament(organizer, 32);
 		});
 

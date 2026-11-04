@@ -1,22 +1,36 @@
-import { expect, type BrowserContext, type Page } from '@playwright/test';
+import { test as base, expect, type BrowserContext, type Page } from '@playwright/test';
 
-// Set-up shared by the TV layout tests.
+// Set-up shared by the browser tests and the screenshot script.
 
 /*
  * Makes the same Draw every run: the Organizer's Draw shuffles with Math.random, replaced here by a seeded
- * stand-in (mulberry32), so the widths that once squeezed a column come back each time.
+ * stand-in (mulberry32), so a layout that once squeezed a column, or a pair of names that once overflowed a
+ * card, comes back each time.
  */
-export const seedDraw = async (context: BrowserContext) => {
-	await context.addInitScript(() => {
-		let seed = 1;
+const seedDraw = async (context: BrowserContext, seed: number) => {
+	await context.addInitScript((initialSeed) => {
+		let state = initialSeed;
 		Math.random = () => {
-			seed = (seed + 0x6d2b79f5) | 0;
-			let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+			state = (state + 0x6d2b79f5) | 0;
+			let t = Math.imul(state ^ (state >>> 15), 1 | state);
 			t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
 			return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 		};
-	});
+	}, seed);
 };
+
+/*
+ * Playwright's test, with every browser context's Draw seeded, so no test depends on a random Draw. A test
+ * that wants another Draw sets its own seed: `test.use({ drawSeed: 7 })`.
+ */
+export const test = base.extend<{ drawSeed: number }>({
+	drawSeed: [1, { option: true }],
+	// runTest is Playwright's `use`: it runs the test with this context.
+	context: async ({ context, drawSeed }, runTest) => {
+		await seedDraw(context, drawSeed);
+		await runTest(context);
+	},
+});
 
 export const confirmDraw = async (organizer: Page) => {
 	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
