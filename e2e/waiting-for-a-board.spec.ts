@@ -44,20 +44,13 @@ const registerPlayers = async (organizer: Page, names: string[]) => {
 	}
 };
 
-const registerLongNames = async (organizer: Page, playerCount: number) => {
-	await registerPlayers(
-		organizer,
-		Array.from(
-			{ length: playerCount },
-			(_, index) => `Bartholomew Featherstonehaugh ${index + 1}`,
-		),
-	);
-};
+const makeLongNames = (playerCount: number) =>
+	Array.from({ length: playerCount }, (_, index) => `Bartholomew Featherstonehaugh ${index + 1}`);
 
 /*
- * Names as long as the room's longest, such as "Frank the Tank": two long first names, each with one of the
- * widest initials. Any two of them make as long a pair as the room is likely to see, so whichever Match the
- * Draw makes a Bye Player wait for is the longest realistic one.
+ * Names as long as the room's longest: a long first name, "Bartholomew" or "Christopher", with one of the
+ * widest initials, so each is as wide as the longest name in the test Tournament. Any two of them make a pair
+ * at least as long as the room is likely to see. Up to 32 Players, one per initial and first name.
  */
 const makeLongestRealisticNames = (playerCount: number) => {
 	const initials = 'WMQOGDHNUCBRKAVX';
@@ -66,6 +59,24 @@ const makeLongestRealisticNames = (playerCount: number) => {
 		(_, index) =>
 			`${index % 2 === 0 ? 'Bartholomew' : 'Christopher'} ${initials[Math.floor(index / 2)]}.`,
 	);
+};
+
+/*
+ * Registers 31 Players on 16 Boards, where the Bye Player waiting for a winner has a card of their own, and
+ * returns that card's line naming the Match they wait for. The Draw is seeded so the same pair of names is
+ * awaited every run.
+ */
+const showAwaitedMatchLineOnTv = async (
+	context: BrowserContext,
+	organizer: Page,
+	names: string[],
+) => {
+	await seedDraw(context);
+	await organizer.goto('/?players=0&boards=16');
+	const tv = await openTv(context);
+	await registerPlayers(organizer, names);
+	await showDrawOnTv(organizer, tv);
+	return { tv, awaitedMatchLine: tv.getByText(/^Winner of /) };
 };
 
 for (const boardCount of [2, 5, 6, 7, 13]) {
@@ -93,7 +104,7 @@ test('Long names stay on one line on Tonight’s Draw', async ({ context, page: 
 	const boardCount = 13;
 	await organizer.goto(`/?players=0&boards=${boardCount}`);
 	const tv = await openTv(context);
-	await registerLongNames(organizer, 32);
+	await registerPlayers(organizer, makeLongNames(32));
 
 	await showDrawOnTv(organizer, tv);
 
@@ -104,15 +115,12 @@ test('A Bye Player’s card shows the whole Match they wait for', async ({
 	context,
 	page: organizer,
 }) => {
-	// 31 Players on 16 Boards: the Bye Player waiting for a winner has a card of their own.
-	await seedDraw(context);
-	await organizer.goto('/?players=0&boards=16');
-	const tv = await openTv(context);
-	await registerPlayers(organizer, makeLongestRealisticNames(31));
+	const { tv, awaitedMatchLine } = await showAwaitedMatchLineOnTv(
+		context,
+		organizer,
+		makeLongestRealisticNames(31),
+	);
 
-	await showDrawOnTv(organizer, tv);
-
-	const awaitedMatchLine = tv.getByText(/^Winner of /);
 	const isCutShort = await awaitedMatchLine.evaluate(
 		(line) => line.scrollWidth > line.clientWidth || line.scrollHeight > line.clientHeight,
 	);
@@ -124,14 +132,12 @@ test('A very long Match a Bye Player waits for takes three lines at most', async
 	context,
 	page: organizer,
 }) => {
-	// 31 Players on 16 Boards: the Bye Player waiting for a winner has a card of their own.
-	await organizer.goto('/?players=0&boards=16');
-	const tv = await openTv(context);
-	await registerLongNames(organizer, 31);
+	const { tv, awaitedMatchLine } = await showAwaitedMatchLineOnTv(
+		context,
+		organizer,
+		makeLongNames(31),
+	);
 
-	await showDrawOnTv(organizer, tv);
-
-	const awaitedMatchLine = tv.getByText(/^Winner of /);
 	const lineCount = await awaitedMatchLine.evaluate((line) => {
 		const lineHeight = parseFloat(getComputedStyle(line).lineHeight);
 		return Math.round(line.clientHeight / lineHeight);
