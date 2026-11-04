@@ -200,23 +200,31 @@ describe('giving a Player a Home Board', () => {
 		});
 	});
 
-	it('refuses to give or clear a Home Board once the Draw is made, or for a Player no longer registered', () => {
+	it('refuses to give or clear a Home Board once the Draw is made', () => {
 		const registered = setUpTournament(4, 6);
-		const [ann, bob] = registered.players;
+		const [ann] = registered.players;
 		const withHome = expectOk(setHomeBoard(registered, ann.id, 2));
 		const drawn = expectOk(makeDraw(withHome, Math.random));
 		const closedRefusal = {
 			ok: false,
 			reason: 'A Home Board can’t change once the Draw is made.',
 		};
+
 		expect(setHomeBoard(drawn, ann.id, 3)).toEqual(closedRefusal);
 		expect(clearHomeBoard(drawn, ann.id)).toEqual(closedRefusal);
+	});
 
+	it('refuses to give or clear a Home Board for a Player no longer registered', () => {
+		const registered = setUpTournament(4, 6);
+		const [, bob] = registered.players;
 		const removed = expectOk(removePlayer(registered, bob.id));
-		expect(setHomeBoard(removed, bob.id, 3)).toEqual({
+		const notRegisteredRefusal = {
 			ok: false,
 			reason: 'That Player is no longer registered.',
-		});
+		};
+
+		expect(setHomeBoard(removed, bob.id, 3)).toEqual(notRegisteredRefusal);
+		expect(clearHomeBoard(removed, bob.id)).toEqual(notRegisteredRefusal);
 	});
 
 	it('clears the Home Board when its Player is removed, or its Board is no longer set out', () => {

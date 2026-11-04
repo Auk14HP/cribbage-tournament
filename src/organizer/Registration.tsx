@@ -186,13 +186,13 @@ const HomeBoardPicker = ({
 }) => {
 	const [pickedBoard, setPickedBoard] = useState<BoardNumber>(1);
 	const { boards } = tournament;
-	const [home] = tournament.homeBoards;
+	const [homeBoard] = tournament.homeBoards;
 	const isPickedSetOut = boards.includes(pickedBoard);
-	const board = home?.board ?? (isPickedSetOut ? pickedBoard : boards[0]);
+	const board = homeBoard?.board ?? (isPickedSetOut ? pickedBoard : boards[0]);
 
 	const pickPlayer = (value: string) => {
 		const unchanged: Result<Tournament> = { ok: true, value: tournament };
-		const cleared = home ? clearHomeBoard(tournament, home.player) : unchanged;
+		const cleared = homeBoard ? clearHomeBoard(tournament, homeBoard.player) : unchanged;
 		if (!cleared.ok || value === '') {
 			onChange(cleared);
 			return;
@@ -205,8 +205,8 @@ const HomeBoardPicker = ({
 	const pickBoard = (value: string) => {
 		const picked = Number(value);
 		setPickedBoard(picked);
-		if (home) {
-			onChange(setHomeBoard(tournament, home.player, picked));
+		if (homeBoard) {
+			onChange(setHomeBoard(tournament, homeBoard.player, picked));
 		}
 	};
 
@@ -215,7 +215,7 @@ const HomeBoardPicker = ({
 			<label className="mt-2 flex items-center gap-2">
 				Home Board for
 				<select
-					value={home?.player ?? ''}
+					value={homeBoard?.player ?? ''}
 					onChange={(event) => pickPlayer(event.target.value)}
 					className={`${textInput} flex-1`}
 				>
