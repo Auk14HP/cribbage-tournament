@@ -4,9 +4,7 @@ import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Display } from './Display';
 import { createLocalStorageStore, type Store } from '../storage';
-import type { Result } from '../result';
 import { listWaitingText } from '../screenTestHelpers';
-import { isReadyToPlay } from '../testHelpers';
 import { getPlayerName } from '../wording';
 import {
 	makeDraw,
@@ -23,6 +21,13 @@ import {
 	type Player,
 	type Tournament,
 } from '../tournament';
+import {
+	createSeededRandom,
+	expectOk,
+	isReadyToPlay,
+	playDrawStaying,
+	registerPlayers,
+} from '../tournament/testSetup';
 
 const key = 'display-test';
 
@@ -311,19 +316,6 @@ describe('the Losers Bracket', () => {
 	});
 });
 
-/*
- * Records every Match the Draw started, its first-named Player winning and the loser staying for the
- * Losers Bracket.
- */
-const playDrawStaying = (started: Tournament): Tournament => {
-	let tournament = started;
-	const opening = getMatchesOnBoards(tournament).filter(isReadyToPlay);
-	for (const { match, players } of opening) {
-		tournament = expectOk(recordWinner(tournament, match, players[0].id, 'staying'));
-	}
-	return tournament;
-};
-
 // The display route, against the real storage adapter. Saving to the store stands in for the Organizer.
 const showDisplay = (): Store<Tournament> => {
 	const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
@@ -331,15 +323,16 @@ const showDisplay = (): Store<Tournament> => {
 	return store;
 };
 
-// A Tournament with the named Players registered, that many Boards set out, and the Draw made.
+/*
+ * A Tournament with the named Players registered, that many Boards set out, and the Draw made, shuffled by
+ * a seeded random source.
+ */
 const setUpDraw = (names: readonly string[], boards: number): Tournament => {
-	let tournament = createTournament();
-	for (const name of names) {
-		tournament = expectOk(registerPlayer(tournament, name));
-	}
+	const registered = registerPlayers(...names);
 	const typed = String(boards);
-	tournament = expectOk(setBoardCount(tournament, typed));
-	return expectOk(makeDraw(tournament, Math.random));
+	const withBoards = expectOk(setBoardCount(registered, typed));
+	const random = createSeededRandom(1);
+	return expectOk(makeDraw(withBoards, random));
 };
 
 const readHeading = () => screen.getByRole('heading', { level: 1 }).textContent;
@@ -349,11 +342,4 @@ const waitSeconds = (seconds: number) => {
 	act(() => {
 		vi.advanceTimersByTime(seconds * 1000);
 	});
-};
-
-const expectOk = (outcome: Result<Tournament>): Tournament => {
-	if (!outcome.ok) {
-		throw new Error(outcome.reason);
-	}
-	return outcome.value;
 };
