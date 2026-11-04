@@ -390,7 +390,6 @@ describe('a Home Board through the night', () => {
 			let { tournament } = started;
 			for (let recorded = 1; tournament.phase !== 'finished'; recorded++) {
 				const matchesOnBoards = getMatchesOnBoards(tournament);
-				expect(isEachBoardHeldOnce(matchesOnBoards)).toBe(true);
 				const homeMatch = matchesOnBoards.find((m) => isPlaying(m, homePlayer));
 				if (homeMatch) {
 					expect(homeMatch.board).toBe(boards);
@@ -412,7 +411,7 @@ describe('a Home Board through the night', () => {
 				const undone = undoResult(tournament, ready!.match);
 				if (recorded % 3 === 0 && undone.ok) {
 					const before = getMatchesOnBoards(tournament).find((m) => m.board === boards);
-					tournament = undone.value;
+					tournament = expectOk(undone);
 					expectMovedOffFirst(tournament, homePlayer, boards, before);
 				}
 			}
@@ -1113,7 +1112,7 @@ describe('a Player waiting alone when Boards run short', () => {
 				tournament = expectOk(recordWinner(tournament, ready!.match, winner.id, answer));
 				const undone = undoResult(tournament, ready!.match);
 				if (recorded % 3 === 0 && undone.ok) {
-					tournament = undone.value;
+					tournament = expectOk(undone);
 				}
 			}
 			expect(getBracketPicture(tournament, 'winners')!.champion).toBeDefined();
@@ -1789,12 +1788,13 @@ const expectOk = (outcome: Result<Tournament>): Tournament => {
 
 /*
  * Checks the Boards: each Match holding a Board is at a Board set out, no Board holds two Matches, no Match
- * holds two Boards, and no Match both holds a Board and waits for one.
+ * holds two Boards, and no Match both holds a Board and waits for one. Whether every Match that needs a Board
+ * holds one or waits for one can't be read through the Tournament's queries, so it isn't checked here.
  */
 const expectSeatingHolds = (tournament: Tournament) => {
 	const matchesOnBoards = getMatchesOnBoards(tournament);
-	const boardsHeld = matchesOnBoards.map((m) => m.board);
-	expect(boardsHeld.filter((board) => !tournament.boards.includes(board))).toEqual([]);
+	const offBoards = matchesOnBoards.filter((m) => !tournament.boards.includes(m.board));
+	expect(offBoards).toEqual([]);
 	expect(isEachBoardHeldOnce(matchesOnBoards)).toBe(true);
 	const seatedKeys = matchesOnBoards.map((m) => getMatchKey(m.match));
 	expect(new Set(seatedKeys).size).toBe(seatedKeys.length);

@@ -71,9 +71,9 @@ export default defineConfig([
 				 */
 				{
 					selector:
-						"BinaryExpression[operator=/^[!=]==?$/] > MemberExpression[property.name='match']",
+						"BinaryExpression[operator=/^[!=]==?$/] > MemberExpression[property.name='match'], BinaryExpression[operator=/^[!=]==?$/] > ChainExpression > MemberExpression[property.name='match']",
 					message:
-						'Compare Matches with isSameMatch (src/tournament.ts): places worked out afresh are new objects, so === never matches a saved one.',
+						'Compare Matches by place, not as objects: isSameMatch inside src/tournament.ts, getMatchKey outside it. Places worked out afresh are new objects, so === never matches a saved one.',
 				},
 				{
 					selector:
