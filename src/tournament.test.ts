@@ -369,6 +369,8 @@ describe('a Home Board through the night', () => {
 			const { homePlayer } = started;
 			let { tournament } = started;
 			for (let recorded = 1; tournament.phase !== 'finished'; recorded++) {
+				const seats = getMatchesOnBoards(tournament).map((m) => m.board);
+				expect(new Set(seats).size).toBe(seats.length);
 				const homeMatch = getMatchesOnBoards(tournament).find((m) =>
 					isPlaying(m, homePlayer),
 				);

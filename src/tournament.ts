@@ -108,7 +108,7 @@ export interface Tournament {
 	readonly losersDrawOrder?: readonly PlayerId[];
 	// Undefined until the Losers Draw is made; null once it found fewer than two Players staying.
 	readonly losersBracket?: Bracket | null;
-	// Each Match holding a Board, in the order the Matches took their Boards.
+	// Each Match holding a Board: those at a Home Board, then the rest in the order they took their Boards.
 	readonly onBoards: readonly BoardTaken[];
 	// Each Match with a Player known but no Board free, in turn.
 	readonly waitingForBoard: readonly MatchPlace[];
@@ -774,14 +774,13 @@ const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 	const seated = queue
 		.slice(0, freeBoards.length)
 		.map((match, index) => ({ match, board: freeBoards[index] }));
-	// A Match already at its Home Board keeps its place in the order the Matches took their Boards.
-	const stayingHome = tournament.onBoards.filter((on) =>
-		atHome.some((home) => isSameMatch(home.match, on.match) && home.board === on.board),
-	);
-	const comingHome = atHome.filter((home) => !stayingHome.some((on) => on.match === home.match));
+	/*
+	 * Matches at their Home Boards are worked out afresh each time and listed first: only the other Boards'
+	 * order matters, for which Player waiting alone gives up their Board.
+	 */
 	return {
 		...tournament,
-		onBoards: [...stayingHome, ...keepingBoards, ...seated, ...comingHome],
+		onBoards: [...atHome, ...keepingBoards, ...seated],
 		waitingForBoard: queue.slice(freeBoards.length),
 	};
 };
