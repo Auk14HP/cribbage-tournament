@@ -203,15 +203,15 @@ describe('giving a Player a Home Board', () => {
 	it('refuses to give or clear a Home Board once the Draw is made', () => {
 		const registered = setUpTournament(4, 6);
 		const [ann] = registered.players;
-		const withHome = expectOk(setHomeBoard(registered, ann.id, 2));
-		const drawn = expectOk(makeDraw(withHome, Math.random));
-		const closedRefusal = {
+		const withHomeBoard = expectOk(setHomeBoard(registered, ann.id, 2));
+		const drawn = expectOk(makeDraw(withHomeBoard, Math.random));
+		const drawMadeRefusal = {
 			ok: false,
 			reason: 'A Home Board can’t change once the Draw is made.',
 		};
 
-		expect(setHomeBoard(drawn, ann.id, 3)).toEqual(closedRefusal);
-		expect(clearHomeBoard(drawn, ann.id)).toEqual(closedRefusal);
+		expect(setHomeBoard(drawn, ann.id, 3)).toEqual(drawMadeRefusal);
+		expect(clearHomeBoard(drawn, ann.id)).toEqual(drawMadeRefusal);
 	});
 
 	it('refuses to give or clear a Home Board for a Player no longer registered', () => {
@@ -230,12 +230,12 @@ describe('giving a Player a Home Board', () => {
 	it('clears the Home Board when its Player is removed, or its Board is no longer set out', () => {
 		const registered = setUpTournament(4, 6);
 		const [ann, bob] = registered.players;
-		const withHome = expectOk(setHomeBoard(registered, ann.id, 4));
+		const withHomeBoard = expectOk(setHomeBoard(registered, ann.id, 4));
 
-		const otherRemoved = expectOk(removePlayer(withHome, bob.id));
-		const homePlayerRemoved = expectOk(removePlayer(withHome, ann.id));
-		const boardStillSetOut = expectOk(setBoardCount(withHome, '4'));
-		const boardNoLongerSetOut = expectOk(setBoardCount(withHome, '3'));
+		const otherRemoved = expectOk(removePlayer(withHomeBoard, bob.id));
+		const homePlayerRemoved = expectOk(removePlayer(withHomeBoard, ann.id));
+		const boardStillSetOut = expectOk(setBoardCount(withHomeBoard, '4'));
+		const boardNoLongerSetOut = expectOk(setBoardCount(withHomeBoard, '3'));
 
 		expect(otherRemoved.homeBoards).toHaveLength(1);
 		expect(homePlayerRemoved.homeBoards).toEqual([]);
@@ -1761,9 +1761,9 @@ const startWithHomeBoard = (
 ) => {
 	const homePlayer = choosePlayer(startTournament(players, boards, seed));
 	const registered = setUpTournament(players, boards);
-	const withHome = expectOk(setHomeBoard(registered, homePlayer.id, homeBoard));
+	const withHomeBoard = expectOk(setHomeBoard(registered, homePlayer.id, homeBoard));
 	const random = createSeededRandom(seed);
-	const drawn = expectOk(makeDraw(withHome, random));
+	const drawn = expectOk(makeDraw(withHomeBoard, random));
 	return { tournament: expectOk(start(drawn)), homePlayer };
 };
 
