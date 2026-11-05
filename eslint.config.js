@@ -7,6 +7,9 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+// The Tournament core's files in src/tournament/, in the order they may import from each other.
+const coreFiles = ['types', 'bracket', 'registration', 'seating', 'draw', 'results', 'views'];
+
 export default defineConfig([
 	globalIgnores(['dist']),
 	{
@@ -73,7 +76,7 @@ export default defineConfig([
 					selector:
 						"BinaryExpression[operator=/^[!=]==?$/] > MemberExpression[property.name='match'], BinaryExpression[operator=/^[!=]==?$/] > ChainExpression > MemberExpression[property.name='match']",
 					message:
-						'Compare Matches by place, not as objects: isSameMatch inside src/tournament.ts, getMatchKey outside it. Places worked out afresh are new objects, so === never matches a saved one.',
+						'Compare Matches by place, not as objects: isSameMatch inside src/tournament/, getMatchKey outside it. Places worked out afresh are new objects, so === never matches a saved one.',
 				},
 				{
 					selector:
@@ -113,6 +116,36 @@ export default defineConfig([
 			],
 		},
 	},
+	/*
+	 * The Tournament core's files, each holding one concept (#57). Each imports only from the files above it
+	 * in this list, so they never import in a cycle. index.ts re-exports them, and the core's tests may import
+	 * any of them.
+	 */
+	...coreFiles.map((coreFile, index) => {
+		const above = coreFiles.slice(0, index);
+		/*
+		 * Any path into the core, from beside the file (./draw, or . for index.ts) or back in from outside
+		 * the folder (../tournament/draw, or ../tournament for index.ts), unless it names a file above this one.
+		 */
+		const intoCore = String.raw`^(\.(/|$)|\.\./tournament(/|$))`;
+		const unlessAbove = above.length === 0 ? '' : `(?!(${above.join('|')})$)`;
+		return {
+			files: [`src/tournament/${coreFile}.ts`],
+			rules: {
+				'no-restricted-imports': [
+					'error',
+					{
+						patterns: [
+							{
+								regex: intoCore + unlessAbove,
+								message: `In the Tournament core, ${coreFile}.ts imports only from the files above it in eslint.config.js's coreFiles (${above.join(', ') || 'none'}), so the core's files never import in a cycle.`,
+							},
+						],
+					},
+				],
+			},
+		};
+	}),
 	/*
 	 * One file per screen in each route (#42). The cap keeps a screen from regrowing to the size that
 	 * prompted the split: past it, move a part out to its own file. Test files are exempt.

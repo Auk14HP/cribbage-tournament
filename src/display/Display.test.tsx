@@ -4,9 +4,7 @@ import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Display } from './Display';
 import { createLocalStorageStore, type Store } from '../storage';
-import type { Result } from '../result';
 import { listWaitingText } from '../screenTestHelpers';
-import { isReadyToPlay } from '../testHelpers';
 import { getPlayerName } from '../wording';
 import {
 	makeDraw,
@@ -23,6 +21,13 @@ import {
 	type Player,
 	type Tournament,
 } from '../tournament';
+import {
+	createSeededRandom,
+	expectOk,
+	hasBothPlayersKnown,
+	playDrawStaying,
+	registerPlayers,
+} from '../tournament/testSetup';
 
 const key = 'display-test';
 
@@ -107,7 +112,7 @@ describe('the Winners Bracket screen', () => {
 		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue'], 2);
 		let tournament = expectOk(start(drawn));
 		const seatedMatches = getMatchesOnBoards(tournament);
-		const firstMatch = seatedMatches.find(isReadyToPlay)!;
+		const firstMatch = seatedMatches.find(hasBothPlayersKnown)!;
 		const [playerA, playerB] = firstMatch.players as [Player, Player];
 		const [byePlayer] = seatedMatches.find((m) => m !== firstMatch)!.players;
 		const recordWinnerOf = (match: typeof firstMatch.match, winner: Player) => {
@@ -156,7 +161,7 @@ describe('the TV cycle', () => {
 		 * 5 Players: a first-Round Match on Board 1, a Bye Player at Board 2 waiting for its winner, and a
 		 * Match between the other two Bye Players on Board 3. The waiting Player isn't playing yet.
 		 */
-		const playing = getMatchesOnBoards(tournament).filter(isReadyToPlay);
+		const playing = getMatchesOnBoards(tournament).filter(hasBothPlayersKnown);
 		const firstMatch = playing.find((m) => m.match.round === 1)!;
 		const byes = playing.find((m) => m !== firstMatch)!;
 		const describeCard = ({ board, players: [playerA, playerB] }: typeof firstMatch) =>
@@ -311,19 +316,6 @@ describe('the Losers Bracket', () => {
 	});
 });
 
-/*
- * Records every Match the Draw started, its first-named Player winning and the loser staying for the
- * Losers Bracket.
- */
-const playDrawStaying = (started: Tournament): Tournament => {
-	let tournament = started;
-	const opening = getMatchesOnBoards(tournament).filter(isReadyToPlay);
-	for (const { match, players } of opening) {
-		tournament = expectOk(recordWinner(tournament, match, players[0].id, 'staying'));
-	}
-	return tournament;
-};
-
 // The display route, against the real storage adapter. Saving to the store stands in for the Organizer.
 const showDisplay = (): Store<Tournament> => {
 	const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
@@ -331,15 +323,16 @@ const showDisplay = (): Store<Tournament> => {
 	return store;
 };
 
-// A Tournament with the named Players registered, that many Boards set out, and the Draw made.
+/*
+ * A Tournament with the named Players registered, that many Boards set out, and the Draw made, shuffled by
+ * a seeded random source.
+ */
 const setUpDraw = (names: readonly string[], boards: number): Tournament => {
-	let tournament = createTournament();
-	for (const name of names) {
-		tournament = expectOk(registerPlayer(tournament, name));
-	}
+	const registered = registerPlayers(...names);
 	const typed = String(boards);
-	tournament = expectOk(setBoardCount(tournament, typed));
-	return expectOk(makeDraw(tournament, Math.random));
+	const withBoards = expectOk(setBoardCount(registered, typed));
+	const random = createSeededRandom(1);
+	return expectOk(makeDraw(withBoards, random));
 };
 
 const readHeading = () => screen.getByRole('heading', { level: 1 }).textContent;
@@ -349,11 +342,4 @@ const waitSeconds = (seconds: number) => {
 	act(() => {
 		vi.advanceTimersByTime(seconds * 1000);
 	});
-};
-
-const expectOk = (outcome: Result<Tournament>): Tournament => {
-	if (!outcome.ok) {
-		throw new Error(outcome.reason);
-	}
-	return outcome.value;
 };
