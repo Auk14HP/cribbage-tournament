@@ -24,7 +24,7 @@ import {
 	expectOk,
 	findMatchOf,
 	isPlaying,
-	isReadyToPlay,
+	hasBothPlayersKnown,
 	listPlayersInRound,
 	listSeats,
 	listWaiting,
@@ -44,7 +44,7 @@ const findOpponentIn = (match: MatchOnBoard, player: Player): Player =>
 const playToHomePlayersFirstMatch = () => {
 	const started = startWithByePlayerHome();
 	const { homePlayer } = started;
-	const firstMatch = getMatchesOnBoards(started.tournament).find(isReadyToPlay)!;
+	const firstMatch = getMatchesOnBoards(started.tournament).find(hasBothPlayersKnown)!;
 	const [winner] = firstMatch.players as [Player, Player];
 	const tournament = expectOk(
 		recordWinner(started.tournament, firstMatch.match, winner.id, 'leaving'),
@@ -215,14 +215,14 @@ describe('a Home Board through the night', () => {
 	it('keeps it for a Bye Player waiting alone, their opponent coming to them', () => {
 		// 5 Players on 4 Boards: one first-Round Match, whose winner the Bye Player waits for.
 		const started = startWithHomeBoard(5, 4, 4, (drawn) => {
-			const waitingAlone = getMatchesOnBoards(drawn).find((m) => !isReadyToPlay(m))!;
+			const waitingAlone = getMatchesOnBoards(drawn).find((m) => !hasBothPlayersKnown(m))!;
 			return waitingAlone.players[0];
 		});
 		const { homePlayer } = started;
 		let { tournament } = started;
 		expect(listSeats(tournament)).toContainEqual([4, homePlayer.name, expect.any(String)]);
 		const firstMatch = getMatchesOnBoards(tournament).find(
-			(m) => m.match.round === 1 && isReadyToPlay(m),
+			(m) => m.match.round === 1 && hasBothPlayersKnown(m),
 		)!;
 		expect(firstMatch.board).not.toBe(4);
 		const [winner] = firstMatch.players as [Player, Player];
@@ -265,7 +265,7 @@ describe('a Home Board through the night', () => {
 	it('lists its Player’s Match there once, however many results are recorded around it', () => {
 		const started = startWithByePlayerHome();
 		let { tournament } = started;
-		const firstMatch = getMatchesOnBoards(tournament).find(isReadyToPlay)!;
+		const firstMatch = getMatchesOnBoards(tournament).find(hasBothPlayersKnown)!;
 		const [winner] = firstMatch.players as [Player, Player];
 
 		tournament = expectOk(recordWinner(tournament, firstMatch.match, winner.id, 'leaving'));
@@ -278,7 +278,7 @@ describe('a Home Board through the night', () => {
 		const started = startWithByePlayerHome();
 		const { homePlayer } = started;
 		let { tournament } = started;
-		const firstMatch = getMatchesOnBoards(tournament).find(isReadyToPlay)!;
+		const firstMatch = getMatchesOnBoards(tournament).find(hasBothPlayersKnown)!;
 		const [winner, loser] = firstMatch.players as [Player, Player];
 		expect(listSeats(tournament)).toEqual([
 			[1, winner.name, loser.name],
@@ -351,7 +351,7 @@ describe('a Home Board through the night', () => {
 				if (onHomeBoard && !isPlaying(onHomeBoard, homePlayer)) {
 					expect(hasLostIn(tournament, 'winners', homePlayer.id)).toBe(true);
 				}
-				const ready = matchesOnBoards.find(isReadyToPlay);
+				const ready = matchesOnBoards.find(hasBothPlayersKnown);
 				expect(ready).toBeDefined();
 				const [winner, loser] = ready!.players as [Player, Player];
 				const isOpen = isLosersBracketOpenTo(tournament, loser.id);
@@ -375,7 +375,7 @@ describe('a Home Board through the night', () => {
 		 */
 		const started = startWithHomeBoard(5, 2, 2, (drawn) => {
 			const [firstMatch] = getMatchesOnBoards(drawn).filter(
-				(m) => m.match.round === 1 && isReadyToPlay(m),
+				(m) => m.match.round === 1 && hasBothPlayersKnown(m),
 			);
 			return firstMatch.players[0];
 		});
@@ -403,7 +403,7 @@ describe('a Home Board through the night', () => {
 			recordWinner(homeFirstMatch.tournament, homeMatch.match, opponent.id, 'staying'),
 		);
 		expect(getMatchesOnBoards(tournament).map((m) => m.board)).toEqual([1]);
-		const byePair = getMatchesOnBoards(tournament).find(isReadyToPlay)!;
+		const byePair = getMatchesOnBoards(tournament).find(hasBothPlayersKnown)!;
 		const [byeWinner] = byePair.players as [Player, Player];
 
 		// The Bye pair's loser stays too, so the Losers Draw is made: a final against the Home Board Player.

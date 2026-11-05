@@ -12,7 +12,7 @@ import {
 	expectOk,
 	findMatchOf,
 	isPlaying,
-	isReadyToPlay,
+	hasBothPlayersKnown,
 	listPlayersInRound,
 	listSeats,
 	listWaiting,
@@ -46,12 +46,14 @@ describe('a Player waiting alone when Boards run short', () => {
 		 */
 		let tournament = startTournament(10, 4);
 		const findReadyInRound = (round: number) =>
-			getMatchesOnBoards(tournament).find((m) => m.match.round === round && isReadyToPlay(m));
+			getMatchesOnBoards(tournament).find(
+				(m) => m.match.round === round && hasBothPlayersKnown(m),
+			);
 		for (let match = findReadyInRound(2); match; match = findReadyInRound(2)) {
 			tournament = recordWin(tournament, match, 'staying');
 		}
 		const aloneInRoundThree = getMatchesOnBoards(tournament).find(
-			(m) => m.match.round === 3 && !isReadyToPlay(m),
+			(m) => m.match.round === 3 && !hasBothPlayersKnown(m),
 		)!;
 		const seatedFirst = aloneInRoundThree.players[0];
 		tournament = recordWin(tournament, findReadyInRound(3)!, 'staying');
@@ -85,7 +87,7 @@ describe('a Player waiting alone when Boards run short', () => {
 		({ field, boards }) => {
 			let tournament = startTournament(field, boards);
 			for (let recorded = 1; tournament.phase !== 'finished'; recorded++) {
-				const ready = getMatchesOnBoards(tournament).find(isReadyToPlay);
+				const ready = getMatchesOnBoards(tournament).find(hasBothPlayersKnown);
 				expect(ready).toBeDefined();
 				const [winner, loser] = ready!.players as [Player, Player];
 				const answer = isLosersBracketOpenTo(tournament, loser.id) ? 'staying' : undefined;

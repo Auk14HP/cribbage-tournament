@@ -19,7 +19,7 @@ import {
 	expectOk,
 	findMatchOf,
 	isPlaying,
-	isReadyToPlay,
+	hasBothPlayersKnown,
 	listPlayersInRound,
 	listSeats,
 	listWaiting,
@@ -38,8 +38,8 @@ const setUpHeldPlace = (answers: readonly [StayingAnswer, StayingAnswer]) => {
 	const [ann, bob] = listPlayersInRound(tournament, 1);
 	const annAndBob = findMatchOf(tournament, ann);
 	const onBoards = getMatchesOnBoards(tournament).filter((m) => !isPlaying(m, ann));
-	const danAndEve = onBoards.find(isReadyToPlay)!;
-	const waiting = onBoards.find((m) => !isReadyToPlay(m))!;
+	const danAndEve = onBoards.find(hasBothPlayersKnown)!;
+	const waiting = onBoards.find((m) => !hasBothPlayersKnown(m))!;
 	const cat = waiting.players[0];
 	const [dan, eve] = danAndEve.players as [Player, Player];
 	tournament = expectOk(recordWinner(tournament, annAndBob.match, ann.id, answers[0]));
@@ -66,7 +66,10 @@ const hasOneByePlayer = (tournament: Tournament, match: MatchOnBoard): boolean =
  */
 const findByePlayerStillToPlay = (tournament: Tournament) => {
 	const firstMatch = getMatchesOnBoards(tournament).find(
-		(m) => m.match.bracket === 'winners' && isReadyToPlay(m) && hasOneByePlayer(tournament, m),
+		(m) =>
+			m.match.bracket === 'winners' &&
+			hasBothPlayersKnown(m) &&
+			hasOneByePlayer(tournament, m),
 	)!;
 	const byePlayer = firstMatch.players.find((p) => isByePlayerIn(tournament, p)) as Player;
 	return { byePlayer, firstMatch };
@@ -329,7 +332,7 @@ describe('the Losers Bracket', () => {
 			let tournament = playDrawStaying(startTournament(9, 5));
 			const { byePlayer: cat } = findByePlayerStillToPlay(tournament);
 			for (;;) {
-				const ready = getMatchesOnBoards(tournament).find(isReadyToPlay);
+				const ready = getMatchesOnBoards(tournament).find(hasBothPlayersKnown);
 				if (!ready) {
 					break;
 				}
@@ -375,7 +378,7 @@ describe('the Losers Bracket', () => {
 			(m) => m.match.bracket === 'losers',
 		);
 		expect(losersOnBoards).toHaveLength(2);
-		expect(losersOnBoards.every(isReadyToPlay)).toBe(true);
+		expect(losersOnBoards.every(hasBothPlayersKnown)).toBe(true);
 		const [waitingLosers] = getWaitingForBoard(tournament);
 		expect(waitingLosers.match.bracket).toBe('losers');
 		const losersFirstMatch = losersOnBoards.find((m) => m.match.round === 1)!;

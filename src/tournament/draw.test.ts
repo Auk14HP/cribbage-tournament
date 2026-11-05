@@ -16,7 +16,7 @@ import {
 	createSeededRandom,
 	expectOk,
 	isPlaying,
-	isReadyToPlay,
+	hasBothPlayersKnown,
 	listWaiting,
 	makeSeededDraw,
 	setUpTournament,
@@ -118,7 +118,7 @@ describe('making the Draw', () => {
 		const drawOf25 = expectOk(makeSeededDraw(25, 12));
 
 		const seated = getMatchesOnBoards(drawOf25);
-		expect(seated.every(isReadyToPlay)).toBe(true);
+		expect(seated.every(hasBothPlayersKnown)).toBe(true);
 		const [waiting] = listWaiting(drawOf25);
 		const [, awaited] = /^Winner of (.+)$/.exec(waiting[1])!;
 		expect(seated.map(({ players: [a, b] }) => `${a.name} / ${getPlayerName(b)}`)).toContain(

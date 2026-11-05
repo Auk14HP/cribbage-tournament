@@ -24,7 +24,7 @@ import {
 import {
 	createSeededRandom,
 	expectOk,
-	isReadyToPlay,
+	hasBothPlayersKnown,
 	playDrawStaying,
 	registerPlayers,
 } from '../tournament/testSetup';
@@ -112,7 +112,7 @@ describe('the Winners Bracket screen', () => {
 		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue'], 2);
 		let tournament = expectOk(start(drawn));
 		const seatedMatches = getMatchesOnBoards(tournament);
-		const firstMatch = seatedMatches.find(isReadyToPlay)!;
+		const firstMatch = seatedMatches.find(hasBothPlayersKnown)!;
 		const [playerA, playerB] = firstMatch.players as [Player, Player];
 		const [byePlayer] = seatedMatches.find((m) => m !== firstMatch)!.players;
 		const recordWinnerOf = (match: typeof firstMatch.match, winner: Player) => {
@@ -161,7 +161,7 @@ describe('the TV cycle', () => {
 		 * 5 Players: a first-Round Match on Board 1, a Bye Player at Board 2 waiting for its winner, and a
 		 * Match between the other two Bye Players on Board 3. The waiting Player isn't playing yet.
 		 */
-		const playing = getMatchesOnBoards(tournament).filter(isReadyToPlay);
+		const playing = getMatchesOnBoards(tournament).filter(hasBothPlayersKnown);
 		const firstMatch = playing.find((m) => m.match.round === 1)!;
 		const byes = playing.find((m) => m !== firstMatch)!;
 		const describeCard = ({ board, players: [playerA, playerB] }: typeof firstMatch) =>

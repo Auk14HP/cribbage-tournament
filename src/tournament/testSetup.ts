@@ -102,10 +102,10 @@ export const startTournament = (players: number, boards: number, seed = 1): Tour
  */
 export const recordWin = (
 	tournament: Tournament,
-	onBoard: MatchOnBoard,
+	matchOnBoard: MatchOnBoard,
 	loserAnswer: StayingAnswer,
-	winner = onBoard.players[0],
-): Tournament => expectOk(recordWinner(tournament, onBoard.match, winner.id, loserAnswer));
+	winner = matchOnBoard.players[0],
+): Tournament => expectOk(recordWinner(tournament, matchOnBoard.match, winner.id, loserAnswer));
 
 /*
  * Records every Match the Draw started, its first-named Player winning and the loser staying for the
@@ -113,15 +113,15 @@ export const recordWin = (
  */
 export const playDrawStaying = (started: Tournament): Tournament => {
 	let tournament = started;
-	const opening = getMatchesOnBoards(tournament).filter(isReadyToPlay);
-	for (const onBoard of opening) {
-		tournament = recordWin(tournament, onBoard, 'staying');
+	const opening = getMatchesOnBoards(tournament).filter(hasBothPlayersKnown);
+	for (const matchOnBoard of opening) {
+		tournament = recordWin(tournament, matchOnBoard, 'staying');
 	}
 	return tournament;
 };
 
 // Whether both a Match's Players are known.
-export const isReadyToPlay = (match: MatchOnBoard): boolean =>
+export const hasBothPlayersKnown = (match: MatchOnBoard): boolean =>
 	match.players.every((p) => 'name' in p);
 
 // Whether all the given Players are seated in a Match, wherever the Draw put it.

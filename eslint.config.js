@@ -123,6 +123,12 @@ export default defineConfig([
 	 */
 	...coreFiles.map((coreFile, index) => {
 		const above = coreFiles.slice(0, index);
+		/*
+		 * Any path into the core, from beside the file (./draw) or back in from outside the folder
+		 * (../tournament/draw, or ../tournament for index.ts), unless it names a file above this one.
+		 */
+		const intoCore = String.raw`^(\./|\.\./tournament(/|$))`;
+		const unlessAbove = above.length === 0 ? '' : `(?!(${above.join('|')})$)`;
 		return {
 			files: [`src/tournament/${coreFile}.ts`],
 			rules: {
@@ -131,7 +137,7 @@ export default defineConfig([
 					{
 						patterns: [
 							{
-								regex: `^\\./(?!(${above.join('|')})$)`,
+								regex: intoCore + unlessAbove,
 								message: `In the Tournament core, ${coreFile}.ts imports only from the files above it in eslint.config.js's coreFiles (${above.join(', ') || 'none'}), so the core's files never import in a cycle.`,
 							},
 						],

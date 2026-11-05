@@ -13,7 +13,7 @@ import {
 import {
 	expectOk,
 	isPlaying,
-	isReadyToPlay,
+	hasBothPlayersKnown,
 	makeSeededDraw,
 	recordWin,
 	startTournament,
@@ -158,7 +158,7 @@ describe('recording winners', () => {
 				const seats = matches.map((m) => m.board);
 				expect(new Set(seats).size).toBe(seats.length);
 				expect(seats.every((b) => b >= 1 && b <= boards)).toBe(true);
-				const ready = matches.find(isReadyToPlay);
+				const ready = matches.find(hasBothPlayersKnown);
 				if (!ready) {
 					break;
 				}
