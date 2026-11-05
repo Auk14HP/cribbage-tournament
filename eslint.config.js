@@ -124,10 +124,10 @@ export default defineConfig([
 	...coreFiles.map((coreFile, index) => {
 		const above = coreFiles.slice(0, index);
 		/*
-		 * Any path into the core, from beside the file (./draw) or back in from outside the folder
-		 * (../tournament/draw, or ../tournament for index.ts), unless it names a file above this one.
+		 * Any path into the core, from beside the file (./draw, or . for index.ts) or back in from outside
+		 * the folder (../tournament/draw, or ../tournament for index.ts), unless it names a file above this one.
 		 */
-		const intoCore = String.raw`^(\./|\.\./tournament(/|$))`;
+		const intoCore = String.raw`^(\.(/|$)|\.\./tournament(/|$))`;
 		const unlessAbove = above.length === 0 ? '' : `(?!(${above.join('|')})$)`;
 		return {
 			files: [`src/tournament/${coreFile}.ts`],

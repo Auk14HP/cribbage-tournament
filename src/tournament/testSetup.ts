@@ -121,8 +121,8 @@ export const playDrawStaying = (started: Tournament): Tournament => {
 };
 
 // Whether both a Match's Players are known.
-export const hasBothPlayersKnown = (match: MatchOnBoard): boolean =>
-	match.players.every((p) => 'name' in p);
+export const hasBothPlayersKnown = (matchOnBoard: MatchOnBoard): boolean =>
+	matchOnBoard.players.every((p) => 'name' in p);
 
 // Whether all the given Players are seated in a Match, wherever the Draw put it.
 export const isPlaying = (match: MatchOnBoard, ...players: Player[]): boolean =>
