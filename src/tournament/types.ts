@@ -83,6 +83,15 @@ export interface BoardTaken {
  */
 export type Phase = 'registration' | 'drawShown' | 'inProgress' | 'finished';
 
+// A screen the TV cycles through once Started.
+export type TvScreen = 'winnersBracket' | 'losersBracket' | 'nowPlaying' | 'champion';
+
+/*
+ * auto: the TV cycles the current phase's screens, each for the Tournament's screenSeconds.
+ * Otherwise the Held screen: the screen the Organizer has chosen, which the TV shows until they choose Auto.
+ */
+export type TvChoice = 'auto' | TvScreen;
+
 export interface Tournament {
 	readonly phase: Phase;
 	readonly players: readonly Player[];
@@ -110,10 +119,12 @@ export interface Tournament {
 	readonly results: readonly MatchResult[];
 	// How long the TV shows each screen it cycles through once Started.
 	readonly screenSeconds: number;
+	// What the TV shows once Started: Auto, or the Held screen.
+	readonly tvChoice: TvChoice;
 }
 
 // Bump whenever the Tournament's shape changes, so a Tournament saved in an older shape loads as blank.
-export const tournamentVersion = 8;
+export const tournamentVersion = 9;
 
 export const createTournament = (): Tournament => ({
 	phase: 'registration',
@@ -125,4 +136,5 @@ export const createTournament = (): Tournament => ({
 	waitingForBoard: [],
 	results: [],
 	screenSeconds: 20,
+	tvChoice: 'auto',
 });

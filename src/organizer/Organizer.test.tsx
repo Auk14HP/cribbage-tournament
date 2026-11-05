@@ -120,6 +120,14 @@ const listResults = () =>
 		.getAllByRole('listitem')
 		.map((item) => item.textContent);
 
+// The choices of what the TV shows, by their labels.
+const listTvChoices = () => {
+	const choices = within(screen.getByRole('group', { name: 'TV shows' }));
+	return choices
+		.getAllByRole('radio')
+		.map((radio) => (radio as HTMLInputElement).labels![0].textContent);
+};
+
 const listPlayerNames = () =>
 	within(screen.getByRole('list', { name: 'Players' }))
 		.queryAllByRole('listitem')
@@ -558,6 +566,36 @@ describe('the organizer route', () => {
 		cleanup();
 		showOrganizer();
 		expect(screen.getByLabelText('Seconds per TV screen')).toHaveValue('20');
+	});
+
+	it('offers the TV’s screens only once Started, Auto chosen, and saves the screen the Organizer holds', async () => {
+		const user = showOrganizer();
+		expect(screen.queryByRole('group', { name: 'TV shows' })).not.toBeInTheDocument();
+		await makeTheDraw(user, ['Dave K.', 'Big Dave'], '1');
+		expect(screen.queryByRole('group', { name: 'TV shows' })).not.toBeInTheDocument();
+
+		await user.click(screen.getByRole('button', { name: 'Start' }));
+		expect(listTvChoices()).toEqual(['Auto', 'Winners Bracket', 'Now playing']);
+		expect(screen.getByRole('radio', { name: 'Auto' })).toBeChecked();
+
+		await user.click(screen.getByRole('radio', { name: 'Now playing' }));
+		cleanup();
+		showOrganizer();
+		expect(screen.getByRole('radio', { name: 'Now playing' })).toBeChecked();
+	});
+
+	it('offers the finished Tournament’s screens, falling back to Auto from a screen it doesn’t have', async () => {
+		const user = showOrganizer();
+		await makeTheDraw(user, ['Dave K.', 'Big Dave'], '1');
+		await user.click(screen.getByRole('button', { name: 'Start' }));
+		await user.click(screen.getByRole('radio', { name: 'Now playing' }));
+
+		const [champion] = listWinnerNames(findPlayingRow());
+		await recordWin(user, findPlayingRow(), champion);
+		await answerDialog(user, 'Leaving');
+
+		expect(listTvChoices()).toEqual(['Auto', 'Champion', 'Winners Bracket']);
+		expect(screen.getByRole('radio', { name: 'Auto' })).toBeChecked();
 	});
 
 	it('resumes the saved Tournament when reopened', async () => {

@@ -17,6 +17,7 @@ import {
 } from './bracket';
 import { drawLosersBracketIfDue, isHeldFor } from './draw';
 import { reseat } from './seating';
+import { dropHeldScreenIfGone } from './tvScreen';
 import type { MatchPlace, PlayerId, StayingAnswer, Tournament } from './types';
 
 /*
@@ -141,7 +142,7 @@ const settleMatch = (
 		results: [...tournament.results, { match, winner, board, isForfeit, ...asked }],
 	});
 	const settled = reseat(recorded);
-	return isFinished(settled) ? { ...settled, phase: 'finished' } : settled;
+	return isFinished(settled) ? dropHeldScreenIfGone({ ...settled, phase: 'finished' }) : settled;
 };
 
 // The Tournament is finished once every bracket played has a champion.
@@ -174,10 +175,8 @@ export const undoResult = (tournament: Tournament, match: MatchPlace): Result<To
 		losersBracket: isLosersDrawUndone ? undefined : tournament.losersBracket,
 	};
 	// Undoing the final takes the champion back out, so the Tournament is in progress again.
-	return {
-		ok: true,
-		value: { ...reseat(undone, { match, board: result.board }), phase: 'inProgress' },
-	};
+	const reseated = reseat(undone, { match, board: result.board });
+	return { ok: true, value: dropHeldScreenIfGone({ ...reseated, phase: 'inProgress' }) };
 };
 
 /*

@@ -10,6 +10,7 @@ import {
 	makeDraw,
 	getMatchesOnBoards,
 	getWaitingForBoard,
+	chooseTvScreen,
 	createTournament,
 	recordWinner,
 	registerPlayer,
@@ -215,6 +216,70 @@ describe('the TV cycle', () => {
 		const restartedCountdownRing = screen.getByTestId('countdown ring');
 		expect(restartedCountdownRing).not.toBe(secondCountdownRing);
 		expect(restartedCountdownRing).toHaveStyle({ '--countdown-duration': '5s' });
+	});
+});
+
+describe('a Held screen', () => {
+	it('holds the chosen screen with no countdown ring, then on Auto keeps it for a fresh screen time before moving on', () => {
+		vi.useFakeTimers();
+		const store = showDisplay();
+		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], 3);
+		let tournament = expectOk(start(drawn));
+		act(() => store.save(tournament));
+		waitSeconds(10);
+
+		tournament = expectOk(chooseTvScreen(tournament, 'nowPlaying'));
+		act(() => store.save(tournament));
+		expect(readHeading()).toBe('Now playing');
+		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
+		waitSeconds(120);
+		expect(readHeading()).toBe('Now playing');
+
+		tournament = expectOk(chooseTvScreen(tournament, 'auto'));
+		act(() => store.save(tournament));
+		expect(readHeading()).toBe('Now playing');
+		expect(screen.getByTestId('countdown ring')).toBeInTheDocument();
+		waitSeconds(19);
+		expect(readHeading()).toBe('Now playing');
+		waitSeconds(1);
+		expect(readHeading()).toBe('Winners Bracket');
+	});
+
+	it('stays held through the final’s result when the finished Tournament has it, and Auto then cycles on to the champion', () => {
+		vi.useFakeTimers();
+		const store = showDisplay();
+		const drawn = setUpDraw(['Dave K.', 'Big Dave'], 1);
+		const started = expectOk(start(drawn));
+		let tournament = expectOk(chooseTvScreen(started, 'winnersBracket'));
+		const [final] = getMatchesOnBoards(tournament);
+		const champion = final.players[0];
+
+		tournament = expectOk(recordWinner(tournament, final.match, champion.id, 'leaving'));
+		act(() => store.save(tournament));
+		expect(readHeading()).toBe('Winners Bracket');
+		waitSeconds(60);
+		expect(readHeading()).toBe('Winners Bracket');
+
+		tournament = expectOk(chooseTvScreen(tournament, 'auto'));
+		act(() => store.save(tournament));
+		waitSeconds(19);
+		expect(readHeading()).toBe('Winners Bracket');
+		waitSeconds(1);
+		expect(readHeading()).toBe('Tonight’s Champion');
+	});
+
+	it('is still held when the TV is reloaded', () => {
+		const store = showDisplay();
+		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], 3);
+		const started = expectOk(start(drawn));
+		const holding = expectOk(chooseTvScreen(started, 'nowPlaying'));
+		act(() => store.save(holding));
+
+		cleanup();
+		showDisplay();
+
+		expect(readHeading()).toBe('Now playing');
+		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
 	});
 });
 
