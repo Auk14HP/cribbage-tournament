@@ -39,7 +39,11 @@ export const Organizer = ({ store }: { store: Store<Tournament> }) => {
 	};
 
 	return (
-		<main className="px-8 py-6">
+		/*
+		 * Fills the window and never scrolls as a page: a long list scrolls on its own inside it, so the controls
+		 * around the list stay on screen.
+		 */
+		<main className="flex h-dvh flex-col px-8 py-6">
 			<header className="flex items-center justify-between gap-4">
 				<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
 				<nav className="flex items-center gap-4">

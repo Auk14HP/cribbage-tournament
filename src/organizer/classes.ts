@@ -13,3 +13,16 @@ export const confirmColours = {
 export const textInput = 'rounded border border-gray-400 px-3 py-1.5';
 
 export const dialogBox = 'm-auto max-w-lg rounded-lg p-6 shadow-xl backdrop:bg-black/40';
+
+/*
+ * The window-filling layout. A screen's row of columns takes the height left below the page's heading, each
+ * column stacks its parts, and a long list in a column scrolls in an area of its own: the area shrinks to fit
+ * the space left, so it never pushes the controls after it off screen. A short list keeps its own height.
+ * Two lists one above the other share one area, so neither is squeezed to make room for the other. min-h-0
+ * lets each of them shrink below the height of what it holds.
+ */
+export const windowFilling = {
+	row: 'mt-6 flex min-h-0 flex-1 gap-12',
+	column: 'flex min-h-0 flex-col',
+	scrollingArea: 'min-h-0 overflow-y-auto',
+};
