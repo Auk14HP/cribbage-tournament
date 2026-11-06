@@ -7,7 +7,7 @@ import {
 	type RecordedResult,
 	type Tournament,
 } from '../tournament';
-import { button } from './classes';
+import { button, windowFilling } from './classes';
 import { Refusal, type Apply } from './controls';
 
 // The results that can still be undone, latest first, each with its own Undo. None until a result is recorded.
@@ -22,10 +22,10 @@ export const Results = ({ tournament, apply }: { tournament: Tournament; apply: 
 		return null;
 	}
 	return (
-		<section className="mt-8">
+		<section className={`${windowFilling.column} mt-8`}>
 			<h2 className="text-xl font-bold">Results</h2>
 			<p className="mt-1 text-gray-700">Undo a result to correct it.</p>
-			<ul aria-label="Results" className="mt-2">
+			<ul aria-label="Results" className={`${windowFilling.scrollingArea} mt-2`}>
 				{results.map((result) => (
 					<li
 						key={getMatchKey(result.match)}

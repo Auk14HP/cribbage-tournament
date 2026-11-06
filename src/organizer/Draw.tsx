@@ -22,6 +22,7 @@ import {
 	dangerButton,
 	dialogBox,
 	primaryButton,
+	windowFilling,
 } from './classes';
 import { Refusal, type Apply } from './controls';
 import { Results } from './Results';
@@ -76,8 +77,8 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 		setRefusal(reason);
 	};
 	return (
-		<div className="mt-6 flex items-start gap-12">
-			<section className="flex-1">
+		<div className={`${windowFilling.row} mt-6`}>
+			<section className={`${windowFilling.column} flex-1`}>
 				{champion && (
 					<p className="text-2xl font-bold text-green-800">Champion: {champion.name}</p>
 				)}
@@ -90,7 +91,16 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 					<>
 						<h2 className="text-xl font-bold">Matches</h2>
 						{playing && <p className="mt-1 text-gray-700">Tap a Match’s winner.</p>}
-						<ul aria-label="Matches" className="mt-2">
+					</>
+				)}
+				{/*
+				 * The Matches and those waiting for a Board scroll together, so neither list is squeezed to make room
+				 * for the other: a waiting Match is reached by scrolling past the Matches holding a Board. Hidden while
+				 * both are empty, as once there is a Champion, so it leaves no gap.
+				 */}
+				<div className={`${windowFilling.scrollingArea} mt-2 empty:hidden`}>
+					{matches.length > 0 && (
+						<ul aria-label="Matches">
 							{matches.map((matchOnBoard) => (
 								<MatchRow
 									key={matchOnBoard.board}
@@ -101,17 +111,17 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 								/>
 							))}
 						</ul>
-					</>
-				)}
+					)}
+					<WaitingForBoard tournament={tournament} />
+				</div>
 				{playing && <Refusal reason={refusal} />}
-				<WaitingForBoard tournament={tournament} />
 				<StayingDialog
 					ref={stayingDialog}
 					loser={pendingResult?.loser}
 					onAnswer={(answer) => pendingResult?.record(answer)}
 				/>
 			</section>
-			<section className="w-80">
+			<section className={`${windowFilling.column} w-80`}>
 				{tournament.phase === 'drawShown' && (
 					<>
 						<p>

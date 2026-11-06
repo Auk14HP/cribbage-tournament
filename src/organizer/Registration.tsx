@@ -1,22 +1,20 @@
 // Registration: Players registered, renamed and removed, the Boards set out, then the Draw made.
-import { useRef, useState, type SubmitEvent } from 'react';
+import { useEffect, useRef, useState, type SubmitEvent } from 'react';
 import type { Result } from '../result';
 import {
-	clearHomeBoard,
 	makeDraw,
 	registerPlayer,
 	removePlayer,
 	renamePlayer,
 	setBoardCount,
-	setHomeBoard,
-	type BoardNumber,
 	type Player,
 	type PlayerId,
 	type Tournament,
 } from '../tournament';
 import { describePlayersRegistered } from '../wording';
-import { button, dangerButton, primaryButton, textInput } from './classes';
+import { button, dangerButton, primaryButton, textInput, windowFilling } from './classes';
 import { ConfirmDialog, NumberBox, Refusal, type Apply } from './controls';
+import { HomeBoardPicker } from './HomeBoardPicker';
 import { ScreenTiming } from './ScreenTiming';
 
 export const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
@@ -27,6 +25,21 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 	const [boardsRefusal, setBoardsRefusal] = useState('');
 	const nameInput = useRef<HTMLInputElement>(null);
 	const drawDialog = useRef<HTMLDialogElement>(null);
+	const playersList = useRef<HTMLUListElement>(null);
+	const playerCount = tournament.players.length;
+	const shownPlayerCount = useRef(playerCount);
+
+	/*
+	 * Scrolls the Players list to its end when a Player is registered, so the new Player's row, added last,
+	 * is in view however long the list.
+	 */
+	useEffect(() => {
+		const list = playersList.current;
+		if (list && playerCount > shownPlayerCount.current) {
+			list.scrollTop = list.scrollHeight;
+		}
+		shownPlayerCount.current = playerCount;
+	}, [playerCount]);
 
 	const register = (event: SubmitEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -68,8 +81,8 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 	};
 
 	return (
-		<div className="mt-6 flex items-start gap-12">
-			<section aria-label="Players" className="flex-1">
+		<div className={`${windowFilling.row} mt-6`}>
+			<section aria-label="Players" className={`${windowFilling.column} flex-1`}>
 				<form onSubmit={register} className="flex items-center gap-2">
 					<label className="flex items-center gap-2">
 						Player name
@@ -90,7 +103,11 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 				</form>
 				<Refusal reason={playersRefusal} />
 				<p className="mt-2">{describePlayersRegistered(tournament.players.length)}</p>
-				<ul aria-label="Players" className="mt-2">
+				<ul
+					ref={playersList}
+					aria-label="Players"
+					className={`${windowFilling.scrollingArea} mt-2`}
+				>
 					{tournament.players.map((player) =>
 						player.id === renaming ? (
 							<RenameRow
@@ -172,80 +189,6 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 	);
 };
 
-/*
- * Gives one Player a Home Board: a Player, or Nobody, and a Board from those set out. Picking another
- * Player moves the Home Board to them. A Board picked while Nobody has it is kept here for when a Player is
- * picked. Always shown, so Make the Draw below never moves as the Boards are set out.
- */
-const HomeBoardPicker = ({
-	tournament,
-	onChange,
-}: {
-	tournament: Tournament;
-	onChange: (outcome: Result<Tournament>) => void;
-}) => {
-	const [pickedBoard, setPickedBoard] = useState<BoardNumber>(1);
-	const { boards } = tournament;
-	const [homeBoard] = tournament.homeBoards;
-	const isPickedSetOut = boards.includes(pickedBoard);
-	const board = homeBoard?.board ?? (isPickedSetOut ? pickedBoard : boards[0]);
-
-	const pickPlayer = (value: string) => {
-		const unchanged: Result<Tournament> = { ok: true, value: tournament };
-		const cleared = homeBoard ? clearHomeBoard(tournament, homeBoard.player) : unchanged;
-		if (!cleared.ok || value === '') {
-			onChange(cleared);
-			return;
-		}
-		const playerId = Number(value);
-		// With no Boards set out there is no Board to pick, and the Tournament says why.
-		onChange(setHomeBoard(cleared.value, playerId, board ?? 1));
-	};
-
-	const pickBoard = (value: string) => {
-		const picked = Number(value);
-		setPickedBoard(picked);
-		if (homeBoard) {
-			onChange(setHomeBoard(tournament, homeBoard.player, picked));
-		}
-	};
-
-	return (
-		<>
-			<label className="mt-2 flex items-center gap-2">
-				Home Board for
-				<select
-					value={homeBoard?.player ?? ''}
-					onChange={(event) => pickPlayer(event.target.value)}
-					className={`${textInput} flex-1`}
-				>
-					<option value="">Nobody</option>
-					{tournament.players.map((player) => (
-						<option key={player.id} value={player.id}>
-							{player.name}
-						</option>
-					))}
-				</select>
-			</label>
-			<label className="mt-2 flex items-center gap-2">
-				Board
-				<select
-					value={board ?? ''}
-					disabled={boards.length === 0}
-					onChange={(event) => pickBoard(event.target.value)}
-					className={textInput}
-				>
-					{boards.map((number) => (
-						<option key={number} value={number}>
-							{number}
-						</option>
-					))}
-				</select>
-			</label>
-		</>
-	);
-};
-
 const RenameRow = ({
 	player,
 	onSave,
@@ -256,8 +199,13 @@ const RenameRow = ({
 	onCancel: () => void;
 }) => {
 	const [name, setName] = useState(player.name);
+	const row = useRef<HTMLLIElement>(null);
+	// Brings the whole row into view in the Players list, its Save and Cancel too, however far down it is.
+	useEffect(() => {
+		row.current?.scrollIntoView({ block: 'nearest' });
+	}, []);
 	return (
-		<li className="border-b border-gray-300 py-1.5">
+		<li ref={row} className="border-b border-gray-300 py-1.5">
 			<form
 				onSubmit={(event) => {
 					event.preventDefault();
