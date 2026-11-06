@@ -232,7 +232,7 @@ describe('a Held screen', () => {
 		act(() => store.save(tournament));
 		expect(readHeading()).toBe('Now playing');
 		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
-		waitSeconds(120);
+		waitSeconds(21);
 		expect(readHeading()).toBe('Now playing');
 
 		tournament = expectOk(chooseTvScreen(tournament, 'auto'));
