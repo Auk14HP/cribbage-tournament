@@ -40,19 +40,33 @@ const isScrollable = (list: Locator) =>
 
 /*
  * The area a long list scrolls in fills the space left on screen: it ends at the bottom of the window, above
- * the page's own padding. The area is the list itself or the nearest box around it that scrolls.
+ * the page's own padding and any boxes beneath it in its column, such as the refusal line once Started. The
+ * area is the list itself or the nearest box around it that scrolls.
  */
-const expectScrollingAreaReachesWindowBottom = async (list: Locator) => {
+const expectScrollingAreaFillsSpaceLeft = async (list: Locator) => {
 	const { areaBottom, spaceBottom } = await list.evaluate((element) => {
 		let area: Element = element;
 		while (getComputedStyle(area).overflowY !== 'auto' && area.parentElement) {
 			area = area.parentElement;
 		}
-		const page = element.closest('main')!;
-		return {
-			areaBottom: area.getBoundingClientRect().bottom,
-			spaceBottom: window.innerHeight - parseFloat(getComputedStyle(page).paddingBottom),
-		};
+		const main = element.closest('main')!;
+		let spaceBottom = window.innerHeight - parseFloat(getComputedStyle(main).paddingBottom);
+		/*
+		 * Each box shown beneath the area, such as the refusal line, takes its height and margins from the
+		 * space left. A closed dialog has no height, so it takes nothing.
+		 */
+		for (
+			let boxBelow = area.nextElementSibling;
+			boxBelow;
+			boxBelow = boxBelow.nextElementSibling
+		) {
+			const { marginTop, marginBottom } = getComputedStyle(boxBelow);
+			const boxHeight = boxBelow.getBoundingClientRect().height;
+			if (boxHeight > 0) {
+				spaceBottom -= boxHeight + parseFloat(marginTop) + parseFloat(marginBottom);
+			}
+		}
+		return { areaBottom: area.getBoundingClientRect().bottom, spaceBottom };
 	});
 	expect(areaBottom).toBeCloseTo(spaceBottom, 0);
 };
@@ -107,7 +121,7 @@ test.describe('Registering a long field', () => {
 			page.getByRole('heading', { name: 'TV screens' }),
 		]);
 		expect(await isScrollable(players)).toBe(true);
-		await expectScrollingAreaReachesWindowBottom(players);
+		await expectScrollingAreaFillsSpaceLeft(players);
 	});
 
 	test('brings a newly registered Player into view, keeping the name box ready', async ({
@@ -154,7 +168,7 @@ test.describe('Playing a long field', () => {
 		await expectPageDoesNotScroll(page);
 		await expectWhollyOnScreen(controls);
 		await expectRefusalLinesOnScreen(page);
-		await expectScrollingAreaReachesWindowBottom(matches);
+		await expectScrollingAreaFillsSpaceLeft(matches);
 		await expectRowScrollsIntoView(page, findLastRow(matches));
 		await expectWhollyOnScreen(controls);
 	});
@@ -173,6 +187,7 @@ test.describe('Playing a long field', () => {
 		]);
 		await expectRefusalLinesOnScreen(page);
 		const matches = page.getByRole('list', { name: 'Matches' });
+		await expectScrollingAreaFillsSpaceLeft(matches);
 		await expectRowScrollsIntoView(page, findLastRow(matches));
 	});
 
