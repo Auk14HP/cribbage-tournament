@@ -238,3 +238,57 @@ test.describe('Playing a long field', () => {
 		await expectWhollyOnScreen([page.getByRole('heading', { name: 'Matches' })]);
 	});
 });
+
+/*
+ * Every list on screen can be scrolled to its last row, which then shows whole, while the page itself stays
+ * put: no list is squeezed so small that a row is cut off.
+ */
+const expectEveryLastRowReachable = async (page: Page) => {
+	for (const list of await page.getByRole('list').all()) {
+		const rowCount = await list.getByRole('listitem').count();
+		if (rowCount === 0) {
+			continue;
+		}
+		const lastRow = findLastRow(list);
+		await lastRow.scrollIntoViewIfNeeded();
+		await expectWhollyOnScreen([lastRow]);
+	}
+	await expectPageDoesNotScroll(page);
+};
+
+/*
+ * Fields of several shapes, since a layout bug can show in only one: 26 Players on 12 Boards seat 12 of 13
+ * opening Matches, leaving one waiting beneath a long list. An odd field gives a Bye; one Board makes most
+ * Matches wait.
+ */
+const fieldShapes = [
+	{ playerCount: 3, boardCount: 1 },
+	{ playerCount: 9, boardCount: 4 },
+	{ playerCount: 17, boardCount: 8 },
+	{ playerCount: 26, boardCount: 12 },
+	{ playerCount: 32, boardCount: 1 },
+	{ playerCount: 32, boardCount: 15 },
+	{ playerCount: 40, boardCount: 19 },
+	{ playerCount: 64, boardCount: 32 },
+];
+
+test.describe('Fields of several shapes', () => {
+	for (const { playerCount, boardCount } of fieldShapes) {
+		test(`reaches every list's last row whole, ${playerCount} Players on ${boardCount} Board${boardCount === 1 ? '' : 's'}`, async ({
+			page,
+		}) => {
+			await page.goto(`/?players=${playerCount}&boards=${boardCount}`);
+			await expect(page.getByText(`${playerCount} Players registered`)).toBeVisible();
+			await expect(page.getByLabel('Number of Boards')).toHaveValue(String(boardCount));
+			await expectEveryLastRowReachable(page);
+
+			await confirmDraw(page);
+			await expect(page.getByRole('heading', { name: 'Matches' })).toBeVisible();
+			await expectEveryLastRowReachable(page);
+
+			await page.getByRole('button', { name: 'Start', exact: true }).click();
+			await expect(page.getByText('Tap a Match’s winner.')).toBeVisible();
+			await expectEveryLastRowReachable(page);
+		});
+	}
+});
