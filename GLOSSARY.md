@@ -65,3 +65,13 @@ _Avoid_: Preferred board, reserved board, fixed board, pinned board
 **Waiting for a Board**:
 The line of **Matches**, from both brackets, that need a **Board** while none is free. Matches ready to play, both **Players** known, go ahead of those still waiting on a Player, and a Player waiting alone at a **Board** other than their **Home Board** gives it up to one. A Match moved off a **Home Board** when its Player comes back to it, through an undo, goes first in line. Otherwise it is first come, first served.
 _Avoid_: Waitlist, backlog
+
+### The TV
+
+**Auto**:
+The **Organizer**'s choice that has the TV cycle the current phase's screens once Started, each for the seconds per TV screen.
+_Avoid_: Cycle mode, rotate
+
+**Held screen**:
+The screen the **Organizer** has chosen for the TV once Started, which the TV shows until they choose **Auto**. Choosing Auto cycles on from it. A Held screen the night's next phase doesn't have, such as Now playing once the **Tournament** is finished, falls back to Auto.
+_Avoid_: Pinned screen, locked screen

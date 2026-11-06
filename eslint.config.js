@@ -8,7 +8,16 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 // The Tournament core's files in src/tournament/, in the order they may import from each other.
-const coreFiles = ['types', 'bracket', 'registration', 'seating', 'draw', 'results', 'views'];
+const coreFiles = [
+	'types',
+	'tvScreen',
+	'bracket',
+	'registration',
+	'seating',
+	'draw',
+	'results',
+	'views',
+];
 
 export default defineConfig([
 	globalIgnores(['dist']),

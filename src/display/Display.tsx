@@ -2,9 +2,9 @@
  * The display route: read-only, shown on the TV. Redraws whenever the saved Tournament changes.
  * Sizes are in vh so text scales with the TV: large and high-contrast, readable from across the room.
  */
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Store } from '../storage';
-import type { Tournament } from '../tournament';
+import { listTvScreens, type Tournament, type TvScreen } from '../tournament';
 import { useTournament } from '../useTournament';
 import { Bracket } from './Bracket';
 import { Champion } from './Champion';
@@ -18,7 +18,7 @@ export const Display = ({ store }: { store: Store<Tournament> }) => {
 		<main className="min-h-screen bg-black px-[4vw] py-[3vh] text-white">
 			{tournament.phase === 'registration' && <Players tournament={tournament} />}
 			{tournament.phase === 'drawShown' && <Draw tournament={tournament} />}
-			{/* Keyed by phase, so finishing starts the cycle again from its first screen. */}
+			{/* Keyed by phase, so finishing starts the cycle again from its first screen, or the Held screen. */}
 			{(tournament.phase === 'inProgress' || tournament.phase === 'finished') && (
 				<Cycle key={tournament.phase} tournament={tournament} />
 			)}
@@ -26,55 +26,48 @@ export const Display = ({ store }: { store: Store<Tournament> }) => {
 	);
 };
 
-// The screens the TV cycles through, each for the Tournament's screenSeconds.
-const cycledScreens = {
-	winnersBracket: (tournament: Tournament) => (
-		<Bracket tournament={tournament} bracketName="winners" />
-	),
-	losersBracket: (tournament: Tournament) => (
-		<Bracket tournament={tournament} bracketName="losers" />
-	),
-	nowPlaying: (tournament: Tournament) => <NowPlaying tournament={tournament} />,
-	champion: (tournament: Tournament) => <Champion tournament={tournament} />,
+// Each screen the TV shows once Started.
+const tvScreens: Record<TvScreen, (tournament: Tournament) => ReactNode> = {
+	winnersBracket: (tournament) => <Bracket tournament={tournament} bracketName="winners" />,
+	losersBracket: (tournament) => <Bracket tournament={tournament} bracketName="losers" />,
+	nowPlaying: (tournament) => <NowPlaying tournament={tournament} />,
+	champion: (tournament) => <Champion tournament={tournament} />,
 };
 
-type CycledScreen = keyof typeof cycledScreens;
-
-// The Losers Bracket's screen, once it is drawn: skipped when there is none.
-const listBracketScreens = (tournament: Tournament): CycledScreen[] =>
-	tournament.losersBracket ? ['winnersBracket', 'losersBracket'] : ['winnersBracket'];
-
 /*
- * The screens in the order the TV shows them. During play: the brackets, then Now playing. Once the night
- * is finished: the champions first, then the brackets.
- */
-const listCycledScreens = (tournament: Tournament): CycledScreen[] =>
-	tournament.phase === 'finished'
-		? ['champion', ...listBracketScreens(tournament)]
-		: [...listBracketScreens(tournament), 'nowPlaying'];
-
-/*
- * Shows each screen in turn, from the first. A new screenSeconds restarts the current screen's time, so
- * the change shows at once.
+ * On Auto, shows each of the phase's screens in turn, each for the Tournament's screenSeconds, from the
+ * first. A Held screen stays on show, with no countdown ring. Choosing Auto again starts the cycle from the
+ * screen on show, with a fresh screen time. A new screenSeconds restarts the current screen's time, so the
+ * change shows at once.
  */
 const Cycle = ({ tournament }: { tournament: Tournament }) => {
-	const screens = listCycledScreens(tournament);
-	const [shown, setShown] = useState(0);
+	const screens = listTvScreens(tournament);
+	const held = tournament.tvChoice === 'auto' ? undefined : tournament.tvChoice;
+	const isHeld = held !== undefined;
+	const [shown, setShown] = useState(held ?? screens[0]);
+	// While a screen is held it is the screen on show, so Auto picks up from it.
+	if (isHeld && shown !== held) {
+		setShown(held);
+	}
+	const shownIndex = screens.indexOf(shown);
+	const nextScreen = screens[(shownIndex + 1) % screens.length];
 	useEffect(() => {
-		const timer = setTimeout(
-			() => setShown((index) => (index + 1) % screens.length),
-			tournament.screenSeconds * 1000,
-		);
+		if (isHeld) {
+			return;
+		}
+		const timer = setTimeout(() => setShown(nextScreen), tournament.screenSeconds * 1000);
 		return () => clearTimeout(timer);
-	}, [shown, screens.length, tournament.screenSeconds]);
+	}, [shown, nextScreen, isHeld, tournament.screenSeconds]);
 	// Keyed like the timer, so the ring starts again exactly when the screen's time does.
 	return (
 		<>
-			{cycledScreens[screens[shown]](tournament)}
-			<CountdownRing
-				key={`${shown} ${tournament.screenSeconds}`}
-				seconds={tournament.screenSeconds}
-			/>
+			{tvScreens[shown](tournament)}
+			{!isHeld && (
+				<CountdownRing
+					key={`${shown} ${tournament.screenSeconds}`}
+					seconds={tournament.screenSeconds}
+				/>
+			)}
 		</>
 	);
 };
