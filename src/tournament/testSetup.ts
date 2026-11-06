@@ -10,6 +10,7 @@ import {
 	getMatchKey,
 	getMatchesOnBoards,
 	getWaitingForBoard,
+	listTvScreens,
 	makeDraw,
 	recordWinner,
 	registerPlayer,
@@ -30,14 +31,16 @@ export const createSeededRandom = (seed: number) => () => {
 };
 
 /*
- * Returns the Tournament a command made, failing the test if the command was refused or left the Boards in a
- * state no Tournament should reach. Every command a test runs goes through here, so each one is checked.
+ * Returns the Tournament a command made, failing the test if the command was refused or left the Boards or
+ * the TV in a state no Tournament should reach. Every command a test runs goes through here, so each one is
+ * checked.
  */
 export const expectOk = (outcome: Result<Tournament>): Tournament => {
 	if (!outcome.ok) {
 		throw new Error(`Expected command to succeed, was rejected: ${outcome.reason}`);
 	}
 	expectSeatingHolds(outcome.value);
+	expectTvChoiceShown(outcome.value);
 	return outcome.value;
 };
 
@@ -57,6 +60,12 @@ export const expectSeatingHolds = (tournament: Tournament) => {
 	expect(new Set(seatedKeys).size).toBe(seatedKeys.length);
 	const waitingKeys = getWaitingForBoard(tournament).map((m) => getMatchKey(m.match));
 	expect(waitingKeys.filter((key) => seatedKeys.includes(key))).toEqual([]);
+};
+
+// Checks the TV's choice: Auto, or a Held screen the current phase has.
+const expectTvChoiceShown = (tournament: Tournament) => {
+	const offered = ['auto', ...listTvScreens(tournament)];
+	expect(offered).toContain(tournament.tvChoice);
 };
 
 // Whether no two Matches hold the same Board.
