@@ -40,7 +40,7 @@ export const expectOk = (outcome: Result<Tournament>): Tournament => {
 		throw new Error(`Expected command to succeed, was rejected: ${outcome.reason}`);
 	}
 	expectSeatingHolds(outcome.value);
-	expectTvChoiceShown(outcome.value);
+	expectTvChoiceOffered(outcome.value);
 	return outcome.value;
 };
 
@@ -62,8 +62,8 @@ export const expectSeatingHolds = (tournament: Tournament) => {
 	expect(waitingKeys.filter((key) => seatedKeys.includes(key))).toEqual([]);
 };
 
-// Checks the TV's choice: Auto, or a Held screen the current phase has.
-const expectTvChoiceShown = (tournament: Tournament) => {
+// Checks the TV's choice is Auto or a Held screen the current phase has, so one left from another phase fails.
+const expectTvChoiceOffered = (tournament: Tournament) => {
 	const offered = ['auto', ...listTvScreens(tournament)];
 	expect(offered).toContain(tournament.tvChoice);
 };
