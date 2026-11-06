@@ -77,14 +77,19 @@ const expectScrollingAreaFillsSpaceLeft = async (list: Locator) => {
  */
 const findLastRow = (list: Locator) => list.getByRole('listitem').last();
 
+// Scrolls a row into view and checks it then shows whole, not cut off by the edge of its list's area.
+const expectWhollyOnScreenOnceScrolledTo = async (row: Locator) => {
+	await row.scrollIntoViewIfNeeded();
+	await expectWhollyOnScreen([row]);
+};
+
 /*
  * A row below the visible part of its list is scrolled to, as the Organizer would with the mouse wheel: it
  * comes wholly on screen while the page itself stays put.
  */
 const expectRowScrollsIntoView = async (page: Page, row: Locator) => {
 	await expect(row).not.toBeInViewport();
-	await row.scrollIntoViewIfNeeded();
-	await expectWhollyOnScreen([row]);
+	await expectWhollyOnScreenOnceScrolledTo(row);
 	await expectPageDoesNotScroll(page);
 };
 
@@ -249,25 +254,28 @@ const expectEveryLastRowReachable = async (page: Page) => {
 		if (rowCount === 0) {
 			continue;
 		}
-		const lastRow = findLastRow(list);
-		await lastRow.scrollIntoViewIfNeeded();
-		await expectWhollyOnScreen([lastRow]);
+		await expectWhollyOnScreenOnceScrolledTo(findLastRow(list));
 	}
 	await expectPageDoesNotScroll(page);
 };
 
 /*
- * Fields of several shapes, since a layout bug can show in only one: 26 Players on 12 Boards seat 12 of 13
- * opening Matches, leaving one waiting beneath a long list. An odd field gives a Bye; one Board makes most
- * Matches wait.
+ * Each field below is checked on registration, Tonight's Draw and once Started, since a layout bug can show in
+ * only one shape. 26 Players on 12 Boards seat 12 of their 13 opening Matches, leaving one waiting beneath a
+ * long list. One Board makes most Matches wait. An odd field gives a Bye: 33 on 16 fill every Board exactly
+ * beside it. 22 on 12 leave one Board to spare, 9 on 6 and 20 on 14 several.
  */
 const fieldShapes = [
 	{ playerCount: 3, boardCount: 1 },
 	{ playerCount: 9, boardCount: 4 },
+	{ playerCount: 9, boardCount: 6 },
 	{ playerCount: 17, boardCount: 8 },
+	{ playerCount: 20, boardCount: 14 },
+	{ playerCount: 22, boardCount: 12 },
 	{ playerCount: 26, boardCount: 12 },
 	{ playerCount: 32, boardCount: 1 },
 	{ playerCount: 32, boardCount: 15 },
+	{ playerCount: 33, boardCount: 16 },
 	{ playerCount: 40, boardCount: 19 },
 	{ playerCount: 64, boardCount: 32 },
 ];

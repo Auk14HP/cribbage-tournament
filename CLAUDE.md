@@ -6,7 +6,7 @@
 
 `npm run check` must pass to commit (pre-commit hook). CI also runs `npm run e2e`, the two-window browser tests the hook skips; run it before pushing a UI change.
 
-Commits made after the branch's last `code-review` (a fix the user asks for, a follow-up) get their own `code-review` before they are pushed, and each gap that review finds is fixed or named in the PR body.
+Commits made after the branch's last `code-review` (a fix the user asks for, a follow-up) get their own `code-review` before they are pushed, and each of its findings is fixed or named in the PR body.
 
 ## Agent skills
 
