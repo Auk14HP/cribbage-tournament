@@ -12,9 +12,11 @@ const key = 'organizer-test';
 
 /*
  * jsdom has no modal dialogs, so these stand in for the browser's, opening and closing only. Escape and
- * moving focus are the browser's, covered in e2e/.
+ * moving focus are the browser's, covered in e2e/. Nor does it lay out a page, so scrolling a row into view
+ * does nothing here; e2e/ covers it.
  */
 beforeAll(() => {
+	Element.prototype.scrollIntoView = () => {};
 	HTMLDialogElement.prototype.showModal = function () {
 		this.open = true;
 	};

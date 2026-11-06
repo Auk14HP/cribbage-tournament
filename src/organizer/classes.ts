@@ -22,7 +22,7 @@ export const dialogBox = 'm-auto max-w-lg rounded-lg p-6 shadow-xl backdrop:bg-b
  * lets each of them shrink below the height of what it holds.
  */
 export const windowFilling = {
-	row: 'mt-6 flex min-h-0 flex-1 gap-12',
+	row: 'flex min-h-0 flex-1 gap-12',
 	column: 'flex min-h-0 flex-col',
 	scrollingArea: 'min-h-0 overflow-y-auto',
 };

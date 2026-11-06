@@ -77,7 +77,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 		setRefusal(reason);
 	};
 	return (
-		<div className={windowFilling.row}>
+		<div className={`${windowFilling.row} mt-6`}>
 			<section className={`${windowFilling.column} flex-1`}>
 				{champion && (
 					<p className="text-2xl font-bold text-green-800">Champion: {champion.name}</p>
@@ -95,9 +95,10 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 				)}
 				{/*
 				 * The Matches and those waiting for a Board scroll together, so neither list is squeezed to make room
-				 * for the other: a waiting Match is reached by scrolling past the Matches holding a Board.
+				 * for the other: a waiting Match is reached by scrolling past the Matches holding a Board. Hidden while
+				 * both are empty, as once there is a Champion, so it leaves no gap.
 				 */}
-				<div className={`${windowFilling.scrollingArea} mt-2`}>
+				<div className={`${windowFilling.scrollingArea} mt-2 empty:hidden`}>
 					{matches.length > 0 && (
 						<ul aria-label="Matches">
 							{matches.map((matchOnBoard) => (

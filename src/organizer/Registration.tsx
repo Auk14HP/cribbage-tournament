@@ -81,7 +81,7 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 	};
 
 	return (
-		<div className={windowFilling.row}>
+		<div className={`${windowFilling.row} mt-6`}>
 			<section aria-label="Players" className={`${windowFilling.column} flex-1`}>
 				<form onSubmit={register} className="flex items-center gap-2">
 					<label className="flex items-center gap-2">
@@ -199,8 +199,13 @@ const RenameRow = ({
 	onCancel: () => void;
 }) => {
 	const [name, setName] = useState(player.name);
+	const row = useRef<HTMLLIElement>(null);
+	// Brings the whole row into view in the Players list, its Save and Cancel too, however far down it is.
+	useEffect(() => {
+		row.current?.scrollIntoView({ block: 'nearest' });
+	}, []);
 	return (
-		<li className="border-b border-gray-300 py-1.5">
+		<li ref={row} className="border-b border-gray-300 py-1.5">
 			<form
 				onSubmit={(event) => {
 					event.preventDefault();

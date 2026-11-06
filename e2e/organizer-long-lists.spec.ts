@@ -1,5 +1,10 @@
 import { expect, type Locator, type Page } from '@playwright/test';
-import { answerIsLoserStayingDialogIfAsked, confirmDraw, test } from './setUpTournament';
+import {
+	answerIsLoserStayingDialogIfAsked,
+	confirmDraw,
+	startTournament,
+	test,
+} from './setUpTournament';
 
 /*
  * The organizer route fills the laptop's window and never scrolls as a page: a long list scrolls on its own,
@@ -7,9 +12,6 @@ import { answerIsLoserStayingDialogIfAsked, confirmDraw, test } from './setUpTou
  */
 
 const windowSize = { width: 1280, height: 720 };
-
-// The page's bottom padding (py-6): a list that fills the window ends this far above its bottom edge.
-const pageBottomPadding = 24;
 
 test.use({ viewport: windowSize });
 
@@ -28,14 +30,38 @@ const expectWhollyOnScreen = async (elements: Locator[]) => {
 	}
 };
 
+// Every refusal line on the page, empty or not, is wholly on screen, ready for a refusal to show in.
+const expectRefusalLinesOnScreen = async (page: Page) => {
+	await expectWhollyOnScreen(await page.getByRole('alert').all());
+};
+
 const isScrollable = (list: Locator) =>
 	list.evaluate((element) => element.scrollHeight > element.clientHeight);
 
-// A list that fills the window ends at the bottom of the space left on screen, above the page's padding.
-const expectListReachesWindowBottom = async (list: Locator) => {
-	const box = await list.boundingBox();
-	expect(box!.y + box!.height).toBeCloseTo(windowSize.height - pageBottomPadding, 0);
+/*
+ * The area a long list scrolls in fills the space left on screen: it ends at the bottom of the window, above
+ * the page's own padding. The area is the list itself or the nearest box around it that scrolls.
+ */
+const expectScrollingAreaReachesWindowBottom = async (list: Locator) => {
+	const { areaBottom, spaceBottom } = await list.evaluate((element) => {
+		let area: Element = element;
+		while (getComputedStyle(area).overflowY !== 'auto' && area.parentElement) {
+			area = area.parentElement;
+		}
+		const page = element.closest('main')!;
+		return {
+			areaBottom: area.getBoundingClientRect().bottom,
+			spaceBottom: window.innerHeight - parseFloat(getComputedStyle(page).paddingBottom),
+		};
+	});
+	expect(areaBottom).toBeCloseTo(spaceBottom, 0);
 };
+
+/*
+ * The last row of a list, found by its place rather than by its Players: the test needs whichever row sits
+ * furthest past the visible part of the list, not a particular Match.
+ */
+const findLastRow = (list: Locator) => list.getByRole('listitem').last();
 
 /*
  * A row below the visible part of its list is scrolled to, as the Organizer would with the mouse wheel: it
@@ -48,12 +74,14 @@ const expectRowScrollsIntoView = async (page: Page, row: Locator) => {
 	await expectPageDoesNotScroll(page);
 };
 
-const recordResults = async (page: Page, resultCount: number) => {
+// Starts 32 Players on 16 Boards and records 12 results, each loser staying for the Losers Bracket.
+const startWithTwelveResults = async (page: Page) => {
+	await startTournament(page, 32);
 	const nextWinnerButton = page
 		.getByRole('list', { name: 'Matches' })
 		.getByRole('button')
 		.first();
-	for (let recorded = 0; recorded < resultCount; recorded++) {
+	for (let recorded = 0; recorded < 12; recorded++) {
 		await nextWinnerButton.click();
 		await answerIsLoserStayingDialogIfAsked(page, 'Staying');
 	}
@@ -79,7 +107,7 @@ test.describe('Registering a long field', () => {
 			page.getByRole('heading', { name: 'TV screens' }),
 		]);
 		expect(await isScrollable(players)).toBe(true);
-		await expectListReachesWindowBottom(players);
+		await expectScrollingAreaReachesWindowBottom(players);
 	});
 
 	test('brings a newly registered Player into view, keeping the name box ready', async ({
@@ -98,13 +126,11 @@ test.describe('Registering a long field', () => {
 
 	test('keeps the last Player’s rename row on screen', async ({ page }) => {
 		const players = page.getByRole('list', { name: 'Players' });
-		const lastRow = players.getByRole('listitem').last();
-		const lastName = await lastRow.locator('span').textContent();
 
-		await lastRow.getByRole('button', { name: 'Rename' }).click();
+		await findLastRow(players).getByRole('button', { name: 'Rename' }).click();
 
 		await expectWhollyOnScreen([
-			page.getByLabel(`New name for ${lastName}`),
+			page.getByRole('textbox', { name: /^New name for / }),
 			page.getByRole('button', { name: 'Save' }),
 			page.getByRole('button', { name: 'Cancel' }),
 		]);
@@ -118,7 +144,7 @@ test.describe('Playing a long field', () => {
 	}) => {
 		await page.goto('/?players=32&boards=16');
 		await confirmDraw(page);
-		const lastMatch = page.getByRole('list', { name: 'Matches' }).getByRole('listitem').last();
+		const matches = page.getByRole('list', { name: 'Matches' });
 		const controls = [
 			page.getByRole('heading', { name: 'Matches' }),
 			page.getByRole('button', { name: 'Start', exact: true }),
@@ -127,18 +153,16 @@ test.describe('Playing a long field', () => {
 
 		await expectPageDoesNotScroll(page);
 		await expectWhollyOnScreen(controls);
-		await expectRowScrollsIntoView(page, lastMatch);
+		await expectRefusalLinesOnScreen(page);
+		await expectScrollingAreaReachesWindowBottom(matches);
+		await expectRowScrollsIntoView(page, findLastRow(matches));
 		await expectWhollyOnScreen(controls);
 	});
 
-	test('keeps the Matches heading and the TV screens on screen once Started, as Results pile up', async ({
+	test('keeps the Matches heading, its refusal line and the TV screens on screen once Started, as Results pile up', async ({
 		page,
 	}) => {
-		await page.goto('/?players=32&boards=16');
-		await confirmDraw(page);
-		await page.getByRole('button', { name: 'Start', exact: true }).click();
-
-		await recordResults(page, 12);
+		await startWithTwelveResults(page);
 
 		await expectPageDoesNotScroll(page);
 		await expectWhollyOnScreen([
@@ -147,17 +171,15 @@ test.describe('Playing a long field', () => {
 			page.getByRole('heading', { name: 'TV screens' }),
 			page.getByRole('heading', { name: 'Results' }),
 		]);
-		const lastMatch = page.getByRole('list', { name: 'Matches' }).getByRole('listitem').last();
-		await expectRowScrollsIntoView(page, lastMatch);
+		await expectRefusalLinesOnScreen(page);
+		const matches = page.getByRole('list', { name: 'Matches' });
+		await expectRowScrollsIntoView(page, findLastRow(matches));
 	});
 
 	test('scrolls the Results list on its own in a short window, keeping the TV screens on screen', async ({
 		page,
 	}) => {
-		await page.goto('/?players=32&boards=16');
-		await confirmDraw(page);
-		await page.getByRole('button', { name: 'Start', exact: true }).click();
-		await recordResults(page, 12);
+		await startWithTwelveResults(page);
 
 		// Too short for the few results that can still be undone after 12.
 		await page.setViewportSize({ width: windowSize.width, height: 520 });
@@ -182,11 +204,8 @@ test.describe('Playing a long field', () => {
 			page.getByRole('heading', { name: 'Waiting for a Board' }),
 			page.getByRole('button', { name: 'Start', exact: true }),
 		]);
-		const lastWaiting = page
-			.getByRole('list', { name: 'Waiting for a Board' })
-			.getByRole('listitem')
-			.last();
-		await expectRowScrollsIntoView(page, lastWaiting);
+		const waiting = page.getByRole('list', { name: 'Waiting for a Board' });
+		await expectRowScrollsIntoView(page, findLastRow(waiting));
 	});
 
 	test('shows the whole of a single Match waiting beneath a long Matches list', async ({
