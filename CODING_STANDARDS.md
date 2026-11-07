@@ -52,6 +52,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - Behaviour across two windows belongs in `e2e/` (Playwright).
 - Find an element, in a route test or an e2e test, by [Testing Library's query priority](https://testing-library.com/docs/queries/about#priority), as a person finds it. Use role, label, placeholder, text or display value first, then alt text or title. A `data-testid` comes last, for an element nothing on screen names, such as the decorative countdown ring. Playwright has the same queries (`getByRole`, `getByLabel`, `getByText`, `getByTestId`). A CSS selector couples the test to markup, so reach for a test ID instead.
 - Set-up that two tests in a file share becomes a module-level test helper (`showOrganizer`, `setUpDraw`), so each test shows only what it is about. Once a helper exists, call it wherever its steps appear: `typeNumber` then Enter is `enterNumber`.
+- A test helper's name and comment claim only what it asserts, on the screens that call it.
 - A test of when something happens checks both sides of the moment: the old state just before it, the new one at it (still the Winners Bracket at 19 seconds, Now playing at 20).
 - A test that something doesn't happen waits just past the moment it would have happened (still held at 21 seconds, past a 20-second screen), rather than to a round number: a repeating cycle can be back where it started by then.
 - Find a Match in a test by its Players, not by its Board or its place in a list: how Boards are assigned may change.

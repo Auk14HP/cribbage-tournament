@@ -77,14 +77,19 @@ const expectScrollingAreaFillsSpaceLeft = async (list: Locator) => {
  */
 const findLastRow = (list: Locator) => list.getByRole('listitem').last();
 
+// Scrolls a row into view and checks it then shows whole, not cut off by the edge of its list's area.
+const expectWhollyOnScreenOnceScrolledTo = async (row: Locator) => {
+	await row.scrollIntoViewIfNeeded();
+	await expectWhollyOnScreen([row]);
+};
+
 /*
  * A row below the visible part of its list is scrolled to, as the Organizer would with the mouse wheel: it
  * comes wholly on screen while the page itself stays put.
  */
 const expectRowScrollsIntoView = async (page: Page, row: Locator) => {
 	await expect(row).not.toBeInViewport();
-	await row.scrollIntoViewIfNeeded();
-	await expectWhollyOnScreen([row]);
+	await expectWhollyOnScreenOnceScrolledTo(row);
 	await expectPageDoesNotScroll(page);
 };
 
@@ -237,4 +242,61 @@ test.describe('Playing a long field', () => {
 		await expectRowScrollsIntoView(page, waitingMatch);
 		await expectWhollyOnScreen([page.getByRole('heading', { name: 'Matches' })]);
 	});
+});
+
+/*
+ * Every list on screen can be scrolled to its last row, which then shows whole, while the page itself stays
+ * put: no list is squeezed so small that a row is cut off.
+ */
+const expectEveryLastRowReachable = async (page: Page) => {
+	for (const list of await page.getByRole('list').all()) {
+		const rowCount = await list.getByRole('listitem').count();
+		if (rowCount === 0) {
+			continue;
+		}
+		await expectWhollyOnScreenOnceScrolledTo(findLastRow(list));
+	}
+	await expectPageDoesNotScroll(page);
+};
+
+/*
+ * Each field below is checked on registration, Tonight's Draw and once Started, since a layout bug can show in
+ * only one shape. 26 Players on 12 Boards seat 12 of their 13 opening Matches, leaving one waiting beneath a
+ * long list. One Board makes most Matches wait. An odd field gives a Bye: 33 on 16 fill every Board exactly
+ * beside it. 22 on 12 leave one Board to spare, 9 on 6 and 20 on 14 several.
+ */
+const fieldShapes = [
+	{ playerCount: 3, boardCount: 1 },
+	{ playerCount: 9, boardCount: 4 },
+	{ playerCount: 9, boardCount: 6 },
+	{ playerCount: 17, boardCount: 8 },
+	{ playerCount: 20, boardCount: 14 },
+	{ playerCount: 22, boardCount: 12 },
+	{ playerCount: 26, boardCount: 12 },
+	{ playerCount: 32, boardCount: 1 },
+	{ playerCount: 32, boardCount: 15 },
+	{ playerCount: 33, boardCount: 16 },
+	{ playerCount: 40, boardCount: 19 },
+	{ playerCount: 64, boardCount: 32 },
+];
+
+test.describe('Fields of several shapes', () => {
+	for (const { playerCount, boardCount } of fieldShapes) {
+		test(`reaches every list's last row whole, ${playerCount} Players on ${boardCount} Board${boardCount === 1 ? '' : 's'}`, async ({
+			page,
+		}) => {
+			await page.goto(`/?players=${playerCount}&boards=${boardCount}`);
+			await expect(page.getByText(`${playerCount} Players registered`)).toBeVisible();
+			await expect(page.getByLabel('Number of Boards')).toHaveValue(String(boardCount));
+			await expectEveryLastRowReachable(page);
+
+			await confirmDraw(page);
+			await expect(page.getByRole('heading', { name: 'Matches' })).toBeVisible();
+			await expectEveryLastRowReachable(page);
+
+			await page.getByRole('button', { name: 'Start', exact: true }).click();
+			await expect(page.getByText('Tap a Match’s winner.')).toBeVisible();
+			await expectEveryLastRowReachable(page);
+		});
+	}
 });
