@@ -1,6 +1,6 @@
 # Cribbage Tournament App
 
-[![CI](https://github.com/Auk14HP/cribbage-tournament/actions/workflows/check.yml/badge.svg)](https://github.com/Auk14HP/cribbage-tournament/actions/workflows/check.yml)
+[![CI](https://github.com/Auk14HP/cribbage-tournament/actions/workflows/ci.yml/badge.svg)](https://github.com/Auk14HP/cribbage-tournament/actions/workflows/ci.yml)
 
 An app for running a monthly cribbage Tournament at a local brewery. The Organizer runs the bracket from a laptop connected to a TV, and the Players in the room can view the up-to-date brackets and Boards.
 
