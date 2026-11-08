@@ -110,8 +110,8 @@ export const makeSeededDraw = ({
 };
 
 // A Tournament that has made its Draw and Started.
-export const startTournament = (size: TournamentSetup): Tournament => {
-	const drawn = expectOk(makeSeededDraw(size));
+export const startTournament = (setup: TournamentSetup): Tournament => {
+	const drawn = expectOk(makeSeededDraw(setup));
 	return expectOk(start(drawn));
 };
 
