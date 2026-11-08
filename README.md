@@ -8,7 +8,9 @@ An app for running a monthly cribbage Tournament at a local brewery. The Organiz
 
 ## Live Demo
 
-[Coming soon.](https://github.com/Auk14HP/cribbage-tournament/issues/50)
+[Try it with 16 test Players and 8 Boards.](https://auk14hp.github.io/cribbage-tournament/?players=16&boards=8)
+
+Click _Open TV display_ to open the TV's window beside the Organizer's, as the laptop would on the night.
 
 ## Why An App?
 

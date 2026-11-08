@@ -8,6 +8,7 @@ import { createTournament, type Phase, type Tournament } from '../tournament';
 import { useTournament } from '../useTournament';
 import { dangerButton } from './classes';
 import { ConfirmDialog, type Apply } from './controls';
+import { makeDisplayPath } from '../routes';
 import { Draw } from './Draw';
 import { Registration } from './Registration';
 
@@ -48,7 +49,7 @@ export const Organizer = ({ store }: { store: Store<Tournament> }) => {
 				<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
 				<nav className="flex items-center gap-4">
 					<a
-						href="/display"
+						href={makeDisplayPath(import.meta.env.BASE_URL)}
 						target="cribbage-display"
 						className="text-blue-700 underline"
 					>
