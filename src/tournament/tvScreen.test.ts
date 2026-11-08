@@ -14,12 +14,12 @@ import { expectOk, makeSeededDraw, playDrawStaying, startTournament } from './te
 describe('choosing what the TV shows', () => {
 	it('is Auto until the Organizer chooses a screen', () => {
 		expect(createTournament().tvChoice).toBe('auto');
-		expect(startTournament(4, 2).tvChoice).toBe('auto');
+		expect(startTournament({ players: 4, boards: 2 }).tvChoice).toBe('auto');
 	});
 
 	it('is refused before Start', () => {
 		const registering = createTournament();
-		const drawn = expectOk(makeSeededDraw(4, 2));
+		const drawn = expectOk(makeSeededDraw({ players: 4, boards: 2 }));
 		const refusal = { ok: false, reason: 'Press Start before choosing what the TV shows.' };
 
 		expect(chooseTvScreen(registering, 'winnersBracket')).toEqual(refusal);
@@ -27,7 +27,7 @@ describe('choosing what the TV shows', () => {
 	});
 
 	it('offers the Winners Bracket and Now playing while in progress, and holds the one chosen', () => {
-		const started = startTournament(4, 2);
+		const started = startTournament({ players: 4, boards: 2 });
 		expect(listTvScreens(started)).toEqual(['winnersBracket', 'nowPlaying']);
 
 		const holding = expectOk(chooseTvScreen(started, 'nowPlaying'));
@@ -37,7 +37,7 @@ describe('choosing what the TV shows', () => {
 	});
 
 	it('offers the Losers Bracket once it is drawn', () => {
-		const started = startTournament(6, 3);
+		const started = startTournament({ players: 6, boards: 3 });
 		const playing = playDrawStaying(started);
 
 		expect(chooseTvScreen(started, 'losersBracket')).toEqual({
@@ -49,7 +49,7 @@ describe('choosing what the TV shows', () => {
 	});
 
 	it('refuses a screen the TV doesn’t have in the current phase', () => {
-		const started = startTournament(4, 2);
+		const started = startTournament({ players: 4, boards: 2 });
 		const finished = finishTwoPlayerTournament();
 
 		expect(chooseTvScreen(started, 'champion')).toEqual({
@@ -95,7 +95,7 @@ describe('a Held screen when the Tournament finishes or is undone', () => {
 });
 
 // Two Players, Started: their one Match is the final.
-const startTwoPlayerTournament = (): Tournament => startTournament(2, 1);
+const startTwoPlayerTournament = (): Tournament => startTournament({ players: 2, boards: 1 });
 
 // Records the final's winner, its first-named Player, with no Losers Bracket to play.
 const winFinal = (tournament: Tournament): Tournament => {

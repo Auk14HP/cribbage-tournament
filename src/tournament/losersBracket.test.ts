@@ -34,7 +34,7 @@ import {
  * Losers Bracket's first-Round Match in the order its Draw put them.
  */
 const setUpHeldPlace = (answers: readonly [StayingAnswer, StayingAnswer]) => {
-	let tournament = startTournament(5, 4);
+	let tournament = startTournament({ players: 5, boards: 4 });
 	const [ann, bob] = listPlayersInRound(tournament, 1);
 	const annAndBob = findMatchOf(tournament, ann);
 	const onBoards = getMatchesOnBoards(tournament).filter((m) => !isPlaying(m, ann));
@@ -77,7 +77,7 @@ const findByePlayerStillToPlay = (tournament: Tournament) => {
 
 // 4 Players on 2 Boards, Started: Ann and Bob, and Cat and Dan, play the first Round.
 const startFourPlayerTournament = () => {
-	const started = startTournament(4, 2);
+	const started = startTournament({ players: 4, boards: 2 });
 	const [ann, bob, cat, dan] = listPlayersInRound(started, 1);
 	const annAndBob = findMatchOf(started, ann);
 	const catAndDan = findMatchOf(started, cat);
@@ -90,7 +90,7 @@ describe('the Losers Bracket', () => {
 		 * 5 Players: Ann and Bob play the one first-Round Match, Cat has a Bye and waits for its winner,
 		 * and Dan and Eve, both Byes, meet in Round 2.
 		 */
-		let tournament = startTournament(5, 4);
+		let tournament = startTournament({ players: 5, boards: 4 });
 		const [firstMatch, waiting] = getMatchesOnBoards(tournament);
 		const [ann, bob] = firstMatch.players as [Player, Player];
 		const cat = waiting.players[0];
@@ -119,7 +119,7 @@ describe('the Losers Bracket', () => {
 		 * 6 Players on 3 Boards: Ann and Bob, and Cat and Dan, play first-Round Matches; Eve and Fay, both
 		 * Byes, meet in Round 2.
 		 */
-		let tournament = startTournament(6, 3);
+		let tournament = startTournament({ players: 6, boards: 3 });
 		const [ann, bob, cat, dan] = listPlayersInRound(tournament, 1);
 		const [eve, fay] = listPlayersInRound(tournament, 2);
 		const annAndBob = findMatchOf(tournament, ann);
@@ -308,7 +308,7 @@ describe('the Losers Bracket', () => {
 		 * between Bye Players. Their four losers stay, so with Cat's Held Place the Losers Bracket has eight
 		 * places: one first-Round Match, against the Held Place, and three Byes.
 		 */
-		let tournament = playDrawStaying(startTournament(9, 5));
+		let tournament = playDrawStaying(startTournament({ players: 9, boards: 5 }));
 		expect(getBracketPicture(tournament, 'losers')!.rounds.map((r) => r.length)).toEqual([
 			4, 2, 1,
 		]);
@@ -329,7 +329,7 @@ describe('the Losers Bracket', () => {
 		'plays through a Held Place to both champions when the Bye Player $result',
 		({ catWins }) => {
 			// 9 Players: four losers stay, and Cat, the Bye Player still to play, has a place held.
-			let tournament = playDrawStaying(startTournament(9, 5));
+			let tournament = playDrawStaying(startTournament({ players: 9, boards: 5 }));
 			const { byePlayer: cat } = findByePlayerStillToPlay(tournament);
 			for (;;) {
 				const ready = getMatchesOnBoards(tournament).find(hasBothPlayersKnown);
@@ -353,15 +353,17 @@ describe('the Losers Bracket', () => {
 	);
 
 	it('makes the Losers Draw at random, the same every time from the same seeded random source', () => {
-		const drawLosersWith = (seed: number) => {
-			const tournament = playDrawStaying(startTournament(26, 13, seed));
+		const drawLosersWith = ({ seed }: { seed: number }) => {
+			const tournament = playDrawStaying(startTournament({ players: 26, boards: 13, seed }));
 			return getBracketPicture(tournament, 'losers')!.rounds[0];
 		};
 
-		expect(drawLosersWith(42)).toEqual(drawLosersWith(42));
-		expect(drawLosersWith(42)).not.toEqual(drawLosersWith(43));
+		expect(drawLosersWith({ seed: 42 })).toEqual(drawLosersWith({ seed: 42 }));
+		expect(drawLosersWith({ seed: 42 })).not.toEqual(drawLosersWith({ seed: 43 }));
 		// Not in the order the Players registered.
-		const drawnIds = drawLosersWith(42).flatMap((m) => m?.players.map((p) => p!.id) ?? []);
+		const drawnIds = drawLosersWith({ seed: 42 }).flatMap(
+			(m) => m?.players.map((p) => p!.id) ?? [],
+		);
 		expect(drawnIds).not.toEqual([...drawnIds].sort((a, b) => a - b));
 	});
 
@@ -373,7 +375,7 @@ describe('the Losers Bracket', () => {
 		 * pair's Match, both ready to play, take the 2 free Boards ahead of the Bye Player waiting for a
 		 * winner, though that Bye Player comes first in the bracket.
 		 */
-		let tournament = playDrawStaying(startTournament(10, 5));
+		let tournament = playDrawStaying(startTournament({ players: 10, boards: 5 }));
 		const losersOnBoards = getMatchesOnBoards(tournament).filter(
 			(m) => m.match.bracket === 'losers',
 		);

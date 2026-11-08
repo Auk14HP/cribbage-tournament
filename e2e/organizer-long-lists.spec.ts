@@ -68,7 +68,9 @@ const expectScrollingAreaFillsSpaceLeft = async (list: Locator) => {
 		}
 		return { areaBottom: area.getBoundingClientRect().bottom, spaceBottom };
 	});
-	expect(areaBottom).toBeCloseTo(spaceBottom, 0);
+	// toBeCloseTo counts the digits after the point that must match: none, so to the whole pixel.
+	const digitsAfterPoint = 0;
+	expect(areaBottom).toBeCloseTo(spaceBottom, digitsAfterPoint);
 };
 
 /*
@@ -95,7 +97,7 @@ const expectRowScrollsIntoView = async (page: Page, row: Locator) => {
 
 // Starts 32 Players on 16 Boards and records 12 results, each loser staying for the Losers Bracket.
 const startWithTwelveResults = async (page: Page) => {
-	await startTournament(page, 32);
+	await startTournament(page, { players: 32 });
 	const nextWinnerButton = page
 		.getByRole('list', { name: 'Matches' })
 		.getByRole('button')

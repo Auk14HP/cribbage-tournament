@@ -43,7 +43,7 @@ for (const tvSize of [
 ]) {
 	test.describe(`on a ${tvSize.width}×${tvSize.height} TV with 32 Players`, () => {
 		test.beforeEach(async ({ page: organizer }) => {
-			await startTournament(organizer, 32);
+			await startTournament(organizer, { players: 32 });
 		});
 
 		test('the ring covers no Match on the Winners Bracket or card on Now playing at Start', async ({

@@ -41,7 +41,10 @@ export const recordWinner = (
 	if (answerRefusal) {
 		return { ok: false, reason: answerRefusal };
 	}
-	return { ok: true, value: settleMatch(tournament, match, winner, false, loserAnswer) };
+	return {
+		ok: true,
+		value: settleMatch(tournament, match, winner, loserAnswer, { isForfeit: false }),
+	};
 };
 
 /*
@@ -61,7 +64,10 @@ export const recordForfeit = (
 		return { ok: false, reason: refusal };
 	}
 	const opponent = findOpponent(tournament, match, leaver);
-	return { ok: true, value: settleMatch(tournament, match, opponent, true, leaverAnswer) };
+	return {
+		ok: true,
+		value: settleMatch(tournament, match, opponent, leaverAnswer, { isForfeit: true }),
+	};
 };
 
 // A loser the Losers Bracket is open to must say whether they are staying for it.
@@ -130,8 +136,8 @@ const settleMatch = (
 	tournament: Tournament,
 	match: MatchPlace,
 	winner: PlayerId,
-	isForfeit: boolean,
 	loserAnswer: StayingAnswer | undefined,
+	{ isForfeit }: { isForfeit: boolean },
 ): Tournament => {
 	const board = findBoard(tournament, match)!;
 	const loser = findOpponent(tournament, match, winner);

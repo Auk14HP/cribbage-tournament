@@ -74,8 +74,12 @@ const isEachBoardHeldOnce = (matches: readonly MatchOnBoard[]): boolean => {
 	return new Set(boardsHeld).size === boardsHeld.length;
 };
 
+// How many Players to register and Boards to set out, and the seed that shuffles the Draw.
+type TournamentSize = { players: number; boards: number };
+type SeededTournamentSize = TournamentSize & { seed?: number };
+
 // A Tournament with the given number of Players registered and Boards set out.
-export const setUpTournament = (players: number, boards: number): Tournament => {
+export const setUpTournament = ({ players, boards }: TournamentSize): Tournament => {
 	let tournament = createTournament();
 	for (let i = 1; i <= players; i++) {
 		tournament = expectOk(registerPlayer(tournament, `Player ${i}`));
@@ -94,14 +98,18 @@ export const registerPlayers = (...names: string[]): Tournament => {
 };
 
 // The Draw for a Tournament set up as setUpTournament does, shuffled by a seeded random source.
-export const makeSeededDraw = (players: number, boards: number, seed = 1): Result<Tournament> => {
-	const registered = setUpTournament(players, boards);
+export const makeSeededDraw = ({
+	players,
+	boards,
+	seed = 1,
+}: SeededTournamentSize): Result<Tournament> => {
+	const registered = setUpTournament({ players, boards });
 	return makeDraw(registered, createSeededRandom(seed));
 };
 
 // A Tournament that has made its Draw and Started.
-export const startTournament = (players: number, boards: number, seed = 1): Tournament => {
-	const drawn = expectOk(makeSeededDraw(players, boards, seed));
+export const startTournament = (size: SeededTournamentSize): Tournament => {
+	const drawn = expectOk(makeSeededDraw(size));
 	return expectOk(start(drawn));
 };
 

@@ -135,7 +135,7 @@ describe('timing the TV screens', () => {
 	it('shows each TV screen for 20 seconds unless the Organizer changes it, even once Started', () => {
 		expect(createTournament().screenSeconds).toBe(20);
 
-		const started = startTournament(5, 4);
+		const started = startTournament({ players: 5, boards: 4 });
 		const changed = expectOk(setScreenSeconds(started, ' 45 '));
 
 		expect(changed.screenSeconds).toBe(45);

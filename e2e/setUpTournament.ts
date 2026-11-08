@@ -37,7 +37,7 @@ export const confirmDraw = async (organizer: Page) => {
 	await organizer.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
 };
 
-export const startTournament = async (page: Page, players: number) => {
+export const startTournament = async (page: Page, { players }: { players: number }) => {
 	await page.goto(`/?players=${players}&boards=${Math.ceil(players / 2)}`);
 	await confirmDraw(page);
 	await page.getByRole('button', { name: 'Start', exact: true }).click();

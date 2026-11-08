@@ -15,6 +15,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 ## Readability
 
 - Don't nest a call two or more levels deep inside another call's arguments: name the inner result first, so each line does one thing and the name says what it is. Write `const dialog = within(screen.getByRole('dialog'))` and then `user.click(dialog.getByRole('button', { name }))`, not `user.click(within(screen.getByRole('dialog')).getByRole('button', { name }))`. One level is fine: `expect(screen.getByRole('heading')).toHaveTextContent('Now playing')`. A callback's body starts afresh: `matches.find((m) => m.players.every(isKnown))` nests nothing. ESLint catches a call nested in arguments two deep; a call made on a call's result, like `within(...)` above, is left to review.
+- Name a number or boolean literal at the call when the function's name doesn't say what it is. A function in this repo takes it in an options object: `startTournament({ players: 5, boards: 4 })`, not `startTournament(5, 4)`. A call into code we don't own, or a value used more than once, names it in a const first. A literal can stay bare when the function's name says what it is (`waitSeconds(3)`, `playUntilMatchesLeft(page, 0)`) or when the order doesn't matter or is well known (`Math.min(a, b)`, `slice(0, 3)`); otherwise two bare numbers at one call always need names. A variable passed as an argument is already named. String literals read as words and are exempt. This is left to review: no lint rule catches it.
 
 ## Comments
 
