@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
 import { configDefaults, defineConfig } from 'vitest/config';
+import { pagesBase } from './pagesBase.ts';
 
 /*
  * GitHub Pages serves 404.html for any path it has no file for, so a copy of the entry there lets a direct load
@@ -28,7 +29,7 @@ export default defineConfig(({ command, isPreview }) => ({
 	 * A build is for GitHub Pages, served under the repository's name, and `vite preview` serves it there too;
 	 * the dev server and Vitest stay at the root.
 	 */
-	base: command === 'build' || isPreview ? '/cribbage-tournament/' : '/',
+	base: command === 'build' || isPreview ? pagesBase : '/',
 	plugins: [react(), tailwindcss(), copyEntryTo404()],
 	test: {
 		// e2e/ and screens/ are Playwright's, run by `npm run e2e` and `npm run screens`, not Vitest.

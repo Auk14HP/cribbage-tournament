@@ -8,10 +8,10 @@ import { createLocalStorageStore } from './storage';
 import { setUpTestTournament } from './testTournament';
 import { tournamentVersion, type Tournament } from './tournament';
 
-// Two routes under the base path: the organizer route (on the laptop) and the display route (a second window on the TV).
 const store = createLocalStorageStore<Tournament>('cribbage-tournament', tournamentVersion);
 const route = findRoute(import.meta.env.BASE_URL, location.pathname);
 
+// A stray path shows the organizer route too, but only the organizer route itself sets up test Players.
 if (route === 'organizer') {
 	setUpTestTournament(store);
 }

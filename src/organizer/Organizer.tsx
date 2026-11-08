@@ -3,12 +3,12 @@
  * saves accepted changes through the store, and shows the core's reason when a change is refused.
  */
 import { useRef, useState } from 'react';
+import { makeDisplayPath } from '../routes';
 import type { Store } from '../storage';
 import { createTournament, type Phase, type Tournament } from '../tournament';
 import { useTournament } from '../useTournament';
 import { dangerButton } from './classes';
 import { ConfirmDialog, type Apply } from './controls';
-import { makeDisplayPath } from '../routes';
 import { Draw } from './Draw';
 import { Registration } from './Registration';
 

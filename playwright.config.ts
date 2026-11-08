@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { pagesBase } from './pagesBase';
 
 const devPort = 5181;
 const pagesPort = 5182;
@@ -41,7 +42,7 @@ export default defineConfig({
 		devServer,
 		{
 			command: `npm run build && npm run preview -- --port ${pagesPort} --strictPort`,
-			url: `http://localhost:${pagesPort}/cribbage-tournament/`,
+			url: `http://localhost:${pagesPort}${pagesBase}`,
 			reuseExistingServer: !process.env.CI,
 		},
 	],
