@@ -74,9 +74,11 @@ const isEachBoardHeldOnce = (matches: readonly MatchOnBoard[]): boolean => {
 	return new Set(boardsHeld).size === boardsHeld.length;
 };
 
-// How many Players to register and Boards to set out, and the seed that shuffles the Draw.
+// How many Players to register and Boards to set out.
 type TournamentSize = { players: number; boards: number };
-type SeededTournamentSize = TournamentSize & { seed?: number };
+
+// A Tournament's size, and the seed that shuffles its Draw: 1 unless given.
+export type TournamentSetup = TournamentSize & { seed?: number };
 
 // A Tournament with the given number of Players registered and Boards set out.
 export const setUpTournament = ({ players, boards }: TournamentSize): Tournament => {
@@ -102,13 +104,13 @@ export const makeSeededDraw = ({
 	players,
 	boards,
 	seed = 1,
-}: SeededTournamentSize): Result<Tournament> => {
+}: TournamentSetup): Result<Tournament> => {
 	const registered = setUpTournament({ players, boards });
 	return makeDraw(registered, createSeededRandom(seed));
 };
 
 // A Tournament that has made its Draw and Started.
-export const startTournament = (size: SeededTournamentSize): Tournament => {
+export const startTournament = (size: TournamentSetup): Tournament => {
 	const drawn = expectOk(makeSeededDraw(size));
 	return expectOk(start(drawn));
 };

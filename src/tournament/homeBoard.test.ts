@@ -30,6 +30,7 @@ import {
 	listWaiting,
 	setUpTournament,
 	startTournament,
+	type TournamentSetup,
 } from './testSetup';
 
 // The other Player in a Match holding a Board, both its Players known.
@@ -90,12 +91,7 @@ const startWithByePlayerHome = () =>
  * Player is picked from the Draw made the same way without one: choosePlayer receives that Draw, Started.
  */
 const startWithHomeBoard = (
-	{
-		players,
-		boards,
-		homeBoard,
-		seed = 1,
-	}: { players: number; boards: number; homeBoard: number; seed?: number },
+	{ players, boards, homeBoard, seed = 1 }: TournamentSetup & { homeBoard: number },
 	choosePlayer: (drawn: Tournament) => Player,
 ) => {
 	const homePlayer = choosePlayer(startTournament({ players, boards, seed }));
