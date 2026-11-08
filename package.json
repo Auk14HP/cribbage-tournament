@@ -2,6 +2,7 @@
 	"name": "CribbageTournament",
 	"version": "1.0.0",
 	"description": "",
+	"license": "MIT",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
