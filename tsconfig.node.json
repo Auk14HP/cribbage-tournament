@@ -7,10 +7,12 @@
 		"types": ["node"],
 		"strict": true,
 		"skipLibCheck": true,
-		"noEmit": true
+		"noEmit": true,
+		"allowImportingTsExtensions": true
 	},
 	"include": [
 		"vite.config.ts",
+		"pagesBase.ts",
 		"playwright.config.ts",
 		"playwright.screens.config.ts",
 		"e2e",

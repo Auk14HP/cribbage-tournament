@@ -3,6 +3,7 @@
  * saves accepted changes through the store, and shows the core's reason when a change is refused.
  */
 import { useRef, useState } from 'react';
+import { makeDisplayPath } from '../routes';
 import type { Store } from '../storage';
 import { createTournament, type Phase, type Tournament } from '../tournament';
 import { useTournament } from '../useTournament';
@@ -48,7 +49,7 @@ export const Organizer = ({ store }: { store: Store<Tournament> }) => {
 				<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
 				<nav className="flex items-center gap-4">
 					<a
-						href="/display"
+						href={makeDisplayPath(import.meta.env.BASE_URL)}
 						target="cribbage-display"
 						className="text-blue-700 underline"
 					>

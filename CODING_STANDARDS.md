@@ -60,4 +60,4 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 
 ## Routing
 
-- Choose the route with a plain URL check in `src/main.tsx`. Reach for a router when the app grows beyond the organizer and display routes; the display route's cycling screens (brackets, Now playing) are screens within one route.
+- Choose the route with a plain URL check against the base path: `findRoute` in `src/routes.ts`, called from `src/main.tsx`. Reach for a router when the app grows beyond the organizer and display routes; the display route's cycling screens (brackets, Now playing) are screens within one route.
