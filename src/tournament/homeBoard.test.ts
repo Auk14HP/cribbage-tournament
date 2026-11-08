@@ -30,6 +30,7 @@ import {
 	listWaiting,
 	setUpTournament,
 	startTournament,
+	type TournamentSetup,
 } from './testSetup';
 
 // The other Player in a Match holding a Board, both its Players known.
@@ -79,7 +80,7 @@ const expectMovedOffFirst = (
  * winner. That Match takes Board 1, and the two other Bye Players, ready to play, wait for a Board.
  */
 const startWithByePlayerHome = () =>
-	startWithHomeBoard(5, 2, 2, (drawn) => {
+	startWithHomeBoard({ players: 5, boards: 2, homeBoard: 2 }, (drawn) => {
 		// Without a Home Board, the Bye Player waiting for a winner waits for a Board too.
 		const waitingForWinner = getWaitingForBoard(drawn).find((m) => !('name' in m.players[1]))!;
 		return waitingForWinner.players[0];
@@ -90,14 +91,11 @@ const startWithByePlayerHome = () =>
  * Player is picked from the Draw made the same way without one: choosePlayer receives that Draw, Started.
  */
 const startWithHomeBoard = (
-	players: number,
-	boards: number,
-	homeBoard: number,
+	{ players, boards, homeBoard, seed = 1 }: TournamentSetup & { homeBoard: number },
 	choosePlayer: (drawn: Tournament) => Player,
-	seed = 1,
 ) => {
-	const homePlayer = choosePlayer(startTournament(players, boards, seed));
-	const registered = setUpTournament(players, boards);
+	const homePlayer = choosePlayer(startTournament({ players, boards, seed }));
+	const registered = setUpTournament({ players, boards });
 	const withHomeBoard = expectOk(setHomeBoard(registered, homePlayer.id, homeBoard));
 	const random = createSeededRandom(seed);
 	const drawn = expectOk(makeDraw(withHomeBoard, random));
@@ -106,7 +104,7 @@ const startWithHomeBoard = (
 
 describe('giving a Player a Home Board', () => {
 	it('keeps the Board picked for that Player, any of them, and moves it when another is picked', () => {
-		let tournament = setUpTournament(4, 6);
+		let tournament = setUpTournament({ players: 4, boards: 6 });
 		const [ann] = tournament.players;
 
 		tournament = expectOk(setHomeBoard(tournament, ann.id, 3));
@@ -120,18 +118,18 @@ describe('giving a Player a Home Board', () => {
 	});
 
 	it('refuses a Home Board before the Boards are set out, with only one Board, or for a Board not set out', () => {
-		const noBoards = setUpTournament(4, 0);
+		const noBoards = setUpTournament({ players: 4, boards: 0 });
 		const [ann] = noBoards.players;
 		expect(setHomeBoard(noBoards, ann.id, 1)).toEqual({
 			ok: false,
 			reason: 'Type how many Boards there are before giving a Player a Home Board.',
 		});
-		const oneBoard = setUpTournament(4, 1);
+		const oneBoard = setUpTournament({ players: 4, boards: 1 });
 		expect(setHomeBoard(oneBoard, ann.id, 1)).toEqual({
 			ok: false,
 			reason: 'A Player can’t have a Home Board when there is only one Board.',
 		});
-		const sixBoards = setUpTournament(4, 6);
+		const sixBoards = setUpTournament({ players: 4, boards: 6 });
 		expect(setHomeBoard(sixBoards, ann.id, 7)).toEqual({
 			ok: false,
 			reason: 'There is no Board 7.',
@@ -139,7 +137,7 @@ describe('giving a Player a Home Board', () => {
 	});
 
 	it('refuses a second Player a Home Board while one Player has one', () => {
-		let tournament = setUpTournament(4, 6);
+		let tournament = setUpTournament({ players: 4, boards: 6 });
 		const [ann, bob] = tournament.players;
 		tournament = expectOk(setHomeBoard(tournament, ann.id, 2));
 
@@ -150,7 +148,7 @@ describe('giving a Player a Home Board', () => {
 	});
 
 	it('refuses to give or clear a Home Board once the Draw is made', () => {
-		const registered = setUpTournament(4, 6);
+		const registered = setUpTournament({ players: 4, boards: 6 });
 		const [ann] = registered.players;
 		const withHomeBoard = expectOk(setHomeBoard(registered, ann.id, 2));
 		const drawn = expectOk(makeDraw(withHomeBoard, Math.random));
@@ -164,7 +162,7 @@ describe('giving a Player a Home Board', () => {
 	});
 
 	it('refuses to give or clear a Home Board for a Player no longer registered', () => {
-		const registered = setUpTournament(4, 6);
+		const registered = setUpTournament({ players: 4, boards: 6 });
 		const [, bob] = registered.players;
 		const removed = expectOk(removePlayer(registered, bob.id));
 		const notRegisteredRefusal = {
@@ -177,7 +175,7 @@ describe('giving a Player a Home Board', () => {
 	});
 
 	it('clears the Home Board when its Player is removed, or its Board is no longer set out', () => {
-		const registered = setUpTournament(4, 6);
+		const registered = setUpTournament({ players: 4, boards: 6 });
 		const [ann, bob] = registered.players;
 		const withHomeBoard = expectOk(setHomeBoard(registered, ann.id, 4));
 
@@ -203,10 +201,13 @@ describe('giving a Player a Home Board', () => {
 describe('a Home Board through the night', () => {
 	it('seats its Player’s first Match there, and every other Match at the lowest-numbered other free Board', () => {
 		// 8 Players on 4 Boards: four first-Round Matches.
-		const { tournament, homePlayer } = startWithHomeBoard(8, 4, 2, (drawn) => {
-			const [, , , , playerInFourthMatch] = listPlayersInRound(drawn, 1);
-			return playerInFourthMatch;
-		});
+		const { tournament, homePlayer } = startWithHomeBoard(
+			{ players: 8, boards: 4, homeBoard: 2 },
+			(drawn) => {
+				const [, , , , playerInFourthMatch] = listPlayersInRound(drawn, 1);
+				return playerInFourthMatch;
+			},
+		);
 
 		expect(findMatchOf(tournament, homePlayer).board).toBe(2);
 		expect(getMatchesOnBoards(tournament).map((m) => m.board)).toEqual([1, 2, 3, 4]);
@@ -214,7 +215,7 @@ describe('a Home Board through the night', () => {
 
 	it('keeps it for a Bye Player waiting alone, their opponent coming to them', () => {
 		// 5 Players on 4 Boards: one first-Round Match, whose winner the Bye Player waits for.
-		const started = startWithHomeBoard(5, 4, 4, (drawn) => {
+		const started = startWithHomeBoard({ players: 5, boards: 4, homeBoard: 4 }, (drawn) => {
 			const waitingAlone = getMatchesOnBoards(drawn).find((m) => !hasBothPlayersKnown(m))!;
 			return waitingAlone.players[0];
 		});
@@ -240,7 +241,7 @@ describe('a Home Board through the night', () => {
 		 * 8 Players on 4 Boards, the Home Board 4: the first Match in the bracket takes it, and the second
 		 * Match, whose winner meets the first's, takes Board 1.
 		 */
-		const started = startWithHomeBoard(8, 4, 4, (drawn) => {
+		const started = startWithHomeBoard({ players: 8, boards: 4, homeBoard: 4 }, (drawn) => {
 			const firstInBracket = getMatchesOnBoards(drawn).find((m) => m.match.place === 0)!;
 			return firstInBracket.players[0];
 		});
@@ -329,11 +330,8 @@ describe('a Home Board through the night', () => {
 		({ field, boards }) => {
 			// The Home Board is the highest-numbered, for the first Player registered.
 			const started = startWithHomeBoard(
-				field,
-				boards,
-				boards,
+				{ players: field, boards, homeBoard: boards, seed: field },
 				(drawn) => drawn.players[0],
-				field,
 			);
 			const { homePlayer } = started;
 			let { tournament } = started;
@@ -373,7 +371,7 @@ describe('a Home Board through the night', () => {
 		 * 5 Players on 2 Boards, the Home Board 2 for a Player in the first-Round Match. The two other Bye
 		 * Players take Board 1, and the Bye Player waiting for the first-Round Match's winner waits for a Board.
 		 */
-		const started = startWithHomeBoard(5, 2, 2, (drawn) => {
+		const started = startWithHomeBoard({ players: 5, boards: 2, homeBoard: 2 }, (drawn) => {
 			const [firstMatch] = getMatchesOnBoards(drawn).filter(
 				(m) => m.match.round === 1 && hasBothPlayersKnown(m),
 			);

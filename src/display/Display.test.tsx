@@ -59,7 +59,7 @@ describe('the display route', () => {
 describe('Tonight’s Draw screen', () => {
 	it('shows every Match with its Board, including a Bye Player waiting for a winner, until Start', () => {
 		const store = showDisplay();
-		const tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], 3);
+		const tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 3 });
 
 		act(() => store.save(tournament));
 
@@ -96,7 +96,7 @@ describe('Tonight’s Draw screen', () => {
 		 * 5 Players on 2 Boards: the first-Round Match and the Bye Players' Match take the Boards, and the
 		 * Bye Player waiting for a winner waits for a Board too.
 		 */
-		const tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], 2);
+		const tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 2 });
 
 		act(() => store.save(tournament));
 
@@ -110,7 +110,7 @@ describe('Tonight’s Draw screen', () => {
 describe('the Winners Bracket screen', () => {
 	it('shows the bracket after Start, with Bye Players in Round 2, updating live', () => {
 		const store = showDisplay();
-		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue'], 2);
+		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue'], { boards: 2 });
 		let tournament = expectOk(start(drawn));
 		const seatedMatches = getMatchesOnBoards(tournament);
 		const firstMatch = seatedMatches.find(hasBothPlayersKnown)!;
@@ -144,7 +144,7 @@ describe('the TV cycle', () => {
 	it('holds Tonight’s Draw until Start, then cycles the Winners Bracket and Now playing, each for the set time', () => {
 		vi.useFakeTimers();
 		const store = showDisplay();
-		let tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], 3);
+		let tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 3 });
 		act(() => store.save(tournament));
 
 		waitSeconds(60);
@@ -193,7 +193,7 @@ describe('the TV cycle', () => {
 		const store = showDisplay();
 		expect(readHeading()).toBe('Tonight’s Players');
 		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
-		let tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], 3);
+		let tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 3 });
 		act(() => store.save(tournament));
 		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
 
@@ -223,7 +223,7 @@ describe('a Held screen', () => {
 	it('holds the chosen screen with no countdown ring, then on Auto keeps it for a fresh screen time before moving on', () => {
 		vi.useFakeTimers();
 		const store = showDisplay();
-		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], 3);
+		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 3 });
 		let tournament = expectOk(start(drawn));
 		act(() => store.save(tournament));
 		waitSeconds(10);
@@ -248,7 +248,7 @@ describe('a Held screen', () => {
 	it('stays held through the final’s result when the finished Tournament has it, and Auto then cycles on to the champion', () => {
 		vi.useFakeTimers();
 		const store = showDisplay();
-		const drawn = setUpDraw(['Dave K.', 'Big Dave'], 1);
+		const drawn = setUpDraw(['Dave K.', 'Big Dave'], { boards: 1 });
 		const started = expectOk(start(drawn));
 		let tournament = expectOk(chooseTvScreen(started, 'winnersBracket'));
 		const [final] = getMatchesOnBoards(tournament);
@@ -270,7 +270,7 @@ describe('a Held screen', () => {
 
 	it('is still held when the TV is reloaded', () => {
 		const store = showDisplay();
-		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], 3);
+		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 3 });
 		const started = expectOk(start(drawn));
 		const holding = expectOk(chooseTvScreen(started, 'nowPlaying'));
 		act(() => store.save(holding));
@@ -287,7 +287,7 @@ describe('the champion screen', () => {
 	it('shows the champion once the final has a winner, then cycles it with the finished bracket', () => {
 		vi.useFakeTimers();
 		const store = showDisplay();
-		const drawn = setUpDraw(['Dave K.', 'Big Dave'], 1);
+		const drawn = setUpDraw(['Dave K.', 'Big Dave'], { boards: 1 });
 		let tournament = expectOk(start(drawn));
 		const [final] = getMatchesOnBoards(tournament);
 		const champion = final.players[0];
@@ -318,7 +318,7 @@ describe('the Losers Bracket', () => {
 		 * 6 Players on 3 Boards: once the Draw's three Matches are played and their losers stay, the
 		 * Losers Bracket is one Match on a Board and a Bye Player waiting for one.
 		 */
-		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev'], 3);
+		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev'], { boards: 3 });
 		const started = expectOk(start(drawn));
 		const tournament = playDrawStaying(started);
 		const [waiting] = getWaitingForBoard(tournament);
@@ -346,7 +346,7 @@ describe('the Losers Bracket', () => {
 		vi.useFakeTimers();
 		const store = showDisplay();
 		// 4 Players: both first-Round losers stay, and meet in the Losers Bracket.
-		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann'], 2);
+		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann'], { boards: 2 });
 		const started = expectOk(start(drawn));
 		let tournament = playDrawStaying(started);
 		const findFinal = (bracket: BracketName) =>
@@ -392,7 +392,7 @@ const showDisplay = (): Store<Tournament> => {
  * A Tournament with the named Players registered, that many Boards set out, and the Draw made, shuffled by
  * a seeded random source.
  */
-const setUpDraw = (names: readonly string[], boards: number): Tournament => {
+const setUpDraw = (names: readonly string[], { boards }: { boards: number }): Tournament => {
 	const registered = registerPlayers(...names);
 	const typed = String(boards);
 	const withBoards = expectOk(setBoardCount(registered, typed));

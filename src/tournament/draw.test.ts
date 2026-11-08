@@ -41,7 +41,9 @@ describe('making the Draw', () => {
 	])(
 		'seats $field Players at $boards Boards, $waiting waiting for a winner, each Player once',
 		({ field, boards, waiting }) => {
-			const tournament = expectOk(makeSeededDraw(field, 16, field));
+			const tournament = expectOk(
+				makeSeededDraw({ players: field, boards: 16, seed: field }),
+			);
 
 			const matches = getMatchesOnBoards(tournament);
 			expect(matches.length).toBe(boards);
@@ -61,7 +63,7 @@ describe('making the Draw', () => {
 	);
 
 	it('seats a Bye Player at their own Board, waiting for the winner of a first-Round Match', () => {
-		const tournament = expectOk(makeSeededDraw(3, 4));
+		const tournament = expectOk(makeSeededDraw({ players: 3, boards: 4 }));
 
 		const [match, waiting] = getMatchesOnBoards(tournament);
 		const [a, b] = match.players as [Player, Player];
@@ -72,7 +74,7 @@ describe('making the Draw', () => {
 
 	it('makes the same Draw every time from the same seeded random source, and a different one from another', () => {
 		const drawWith = (seed: number) => {
-			const drawn = expectOk(makeSeededDraw(26, 16, seed));
+			const drawn = expectOk(makeSeededDraw({ players: 26, boards: 16, seed }));
 			return getMatchesOnBoards(drawn);
 		};
 
@@ -82,14 +84,14 @@ describe('making the Draw', () => {
 
 	it('puts each Match it seats on the lowest-numbered free Board', () => {
 		// 6 Players: two first-Round Matches, and the two Bye Players meet in Round 2.
-		const drawn = expectOk(makeSeededDraw(6, 5));
+		const drawn = expectOk(makeSeededDraw({ players: 6, boards: 5 }));
 		const matches = getMatchesOnBoards(drawn);
 
 		expect(matches.map((m) => m.board)).toEqual([1, 2, 3]);
 	});
 
 	it('refuses the Draw with fewer than two Players', () => {
-		expect(makeSeededDraw(1, 4)).toEqual({
+		expect(makeSeededDraw({ players: 1, boards: 4 })).toEqual({
 			ok: false,
 			reason: 'The Draw needs at least two Players.',
 		});
@@ -97,7 +99,7 @@ describe('making the Draw', () => {
 
 	it('seats Matches with both Players known first, and queues the rest for a Board', () => {
 		// 26 Players: 13 Matches, 10 in the first Round and 3 between Bye Players in Round 2.
-		const drawOf26 = expectOk(makeSeededDraw(26, 12));
+		const drawOf26 = expectOk(makeSeededDraw({ players: 26, boards: 12 }));
 
 		expect(getMatchesOnBoards(drawOf26).map((m) => m.board)).toEqual(
 			Array.from({ length: 12 }, (_, i) => i + 1),
@@ -115,7 +117,7 @@ describe('making the Draw', () => {
 		 * 25 Players: 9 first-Round Matches and 3 between Bye Players fill the 12 Boards, ahead of the Bye
 		 * Player waiting for the last first-Round Match's winner.
 		 */
-		const drawOf25 = expectOk(makeSeededDraw(25, 12));
+		const drawOf25 = expectOk(makeSeededDraw({ players: 25, boards: 12 }));
 
 		const seated = getMatchesOnBoards(drawOf25);
 		expect(seated.every(hasBothPlayersKnown)).toBe(true);
@@ -127,14 +129,14 @@ describe('making the Draw', () => {
 	});
 
 	it('refuses the Draw with no Boards set out', () => {
-		expect(makeSeededDraw(2, 0)).toEqual({
+		expect(makeSeededDraw({ players: 2, boards: 0 })).toEqual({
 			ok: false,
 			reason: 'The Draw needs at least one Board.',
 		});
 	});
 
 	it('closes registration: a late arrival is refused, and the drawn Players can’t be renamed or removed', () => {
-		const tournament = expectOk(makeSeededDraw(5, 4));
+		const tournament = expectOk(makeSeededDraw({ players: 5, boards: 4 }));
 		const player1 = tournament.players[0];
 
 		expect(registerPlayer(tournament, 'Late Larry')).toEqual({
@@ -150,7 +152,7 @@ describe('making the Draw', () => {
 	});
 
 	it('refuses to change the number of Boards once the Draw is made', () => {
-		const tournament = expectOk(makeSeededDraw(5, 4));
+		const tournament = expectOk(makeSeededDraw({ players: 5, boards: 4 }));
 
 		expect(setBoardCount(tournament, '6')).toEqual({
 			ok: false,
@@ -159,7 +161,7 @@ describe('making the Draw', () => {
 	});
 
 	it('refuses a second Draw', () => {
-		const tournament = expectOk(makeSeededDraw(5, 4));
+		const tournament = expectOk(makeSeededDraw({ players: 5, boards: 4 }));
 
 		const random = createSeededRandom(2);
 
@@ -172,7 +174,7 @@ describe('making the Draw', () => {
 
 describe('starting the Tournament', () => {
 	it('moves the Tournament from Tonight’s Draw screen to in progress', () => {
-		let tournament = expectOk(makeSeededDraw(5, 4));
+		let tournament = expectOk(makeSeededDraw({ players: 5, boards: 4 }));
 		expect(tournament.phase).toBe('drawShown');
 
 		tournament = expectOk(start(tournament));
@@ -181,12 +183,12 @@ describe('starting the Tournament', () => {
 	});
 
 	it('refuses to Start before the Draw, or a second time', () => {
-		const registered = setUpTournament(5, 4);
+		const registered = setUpTournament({ players: 5, boards: 4 });
 		expect(start(registered)).toEqual({
 			ok: false,
 			reason: 'Make the Draw before starting.',
 		});
-		const drawn = expectOk(makeSeededDraw(5, 4));
+		const drawn = expectOk(makeSeededDraw({ players: 5, boards: 4 }));
 		const started = expectOk(start(drawn));
 		expect(start(started)).toEqual({
 			ok: false,

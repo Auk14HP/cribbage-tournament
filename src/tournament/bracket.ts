@@ -64,7 +64,7 @@ export const findPlayers = (tournament: Tournament, match: MatchPlace): readonly
 	if (round === 1) {
 		return (findSettledEntry(tournament, match) as FirstRoundMatch).players;
 	}
-	const findPlayerFrom = (side: number): Seat => {
+	const findPlayerFrom = ({ side }: { side: number }): Seat => {
 		const earlier = { bracket, round: round - 1, place: 2 * place + side };
 		if (round === 2) {
 			const entry = findSettledEntry(tournament, earlier);
@@ -74,7 +74,7 @@ export const findPlayers = (tournament: Tournament, match: MatchPlace): readonly
 		}
 		return findWinner(tournament, earlier) ?? earlier;
 	};
-	return [findPlayerFrom(0), findPlayerFrom(1)];
+	return [findPlayerFrom({ side: 0 }), findPlayerFrom({ side: 1 })];
 };
 
 /*

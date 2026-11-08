@@ -23,7 +23,7 @@ import {
 describe('a Player waiting alone when Boards run short', () => {
 	it('gives up their Board to a re-opened Match, so the night never stalls', () => {
 		// 3 Players on 1 Board: undoing the first Match leaves the Bye Player alone on the only Board.
-		let tournament = startTournament(3, 1);
+		let tournament = startTournament({ players: 3, boards: 1 });
 		const [winner, loser] = listPlayersInRound(tournament, 1);
 		const firstMatch = findMatchOf(tournament, winner);
 		tournament = expectOk(recordWinner(tournament, firstMatch.match, winner.id, 'leaving'));
@@ -44,7 +44,7 @@ describe('a Player waiting alone when Boards run short', () => {
 		 * after another Player sat alone in Round 3. The first Round's results then make the Losers Draw,
 		 * and its two Matches ready to play need more Boards than are free.
 		 */
-		let tournament = startTournament(10, 4);
+		let tournament = startTournament({ players: 10, boards: 4 });
 		const findReadyInRound = (round: number) =>
 			getMatchesOnBoards(tournament).find(
 				(m) => m.match.round === round && hasBothPlayersKnown(m),
@@ -85,7 +85,7 @@ describe('a Player waiting alone when Boards run short', () => {
 	])(
 		'always has a Match to play through $field Players on $boards Boards, undoing every third result',
 		({ field, boards }) => {
-			let tournament = startTournament(field, boards);
+			let tournament = startTournament({ players: field, boards });
 			for (let recorded = 1; tournament.phase !== 'finished'; recorded++) {
 				const ready = getMatchesOnBoards(tournament).find(hasBothPlayersKnown);
 				expect(ready).toBeDefined();

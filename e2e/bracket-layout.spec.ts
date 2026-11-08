@@ -56,7 +56,7 @@ for (const { players, rounds } of [
 				context,
 				page: organizer,
 			}) => {
-				await startTournament(organizer, players);
+				await startTournament(organizer, { players });
 				if (moment === 'at the final') {
 					await playUntilTheFinal(organizer);
 				}
