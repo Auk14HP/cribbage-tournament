@@ -77,7 +77,7 @@ const isEachBoardHeldOnce = (matches: readonly MatchOnBoard[]): boolean => {
 // How many Players to register and Boards to set out.
 type TournamentSize = { players: number; boards: number };
 
-// A Tournament's size, and the seed that shuffles its Draw: 1 unless given.
+// A Tournament's size, and the seed that makes its Draw random.
 export type TournamentSetup = TournamentSize & { seed?: number };
 
 // A Tournament with the given number of Players registered and Boards set out.
