@@ -2,7 +2,9 @@
 
 [![CI](https://github.com/Auk14HP/cribbage-tournament/actions/workflows/ci.yml/badge.svg)](https://github.com/Auk14HP/cribbage-tournament/actions/workflows/ci.yml)
 
-An app for running a monthly cribbage Tournament at a local brewery. The Organizer runs the bracket from a laptop connected to a TV, and the Players in the room can view the up-to-date brackets and Boards.
+An app for running a monthly, single-elimination cribbage Tournament at a local brewery. The Organizer runs the bracket from a laptop connected to a TV, and the Players in the room can view the up-to-date brackets and Boards.
+
+A Player can optionally choose to stay for a single-elimination Losers Bracket if they lose their first Winners Bracket Match. If more than 2 Players choose to participate in the Losers Bracket then it'll be generated, otherwise it won't be played.
 
 <img src="docs/images/CribbageAppGif.gif" alt="The Organizer records a winner and the TV's bracket updates"/>
 
