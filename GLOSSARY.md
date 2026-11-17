@@ -20,6 +20,10 @@ _Avoid_: Admin, host, TD
 One night's event: a **Winners Bracket** and an optional **Losers Bracket**, self-contained to that night.
 _Avoid_: Event, night, competition
 
+**House Rules**:
+The **Tournament**'s own rules of play, the same every night, which the **Organizer** announces before the **Draw**.
+_Avoid_: Rules, announcements, guidelines
+
 **Winners Bracket**:
 The main single-elimination bracket every **Player** enters; its final winner is the tournament champion.
 _Avoid_: Main bracket, championship bracket
