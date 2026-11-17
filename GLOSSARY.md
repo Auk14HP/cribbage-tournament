@@ -45,8 +45,12 @@ The last **Round** of a bracket: a single **Match** whose winner is that bracket
 _Avoid_: Championship, last game
 
 **Draw**:
-The random pairing of **Players** into a bracket's first **Round**, including who gets a **Bye**. Each bracket has exactly one Draw.
+The random pairing of **Players** into a bracket's first **Round**, including who gets a **Bye**. Each bracket has exactly one Draw; the **Winners Bracket**'s can be changed by **Swaps** until Start.
 _Avoid_: Seeding, pairing, shuffle
+
+**Swap**:
+The **Organizer** trading two **Players**' places in the **Winners Bracket**'s **Draw** before Start, such as to give someone the **Bye** or to split up two Players who'd rather not meet first.
+_Avoid_: Move, reshuffle, re-draw
 
 **Held Place**:
 A place in the **Losers Bracket**'s **Draw** kept open for the **Bye** Player whose first **Match** is still to come, which becomes a Bye for their opponent unless they lose it and stay.
