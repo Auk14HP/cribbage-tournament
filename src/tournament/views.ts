@@ -110,7 +110,7 @@ export const getNowPlaying = (tournament: Tournament): readonly MatchBeingPlayed
 
 /*
  * One side of a Match in a bracket's picture: a Player known, the place held for a Bye Player, or undefined
- * while that Player is still to come for another reason.
+ * while they are still to come from an earlier Match.
  */
 export type BracketPlayer = Player | PlaceHeld | undefined;
 
@@ -144,7 +144,7 @@ export const getBracketPicture = (
 	if (!bracket) {
 		return undefined;
 	}
-	const findKnown = (from: Seat): BracketPlayer => {
+	const findBracketPlayer = (from: Seat): BracketPlayer => {
 		if (typeof from === 'number') {
 			return findPlayer(tournament, from);
 		}
@@ -156,7 +156,7 @@ export const getBracketPicture = (
 		const [a, b] = findPlayers(tournament, match);
 		const winner = findWinner(tournament, match);
 		return {
-			players: [findKnown(a), findKnown(b)],
+			players: [findBracketPlayer(a), findBracketPlayer(b)],
 			board: findBoard(tournament, match),
 			winner: winner === undefined ? undefined : findPlayer(tournament, winner),
 		};

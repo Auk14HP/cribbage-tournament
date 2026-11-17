@@ -363,10 +363,10 @@ describe('the Losers Bracket', () => {
 		const heldName = screen.getByText(`${byePlayer.name}?`);
 		expect(heldName).toHaveClass('italic');
 		// The Player still to come from the Held Place's Match is a dash.
-		const [final] = within(screen.getByRole('list', { name: 'Final' })).getAllByRole(
+		const [finalMatch] = within(screen.getByRole('list', { name: 'Final' })).getAllByRole(
 			'listitem',
 		);
-		expect(final).toHaveTextContent('—');
+		expect(finalMatch).toHaveTextContent('—');
 
 		// The Bye Player loses their first Match and stays, so the Held Place is theirs.
 		const byePlayersMatch = findMatchOf(tournament, byePlayer);

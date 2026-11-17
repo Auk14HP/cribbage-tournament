@@ -113,9 +113,9 @@ const getPlayerShade = (match: BracketMatch, player: BracketPlayer, champion?: P
 
 /*
  * A Match's two Players: the winner bright, the loser faded, a Player still to come as a dash, and a place
- * held for a Bye Player as their name with a question mark. A Match
- * holding a Board names it. A Match on the path of a Player still in the bracket has a green
- * border. The final turns yellow once it has a champion.
+ * held for a Bye Player as their name with a question mark. A Match holding a Board names it. A Match on
+ * the path of a Player still in the bracket has a green border. The final turns yellow once it has a
+ * champion.
  */
 const MatchBox = ({
 	match,
@@ -146,7 +146,8 @@ const MatchBox = ({
 
 /*
  * One Player's name in a Match card, or a dash while they are still to come. A place held for a Bye Player
- * reads as "maybe them": their name and a question mark, faded and in italics, so it needs no more room.
+ * shows their name and a question mark, faded and in italics: they will be here if they lose their first
+ * Match and stay. It needs no more room than a name.
  * One line, cut short with an ellipsis. It may break anywhere, so it never holds its column wider than it
  * needs.
  */
