@@ -3,6 +3,7 @@ import {
 	hasLostIn,
 	type BracketMatch,
 	type BracketName,
+	type BracketPlayer,
 	type Player,
 	type PlayerId,
 	type Tournament,
@@ -100,18 +101,19 @@ const BracketColumn = ({
 );
 
 // The winner bright, the loser faded, and faded further once the final has a champion.
-const getPlayerShade = (match: BracketMatch, player: Player | undefined, champion?: Player) => {
+const getPlayerShade = (match: BracketMatch, player: BracketPlayer, champion?: Player) => {
 	if (match.winner === undefined) {
 		return '';
 	}
-	if (player?.id === match.winner.id) {
+	if (player && 'id' in player && player.id === match.winner.id) {
 		return 'font-bold';
 	}
 	return champion ? 'text-gray-700' : 'text-gray-500';
 };
 
 /*
- * A Match's two Players: the winner bright, the loser faded, a Player still to come as a dash. A Match
+ * A Match's two Players: the winner bright, the loser faded, a Player still to come as a dash, and a place
+ * held for a Bye Player as their name with a question mark. A Match
  * holding a Board names it. A Match on the path of a Player still in the bracket has a green
  * border. The final turns yellow once it has a champion.
  */
@@ -143,9 +145,18 @@ const MatchBox = ({
 );
 
 /*
- * One Player's name in a Match card, or a dash while they are still to come. One line, cut short with an
- * ellipsis. It may break anywhere, so it never holds its column wider than it needs.
+ * One Player's name in a Match card, or a dash while they are still to come. A place held for a Bye Player
+ * reads as "maybe them": their name and a question mark, faded and in italics, so it needs no more room.
+ * One line, cut short with an ellipsis. It may break anywhere, so it never holds its column wider than it
+ * needs.
  */
-const MatchPlayer = ({ player, shade }: { player: Player | undefined; shade: string }) => (
-	<span className={`line-clamp-1 break-all ${shade}`}>{player?.name ?? '—'}</span>
-);
+const MatchPlayer = ({ player, shade }: { player: BracketPlayer; shade: string }) => {
+	if (player && 'placeHeldFor' in player) {
+		return (
+			<span className="line-clamp-1 break-all text-gray-400 italic">
+				{player.placeHeldFor.name}?
+			</span>
+		);
+	}
+	return <span className={`line-clamp-1 break-all ${shade}`}>{player?.name ?? '—'}</span>;
+};

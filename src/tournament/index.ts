@@ -49,6 +49,7 @@ export {
 	getUndoableResults,
 	getWaitingForBoard,
 	type BracketMatch,
+	type BracketPlayer,
 	type BracketPicture,
 	type MatchBeingPlayed,
 	type MatchOnBoard,

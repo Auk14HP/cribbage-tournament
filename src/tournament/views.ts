@@ -108,10 +108,15 @@ export const getNowPlaying = (tournament: Tournament): readonly MatchBeingPlayed
 	);
 };
 
+/*
+ * One side of a Match in a bracket's picture: a Player known, the place held for a Bye Player, or undefined
+ * while that Player is still to come for another reason.
+ */
+export type BracketPlayer = Player | PlaceHeld | undefined;
+
 // A Match in a bracket's picture.
 export interface BracketMatch {
-	// Undefined while that Player is still to come.
-	readonly players: readonly [Player | undefined, Player | undefined];
+	readonly players: readonly [BracketPlayer, BracketPlayer];
 	// While the Match is being played, or held for a Bye Player waiting there.
 	readonly board?: BoardNumber;
 	readonly winner?: Player;
@@ -139,8 +144,14 @@ export const getBracketPicture = (
 	if (!bracket) {
 		return undefined;
 	}
-	const findKnown = (from: Seat): Player | undefined =>
-		typeof from === 'number' ? findPlayer(tournament, from) : undefined;
+	const findKnown = (from: Seat): BracketPlayer => {
+		if (typeof from === 'number') {
+			return findPlayer(tournament, from);
+		}
+		return 'heldFor' in from
+			? { placeHeldFor: findPlayer(tournament, from.heldFor) }
+			: undefined;
+	};
 	const pictureMatch = (match: MatchPlace): BracketMatch => {
 		const [a, b] = findPlayers(tournament, match);
 		const winner = findWinner(tournament, match);
