@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
 	getBracketPicture,
+	type BracketMatch,
+	type BracketPlayer,
 	getMatchesOnBoards,
 	getUndoableResults,
 	getWaitingForBoard,
@@ -45,15 +47,24 @@ const setUpHeldPlace = (answers: readonly [StayingAnswer, StayingAnswer]) => {
 	tournament = expectOk(recordWinner(tournament, annAndBob.match, ann.id, answers[0]));
 	tournament = expectOk(recordWinner(tournament, danAndEve.match, dan.id, answers[1]));
 	const [[firstMatch]] = getBracketPicture(tournament, 'losers')?.rounds ?? [[]];
-	const inFirstMatch = firstMatch?.players.find(Boolean);
+	const [inFirstMatch] = listKnownPlayers(firstMatch);
 	const losersMatch = inFirstMatch?.id === eve.id ? [eve, bob] : [bob, eve];
 	return { tournament, ann, bob, cat, dan, eve, losersMatch };
+};
+
+// The Players known in a Match of a bracket's picture: none still to come, nor a place held for one.
+const listKnownPlayers = (match: BracketMatch | undefined): Player[] => {
+	const players: readonly BracketPlayer[] = match?.players ?? [];
+	return players.filter((p): p is Player => p !== undefined && 'id' in p);
 };
 
 // Whether a Player had a Bye: they aren't in any first-Round Match of the Winners Bracket.
 const isByePlayerIn = (tournament: Tournament, player: Opponent): boolean => {
 	const [firstRound] = getBracketPicture(tournament, 'winners')!.rounds;
-	return 'name' in player && !firstRound.some((m) => m?.players.some((p) => p?.id === player.id));
+	return (
+		'name' in player &&
+		!firstRound.some((m) => listKnownPlayers(m).some((p) => p.id === player.id))
+	);
 };
 
 // Whether exactly one of a Match's Players had a Bye.
@@ -138,8 +149,8 @@ describe('the Losers Bracket', () => {
 		 * Player waits for a Board of their own.
 		 */
 		const [[losersMatch], [losersFinal]] = getBracketPicture(tournament, 'losers')!.rounds;
-		const byePlayer = losersFinal!.players.find(Boolean)!;
-		expect([...losersMatch!.players, byePlayer].map((p) => p!.name).sort()).toEqual(
+		const [byePlayer] = listKnownPlayers(losersFinal);
+		expect([...listKnownPlayers(losersMatch), byePlayer].map((p) => p.name).sort()).toEqual(
 			[bob, dan, fay].map((p) => p.name).sort(),
 		);
 		const [losersA, losersB] = losersMatch!.players as [Player, Player];
@@ -255,7 +266,7 @@ describe('the Losers Bracket', () => {
 			]);
 			// Its first Round is now all Byes, so the bracket starts at the final.
 			const [[losersFinal]] = getBracketPicture(tournament, 'losers')!.rounds;
-			expect(losersFinal!.players.map((p) => p!.name)).toEqual([byeNow, byeAtDraw]);
+			expect(listKnownPlayers(losersFinal).map((p) => p.name)).toEqual([byeNow, byeAtDraw]);
 		},
 	);
 
@@ -296,9 +307,11 @@ describe('the Losers Bracket', () => {
 		tournament = expectOk(recordWinner(tournament, catAndDan.match, cat.id, 'staying'));
 
 		const [[losersFinal]] = getBracketPicture(tournament, 'losers')!.rounds;
-		expect(losersFinal!.players.map((p) => p!.name).sort()).toEqual(
-			[bob.name, dan.name].sort(),
-		);
+		expect(
+			listKnownPlayers(losersFinal)
+				.map((p) => p.name)
+				.sort(),
+		).toEqual([bob.name, dan.name].sort());
 		expect(getMatchesOnBoards(tournament).some((m) => isPlaying(m, ann, cat))).toBe(true);
 	});
 
@@ -361,8 +374,8 @@ describe('the Losers Bracket', () => {
 		expect(drawLosersWith({ seed: 42 })).toEqual(drawLosersWith({ seed: 42 }));
 		expect(drawLosersWith({ seed: 42 })).not.toEqual(drawLosersWith({ seed: 43 }));
 		// Not in the order the Players registered.
-		const drawnIds = drawLosersWith({ seed: 42 }).flatMap(
-			(m) => m?.players.map((p) => p!.id) ?? [],
+		const drawnIds = drawLosersWith({ seed: 42 }).flatMap((m) =>
+			listKnownPlayers(m).map((p) => p.id),
 		);
 		expect(drawnIds).not.toEqual([...drawnIds].sort((a, b) => a - b));
 	});
@@ -428,9 +441,11 @@ describe('the Losers Bracket', () => {
 			recordWinner(one.tournament, annAndCat.match, one.ann.id, 'staying'),
 		);
 		const [[losersFinal]] = getBracketPicture(catStays, 'losers')!.rounds;
-		expect(losersFinal!.players.map((p) => p!.name).sort()).toEqual(
-			[one.bob.name, one.cat.name].sort(),
-		);
+		expect(
+			listKnownPlayers(losersFinal)
+				.map((p) => p.name)
+				.sort(),
+		).toEqual([one.bob.name, one.cat.name].sort());
 		const catWins = expectOk(recordWinner(one.tournament, annAndCat.match, one.cat.id));
 		expect(getBracketPicture(catWins, 'losers')).toBeUndefined();
 		expect(listSeats(catWins)).toEqual([[1, one.cat.name, one.dan.name]]);

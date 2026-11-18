@@ -25,6 +25,7 @@ import {
 import {
 	createSeededRandom,
 	expectOk,
+	findMatchOf,
 	hasBothPlayersKnown,
 	playDrawStaying,
 	registerPlayers,
@@ -340,6 +341,46 @@ describe('the Losers Bracket', () => {
 		]);
 		waitSeconds(20);
 		expect(readHeading()).toBe('Winners Bracket');
+	});
+
+	it('names the Bye Player a Held Place is held for, faded with a question mark, until their first Match is decided', () => {
+		const store = showDisplay();
+		/*
+		 * 5 Players on 4 Boards: one first-Round Match, a Bye Player waiting for its winner, and the other
+		 * two Bye Players meeting in Round 2. Once the two Matches being played are decided and their losers
+		 * stay, the Losers Draw holds a place for the waiting Bye Player.
+		 */
+		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 4 });
+		const started = expectOk(start(drawn));
+		const [byePlayer] = getMatchesOnBoards(started).find(
+			(m) => !hasBothPlayersKnown(m),
+		)!.players;
+		const played = playDrawStaying(started);
+		let tournament = expectOk(chooseTvScreen(played, 'losersBracket'));
+		act(() => store.save(tournament));
+		expect(readHeading()).toBe('Losers Bracket');
+
+		const heldName = screen.getByText(`${byePlayer.name}?`);
+		expect(heldName).toHaveClass('italic');
+		// The Player still to come from the Held Place's Match is a dash.
+		const [finalMatch] = within(screen.getByRole('list', { name: 'Final' })).getAllByRole(
+			'listitem',
+		);
+		expect(finalMatch).toHaveTextContent('—');
+
+		// The Bye Player loses their first Match and stays, so the Held Place is theirs.
+		const byePlayersMatch = findMatchOf(tournament, byePlayer);
+		const opponent = byePlayersMatch.players.find(
+			(p) => 'id' in p && p.id !== byePlayer.id,
+		) as Player;
+		tournament = expectOk(
+			recordWinner(tournament, byePlayersMatch.match, opponent.id, 'staying'),
+		);
+		act(() => store.save(tournament));
+
+		const [leftRoundOne] = screen.getAllByRole('list', { name: 'Round 1' });
+		expect(leftRoundOne).toHaveTextContent(byePlayer.name);
+		expect(screen.queryByText(`${byePlayer.name}?`)).not.toBeInTheDocument();
 	});
 
 	it('shows a finished bracket’s champion while the other plays on, then names both champions', () => {
