@@ -23,6 +23,7 @@ import {
 	createSeededRandom,
 	expectOk,
 	findMatchOf,
+	findOpponentIn,
 	isPlaying,
 	hasBothPlayersKnown,
 	listPlayersInRound,
@@ -32,10 +33,6 @@ import {
 	startTournament,
 	type TournamentSetup,
 } from './testSetup';
-
-// The other Player in a Match holding a Board, both its Players known.
-const findOpponentIn = (match: MatchOnBoard, player: Player): Player =>
-	match.players.find((p) => 'id' in p && p.id !== player.id) as Player;
 
 /*
  * 5 Players on 2 Boards, Started, the Home Board 2 for the Bye Player waiting for the first-Round Match's
