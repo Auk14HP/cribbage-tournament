@@ -80,16 +80,18 @@ const playUntilMatchesLeft = async (page: Page, matchesLeft: number) => {
 
 /*
  * Answers whether the loser is staying for the Losers Bracket, if they were asked: only a Player losing their
- * first Match is.
+ * first Match is. Returns whether they were asked.
  */
 export const answerIsLoserStayingDialogIfAsked = async (
 	page: Page,
 	answer: 'Staying' | 'Leaving',
 ) => {
 	const stayingDialog = page.getByRole('dialog', { name: /staying for the Losers Bracket/ });
-	if (await stayingDialog.isVisible()) {
-		await stayingDialog.getByRole('button', { name: answer }).click();
+	if (!(await stayingDialog.isVisible())) {
+		return false;
 	}
+	await stayingDialog.getByRole('button', { name: answer }).click();
+	return true;
 };
 
 export const playToFinal = (page: Page) => playUntilMatchesLeft(page, 0);
