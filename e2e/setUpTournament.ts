@@ -32,6 +32,20 @@ export const test = base.extend<{ drawSeed: number }>({
 	},
 });
 
+// The TVs the browser tests draw on: a 16:9 TV and a narrower one.
+export const tvSizes = [
+	{ width: 1920, height: 1080 },
+	{ width: 1258, height: 955 },
+];
+
+// Opens the display route in a TV window of the given size, beside the Organizer's.
+export const openTv = async (organizer: Page, tvSize: { width: number; height: number }) => {
+	const tv = await organizer.context().newPage();
+	await tv.setViewportSize(tvSize);
+	await tv.goto('/display');
+	return tv;
+};
+
 export const confirmDraw = async (organizer: Page) => {
 	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
 	await organizer.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();

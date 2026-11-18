@@ -5,7 +5,7 @@ import { WaitingForBoard } from './WaitingForBoard';
 const roomy = { gap: 'gap-[2vh]', card: 'py-[1vh]' };
 const largeCards = { grid: `grid-cols-2 ${roomy.gap}`, text: 'text-[8vh]', card: roomy.card };
 const mediumCards = { grid: `grid-cols-3 ${roomy.gap}`, text: 'text-[6vh]', card: roomy.card };
-const smallCards = { grid: `grid-cols-4 ${roomy.gap}`, text: 'text-[4.5vh]', card: roomy.card };
+const smallCards = { grid: `grid-cols-4 ${roomy.gap}`, text: 'text-[4.2vh]', card: roomy.card };
 
 /*
  * Columns and text sizes for Now playing, by how many Matches are being played: as large as fits, down to

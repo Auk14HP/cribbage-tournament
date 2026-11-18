@@ -1,16 +1,19 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import {
 	holdScreen,
+	openTv,
 	playToFinal,
 	playUntilTheFinal,
 	startTournament,
 	test,
+	tvSizes,
 } from './setUpTournament';
+import { expectInsideTvSafeArea } from './tvSafeArea';
 
 /*
  * The Winners Bracket's layout on a TV, measured from where the browser drew each Match: every Round header
  * and Board label is one line, every column's Matches start level, every Match sits level with the middle of the two that
- * feed it, and nothing runs off the screen. A Bye's place in the first Round has no Match, so its empty
+ * feed it, and everything sits inside the TV's safe area. A Bye's place in the first Round has no Match, so its empty
  * slot is measured instead. Measured at Start; at the final, when the narrow final column names its Board;
  * and after the final, when winners' names fill later Rounds. On a 16:9 TV and on a narrower one.
  */
@@ -48,12 +51,8 @@ for (const { players, rounds } of [
 	{ players: 5, rounds: 3 },
 ]) {
 	for (const moment of ['at Start', 'at the final', 'after the final'] as const) {
-		for (const tvSize of [
-			{ width: 1920, height: 1080 },
-			{ width: 1258, height: 955 },
-		]) {
-			test(`with ${players} Players ${moment} on a ${tvSize.width}×${tvSize.height} TV, the bracket lines up, all on screen`, async ({
-				context,
+		for (const tvSize of tvSizes) {
+			test(`with ${players} Players ${moment} on a ${tvSize.width}×${tvSize.height} TV, the bracket lines up, inside the safe area`, async ({
 				page: organizer,
 			}) => {
 				await startTournament(organizer, { players });
@@ -63,9 +62,7 @@ for (const { players, rounds } of [
 				if (moment === 'after the final') {
 					await playToFinal(organizer);
 				}
-				const tv = await context.newPage();
-				await tv.setViewportSize(tvSize);
-				await tv.goto('/display');
+				const tv = await openTv(organizer, tvSize);
 				if (moment === 'after the final') {
 					// Once finished, the TV opens on the champion.
 					await holdScreen(organizer, tv, 'Winners Bracket');
@@ -137,21 +134,7 @@ for (const { players, rounds } of [
 				const finalMiddle = await findMiddle(final[0]);
 				expect(Math.abs(finalMiddle - middle), 'the final').toBeLessThan(2);
 
-				for (const column of lists) {
-					const { x, width } = (await column.boundingBox())!;
-					expect(x + width, 'a column runs off the right of the TV').toBeLessThanOrEqual(
-						tvSize.width,
-					);
-				}
-				for (const card of await tv.getByTestId('match card').all()) {
-					const { x, y, width, height } = (await card.boundingBox())!;
-					expect(y + height, 'a Match runs off the bottom of the TV').toBeLessThanOrEqual(
-						tvSize.height,
-					);
-					expect(x + width, 'a Match runs off the right of the TV').toBeLessThanOrEqual(
-						tvSize.width,
-					);
-				}
+				await expectInsideTvSafeArea(tv);
 			});
 		}
 	}

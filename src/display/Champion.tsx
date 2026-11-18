@@ -1,5 +1,6 @@
 import { getBracketPicture, type BracketName, type Player, type Tournament } from '../tournament';
 import { bracketTitles } from '../wording';
+import { tvSafeArea } from './tvSafeArea';
 
 /*
  * Once the Tournament is finished: the champions, as large as the TV allows. The Winners Bracket's is the
@@ -10,7 +11,9 @@ export const Champion = ({ tournament }: { tournament: Tournament }) => {
 	const losersChampion = getBracketPicture(tournament, 'losers')?.champion;
 	const heading = losersChampion ? 'Tonight’s Champions' : 'Tonight’s Champion';
 	return (
-		<div className="flex h-[94vh] flex-col items-center justify-center text-center">
+		<div
+			className={`flex flex-col items-center justify-center text-center ${tvSafeArea.fullHeight}`}
+		>
 			<h1 className="text-[8vh] leading-none font-bold">{heading}</h1>
 			{losersChampion ? (
 				<>

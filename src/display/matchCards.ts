@@ -3,7 +3,7 @@
  * room for Waiting for a Board. Kept in one place since the fit depends on them together.
  */
 export const matchCards = {
-	grid: 'grid-cols-4 gap-x-[0.8vw] gap-y-[1.5vh]',
-	text: 'text-[3.8vh]',
+	grid: 'grid-cols-4 gap-x-[0.8vw] gap-y-[1.2vh]',
+	text: 'text-[3.5vh]',
 	card: 'py-[0.8vh]',
 };

@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
-import { holdScreen, playToFinal, startTournament, test } from './setUpTournament';
+import { holdScreen, openTv, playToFinal, startTournament, test, tvSizes } from './setUpTournament';
 
 /*
  * The TV's countdown ring sits in a corner, clear of every card: measured from where the browser drew it
@@ -22,13 +22,6 @@ const expectClearOfRing = async (tv: Page, cards: Locator) => {
 	}
 };
 
-const openTv = async (organizer: Page, tvSize: { width: number; height: number }) => {
-	const tv = await organizer.context().newPage();
-	await tv.setViewportSize(tvSize);
-	await tv.goto('/display');
-	return tv;
-};
-
 /*
  * Each Match's slot on the Winners Bracket, found by its Round's list as the TV reads it out. A slot holds its
  * Match card and is at least as large, so a slot clear of the ring means a card clear of it. A Bye's empty
@@ -37,10 +30,7 @@ const openTv = async (organizer: Page, tvSize: { width: number; height: number }
 const findBracketSlots = (tv: Page) =>
 	tv.getByRole('list', { name: /^(Round \d+|Final)$/ }).getByRole('listitem');
 
-for (const tvSize of [
-	{ width: 1920, height: 1080 },
-	{ width: 1258, height: 955 },
-]) {
+for (const tvSize of tvSizes) {
 	test.describe(`on a ${tvSize.width}×${tvSize.height} TV with 32 Players`, () => {
 		test.beforeEach(async ({ page: organizer }) => {
 			await startTournament(organizer, { players: 32 });
