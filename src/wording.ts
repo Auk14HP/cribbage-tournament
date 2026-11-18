@@ -8,8 +8,15 @@ import {
 	type Tournament,
 } from './tournament';
 
+// A number of Players, singular for one: "1 Player", "26 Players".
+const describePlayerCount = (count: number): string =>
+	`${count} ${count === 1 ? 'Player' : 'Players'}`;
+
 export const describePlayersRegistered = (count: number): string =>
-	`${count} ${count === 1 ? 'Player' : 'Players'} registered`;
+	`${describePlayerCount(count)} registered`;
+
+export const describePlayersTonight = (count: number): string =>
+	`${describePlayerCount(count)} tonight`;
 
 /*
  * A Match's Player, or who they wait for: the winner of a Match between two known Players, or of one not

@@ -16,12 +16,14 @@ import {
 	recordWinner,
 	registerPlayer,
 	setBoardCount,
+	showHouseRules,
 	start,
 	type BracketMatch,
 	type BracketPlayer,
 	type MatchOnBoard,
 	type Opponent,
 	type Player,
+	type Random,
 	type StayingAnswer,
 	type Tournament,
 } from './index';
@@ -103,6 +105,15 @@ export const registerPlayers = (...names: string[]): Tournament => {
 	return tournament;
 };
 
+// Goes on from registration to the House Rules step and makes the Draw there, as the Organizer does.
+export const makeDrawAfterHouseRules = (
+	registered: Tournament,
+	random: Random,
+): Result<Tournament> => {
+	const onHouseRules = expectOk(showHouseRules(registered));
+	return makeDraw(onHouseRules, random);
+};
+
 // The Draw for a Tournament set up as setUpTournament does, shuffled by a seeded random source.
 export const makeSeededDraw = ({
 	players,
@@ -110,7 +121,7 @@ export const makeSeededDraw = ({
 	seed = 1,
 }: TournamentSetup): Result<Tournament> => {
 	const registered = setUpTournament({ players, boards });
-	return makeDraw(registered, createSeededRandom(seed));
+	return makeDrawAfterHouseRules(registered, createSeededRandom(seed));
 };
 
 // A Tournament that has made its Draw and Started.

@@ -1,11 +1,12 @@
 import { expect, type Page } from '@playwright/test';
 import {
 	answerIsLoserStayingDialogIfAsked,
-	confirmDraw,
+	confirmDrawFromHouseRules,
 	findMatchesOnBoards,
 	holdScreen,
 	openTv,
 	playToFinal,
+	showHouseRules,
 	startTournament,
 	test,
 	tvSizes,
@@ -41,7 +42,7 @@ const playFirstMatchesWithLosersStaying = async (organizer: Page) => {
 
 for (const tvSize of tvSizes) {
 	test.describe(`on a ${tvSize.width}×${tvSize.height} TV with ${playerCount} Players`, () => {
-		test('Tonight’s Players and Tonight’s Draw sit inside the safe area', async ({
+		test('Tonight’s Players, the House Rules and Tonight’s Draw sit inside the safe area', async ({
 			page: organizer,
 		}) => {
 			await organizer.goto(`/?players=${playerCount}&boards=${firstMatchCount}`);
@@ -49,7 +50,13 @@ for (const tvSize of tvSizes) {
 			await tv.getByRole('heading', { name: 'Tonight’s Players' }).waitFor();
 			await expectInsideTvSafeArea(tv);
 
-			await confirmDraw(organizer);
+			// Every House Rule shown, the most the House Rules screen holds, down to the last.
+			await showHouseRules(organizer);
+			await organizer.getByRole('button', { name: 'Show all' }).click();
+			await tv.getByText('Tell the Organizer who won as soon as your game ends.').waitFor();
+			await expectInsideTvSafeArea(tv);
+
+			await confirmDrawFromHouseRules(organizer);
 			await tv.getByRole('heading', { name: 'Tonight’s Draw' }).waitFor();
 			await expectInsideTvSafeArea(tv);
 		});

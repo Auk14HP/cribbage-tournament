@@ -1,6 +1,8 @@
 // The organizer route's shared Tailwind classes: buttons, text boxes and dialogs.
 
-export const button = 'rounded border border-gray-400 bg-gray-100 px-3 py-1.5 hover:bg-gray-200';
+// A button the Organizer can't use right now is faded, and doesn't light up under the pointer.
+export const button =
+	'rounded border border-gray-400 bg-gray-100 px-3 py-1.5 hover:bg-gray-200 disabled:opacity-50 disabled:hover:bg-gray-100';
 export const dangerButton = `${button} text-red-700`;
 export const primaryButton =
 	'rounded bg-blue-700 px-4 py-2 text-lg font-semibold text-white hover:bg-blue-800';

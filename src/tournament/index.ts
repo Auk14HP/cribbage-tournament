@@ -4,8 +4,8 @@
  * How callers read it: CODING_STANDARDS.md, "The Tournament core".
  *
  * Callers import the core from here. Its files, each holding one concept, import only from the files above
- * them in this list, so they never import in a cycle: types, tvScreen, bracket, registration, seating, draw,
- * results, views.
+ * them in this list, so they never import in a cycle: types, tvScreen, bracket, registration, houseRules,
+ * seating, draw, results, views.
  */
 export {
 	createTournament,
@@ -40,6 +40,14 @@ export {
 	setHomeBoard,
 	setScreenSeconds,
 } from './registration';
+export {
+	goBackToRegistration,
+	hideLastHouseRule,
+	houseRules,
+	showAllHouseRules,
+	showHouseRules,
+	showNextHouseRule,
+} from './houseRules';
 export { makeDraw, start } from './draw';
 export { isLosersBracketOpenTo, recordForfeit, recordWinner, undoResult } from './results';
 export {

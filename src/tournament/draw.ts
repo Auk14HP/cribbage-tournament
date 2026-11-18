@@ -1,4 +1,4 @@
-// Making the Draw for each bracket, and Starting the Tournament once Tonight’s Draw is shown.
+// Making the Draw for each bracket, from the House Rules step, and Starting the Tournament once Tonight’s Draw is shown.
 import type { Result } from '../result';
 import { findOpponent, findWinner, isBye, listIndexes, type Entrant } from './bracket';
 import { reseat } from './seating';
@@ -13,7 +13,10 @@ import type {
 } from './types';
 
 export const makeDraw = (tournament: Tournament, random: Random): Result<Tournament> => {
-	if (tournament.phase !== 'registration') {
+	if (tournament.phase === 'registration') {
+		return { ok: false, reason: 'Show the House Rules before making the Draw.' };
+	}
+	if (tournament.phase !== 'houseRules') {
 		return { ok: false, reason: 'The Draw has already been made.' };
 	}
 	if (tournament.players.length < 2) {
@@ -66,7 +69,7 @@ const arrangeBracket = (drawn: readonly Entrant[]): Bracket => {
 };
 
 export const start = (tournament: Tournament): Result<Tournament> => {
-	if (tournament.phase === 'registration') {
+	if (tournament.phase === 'registration' || tournament.phase === 'houseRules') {
 		return { ok: false, reason: 'Make the Draw before starting.' };
 	}
 	if (tournament.phase !== 'drawShown') {

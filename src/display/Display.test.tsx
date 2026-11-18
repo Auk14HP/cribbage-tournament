@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Display } from './Display';
+import type { Result } from '../result';
 import { createLocalStorageStore, type Store } from '../storage';
 import { listWaitingText } from '../screenTestHelpers';
 import { getPlayerName } from '../wording';
@@ -12,6 +13,11 @@ import {
 	getWaitingForBoard,
 	chooseTvScreen,
 	createTournament,
+	goBackToRegistration,
+	hideLastHouseRule,
+	showAllHouseRules,
+	showHouseRules,
+	showNextHouseRule,
 	recordWinner,
 	registerPlayer,
 	setBoardCount,
@@ -55,6 +61,78 @@ describe('the display route', () => {
 		expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
 			'Big Dave',
 		]);
+	});
+});
+
+describe('the House Rules screen', () => {
+	it('shows its heading and a live count of the Players tonight, with no House Rule until the first is shown', () => {
+		const store = showDisplay();
+		const registered = registerPlayers('Big Dave');
+
+		saveOutcome(store, showHouseRules(registered));
+
+		expect(readHeading()).toBe('House Rules');
+		expect(screen.getByText('1 Player tonight')).toBeInTheDocument();
+		expect(screen.queryAllByRole('listitem')).toEqual([]);
+
+		const backAtRegistration = expectOk(goBackToRegistration(store.load()!));
+		const withLateArrival = expectOk(registerPlayer(backAtRegistration, 'Sue'));
+		saveOutcome(store, showHouseRules(withLateArrival));
+
+		expect(screen.getByText('2 Players tonight')).toBeInTheDocument();
+	});
+
+	it('shows only the House Rules shown so far, in order, the latest emphasized, updating live', () => {
+		const store = showDisplay();
+		const registered = registerPlayers('Big Dave', 'Sue');
+		let tournament = expectOk(showHouseRules(registered));
+		tournament = expectOk(showNextHouseRule(tournament));
+		tournament = expectOk(showNextHouseRule(tournament));
+
+		act(() => store.save(tournament));
+
+		expect(listHouseRulesText()).toEqual([
+			'31 scores 2 points. No extra point for the go.',
+			'No muggins. Don’t claim points your opponent misses.',
+		]);
+		expect(findLatestHouseRule()).toHaveTextContent('No muggins.');
+
+		saveOutcome(store, hideLastHouseRule(tournament));
+		expect(listHouseRulesText()).toEqual(['31 scores 2 points. No extra point for the go.']);
+		expect(findLatestHouseRule()).toHaveTextContent('31 scores 2 points.');
+
+		saveOutcome(store, showAllHouseRules(tournament));
+		expect(listHouseRulesText()).toHaveLength(4);
+		expect(findLatestHouseRule()).toHaveTextContent(
+			'Tell the Organizer who won as soon as your game ends.',
+		);
+	});
+
+	it('gives way to Tonight’s Players on going back to registration, returns with the same House Rules shown, and gives way to Tonight’s Draw once the Draw is made', () => {
+		const store = showDisplay();
+		const registered = registerPlayers('Big Dave', 'Sue');
+		const withBoards = expectOk(setBoardCount(registered, '1'));
+		let tournament = expectOk(showHouseRules(withBoards));
+		tournament = expectOk(showNextHouseRule(tournament));
+		tournament = expectOk(showNextHouseRule(tournament));
+		act(() => store.save(tournament));
+		expect(readHeading()).toBe('House Rules');
+
+		tournament = expectOk(goBackToRegistration(tournament));
+		act(() => store.save(tournament));
+		expect(readHeading()).toBe('Tonight’s Players');
+
+		tournament = expectOk(showHouseRules(tournament));
+		act(() => store.save(tournament));
+		expect(readHeading()).toBe('House Rules');
+		expect(listHouseRulesText()).toEqual([
+			'31 scores 2 points. No extra point for the go.',
+			'No muggins. Don’t claim points your opponent misses.',
+		]);
+
+		const random = createSeededRandom(1);
+		saveOutcome(store, makeDraw(tournament, random));
+		expect(readHeading()).toBe('Tonight’s Draw');
 	});
 });
 
@@ -425,9 +503,22 @@ const setUpDraw = (names: readonly string[], { boards }: { boards: number }): To
 	const registered = registerPlayers(...names);
 	const typed = String(boards);
 	const withBoards = expectOk(setBoardCount(registered, typed));
+	const onHouseRules = expectOk(showHouseRules(withBoards));
 	const random = createSeededRandom(1);
-	return expectOk(makeDraw(withBoards, random));
+	return expectOk(makeDraw(onHouseRules, random));
 };
+
+// Saves the Tournament a command made, as the Organizer's window does.
+const saveOutcome = (store: Store<Tournament>, outcome: Result<Tournament>) => {
+	act(() => store.save(expectOk(outcome)));
+};
+
+// The House Rules the TV shows, in order.
+const listHouseRulesText = () => screen.queryAllByRole('listitem').map((item) => item.textContent);
+
+// The House Rule shown last, which the TV emphasizes.
+const findLatestHouseRule = () =>
+	screen.getAllByRole('listitem').find((item) => item.getAttribute('aria-current') === 'true');
 
 const readHeading = () => screen.getByRole('heading', { level: 1 }).textContent;
 

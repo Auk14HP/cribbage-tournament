@@ -77,11 +77,13 @@ export interface BoardTaken {
 
 /*
  * registration: Players and Boards are being entered.
+ * houseRules: the Organizer announces the House Rules, and the TV shows them one at a time. Going back to
+ * registration is still open.
  * drawShown: the Draw is made and the TV holds Tonight’s Draw screen until the Organizer presses Start.
  * inProgress: Matches are being played.
  * finished: the final has a winner, and the TV holds the champions screen.
  */
-export type Phase = 'registration' | 'drawShown' | 'inProgress' | 'finished';
+export type Phase = 'registration' | 'houseRules' | 'drawShown' | 'inProgress' | 'finished';
 
 // A screen the TV cycles through once Started.
 export type TvScreen = 'winnersBracket' | 'losersBracket' | 'nowPlaying' | 'champion';
@@ -96,6 +98,11 @@ export interface Tournament {
 	readonly phase: Phase;
 	readonly players: readonly Player[];
 	readonly nextPlayerId: PlayerId;
+	/*
+	 * How many of the House Rules the TV shows on the House Rules step, from the first. Kept when the
+	 * Organizer goes back to registration, so returning picks up where they left off.
+	 */
+	readonly shownHouseRuleCount: number;
 	// In number order.
 	readonly boards: readonly BoardNumber[];
 	// One for each Player given a Home Board; for now no more than one Player has one.
@@ -124,12 +131,13 @@ export interface Tournament {
 }
 
 // Bump whenever the Tournament's shape changes, so a Tournament saved in an older shape loads as blank.
-export const tournamentVersion = 9;
+export const tournamentVersion = 10;
 
 export const createTournament = (): Tournament => ({
 	phase: 'registration',
 	players: [],
 	nextPlayerId: 1,
+	shownHouseRuleCount: 0,
 	boards: [],
 	homeBoards: [],
 	onBoards: [],

@@ -1,19 +1,19 @@
-// Registration: Players registered, renamed and removed, the Boards set out, then the Draw made.
+// Registration: Players registered, renamed and removed, and the Boards set out, before the House Rules.
 import { useEffect, useRef, useState, type SubmitEvent } from 'react';
 import type { Result } from '../result';
 import {
-	makeDraw,
 	registerPlayer,
 	removePlayer,
 	renamePlayer,
 	setBoardCount,
+	showHouseRules,
 	type Player,
 	type PlayerId,
 	type Tournament,
 } from '../tournament';
 import { describePlayersRegistered } from '../wording';
 import { button, dangerButton, primaryButton, textInput, windowFilling } from './classes';
-import { ConfirmDialog, NumberBox, Refusal, type Apply } from './controls';
+import { NumberBox, Refusal, type Apply } from './controls';
 import { HomeBoardPicker } from './HomeBoardPicker';
 import { ScreenTiming } from './ScreenTiming';
 
@@ -24,7 +24,6 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 	const [playersRefusal, setPlayersRefusal] = useState('');
 	const [boardsRefusal, setBoardsRefusal] = useState('');
 	const nameInput = useRef<HTMLInputElement>(null);
-	const drawDialog = useRef<HTMLDialogElement>(null);
 	const playersList = useRef<HTMLUListElement>(null);
 	const playerCount = tournament.players.length;
 	const shownPlayerCount = useRef(playerCount);
@@ -61,7 +60,7 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 		setPlayersRefusal('');
 	};
 
-	// The Boards, the Home Board and the Draw share one refusal line, below Make the Draw.
+	// The Boards, the Home Board and Show House Rules share one refusal line, below Show House Rules.
 	const applyToBoards = (outcome: Result<Tournament>) => {
 		const refusal = apply(outcome);
 		setBoardsRefusal(refusal);
@@ -71,8 +70,8 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 		applyToBoards(setBoardCount(tournament, typed));
 	};
 
-	const draw = () => {
-		applyToBoards(makeDraw(tournament, Math.random));
+	const goToHouseRules = () => {
+		applyToBoards(showHouseRules(tournament));
 	};
 
 	const remove = (playerId: PlayerId) => {
@@ -151,7 +150,7 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 				</ul>
 			</section>
 			<div className="w-80">
-				<section aria-label="Boards and the Draw">
+				<section aria-label="Boards">
 					<h2 className="text-xl font-bold">Boards</h2>
 					<NumberBox
 						label="Number of Boards"
@@ -160,7 +159,7 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 					/>
 					{/*
 					 * Its line is kept even when empty, so saving the Boards as the Organizer leaves the box for
-					 * Make the Draw doesn't move the button out from under their click.
+					 * Show House Rules doesn't move the button out from under their click.
 					 */}
 					<p className="mt-2 min-h-6 text-gray-700">
 						{!boardsRefusal &&
@@ -171,16 +170,10 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 					<button
 						type="button"
 						className={`${primaryButton} mt-8 w-full`}
-						onClick={() => drawDialog.current?.showModal()}
+						onClick={goToHouseRules}
 					>
-						Make the Draw
+						Show House Rules
 					</button>
-					<ConfirmDialog
-						ref={drawDialog}
-						message="Make the Draw? Registration will close: no Player can be added, renamed or removed afterwards."
-						confirmLabel="Make the Draw"
-						onConfirm={draw}
-					/>
 					<Refusal reason={boardsRefusal} />
 				</section>
 				<ScreenTiming tournament={tournament} apply={apply} />
