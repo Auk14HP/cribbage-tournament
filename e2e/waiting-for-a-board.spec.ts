@@ -1,35 +1,23 @@
-import { expect, type BrowserContext, type Page } from '@playwright/test';
-import { confirmDraw, holdScreen, test } from './setUpTournament';
-
-const tvHeight = 1080;
-
-const expectPageFitsTv = async (tv: Page) => {
-	const pageHeight = await tv.evaluate(() => document.documentElement.scrollHeight);
-	expect(pageHeight).toBeLessThanOrEqual(tvHeight);
-};
+import { expect, type Page } from '@playwright/test';
+import { confirmDraw, holdScreen, openTv, test, tvSizes } from './setUpTournament';
+import { expectInsideTvSafeArea } from './tvSafeArea';
 
 /*
- * Checks that the whole Waiting for a Board list fits on the TV and the page doesn't grow past it. The tests
- * below use the fields that fill the most of the TV for each of Now playing's sizes, and check both Tonight's
- * Draw and Now playing.
+ * Checks that the whole Waiting for a Board list, and all else on the screen, fits inside the TV's safe area.
+ * The tests below use the fields that fill the most of the TV for each of Now playing's sizes, and check both
+ * Tonight's Draw and Now playing.
  */
 const expectWaitingListFitsTv = async (tv: Page, waitingMatchCount: number) => {
 	const waiting = tv.getByRole('list', { name: 'Waiting for a Board' }).getByRole('listitem');
 	await expect(waiting).toHaveCount(waitingMatchCount);
-	const lastEntry = await waiting.last().boundingBox();
-	expect(lastEntry!.y + lastEntry!.height).toBeLessThanOrEqual(tvHeight);
-	await expectPageFitsTv(tv);
+	await expectInsideTvSafeArea(tv);
 };
 
 // 32 Players open 16 Matches, and those without a Board wait for one.
 const openingMatchCount = 16;
 
-const openTv = async (context: BrowserContext) => {
-	const tv = await context.newPage();
-	await tv.setViewportSize({ width: 1920, height: tvHeight });
-	await tv.goto('/display');
-	return tv;
-};
+// A 16:9 TV, the one most rooms have.
+const [sixteenByNineTv] = tvSizes;
 
 const showDrawOnTv = async (organizer: Page, tv: Page) => {
 	await confirmDraw(organizer);
@@ -66,13 +54,9 @@ const makeLongestRealisticNames = (playerCount: number) => {
  * returns that card's line naming the Match they wait for. The Draw is seeded so the same pair of names is
  * awaited every run.
  */
-const showAwaitedMatchLineOnTv = async (
-	context: BrowserContext,
-	organizer: Page,
-	names: string[],
-) => {
+const showAwaitedMatchLineOnTv = async (organizer: Page, names: string[]) => {
 	await organizer.goto('/?players=0&boards=16');
-	const tv = await openTv(context);
+	const tv = await openTv(organizer, sixteenByNineTv);
 	await registerPlayers(organizer, names);
 	await showDrawOnTv(organizer, tv);
 	return { tv, awaitedMatchLine: tv.getByText(/^Winner of /) };
@@ -82,11 +66,10 @@ for (const boardCount of [2, 5, 6, 7, 13]) {
 	const waitingMatchCount = openingMatchCount - boardCount;
 
 	test(`Waiting for a Board stays on the TV at 32 Players on ${boardCount} Boards`, async ({
-		context,
 		page: organizer,
 	}) => {
 		await organizer.goto(`/?players=32&boards=${boardCount}`);
-		const tv = await openTv(context);
+		const tv = await openTv(organizer, sixteenByNineTv);
 
 		await showDrawOnTv(organizer, tv);
 		await expectWaitingListFitsTv(tv, waitingMatchCount);
@@ -98,11 +81,11 @@ for (const boardCount of [2, 5, 6, 7, 13]) {
 	});
 }
 
-test('Long names stay on one line on Tonight’s Draw', async ({ context, page: organizer }) => {
+test('Long names stay on one line on Tonight’s Draw', async ({ page: organizer }) => {
 	// 32 Players on 13 Boards leaves no slack, so one name wrapping would push the page past the TV.
 	const boardCount = 13;
 	await organizer.goto(`/?players=0&boards=${boardCount}`);
-	const tv = await openTv(context);
+	const tv = await openTv(organizer, sixteenByNineTv);
 	await registerPlayers(organizer, makeLongNames(32));
 
 	await showDrawOnTv(organizer, tv);
@@ -110,12 +93,8 @@ test('Long names stay on one line on Tonight’s Draw', async ({ context, page: 
 	await expectWaitingListFitsTv(tv, openingMatchCount - boardCount);
 });
 
-test('A Bye Player’s card shows the whole Match they wait for', async ({
-	context,
-	page: organizer,
-}) => {
+test('A Bye Player’s card shows the whole Match they wait for', async ({ page: organizer }) => {
 	const { tv, awaitedMatchLine } = await showAwaitedMatchLineOnTv(
-		context,
 		organizer,
 		makeLongestRealisticNames(31),
 	);
@@ -124,23 +103,18 @@ test('A Bye Player’s card shows the whole Match they wait for', async ({
 		(line) => line.scrollWidth > line.clientWidth || line.scrollHeight > line.clientHeight,
 	);
 	expect(isCutShort).toBe(false);
-	await expectPageFitsTv(tv);
+	await expectInsideTvSafeArea(tv);
 });
 
 test('A very long Match a Bye Player waits for takes three lines at most', async ({
-	context,
 	page: organizer,
 }) => {
-	const { tv, awaitedMatchLine } = await showAwaitedMatchLineOnTv(
-		context,
-		organizer,
-		makeLongNames(31),
-	);
+	const { tv, awaitedMatchLine } = await showAwaitedMatchLineOnTv(organizer, makeLongNames(31));
 
 	const lineCount = await awaitedMatchLine.evaluate((line) => {
 		const lineHeight = parseFloat(getComputedStyle(line).lineHeight);
 		return Math.round(line.clientHeight / lineHeight);
 	});
 	expect(lineCount).toBeLessThanOrEqual(3);
-	await expectPageFitsTv(tv);
+	await expectInsideTvSafeArea(tv);
 });

@@ -9,6 +9,7 @@ import {
 	type Tournament,
 } from '../tournament';
 import { bracketTitles } from '../wording';
+import { tvSafeArea } from './tvSafeArea';
 import { describeFinal, describeHalf, getPathShade, type BracketSlot } from './bracketLines';
 
 // Text shrinks as the bracket grows, so a 32-place bracket's nine columns fit across the TV.
@@ -30,7 +31,7 @@ export const Bracket = ({
 	const isStillInBracket = (player: PlayerId) => !hasLostIn(tournament, bracketName, player);
 	const earlier = rounds.slice(0, -1).map((_, round) => round);
 	return (
-		<div className="flex h-[94vh] flex-col">
+		<div className={`flex flex-col ${tvSafeArea.fullHeight}`}>
 			<div className="flex items-baseline justify-between">
 				<h1 className="text-[6vh] leading-none font-bold">{bracketTitles[bracketName]}</h1>
 				{champion && (
