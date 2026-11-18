@@ -1,5 +1,6 @@
-import { expect } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import {
+	answerIsLoserStayingDialogIfAsked,
 	confirmDraw,
 	holdScreen,
 	openTv,
@@ -9,6 +10,30 @@ import {
 	tvSizes,
 } from './setUpTournament';
 import { expectInsideTvSafeArea } from './tvSafeArea';
+
+// 32 Players open 16 first Matches, so 16 losers staying draw the largest Losers Bracket.
+const firstMatchCount = 16;
+
+/*
+ * Records results until every first Match has one, each loser staying, so the Losers Bracket is drawn.
+ * Counts the losers asked rather than clicks, since a click may record a later Match whose loser isn't asked.
+ */
+const playFirstMatchesWithLosersStaying = async (organizer: Page) => {
+	const nextWinnerButton = organizer
+		.getByRole('list', { name: 'Matches' })
+		.getByRole('button')
+		.first();
+	const stayingDialog = organizer.getByRole('dialog', {
+		name: /staying for the Losers Bracket/,
+	});
+	for (let staying = 0; staying < firstMatchCount;) {
+		await nextWinnerButton.click();
+		if (await stayingDialog.isVisible()) {
+			await answerIsLoserStayingDialogIfAsked(organizer, 'Staying');
+			staying++;
+		}
+	}
+};
 
 /*
  * Every TV screen keeps its content, the countdown ring included, inside the safe area a TV that overscans
@@ -41,6 +66,16 @@ for (const tvSize of tvSizes) {
 			await expectInsideTvSafeArea(tv);
 
 			await holdScreen(organizer, tv, 'Now playing');
+			await expectInsideTvSafeArea(tv);
+		});
+
+		test('the Losers Bracket sits inside the safe area once drawn', async ({
+			page: organizer,
+		}) => {
+			await startTournament(organizer, { players: 32 });
+			await playFirstMatchesWithLosersStaying(organizer);
+			const tv = await openTv(organizer, tvSize);
+			await holdScreen(organizer, tv, 'Losers Bracket');
 			await expectInsideTvSafeArea(tv);
 		});
 

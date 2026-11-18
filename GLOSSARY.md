@@ -68,6 +68,18 @@ _Avoid_: Waitlist, backlog
 
 ### The TV
 
+**TV screen**:
+One of the pages the TV shows: **Tonight's Players** before the **Draw**, Tonight's Draw until Start, then the **Winners Bracket**, the **Losers Bracket** once drawn, and **Now playing**, and once the **Tournament** is finished, the Champion screen.
+_Avoid_: Slide, view
+
+**Tonight's Players**:
+The **TV screen** listing every **Player** registered so far, shown before the **Draw**. It is the room's view of registration, not the **Organizer**'s.
+_Avoid_: Registration page, sign-up screen
+
+**Now playing**:
+The **TV screen** showing each **Match** on a **Board**, so a **Player** can find their seat, with any Matches **Waiting for a Board** beneath.
+_Avoid_: Current matches, board list
+
 **Auto**:
 The **Organizer**'s choice that has the TV cycle the current phase's screens once Started, each for the seconds per TV screen.
 _Avoid_: Cycle mode, rotate
