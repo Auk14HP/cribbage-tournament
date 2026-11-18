@@ -51,9 +51,10 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 
 - Core tests drive commands and assert on what the Tournament then holds, describing a Tournament in the Organizer's terms.
 - Route tests (React Testing Library, jsdom) render a route against the real storage adapter and drive it through visible labels and roles: what the Organizer sees and can do.
+- A core or route test that walks a Tournament through the Organizer's steps builds each saved Tournament from the one before. Saving an earlier one again skips the step the test claims to cover.
 - Behaviour across two windows belongs in `e2e/` (Playwright).
 - Find an element, in a route test or an e2e test, by [Testing Library's query priority](https://testing-library.com/docs/queries/about#priority), as a person finds it. Use role, label, placeholder, text or display value first, then alt text or title. A `data-testid` comes last, for an element nothing on screen names, such as the decorative countdown ring. Playwright has the same queries (`getByRole`, `getByLabel`, `getByText`, `getByTestId`). A CSS selector couples the test to markup, so reach for a test ID instead, except in a layout check that measures every drawn element, as `expectInsideTvSafeArea` does.
-- Set-up that two tests in a file share becomes a module-level test helper (`showOrganizer`, `setUpDraw`), so each test shows only what it is about. Once a helper exists, call it wherever its steps appear: `typeNumber` then Enter is `enterNumber`.
+- Set-up that two tests in a file share becomes a module-level test helper (`showOrganizer`, `setUpDraw`), so each test shows only what it is about. Once a helper exists, call it wherever its steps appear, including lines written before the helper: `typeNumber` then Enter is `enterNumber`.
 - A test helper's name and comment claim only what it asserts, on the screens that call it.
 - An e2e test of a TV screen checks it with `expectInsideTvSafeArea` (`e2e/tvSafeArea.ts`) at the largest field the screen shows.
 - A test of when something happens checks both sides of the moment: the old state just before it, the new one at it (still the Winners Bracket at 19 seconds, Now playing at 20).

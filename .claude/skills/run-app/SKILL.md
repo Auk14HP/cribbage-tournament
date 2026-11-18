@@ -10,13 +10,10 @@ Behaviour across the two windows, and the Winners Bracket's layout, are covered 
 `npm run screens` (`screens/screens.spec.ts`) starts its own dev server, sets up a Tournament through the test Tournament URL (`/?players=N&boards=M`, `src/testTournament.ts`), and screenshots both routes, the organizer at 1280×720 and the TV at 1920×1080:
 
 ```bash
-PLAYERS=29 BOARDS=16 npm run screens                  # registration
-PLAYERS=29 BOARDS=16 DRAW=1 npm run screens           # and Tonight's Draw
-PLAYERS=29 BOARDS=16 DRAW=1 START=1 npm run screens   # and after Start
-PLAYERS=29 BOARDS=16 DRAW=1 START=1 RESULTS=12 npm run screens   # and after 12 Match results (RESULTS=all: to the champion)
+PLAYERS=29 BOARDS=16 DRAW=1 START=1 npm run screens
 ```
 
-Images land in `test-results/screens/` (gitignored), one per moment the script reaches; its header comment lists the file names. `npm run e2e` empties `test-results/` when it starts, so take screenshots after it, or copy them out first. Shoot the field sizes at the edges of the change: the largest field (32 fills every Board card) and an odd one where a Player waits for a winner (21).
+Each option takes the screenshots further through the night; the script's header comment lists every option and the file names it writes. Images land in `test-results/screens/` (gitignored), one per moment the script reaches. `npm run e2e` empties `test-results/` when it starts, so take screenshots after it, or copy them out first. Shoot the field sizes at the edges of the change: the largest field (32 fills every Board card) and an odd one where a Player waits for a winner (21).
 
 A whole TV screenshot is costly to open, and judging a screen from across the room needs only half its size. Open a half-size copy first (`sips -Z 960 test-results/screens/tv-draw.png --out <scratchpad>/tv-draw-small.png`), and a crop when checking one detail, such as whether a long name is cut (`sips -c <height> <width> --cropOffset <y> <x> <file> --out <crop>`: height before width, y before x). Open the full image only for what those can't show.
 
