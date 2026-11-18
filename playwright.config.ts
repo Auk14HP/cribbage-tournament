@@ -22,6 +22,11 @@ export default defineConfig({
 	testDir: 'e2e',
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 1 : 0,
+	/*
+	 * A dot per test, then each failure in full and the totals, so a run's output stays short enough to read
+	 * whole, piped or not. CI used it already: it is Playwright's default there.
+	 */
+	reporter: 'dot',
 	use: {
 		channel: 'chrome',
 		trace: 'retain-on-failure',
