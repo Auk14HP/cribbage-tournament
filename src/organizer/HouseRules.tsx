@@ -19,7 +19,7 @@ import { ConfirmDialog, Refusal, type Apply } from './controls';
 export const HouseRules = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const [refusal, setRefusal] = useState('');
 	const drawDialog = useRef<HTMLDialogElement>(null);
-	const shownCount = tournament.shownHouseRuleCount;
+	const shownRuleCount = tournament.shownHouseRuleCount;
 
 	// Every control here shares one refusal line, below Make the Draw.
 	const applyHere = (outcome: Result<Tournament>) => {
@@ -30,12 +30,12 @@ export const HouseRules = ({ tournament, apply }: { tournament: Tournament; appl
 	return (
 		<section aria-label="House Rules" className="mt-6 flex max-w-3xl flex-col">
 			<p className="text-gray-700">
-				{shownCount} of {houseRules.length} shown on the TV
+				{shownRuleCount} of {houseRules.length} shown on the TV
 			</p>
 			{/* Every House Rule, so the Organizer sees what comes next: those not yet on the TV are greyed. */}
 			<ol className="mt-3 list-decimal space-y-2 pl-8 text-lg">
 				{houseRules.map((rule, index) => (
-					<li key={rule} className={index < shownCount ? '' : 'text-gray-400'}>
+					<li key={rule} className={index < shownRuleCount ? '' : 'text-gray-400'}>
 						{rule}
 					</li>
 				))}
@@ -44,7 +44,7 @@ export const HouseRules = ({ tournament, apply }: { tournament: Tournament; appl
 				<button
 					type="button"
 					className={button}
-					disabled={shownCount === 0}
+					disabled={shownRuleCount === 0}
 					onClick={() => applyHere(hideLastHouseRule(tournament))}
 				>
 					Back
@@ -52,7 +52,7 @@ export const HouseRules = ({ tournament, apply }: { tournament: Tournament; appl
 				<button
 					type="button"
 					className={button}
-					disabled={shownCount === houseRules.length}
+					disabled={shownRuleCount === houseRules.length}
 					onClick={() => applyHere(showNextHouseRule(tournament))}
 				>
 					Next
@@ -60,7 +60,7 @@ export const HouseRules = ({ tournament, apply }: { tournament: Tournament; appl
 				<button
 					type="button"
 					className={button}
-					disabled={shownCount === houseRules.length}
+					disabled={shownRuleCount === houseRules.length}
 					onClick={() => applyHere(showAllHouseRules(tournament))}
 				>
 					Show all
