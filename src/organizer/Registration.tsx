@@ -70,7 +70,7 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 		applyToBoards(setBoardCount(tournament, typed));
 	};
 
-	const showRules = () => {
+	const goToHouseRules = () => {
 		applyToBoards(showHouseRules(tournament));
 	};
 
@@ -170,7 +170,7 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 					<button
 						type="button"
 						className={`${primaryButton} mt-8 w-full`}
-						onClick={showRules}
+						onClick={goToHouseRules}
 					>
 						Show House Rules
 					</button>

@@ -1,7 +1,9 @@
 import type { Locator } from '@playwright/test';
 import {
 	answerIsLoserStayingDialogIfAsked,
+	confirmDrawFromHouseRules,
 	findMatchesOnBoards,
+	showHouseRules,
 	test,
 } from '../e2e/setUpTournament';
 
@@ -56,12 +58,11 @@ test('screens', async ({ context, page: organizer }) => {
 	if (!process.env.DRAW) {
 		return;
 	}
-	await organizer.getByRole('button', { name: 'Show House Rules' }).click();
+	await showHouseRules(organizer);
 	await organizer.getByRole('button', { name: 'Show all' }).click();
 	await tv.getByRole('heading', { name: 'House Rules' }).waitFor();
 	await shoot('house-rules');
-	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
-	await organizer.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
+	await confirmDrawFromHouseRules(organizer);
 	await tv.getByRole('heading', { name: 'Tonight’s Draw' }).waitFor();
 	await shoot('draw');
 	if (!process.env.START) {

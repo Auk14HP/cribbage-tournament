@@ -34,8 +34,9 @@ const noSuchPlayer: Result<Tournament> = { ok: false, reason: notRegistered };
 const playersDrawn = 'Players can’t be renamed or removed once the Draw is made.';
 
 /*
- * Why registration's changes are refused outside registration, or undefined during it: on the House Rules
- * step the Organizer goes back to registration first, and once the Draw is made the reason given.
+ * Returns why a change to the Players or Boards is refused: during registration nothing (undefined), on the
+ * House Rules step a reason asking to go back to registration first, and once the Draw is made the reason
+ * passed in as onceDrawn.
  */
 const findRegistrationClosedRefusal = (
 	tournament: Tournament,

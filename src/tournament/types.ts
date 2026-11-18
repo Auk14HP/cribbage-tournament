@@ -102,7 +102,7 @@ export interface Tournament {
 	 * How many of the House Rules the TV shows on the House Rules step, from the first. Kept when the
 	 * Organizer goes back to registration, so returning picks up where they left off.
 	 */
-	readonly houseRulesShown: number;
+	readonly shownHouseRuleCount: number;
 	// In number order.
 	readonly boards: readonly BoardNumber[];
 	// One for each Player given a Home Board; for now no more than one Player has one.
@@ -137,7 +137,7 @@ export const createTournament = (): Tournament => ({
 	phase: 'registration',
 	players: [],
 	nextPlayerId: 1,
-	houseRulesShown: 0,
+	shownHouseRuleCount: 0,
 	boards: [],
 	homeBoards: [],
 	onBoards: [],

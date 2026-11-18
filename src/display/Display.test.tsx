@@ -92,14 +92,14 @@ describe('the House Rules screen', () => {
 		act(() => store.save(tournament));
 
 		expect(listHouseRulesText()).toEqual([
-			'31 scores 2. No extra point for the go.',
+			'31 scores 2 points. No extra point for the go.',
 			'No muggins. Don’t claim points your opponent misses.',
 		]);
 		expect(findLatestHouseRule()).toHaveTextContent('No muggins.');
 
 		saveOutcome(store, hideLastHouseRule(tournament));
-		expect(listHouseRulesText()).toEqual(['31 scores 2. No extra point for the go.']);
-		expect(findLatestHouseRule()).toHaveTextContent('31 scores 2.');
+		expect(listHouseRulesText()).toEqual(['31 scores 2 points. No extra point for the go.']);
+		expect(findLatestHouseRule()).toHaveTextContent('31 scores 2 points.');
 
 		saveOutcome(store, showAllHouseRules(tournament));
 		expect(listHouseRulesText()).toHaveLength(4);

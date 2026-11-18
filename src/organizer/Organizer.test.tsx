@@ -68,14 +68,16 @@ const answerDialog = async (user: User, button: string) => {
 const getRefusalIn = (section: string) =>
 	within(screen.getByRole('region', { name: section })).getByRole('alert');
 
+const clickButton = (user: User, name: string) => user.click(screen.getByRole('button', { name }));
+
 // Goes from registration to the House Rules step.
 const showHouseRules = async (user: User) => {
-	await user.click(screen.getByRole('button', { name: 'Show House Rules' }));
+	await clickButton(user, 'Show House Rules');
 };
 
 // Makes the Draw from the House Rules step, confirming it.
 const confirmDraw = async (user: User) => {
-	await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
+	await clickButton(user, 'Make the Draw');
 	await answerDialog(user, 'Make the Draw');
 };
 
@@ -94,8 +96,6 @@ const makeTheDraw = async (user: User, names: string[], boards: string) => {
 
 // The line saying how many House Rules the TV shows: "2 of 4 shown on the TV".
 const readHouseRulesShown = () => screen.getByText(/of \d+ shown on the TV$/).textContent;
-
-const clickButton = (user: User, name: string) => user.click(screen.getByRole('button', { name }));
 
 /*
  * The rows of every Match on a Board, bracket by bracket. Each recorded result re-renders them, so they are
@@ -458,7 +458,7 @@ describe('the organizer route', () => {
 		await setBoardCount(user, '2');
 		await showHouseRules(user);
 
-		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
+		await clickButton(user, 'Make the Draw');
 		expect(screen.getByRole('dialog')).toHaveTextContent(
 			'Make the Draw? Registration will close: no Player can be added, renamed or removed afterwards.',
 		);

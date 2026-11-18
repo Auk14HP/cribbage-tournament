@@ -19,7 +19,7 @@ import { ConfirmDialog, Refusal, type Apply } from './controls';
 export const HouseRules = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const [refusal, setRefusal] = useState('');
 	const drawDialog = useRef<HTMLDialogElement>(null);
-	const shownCount = tournament.houseRulesShown;
+	const shownCount = tournament.shownHouseRuleCount;
 
 	// Every control here shares one refusal line, below Make the Draw.
 	const applyHere = (outcome: Result<Tournament>) => {
