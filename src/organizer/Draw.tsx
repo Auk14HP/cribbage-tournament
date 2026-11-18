@@ -42,9 +42,9 @@ const bracketOrder: readonly BracketName[] = ['winners', 'losers'];
  * The Matches holding a Board, under their bracket's heading: the ones the Draw seats while the TV holds
  * Tonight’s Draw, then the ones being played. Before Start, Swap mode makes the Players' names tappable:
  * the first tap picks a Player and the second swaps them with the Player picked. Once Started, tapping a
- * Player's name records them as the winner, and a Forfeit records their opponent's. A Player losing their first Match is asked first whether they are staying for the
- * Losers Bracket. Matches waiting for a Board are listed beneath. Results that can still be undone are
- * listed, latest first, to correct a mistake.
+ * Player's name records them as the winner, and a Forfeit records their opponent's. A Player losing their
+ * first Match is asked first whether they are staying for the Losers Bracket. Matches waiting for a Board
+ * are listed beneath. Results that can still be undone are listed, latest first, to correct a mistake.
  */
 export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const matches = getMatchesOnBoards(tournament);
@@ -137,7 +137,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 						</div>
 						{playing && <p className="mt-1 text-gray-700">Tap a Match’s winner.</p>}
 						{swapping && (
-							<p className="mt-1 text-gray-700">Tap two Players to swap them</p>
+							<p className="mt-1 text-gray-700">Tap two Players to swap them.</p>
 						)}
 					</>
 				)}

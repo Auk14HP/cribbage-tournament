@@ -140,21 +140,22 @@ const readByePlayerName = () =>
 		new RegExp(`^Board \\d+(?:${roundName})(.+) vs Winner of`),
 	)![1];
 
-// The names on a Match row's winner buttons: both its Players, once it is being played.
-const listWinnerNames = (row: HTMLElement) =>
-	within(row)
-		.queryAllByRole('button')
-		.map((b) => b.textContent!)
-		.filter((name) => name !== 'Forfeit');
-
-// What each Match row reads, in the order shown.
-const listMatchRowTexts = () => listMatchRows().map((row) => row.textContent);
-
 // The names on a Match row's buttons: in Swap mode, its Players known.
 const listButtonNames = (row: HTMLElement) =>
 	within(row)
 		.queryAllByRole('button')
 		.map((b) => b.textContent!);
+
+// The names on a Match row's winner buttons: both its Players, once it is being played.
+const listWinnerNames = (row: HTMLElement) =>
+	listButtonNames(row).filter((name) => name !== 'Forfeit');
+
+// What each Match row reads, in the order shown.
+const listMatchRowTexts = () => listMatchRows().map((row) => row.textContent);
+
+// The row of the Match on a Board that a Player is in.
+const findRowOf = (name: string) =>
+	listMatchRows().find((row) => within(row).queryByText(name) !== null)!;
 
 // Taps a Player's name in Swap mode.
 const tapPlayer = (user: User, name: string) => clickButton(user, name);
@@ -518,11 +519,11 @@ describe('the organizer route', () => {
 
 		await clickButton(user, 'Swap Players');
 
-		expect(screen.getByText('Tap two Players to swap them')).toBeInTheDocument();
+		expect(screen.getByText('Tap two Players to swap them.')).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: 'Start' })).not.toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: 'Swap Players' })).not.toBeInTheDocument();
 		await clickButton(user, 'Done');
-		expect(screen.queryByText('Tap two Players to swap them')).not.toBeInTheDocument();
+		expect(screen.queryByText('Tap two Players to swap them.')).not.toBeInTheDocument();
 		await clickButton(user, 'Start');
 		expect(screen.queryByRole('button', { name: 'Swap Players' })).not.toBeInTheDocument();
 	});
@@ -542,11 +543,10 @@ describe('the organizer route', () => {
 		expect(listHighlightedNames()).toEqual([ann]);
 		await tapPlayer(user, dan);
 
-		const [firstRowSwapped, , thirdRowSwapped] = listMatchRows();
-		expect(firstRowSwapped).toHaveTextContent(`${dan} vs ${bob}`);
-		expect(thirdRowSwapped).toHaveTextContent(`${cat} vs ${ann}`);
+		expect(findRowOf(dan)).toHaveTextContent(`${dan} vs ${bob}`);
+		expect(findRowOf(ann)).toHaveTextContent(`${cat} vs ${ann}`);
 		expect(listHighlightedNames()).toEqual([]);
-		expect(screen.getByText('Tap two Players to swap them')).toBeInTheDocument();
+		expect(screen.getByText('Tap two Players to swap them.')).toBeInTheDocument();
 		await tapPlayer(user, dan);
 		await tapPlayer(user, ann);
 		expect(listMatchRowTexts()).toEqual(drawnRows);
@@ -587,7 +587,7 @@ describe('the organizer route', () => {
 		await tapPlayer(user, playerA);
 		await clickButton(user, 'Done');
 
-		expect(listMatchRows()[0]).toHaveTextContent(`${byePlayer} vs ${playerB}`);
+		expect(findRowOf(byePlayer)).toHaveTextContent(`${byePlayer} vs ${playerB}`);
 		expect(listWaitingText()).toEqual([
 			`Winners Bracket · Final${playerA} vs Winner of ${byePlayer} / ${playerB}`,
 		]);
@@ -609,7 +609,7 @@ describe('the organizer route', () => {
 		showOrganizer();
 
 		expect(listMatchRowTexts()).toEqual(swappedRows);
-		expect(screen.queryByText('Tap two Players to swap them')).not.toBeInTheDocument();
+		expect(screen.queryByText('Tap two Players to swap them.')).not.toBeInTheDocument();
 		expect(listHighlightedNames()).toEqual([]);
 		expect(screen.getByRole('button', { name: 'Start' })).toBeInTheDocument();
 	});
