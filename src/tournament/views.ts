@@ -161,20 +161,46 @@ export const getBracketPicture = (
 			winner: winner === undefined ? undefined : findPlayer(tournament, winner),
 		};
 	};
-	const rounds = listIndexes(countRounds(bracket)).map((r) =>
+	const allRounds = listIndexes(countRounds(bracket)).map((r) =>
 		listIndexes(bracket.firstRound.length / 2 ** r).map((place) =>
 			r === 0 && isBye(findSettledEntry(tournament, { bracket: name, round: 1, place }))
 				? undefined
 				: pictureMatch({ bracket: name, round: r + 1, place }),
 		),
 	);
-	/*
-	 * A Held Place that became a Bye can leave a first Round of nothing but Byes: the bracket was drawn for
-	 * one more Player than came. It is left out, so the bracket looks the size of its field.
-	 */
-	const isFirstRoundEmpty = rounds.length > 1 && rounds[0].every((m) => m === undefined);
-	const shownRounds = isFirstRoundEmpty ? rounds.slice(1) : rounds;
-	return { rounds: shownRounds, champion: shownRounds.at(-1)![0]!.winner };
+	const rounds = isFirstRoundLeftOut(tournament, name) ? allRounds.slice(1) : allRounds;
+	return { rounds, champion: rounds.at(-1)![0]!.winner };
+};
+
+/*
+ * Whether a bracket's picture leaves out its first Round. A Held Place that became a Bye can leave a first
+ * Round of nothing but Byes: the bracket was drawn for one more Player than came. It is left out, so the
+ * bracket looks the size of its field.
+ */
+const isFirstRoundLeftOut = (tournament: Tournament, name: BracketName): boolean => {
+	const bracket = getBracket(tournament, name)!;
+	return (
+		countRounds(bracket) > 1 &&
+		listIndexes(bracket.firstRound.length).every((place) =>
+			isBye(findSettledEntry(tournament, { bracket: name, round: 1, place })),
+		)
+	);
+};
+
+// A Round as its bracket's picture numbers it: counted from the first Round shown, out of the Rounds shown.
+export interface ShownRound {
+	readonly round: number;
+	readonly roundCount: number;
+}
+
+// A Match's Round as its bracket's picture shows it, so every screen numbers it as the TV bracket does.
+export const getShownRound = (
+	tournament: Tournament,
+	{ bracket, round }: MatchPlace,
+): ShownRound => {
+	const leftOut = isFirstRoundLeftOut(tournament, bracket) ? 1 : 0;
+	const roundCount = countRounds(getBracket(tournament, bracket)!);
+	return { round: round - leftOut, roundCount: roundCount - leftOut };
 };
 
 export interface RecordedResult {

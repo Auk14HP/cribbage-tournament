@@ -1,7 +1,10 @@
 import { getMatchKey, getWaitingForBoard, type Tournament } from '../tournament';
-import { getPlayerName } from '../wording';
+import { describeBracketRound, getPlayerName } from '../wording';
 
-// The Matches waiting for a Board, in turn. None while every Match has a Board.
+/*
+ * The Matches waiting for a Board, in turn, each with its bracket and Round, since the list mixes both
+ * brackets. None while every Match has a Board.
+ */
 export const WaitingForBoard = ({ tournament }: { tournament: Tournament }) => {
 	const waiting = getWaitingForBoard(tournament);
 	if (waiting.length === 0) {
@@ -15,9 +18,14 @@ export const WaitingForBoard = ({ tournament }: { tournament: Tournament }) => {
 				{waiting.map(({ match, players: [playerA, playerB] }) => (
 					<li
 						key={getMatchKey(match)}
-						className="border-b border-gray-300 py-1.5 text-lg"
+						className="flex gap-4 border-b border-gray-300 py-1.5 text-lg"
 					>
-						{playerA.name} vs {getPlayerName(playerB)}
+						<span className="w-56 shrink-0 text-gray-700">
+							{describeBracketRound(tournament, match)}
+						</span>
+						<span>
+							{playerA.name} vs {getPlayerName(playerB)}
+						</span>
 					</li>
 				))}
 			</ol>

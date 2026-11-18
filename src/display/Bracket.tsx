@@ -8,7 +8,7 @@ import {
 	type PlayerId,
 	type Tournament,
 } from '../tournament';
-import { bracketTitles } from '../wording';
+import { bracketTitles, describeRound } from '../wording';
 import { tvSafeArea } from './tvSafeArea';
 import { describeFinal, describeHalf, getPathShade, type BracketSlot } from './bracketLines';
 
@@ -30,6 +30,8 @@ export const Bracket = ({
 	const { rounds, champion } = getBracketPicture(tournament, bracketName)!;
 	const isStillInBracket = (player: PlayerId) => !hasLostIn(tournament, bracketName, player);
 	const earlier = rounds.slice(0, -1).map((_, round) => round);
+	const nameRound = (round: number) =>
+		describeRound({ round: round + 1, roundCount: rounds.length });
 	return (
 		<div className={`flex flex-col ${tvSafeArea.fullHeight}`}>
 			<div className="flex items-baseline justify-between">
@@ -46,19 +48,19 @@ export const Bracket = ({
 				{earlier.map((round) => (
 					<BracketColumn
 						key={`left ${round}`}
-						name={`Round ${round + 1}`}
+						name={nameRound(round)}
 						slots={describeHalf(isStillInBracket, rounds, round, 'left')}
 					/>
 				))}
 				<BracketColumn
-					name="Final"
+					name={nameRound(rounds.length - 1)}
 					slots={[describeFinal(isStillInBracket, rounds)]}
 					champion={champion}
 				/>
 				{[...earlier].reverse().map((round) => (
 					<BracketColumn
 						key={`right ${round}`}
-						name={`Round ${round + 1}`}
+						name={nameRound(round)}
 						slots={describeHalf(isStillInBracket, rounds, round, 'right')}
 					/>
 				))}

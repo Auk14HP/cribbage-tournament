@@ -7,10 +7,14 @@ import {
 	type RecordedResult,
 	type Tournament,
 } from '../tournament';
+import { describeBracketRound } from '../wording';
 import { button, windowFilling } from './classes';
 import { Refusal, type Apply } from './controls';
 
-// The results that can still be undone, latest first, each with its own Undo. None until a result is recorded.
+/*
+ * The results that can still be undone, latest first, each with its own Undo. Each names its bracket and
+ * Round, so the Organizer undoes the Match they mean. None until a result is recorded.
+ */
 export const Results = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const results = getUndoableResults(tournament);
 	const [refusal, setRefusal] = useState('');
@@ -31,7 +35,12 @@ export const Results = ({ tournament, apply }: { tournament: Tournament; apply: 
 						key={getMatchKey(result.match)}
 						className="flex items-center gap-2 border-b border-gray-300 py-1.5"
 					>
-						<span className="flex-1">{describeResult(result)}</span>
+						<div className="flex-1">
+							<span className="block text-sm text-gray-700">
+								{describeBracketRound(tournament, result.match)}
+							</span>
+							<span className="block">{describeResult(result)}</span>
+						</div>
 						<button
 							type="button"
 							className={button}
