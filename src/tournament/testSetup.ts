@@ -7,6 +7,7 @@ import type { Result } from '../result';
 import { getPlayerName } from '../wording';
 import {
 	createTournament,
+	getBracketPicture,
 	getMatchKey,
 	getMatchesOnBoards,
 	getWaitingForBoard,
@@ -16,7 +17,10 @@ import {
 	registerPlayer,
 	setBoardCount,
 	start,
+	type BracketMatch,
+	type BracketPlayer,
 	type MatchOnBoard,
+	type Opponent,
 	type Player,
 	type StayingAnswer,
 	type Tournament,
@@ -168,3 +172,64 @@ export const listSeats = (tournament: Tournament) =>
 // Each Match waiting for a Board, in turn, by its Players' names.
 export const listWaiting = (tournament: Tournament) =>
 	getWaitingForBoard(tournament).map(({ players: [a, b] }) => [a.name, getPlayerName(b)]);
+
+// The other Player in a Match holding a Board, both its Players known.
+export const findOpponentIn = (match: MatchOnBoard, player: Player): Player =>
+	match.players.find((p) => 'id' in p && p.id !== player.id) as Player;
+
+/*
+ * 5 Players on 4 Boards, Started, up to the Losers Draw: Ann beats Bob in the one first-Round Match, Cat
+ * has a Bye and waits for Ann, and Dan beats Eve in Round 2, where they met as Byes. Bob and Eve answer
+ * whether they are staying; Cat's first Match is still to come. losersMatch lists the Players of the
+ * Losers Bracket's first-Round Match in the order its Draw put them.
+ */
+export const setUpHeldPlace = (answers: readonly [StayingAnswer, StayingAnswer]) => {
+	let tournament = startTournament({ players: 5, boards: 4 });
+	const [ann, bob] = listPlayersInRound(tournament, 1);
+	const annAndBob = findMatchOf(tournament, ann);
+	const onBoards = getMatchesOnBoards(tournament).filter((m) => !isPlaying(m, ann));
+	const danAndEve = onBoards.find(hasBothPlayersKnown)!;
+	const waiting = onBoards.find((m) => !hasBothPlayersKnown(m))!;
+	const cat = waiting.players[0];
+	const [dan, eve] = danAndEve.players as [Player, Player];
+	tournament = expectOk(recordWinner(tournament, annAndBob.match, ann.id, answers[0]));
+	tournament = expectOk(recordWinner(tournament, danAndEve.match, dan.id, answers[1]));
+	const [[firstMatch]] = getBracketPicture(tournament, 'losers')?.rounds ?? [[]];
+	const [inFirstMatch] = listKnownPlayers(firstMatch);
+	const losersMatch = inFirstMatch?.id === eve.id ? [eve, bob] : [bob, eve];
+	return { tournament, ann, bob, cat, dan, eve, losersMatch };
+};
+
+// The Players known in a Match of a bracket's picture: none still to come, nor a place held for one.
+export const listKnownPlayers = (match: BracketMatch | undefined): Player[] => {
+	const players: readonly BracketPlayer[] = match?.players ?? [];
+	return players.filter((p): p is Player => p !== undefined && 'id' in p);
+};
+
+// Whether a Player had a Bye: they aren't in any first-Round Match of the Winners Bracket.
+export const isByePlayerIn = (tournament: Tournament, player: Opponent): boolean => {
+	const [firstRound] = getBracketPicture(tournament, 'winners')!.rounds;
+	return (
+		'name' in player &&
+		!firstRound.some((m) => listKnownPlayers(m).some((p) => p.id === player.id))
+	);
+};
+
+// Whether exactly one of a Match's Players had a Bye.
+export const hasOneByePlayer = (tournament: Tournament, match: MatchOnBoard): boolean =>
+	match.players.filter((p) => isByePlayerIn(tournament, p)).length === 1;
+
+/*
+ * The one Bye Player still to play their first Match, waiting for the first-Round Match's winner, and
+ * that Match of theirs: in a Tournament whose Draw has an odd number of first-Round Matches.
+ */
+export const findByePlayerStillToPlay = (tournament: Tournament) => {
+	const firstMatch = getMatchesOnBoards(tournament).find(
+		(m) =>
+			m.match.bracket === 'winners' &&
+			hasBothPlayersKnown(m) &&
+			hasOneByePlayer(tournament, m),
+	)!;
+	const byePlayer = firstMatch.players.find((p) => isByePlayerIn(tournament, p)) as Player;
+	return { byePlayer, firstMatch };
+};

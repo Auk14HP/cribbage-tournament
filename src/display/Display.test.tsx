@@ -29,6 +29,7 @@ import {
 	hasBothPlayersKnown,
 	playDrawStaying,
 	registerPlayers,
+	setUpHeldPlace,
 } from '../tournament/testSetup';
 
 const key = 'display-test';
@@ -345,22 +346,14 @@ describe('the Losers Bracket', () => {
 
 	it('names the Bye Player a Held Place is held for, faded with a question mark, until their first Match is decided', () => {
 		const store = showDisplay();
-		/*
-		 * 5 Players on 4 Boards: one first-Round Match, a Bye Player waiting for its winner, and the other
-		 * two Bye Players meeting in Round 2. Once the two Matches being played are decided and their losers
-		 * stay, the Losers Draw holds a place for the waiting Bye Player.
-		 */
-		const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 4 });
-		const started = expectOk(start(drawn));
-		const [byePlayer] = getMatchesOnBoards(started).find(
-			(m) => !hasBothPlayersKnown(m),
-		)!.players;
-		const played = playDrawStaying(started);
-		let tournament = expectOk(chooseTvScreen(played, 'losersBracket'));
+		// Cat, a Bye Player, waits for Ann; Bob and Eve lost and stay, and the Losers Draw holds Cat a place.
+		const heldPlace = setUpHeldPlace(['staying', 'staying']);
+		const { ann, cat } = heldPlace;
+		let tournament = expectOk(chooseTvScreen(heldPlace.tournament, 'losersBracket'));
 		act(() => store.save(tournament));
 		expect(readHeading()).toBe('Losers Bracket');
 
-		const heldName = screen.getByText(`${byePlayer.name}?`);
+		const heldName = screen.getByText(`${cat.name}?`);
 		expect(heldName).toHaveClass('italic');
 		// The Player still to come from the Held Place's Match is a dash.
 		const [finalMatch] = within(screen.getByRole('list', { name: 'Final' })).getAllByRole(
@@ -368,19 +361,14 @@ describe('the Losers Bracket', () => {
 		);
 		expect(finalMatch).toHaveTextContent('—');
 
-		// The Bye Player loses their first Match and stays, so the Held Place is theirs.
-		const byePlayersMatch = findMatchOf(tournament, byePlayer);
-		const opponent = byePlayersMatch.players.find(
-			(p) => 'id' in p && p.id !== byePlayer.id,
-		) as Player;
-		tournament = expectOk(
-			recordWinner(tournament, byePlayersMatch.match, opponent.id, 'staying'),
-		);
+		// Cat loses to Ann and stays, so the Held Place is Cat's.
+		const annAndCat = findMatchOf(tournament, cat);
+		tournament = expectOk(recordWinner(tournament, annAndCat.match, ann.id, 'staying'));
 		act(() => store.save(tournament));
 
 		const [leftRoundOne] = screen.getAllByRole('list', { name: 'Round 1' });
-		expect(leftRoundOne).toHaveTextContent(byePlayer.name);
-		expect(screen.queryByText(`${byePlayer.name}?`)).not.toBeInTheDocument();
+		expect(leftRoundOne).toHaveTextContent(cat.name);
+		expect(screen.queryByText(`${cat.name}?`)).not.toBeInTheDocument();
 	});
 
 	it('shows a finished bracket’s champion while the other plays on, then names both champions', () => {
