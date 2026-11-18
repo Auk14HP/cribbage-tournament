@@ -57,6 +57,10 @@ export const startTournament = async (page: Page, { players }: { players: number
 	await page.getByRole('button', { name: 'Start', exact: true }).click();
 };
 
+// Finds the organizer route's Matches holding a Board: one region holding every bracket's list.
+export const findMatchesOnBoards = (organizer: Page) =>
+	organizer.getByRole('region', { name: 'Matches' });
+
 /*
  * Every Match goes to its first-named Player, the first on the list each time, its loser leaving rather than
  * staying for a Losers Bracket, until the Matches list is down
@@ -65,7 +69,7 @@ export const startTournament = async (page: Page, { players }: { players: number
  * used, so the one button it names is the next to click.
  */
 const playUntilMatchesLeft = async (page: Page, matchesLeft: number) => {
-	const matches = page.getByRole('region', { name: 'Matches' });
+	const matches = findMatchesOnBoards(page);
 	const matchesOnBoards = matches.getByRole('listitem');
 	const nextWinnerButton = matches.getByRole('button').first();
 	/*

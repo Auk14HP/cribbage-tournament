@@ -2,6 +2,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 import {
 	answerIsLoserStayingDialogIfAsked,
 	confirmDraw,
+	findMatchesOnBoards,
 	startTournament,
 	test,
 } from './setUpTournament';
@@ -98,10 +99,7 @@ const expectRowScrollsIntoView = async (page: Page, row: Locator) => {
 // Starts 32 Players on 16 Boards and records 12 results, each loser staying for the Losers Bracket.
 const startWithTwelveResults = async (page: Page) => {
 	await startTournament(page, { players: 32 });
-	const nextWinnerButton = page
-		.getByRole('region', { name: 'Matches' })
-		.getByRole('button')
-		.first();
+	const nextWinnerButton = findMatchesOnBoards(page).getByRole('button').first();
 	for (let recorded = 0; recorded < 12; recorded++) {
 		await nextWinnerButton.click();
 		await answerIsLoserStayingDialogIfAsked(page, 'Staying');
@@ -165,7 +163,7 @@ test.describe('Playing a long field', () => {
 	}) => {
 		await page.goto('/?players=32&boards=16');
 		await confirmDraw(page);
-		const matches = page.getByRole('region', { name: 'Matches' });
+		const matches = findMatchesOnBoards(page);
 		const controls = [
 			page.getByRole('heading', { name: 'Matches' }),
 			page.getByRole('button', { name: 'Start', exact: true }),
@@ -193,7 +191,7 @@ test.describe('Playing a long field', () => {
 			page.getByRole('heading', { name: 'Results' }),
 		]);
 		await expectRefusalLinesOnScreen(page);
-		const matches = page.getByRole('region', { name: 'Matches' });
+		const matches = findMatchesOnBoards(page);
 		await expectScrollingAreaFillsSpaceLeft(matches);
 		await expectRowScrollsIntoView(page, findLastRow(matches));
 	});

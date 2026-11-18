@@ -1,5 +1,9 @@
 import type { Locator } from '@playwright/test';
-import { answerIsLoserStayingDialogIfAsked, test } from '../e2e/setUpTournament';
+import {
+	answerIsLoserStayingDialogIfAsked,
+	findMatchesOnBoards,
+	test,
+} from '../e2e/setUpTournament';
 
 // Whether the element shows within the time, rather than failing the run when it doesn't.
 const isShownWithin = async (element: Locator, timeout: number) => {
@@ -71,10 +75,7 @@ test('screens', async ({ context, page: organizer }) => {
 	}
 	// The first Match on the list that can be won goes to its first-named Player each time.
 	const results = process.env.RESULTS === 'all' ? Infinity : Number(process.env.RESULTS);
-	const nextWinnerButton = organizer
-		.getByRole('region', { name: 'Matches' })
-		.getByRole('button')
-		.first();
+	const nextWinnerButton = findMatchesOnBoards(organizer).getByRole('button').first();
 	// Each Player losing their first Match stays, so the Losers Bracket is played too.
 	for (let recorded = 0; recorded < results && (await nextWinnerButton.count()) > 0; recorded++) {
 		await nextWinnerButton.click();
@@ -100,8 +101,7 @@ test('screens', async ({ context, page: organizer }) => {
 	}
 	// The first Match on the list that can be won is forfeited by its first-named Player.
 	const leaver = await nextWinnerButton.textContent();
-	const forfeitButton = organizer
-		.getByRole('region', { name: 'Matches' })
+	const forfeitButton = findMatchesOnBoards(organizer)
 		.getByRole('button', { name: 'Forfeit' })
 		.first();
 	await forfeitButton.click();

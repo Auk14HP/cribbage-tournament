@@ -2,6 +2,7 @@ import { expect, type Page } from '@playwright/test';
 import {
 	answerIsLoserStayingDialogIfAsked,
 	confirmDraw,
+	findMatchesOnBoards,
 	holdScreen,
 	openTv,
 	playToFinal,
@@ -23,10 +24,7 @@ const firstMatchCount = playerCount / 2;
  * asked.
  */
 const playFirstMatchesWithLosersStaying = async (organizer: Page) => {
-	const nextWinnerButton = organizer
-		.getByRole('region', { name: 'Matches' })
-		.getByRole('button')
-		.first();
+	const nextWinnerButton = findMatchesOnBoards(organizer).getByRole('button').first();
 	let stayingCount = 0;
 	while (stayingCount < firstMatchCount) {
 		await nextWinnerButton.click();
