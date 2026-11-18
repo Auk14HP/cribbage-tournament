@@ -19,13 +19,15 @@ const isShownWithin = async (element: Locator, timeout: number) => {
 
 /*
  * Not a test: screenshots of both routes for a Tournament of any size, set up through the test Tournament URL.
+ * Before running it, read the run-app skill (.claude/skills/run-app/SKILL.md): which field sizes to shoot,
+ * opening a half-size copy first, and why `npm run e2e` deletes these screenshots.
  *   PLAYERS=29 BOARDS=16 npm run screens    registration
  *   ... HOME_BOARD=3                        with the first Player registered given Home Board 3
- *   ... DRAW=1                              and Tonight's Draw
+ *   ... DRAW=1                              and the House Rules, every one shown, then Tonight's Draw
  *   ... DRAW=1 START=1                      and after Start, then Now playing
  *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
  *   ... DRAW=1 START=1 RESULTS=3 FORFEIT=1  and the Forfeit dialog, then after that Forfeit
- * Writes test-results/screens/{organizer,tv}-{registration,draw,started,now-playing,results,losers-bracket,results-now-playing,champion,forfeit-dialog,
+ * Writes test-results/screens/{organizer,tv}-{registration,house-rules,draw,started,now-playing,results,losers-bracket,results-now-playing,champion,forfeit-dialog,
  * forfeit}.png: the organizer at
  * 1280×720, the TV at 1920×1080.
  */
