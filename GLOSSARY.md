@@ -36,6 +36,10 @@ _Avoid_: Game, round, heat
 One column of a bracket: every **Match** that is the same number of wins away from the start.
 _Avoid_: Stage, level
 
+**Final**:
+The last **Round** of a bracket: a single **Match** whose winner is that bracket's champion.
+_Avoid_: Championship, last game
+
 **Draw**:
 The random pairing of **Players** into a bracket's first **Round**, including who gets a **Bye**. Each bracket has exactly one Draw.
 _Avoid_: Seeding, pairing, shuffle

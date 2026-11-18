@@ -65,7 +65,7 @@ export const startTournament = async (page: Page, { players }: { players: number
  * used, so the one button it names is the next to click.
  */
 const playUntilMatchesLeft = async (page: Page, matchesLeft: number) => {
-	const matches = page.getByRole('list', { name: 'Matches' });
+	const matches = page.getByRole('region', { name: 'Matches' });
 	const matchesOnBoards = matches.getByRole('listitem');
 	const nextWinnerButton = matches.getByRole('button').first();
 	/*

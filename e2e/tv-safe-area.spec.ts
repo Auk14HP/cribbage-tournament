@@ -24,7 +24,7 @@ const firstMatchCount = playerCount / 2;
  */
 const playFirstMatchesWithLosersStaying = async (organizer: Page) => {
 	const nextWinnerButton = organizer
-		.getByRole('list', { name: 'Matches' })
+		.getByRole('region', { name: 'Matches' })
 		.getByRole('button')
 		.first();
 	let stayingCount = 0;

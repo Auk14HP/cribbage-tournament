@@ -72,7 +72,7 @@ test('screens', async ({ context, page: organizer }) => {
 	// The first Match on the list that can be won goes to its first-named Player each time.
 	const results = process.env.RESULTS === 'all' ? Infinity : Number(process.env.RESULTS);
 	const nextWinnerButton = organizer
-		.getByRole('list', { name: 'Matches' })
+		.getByRole('region', { name: 'Matches' })
 		.getByRole('button')
 		.first();
 	// Each Player losing their first Match stays, so the Losers Bracket is played too.
@@ -101,7 +101,7 @@ test('screens', async ({ context, page: organizer }) => {
 	// The first Match on the list that can be won is forfeited by its first-named Player.
 	const leaver = await nextWinnerButton.textContent();
 	const forfeitButton = organizer
-		.getByRole('list', { name: 'Matches' })
+		.getByRole('region', { name: 'Matches' })
 		.getByRole('button', { name: 'Forfeit' })
 		.first();
 	await forfeitButton.click();

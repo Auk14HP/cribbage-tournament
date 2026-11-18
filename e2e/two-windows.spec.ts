@@ -124,7 +124,7 @@ test('each winner the Organizer records reaches the TV’s Winners Bracket, thro
 	await organizer.getByRole('button', { name: 'Start', exact: true }).click();
 
 	// 3 Players: one first-Round Match, and a Bye Player waiting in the final for its winner.
-	const matches = organizer.getByRole('list', { name: 'Matches' }).getByRole('listitem');
+	const matches = organizer.getByRole('region', { name: 'Matches' }).getByRole('listitem');
 	const tvFinal = tv.getByRole('list', { name: 'Final' }).getByRole('listitem');
 	await expect(tvFinal).toContainText('—');
 	const winner = await matches.first().getByRole('button').first().textContent();

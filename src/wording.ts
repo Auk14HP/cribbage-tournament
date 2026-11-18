@@ -1,5 +1,12 @@
 // Wording shared by the organizer and display routes.
-import type { BracketName, Opponent } from './tournament';
+import {
+	findShownRound,
+	type BracketName,
+	type MatchPlace,
+	type Opponent,
+	type ShownRound,
+	type Tournament,
+} from './tournament';
 
 export const describePlayersRegistered = (count: number): string =>
 	`${count} ${count === 1 ? 'Player' : 'Players'} registered`;
@@ -23,4 +30,14 @@ export const getPlayerName = (player: Opponent): string => {
 export const bracketTitles: Record<BracketName, string> = {
 	winners: 'Winners Bracket',
 	losers: 'Losers Bracket',
+};
+
+// A Round's name, as the TV bracket heads its column: "Round 1", "Round 2", …, and "Final" for the last.
+export const describeRound = ({ round, roundCount }: ShownRound): string =>
+	round === roundCount ? 'Final' : `Round ${round}`;
+
+// A Match's bracket and Round, for a list holding both brackets' Matches: "Losers Bracket · Round 1".
+export const describeBracketRound = (tournament: Tournament, match: MatchPlace): string => {
+	const roundName = describeRound(findShownRound(tournament, match));
+	return `${bracketTitles[match.bracket]} · ${roundName}`;
 };

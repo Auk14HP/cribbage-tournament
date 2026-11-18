@@ -43,6 +43,7 @@ export {
 export { makeDraw, start } from './draw';
 export { isLosersBracketOpenTo, recordForfeit, recordWinner, undoResult } from './results';
 export {
+	findShownRound,
 	getBracketPicture,
 	getMatchesOnBoards,
 	getNowPlaying,
@@ -57,5 +58,6 @@ export {
 	type Opponent,
 	type PlaceHeld,
 	type RecordedResult,
+	type ShownRound,
 	type WinnerOf,
 } from './views';
