@@ -68,15 +68,34 @@ const answerDialog = async (user: User, button: string) => {
 const getRefusalIn = (section: string) =>
 	within(screen.getByRole('region', { name: section })).getByRole('alert');
 
-// Registers the named Players, sets out the Boards and makes the Draw, confirming it.
+// Goes from registration to the House Rules step.
+const showHouseRules = async (user: User) => {
+	await user.click(screen.getByRole('button', { name: 'Show House Rules' }));
+};
+
+// Makes the Draw from the House Rules step, confirming it.
+const confirmDraw = async (user: User) => {
+	await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
+	await answerDialog(user, 'Make the Draw');
+};
+
+/*
+ * Registers the named Players, sets out the Boards, goes to the House Rules step and makes the Draw,
+ * confirming it.
+ */
 const makeTheDraw = async (user: User, names: string[], boards: string) => {
 	for (const name of names) {
 		await register(user, name);
 	}
 	await setBoardCount(user, boards);
-	await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
-	await answerDialog(user, 'Make the Draw');
+	await showHouseRules(user);
+	await confirmDraw(user);
 };
+
+// The line saying how many House Rules the TV shows: "2 of 4 shown on the TV".
+const readHouseRulesShown = () => screen.getByText(/of \d+ shown on the TV$/).textContent;
+
+const clickButton = (user: User, name: string) => user.click(screen.getByRole('button', { name }));
 
 /*
  * The rows of every Match on a Board, bracket by bracket. Each recorded result re-renders them, so they are
@@ -277,10 +296,10 @@ describe('the organizer route', () => {
 		await setBoardCount(user, '12');
 
 		await typeNumber(user, 'Number of Boards', '0');
-		expect(getRefusalIn('Boards and the Draw')).toBeEmptyDOMElement();
+		expect(getRefusalIn('Boards')).toBeEmptyDOMElement();
 		await user.tab();
 
-		expect(getRefusalIn('Boards and the Draw')).toHaveTextContent(
+		expect(getRefusalIn('Boards')).toHaveTextContent(
 			'The number of Boards is a whole number above zero, like 12.',
 		);
 		expect(getRefusalIn('Players')).toBeEmptyDOMElement();
@@ -304,8 +323,8 @@ describe('the organizer route', () => {
 		expect(screen.getByLabelText('Home Board for')).toHaveDisplayValue('Sue');
 		expect(screen.getByLabelText('Board')).toHaveDisplayValue('3');
 
-		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
-		await answerDialog(user, 'Make the Draw');
+		await showHouseRules(user);
+		await confirmDraw(user);
 		const sueRow = listMatchRows().find((row) => row.textContent!.includes('Sue'))!;
 		expect(sueRow).toHaveTextContent(/^Board 3/);
 	});
@@ -317,29 +336,106 @@ describe('the organizer route', () => {
 
 		await user.selectOptions(screen.getByLabelText('Home Board for'), 'Dave K.');
 
-		expect(getRefusalIn('Boards and the Draw')).toHaveTextContent(
+		expect(getRefusalIn('Boards')).toHaveTextContent(
 			'A Player can’t have a Home Board when there is only one Board.',
 		);
 		await setBoardCount(user, '2');
 		await user.selectOptions(screen.getByLabelText('Home Board for'), 'Dave K.');
-		expect(getRefusalIn('Boards and the Draw')).toBeEmptyDOMElement();
+		expect(getRefusalIn('Boards')).toBeEmptyDOMElement();
 		await user.selectOptions(screen.getByLabelText('Home Board for'), 'Nobody');
 		cleanup();
 		showOrganizer();
 		expect(screen.getByLabelText('Home Board for')).toHaveDisplayValue('Nobody');
 	});
 
-	it('shows why the Draw is refused', async () => {
+	it('shows why the Draw is refused, beside Make the Draw', async () => {
 		const user = showOrganizer();
 		await register(user, 'Dave K.');
 		await register(user, 'Big Dave');
+		await showHouseRules(user);
 
-		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
-		await answerDialog(user, 'Make the Draw');
+		await confirmDraw(user);
 
-		expect(getRefusalIn('Boards and the Draw')).toHaveTextContent(
-			'The Draw needs at least one Board.',
-		);
+		expect(getRefusalIn('House Rules')).toHaveTextContent('The Draw needs at least one Board.');
+	});
+
+	it('offers Show House Rules in place of Make the Draw, starting with no House Rule shown', async () => {
+		const user = showOrganizer();
+		await register(user, 'Dave K.');
+		expect(screen.queryByRole('button', { name: 'Make the Draw' })).not.toBeInTheDocument();
+
+		await showHouseRules(user);
+
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('House Rules');
+		expect(readHouseRulesShown()).toBe('0 of 4 shown on the TV');
+		expect(screen.queryByLabelText('Player name')).not.toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Make the Draw' })).toBeInTheDocument();
+	});
+
+	it('shows the House Rules one at a time with Next, hides the latest with Back, and shows every one with Show all', async () => {
+		const user = showOrganizer();
+		await showHouseRules(user);
+		expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
+
+		await clickButton(user, 'Next');
+		await clickButton(user, 'Next');
+		expect(readHouseRulesShown()).toBe('2 of 4 shown on the TV');
+		await clickButton(user, 'Back');
+		expect(readHouseRulesShown()).toBe('1 of 4 shown on the TV');
+		await clickButton(user, 'Back');
+		expect(readHouseRulesShown()).toBe('0 of 4 shown on the TV');
+		expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
+
+		await clickButton(user, 'Show all');
+		expect(readHouseRulesShown()).toBe('4 of 4 shown on the TV');
+		expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+		expect(screen.getByRole('button', { name: 'Show all' })).toBeDisabled();
+		expect(screen.getByRole('button', { name: 'Back' })).toBeEnabled();
+		await clickButton(user, 'Back');
+		expect(readHouseRulesShown()).toBe('3 of 4 shown on the TV');
+		expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled();
+	});
+
+	it('goes back to registration for a late arrival, then returns with the same House Rules shown', async () => {
+		const user = showOrganizer();
+		await register(user, 'Dave K.');
+		await showHouseRules(user);
+		await clickButton(user, 'Next');
+		await clickButton(user, 'Next');
+
+		await clickButton(user, 'Back to registration');
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Register Players');
+		await register(user, 'Big Dave');
+		expect(listPlayerNames()).toEqual(['Dave K.', 'Big Dave']);
+
+		await showHouseRules(user);
+		expect(readHouseRulesShown()).toBe('2 of 4 shown on the TV');
+	});
+
+	it('makes the Draw from the House Rules step with every House Rule shown', async () => {
+		const user = showOrganizer();
+		for (const name of ['Dave K.', 'Big Dave']) {
+			await register(user, name);
+		}
+		await setBoardCount(user, '1');
+		await showHouseRules(user);
+		await clickButton(user, 'Show all');
+
+		await confirmDraw(user);
+
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tonight’s Draw');
+	});
+
+	it('resumes the House Rules step with the same House Rules shown when reopened', async () => {
+		const user = showOrganizer();
+		await showHouseRules(user);
+		await clickButton(user, 'Next');
+		cleanup();
+
+		showOrganizer();
+
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('House Rules');
+		expect(readHouseRulesShown()).toBe('1 of 4 shown on the TV');
 	});
 
 	it('makes the Draw with fewer Boards than Matches, listing the rest as waiting for a Board', async () => {
@@ -354,22 +450,22 @@ describe('the organizer route', () => {
 		]);
 	});
 
-	it('makes the Draw once confirmed, closing registration and showing the Matches it seats, then Starts', async () => {
+	it('makes the Draw from the House Rules step once confirmed, with no House Rule shown, closing registration and showing the Matches it seats, then Starts', async () => {
 		const user = showOrganizer();
 		for (const name of ['Dave K.', 'Big Dave', 'Sue']) {
 			await register(user, name);
 		}
 		await setBoardCount(user, '2');
+		await showHouseRules(user);
 
 		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
 		expect(screen.getByRole('dialog')).toHaveTextContent(
 			'Make the Draw? Registration will close: no Player can be added, renamed or removed afterwards.',
 		);
 		await answerDialog(user, 'Cancel');
-		expect(screen.getByLabelText('Player name')).toBeInTheDocument();
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('House Rules');
 
-		await user.click(screen.getByRole('button', { name: 'Make the Draw' }));
-		await answerDialog(user, 'Make the Draw');
+		await confirmDraw(user);
 
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tonight’s Draw');
 		expect(screen.queryByLabelText('Player name')).not.toBeInTheDocument();
@@ -680,7 +776,7 @@ describe('the organizer route', () => {
 		expect(getRefusalIn('TV screens')).toHaveTextContent(
 			'The TV shows each screen for a whole number of seconds above zero, like 20.',
 		);
-		expect(getRefusalIn('Boards and the Draw')).toBeEmptyDOMElement();
+		expect(getRefusalIn('Boards')).toBeEmptyDOMElement();
 		cleanup();
 		showOrganizer();
 		expect(screen.getByLabelText('Seconds per TV screen')).toHaveValue('20');

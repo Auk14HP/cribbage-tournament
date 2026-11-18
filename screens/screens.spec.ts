@@ -56,6 +56,10 @@ test('screens', async ({ context, page: organizer }) => {
 	if (!process.env.DRAW) {
 		return;
 	}
+	await organizer.getByRole('button', { name: 'Show House Rules' }).click();
+	await organizer.getByRole('button', { name: 'Show all' }).click();
+	await tv.getByRole('heading', { name: 'House Rules' }).waitFor();
+	await shoot('house-rules');
 	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
 	await organizer.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
 	await tv.getByRole('heading', { name: 'Tonight’s Draw' }).waitFor();

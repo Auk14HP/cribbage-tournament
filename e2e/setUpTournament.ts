@@ -46,9 +46,21 @@ export const openTv = async (organizer: Page, tvSize: { width: number; height: n
 	return tv;
 };
 
-export const confirmDraw = async (organizer: Page) => {
+// Goes from registration to the House Rules step, where the Draw is made.
+export const showHouseRules = async (organizer: Page) => {
+	await organizer.getByRole('button', { name: 'Show House Rules' }).click();
+};
+
+// Makes the Draw from the House Rules step, confirming it.
+export const confirmDrawFromHouseRules = async (organizer: Page) => {
 	await organizer.getByRole('button', { name: 'Make the Draw' }).click();
 	await organizer.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
+};
+
+// Goes on from registration through the House Rules step, none shown, and makes the Draw, confirming it.
+export const confirmDraw = async (organizer: Page) => {
+	await showHouseRules(organizer);
+	await confirmDrawFromHouseRules(organizer);
 };
 
 export const startTournament = async (page: Page, { players }: { players: number }) => {

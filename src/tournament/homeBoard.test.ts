@@ -7,7 +7,6 @@ import {
 	getWaitingForBoard,
 	hasLostIn,
 	isLosersBracketOpenTo,
-	makeDraw,
 	recordWinner,
 	removePlayer,
 	setBoardCount,
@@ -22,6 +21,7 @@ import {
 import {
 	createSeededRandom,
 	expectOk,
+	makeDrawAfterHouseRules,
 	findMatchOf,
 	findOpponentIn,
 	isPlaying,
@@ -95,7 +95,7 @@ const startWithHomeBoard = (
 	const registered = setUpTournament({ players, boards });
 	const withHomeBoard = expectOk(setHomeBoard(registered, homePlayer.id, homeBoard));
 	const random = createSeededRandom(seed);
-	const drawn = expectOk(makeDraw(withHomeBoard, random));
+	const drawn = expectOk(makeDrawAfterHouseRules(withHomeBoard, random));
 	return { tournament: expectOk(start(drawn)), homePlayer };
 };
 
@@ -148,7 +148,7 @@ describe('giving a Player a Home Board', () => {
 		const registered = setUpTournament({ players: 4, boards: 6 });
 		const [ann] = registered.players;
 		const withHomeBoard = expectOk(setHomeBoard(registered, ann.id, 2));
-		const drawn = expectOk(makeDraw(withHomeBoard, Math.random));
+		const drawn = expectOk(makeDrawAfterHouseRules(withHomeBoard, Math.random));
 		const drawMadeRefusal = {
 			ok: false,
 			reason: 'A Home Board can’t change once the Draw is made.',

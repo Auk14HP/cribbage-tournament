@@ -10,10 +10,12 @@ import { useTournament } from '../useTournament';
 import { dangerButton } from './classes';
 import { ConfirmDialog, type Apply } from './controls';
 import { Draw } from './Draw';
+import { HouseRules } from './HouseRules';
 import { Registration } from './Registration';
 
 const headings: Record<Phase, string> = {
 	registration: 'Register Players',
+	houseRules: 'House Rules',
 	drawShown: 'Tonight’s Draw',
 	inProgress: 'Now playing',
 	finished: 'Tournament finished',
@@ -71,9 +73,13 @@ export const Organizer = ({ store }: { store: Store<Tournament> }) => {
 				isDestructive
 				onConfirm={startNewTournament}
 			/>
-			{tournament.phase === 'registration' ? (
+			{tournament.phase === 'registration' && (
 				<Registration key={newTournaments} tournament={tournament} apply={apply} />
-			) : (
+			)}
+			{tournament.phase === 'houseRules' && (
+				<HouseRules tournament={tournament} apply={apply} />
+			)}
+			{tournament.phase !== 'registration' && tournament.phase !== 'houseRules' && (
 				<Draw tournament={tournament} apply={apply} />
 			)}
 		</main>

@@ -1,11 +1,15 @@
-// Setting up the night before the Draw: Players, Boards and a Home Board, and how long the TV shows each screen.
+// Setting up the night at registration, before the House Rules and the Draw: Players, Boards and a Home Board, and how long the TV shows each screen.
 import type { Result } from '../result';
 import { findPlayer, listIndexes } from './bracket';
 import type { BoardNumber, PlayerId, Tournament } from './types';
 
 export const registerPlayer = (tournament: Tournament, typedName: string): Result<Tournament> => {
-	if (tournament.phase !== 'registration') {
-		return { ok: false, reason: 'Registration closed when the Draw was made.' };
+	const closed = findRegistrationClosedRefusal(
+		tournament,
+		'Registration closed when the Draw was made.',
+	);
+	if (closed) {
+		return { ok: false, reason: closed };
 	}
 	const name = typedName.trim();
 	const refusal = findNameRefusal(tournament, name);
@@ -27,9 +31,24 @@ const notRegistered = 'That Player is no longer registered.';
 
 const noSuchPlayer: Result<Tournament> = { ok: false, reason: notRegistered };
 
-const playersDrawn: Result<Tournament> = {
-	ok: false,
-	reason: 'Players can’t be renamed or removed once the Draw is made.',
+const playersDrawn = 'Players can’t be renamed or removed once the Draw is made.';
+
+/*
+ * Why registration's changes are refused outside registration, or undefined during it: on the House Rules
+ * step the Organizer goes back to registration first, and once the Draw is made the reason given.
+ */
+const findRegistrationClosedRefusal = (
+	tournament: Tournament,
+	onceDrawn: string,
+): string | undefined => {
+	switch (tournament.phase) {
+		case 'registration':
+			return undefined;
+		case 'houseRules':
+			return 'Go back to registration first.';
+		default:
+			return onceDrawn;
+	}
 };
 
 export const renamePlayer = (
@@ -37,8 +56,9 @@ export const renamePlayer = (
 	playerId: PlayerId,
 	typedName: string,
 ): Result<Tournament> => {
-	if (tournament.phase !== 'registration') {
-		return playersDrawn;
+	const closed = findRegistrationClosedRefusal(tournament, playersDrawn);
+	if (closed) {
+		return { ok: false, reason: closed };
 	}
 	if (!isRegistered(tournament, playerId)) {
 		return noSuchPlayer;
@@ -58,8 +78,9 @@ export const renamePlayer = (
 };
 
 export const removePlayer = (tournament: Tournament, playerId: PlayerId): Result<Tournament> => {
-	if (tournament.phase !== 'registration') {
-		return playersDrawn;
+	const closed = findRegistrationClosedRefusal(tournament, playersDrawn);
+	if (closed) {
+		return { ok: false, reason: closed };
 	}
 	if (!isRegistered(tournament, playerId)) {
 		return noSuchPlayer;
@@ -94,8 +115,12 @@ const findNameRefusal = (
 
 // Boards are numbered from 1, as the placards set out on them are.
 export const setBoardCount = (tournament: Tournament, typedCount: string): Result<Tournament> => {
-	if (tournament.phase !== 'registration') {
-		return { ok: false, reason: 'The number of Boards can’t change once the Draw is made.' };
+	const closed = findRegistrationClosedRefusal(
+		tournament,
+		'The number of Boards can’t change once the Draw is made.',
+	);
+	if (closed) {
+		return { ok: false, reason: closed };
 	}
 	const count = parseCount(typedCount);
 	if (count === 'blank') {
@@ -176,8 +201,12 @@ export const clearHomeBoard = (tournament: Tournament, playerId: PlayerId): Resu
 
 // Why a Player's Home Board can't be given or taken away, or undefined if it can.
 const findHomeBoardRefusal = (tournament: Tournament, playerId: PlayerId): string | undefined => {
-	if (tournament.phase !== 'registration') {
-		return 'A Home Board can’t change once the Draw is made.';
+	const closed = findRegistrationClosedRefusal(
+		tournament,
+		'A Home Board can’t change once the Draw is made.',
+	);
+	if (closed) {
+		return closed;
 	}
 	if (!isRegistered(tournament, playerId)) {
 		return notRegistered;

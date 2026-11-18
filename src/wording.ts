@@ -11,6 +11,9 @@ import {
 export const describePlayersRegistered = (count: number): string =>
 	`${count} ${count === 1 ? 'Player' : 'Players'} registered`;
 
+export const describePlayersTonight = (count: number): string =>
+	`${count} ${count === 1 ? 'Player' : 'Players'} tonight`;
+
 /*
  * A Match's Player, or who they wait for: the winner of a Match between two known Players, or of one not
  * yet set, or the Bye Player a Losers Bracket place is held for.

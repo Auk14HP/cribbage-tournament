@@ -10,6 +10,7 @@ import { useTournament } from '../useTournament';
 import { Bracket } from './Bracket';
 import { Champion } from './Champion';
 import { Draw } from './Draw';
+import { HouseRules } from './HouseRules';
 import { NowPlaying } from './NowPlaying';
 import { Players } from './Players';
 import { tvSafeArea } from './tvSafeArea';
@@ -19,6 +20,7 @@ export const Display = ({ store }: { store: Store<Tournament> }) => {
 	return (
 		<main className={`min-h-screen bg-black text-white ${tvSafeArea.page}`}>
 			{tournament.phase === 'registration' && <Players tournament={tournament} />}
+			{tournament.phase === 'houseRules' && <HouseRules tournament={tournament} />}
 			{tournament.phase === 'drawShown' && <Draw tournament={tournament} />}
 			{/* Keyed by phase, so finishing starts the cycle again from its first screen, or the Held screen. */}
 			{(tournament.phase === 'inProgress' || tournament.phase === 'finished') && (

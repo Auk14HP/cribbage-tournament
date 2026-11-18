@@ -122,7 +122,7 @@ test.describe('Registering a long field', () => {
 			page.getByRole('button', { name: 'Register' }),
 			page.getByText('32 Players registered'),
 			page.getByRole('heading', { name: 'Boards' }),
-			page.getByRole('button', { name: 'Make the Draw' }),
+			page.getByRole('button', { name: 'Show House Rules' }),
 			page.getByRole('heading', { name: 'TV screens' }),
 		]);
 		expect(await isScrollable(players)).toBe(true);
