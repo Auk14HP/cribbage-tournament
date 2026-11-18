@@ -57,7 +57,7 @@ export const startTournament = async (page: Page, { players }: { players: number
 	await page.getByRole('button', { name: 'Start', exact: true }).click();
 };
 
-// The organizer route's Matches on a Board, every bracket's section, Winners Bracket first.
+// Finds the organizer route's Matches holding a Board: one region holding every bracket's list.
 export const findMatchesOnBoards = (organizer: Page) =>
 	organizer.getByRole('region', { name: 'Matches' });
 
