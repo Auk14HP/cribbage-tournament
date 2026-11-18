@@ -11,6 +11,7 @@ import {
 } from '../tournament';
 import { bracketTitles, describeRound, getPlayerName } from '../wording';
 import { button, confirmButton, confirmColours, dangerButton, dialogBox } from './classes';
+import { SwapButton, type SwapPicking } from './SwapButton';
 
 /*
  * One bracket's Matches holding a Board, under the bracket's title: each row names its Board, its Round and
@@ -21,6 +22,7 @@ export const BracketMatches = ({
 	bracketName,
 	matches,
 	playing,
+	swapPicking,
 	onWin,
 	onForfeit,
 }: {
@@ -28,6 +30,8 @@ export const BracketMatches = ({
 	bracketName: BracketName;
 	matches: readonly MatchOnBoard[];
 	playing: boolean;
+	// Set only in Swap mode.
+	swapPicking?: SwapPicking;
 	onWin: (match: MatchPlace, winner: Player, loser: Player) => void;
 	onForfeit: (match: MatchPlace, player: Player) => void;
 }) => {
@@ -47,6 +51,7 @@ export const BracketMatches = ({
 						matchOnBoard={matchOnBoard}
 						roundName={describeRound(getShownRound(tournament, matchOnBoard.match))}
 						playing={playing}
+						swapPicking={swapPicking}
 						onWin={onWin}
 						onForfeit={onForfeit}
 					/>
@@ -130,12 +135,14 @@ const MatchRow = ({
 	},
 	roundName,
 	playing,
+	swapPicking,
 	onWin,
 	onForfeit,
 }: {
 	matchOnBoard: MatchOnBoard;
 	roundName: string;
 	playing: boolean;
+	swapPicking?: SwapPicking;
 	onWin: (match: MatchPlace, winner: Player, loser: Player) => void;
 	onForfeit: (match: MatchPlace, player: Player) => void;
 }) => {
@@ -150,11 +157,23 @@ const MatchRow = ({
 			<span className="font-semibold">Board {board}</span>
 			<span className="text-gray-700">{roundName}</span>
 			<div className="text-right">
-				<MatchPlayer player={a} canWin={canWin} onWin={winForFirst} />
+				<MatchPlayer
+					player={a}
+					match={match}
+					canWin={canWin}
+					swapPicking={swapPicking}
+					onWin={winForFirst}
+				/>
 			</div>
 			<span className="text-center"> vs </span>
 			<div>
-				<MatchPlayer player={b} canWin={canWin} onWin={winForSecond} />
+				<MatchPlayer
+					player={b}
+					match={match}
+					canWin={canWin}
+					swapPicking={swapPicking}
+					onWin={winForSecond}
+				/>
 			</div>
 			{canWin && (
 				<ForfeitButton
@@ -167,22 +186,33 @@ const MatchRow = ({
 	);
 };
 
-// One Player in a Match row: a button to tap once the Match can be won, otherwise their name.
+/*
+ * One Player in a Match row: a button to tap in Swap mode or once the Match can be won, otherwise their
+ * name.
+ */
 const MatchPlayer = ({
 	player,
+	match,
 	canWin,
+	swapPicking,
 	onWin,
 }: {
 	player: Opponent;
+	match: MatchPlace;
 	canWin: boolean;
+	swapPicking?: SwapPicking;
 	onWin: () => void;
-}) =>
-	canWin && 'name' in player ? (
-		<WinnerButton player={player} onWin={onWin} />
-	) : (
+}) => {
+	if (!('name' in player) || (!canWin && !swapPicking)) {
 		// Padded as a button is, so names line up whether they can be tapped or not.
-		<span className="border border-transparent px-3">{getPlayerName(player)}</span>
+		return <span className="border border-transparent px-3">{getPlayerName(player)}</span>;
+	}
+	return swapPicking ? (
+		<SwapButton player={player} match={match} swapPicking={swapPicking} />
+	) : (
+		<WinnerButton player={player} onWin={onWin} />
 	);
+};
 
 const WinnerButton = ({ player, onWin }: { player: Player; onWin: () => void }) => (
 	<button type="button" className={button} onClick={onWin}>

@@ -28,3 +28,13 @@ export const windowFilling = {
 	column: 'flex min-h-0 flex-col',
 	scrollingArea: 'min-h-0 overflow-y-auto',
 };
+
+/*
+ * A Player's name to tap in Swap mode: outlined in dashed blue, so it never looks like the grey buttons that
+ * record a winner once Started. The Player tapped first is filled in blue.
+ */
+export const swapButton = {
+	shape: 'rounded border px-3 py-1.5',
+	unpicked: 'border-dashed border-blue-600 text-blue-800 hover:bg-blue-50',
+	picked: 'border-blue-700 bg-blue-700 text-white',
+};
