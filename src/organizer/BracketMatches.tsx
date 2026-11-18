@@ -1,10 +1,6 @@
-/*
- * One bracket's Matches holding a Board, as the organizer route lists them: each row names its Board, its
- * Round and both Players, and once Started records a winner or a Forfeit.
- */
 import { useId, useRef } from 'react';
 import {
-	findShownRound,
+	getShownRound,
 	type BoardNumber,
 	type BracketName,
 	type MatchOnBoard,
@@ -17,8 +13,8 @@ import { bracketTitles, describeRound, getPlayerName } from '../wording';
 import { button, confirmButton, confirmColours, dangerButton, dialogBox } from './classes';
 
 /*
- * One bracket's Matches holding a Board, in Board order, under the bracket's title. Hidden while the bracket
- * has none.
+ * One bracket's Matches holding a Board, under the bracket's title: each row names its Board, its Round and
+ * both Players, and once Started records a winner or a Forfeit. Hidden while the bracket has none.
  */
 export const BracketMatches = ({
 	tournament,
@@ -36,8 +32,7 @@ export const BracketMatches = ({
 	onForfeit: (match: MatchPlace, player: Player) => void;
 }) => {
 	const headingId = useId();
-	const bracketMatches = matches.filter((m) => m.match.bracket === bracketName);
-	if (bracketMatches.length === 0) {
+	if (matches.length === 0) {
 		return null;
 	}
 	return (
@@ -46,11 +41,11 @@ export const BracketMatches = ({
 				{bracketTitles[bracketName]}
 			</h3>
 			<ul aria-labelledby={headingId}>
-				{bracketMatches.map((matchOnBoard) => (
+				{matches.map((matchOnBoard) => (
 					<MatchRow
 						key={matchOnBoard.board}
 						matchOnBoard={matchOnBoard}
-						roundName={describeRound(findShownRound(tournament, matchOnBoard.match))}
+						roundName={describeRound(getShownRound(tournament, matchOnBoard.match))}
 						playing={playing}
 						onWin={onWin}
 						onForfeit={onForfeit}

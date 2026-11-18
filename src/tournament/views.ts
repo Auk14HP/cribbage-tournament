@@ -168,7 +168,7 @@ export const getBracketPicture = (
 				: pictureMatch({ bracket: name, round: r + 1, place }),
 		),
 	);
-	const rounds = isFirstRoundAllByes(tournament, name) ? allRounds.slice(1) : allRounds;
+	const rounds = isFirstRoundLeftOut(tournament, name) ? allRounds.slice(1) : allRounds;
 	return { rounds, champion: rounds.at(-1)![0]!.winner };
 };
 
@@ -177,7 +177,7 @@ export const getBracketPicture = (
  * Round of nothing but Byes: the bracket was drawn for one more Player than came. It is left out, so the
  * bracket looks the size of its field.
  */
-const isFirstRoundAllByes = (tournament: Tournament, name: BracketName): boolean => {
+const isFirstRoundLeftOut = (tournament: Tournament, name: BracketName): boolean => {
 	const bracket = getBracket(tournament, name)!;
 	return (
 		countRounds(bracket) > 1 &&
@@ -194,11 +194,11 @@ export interface ShownRound {
 }
 
 // A Match's Round as its bracket's picture shows it, so every screen numbers it as the TV bracket does.
-export const findShownRound = (
+export const getShownRound = (
 	tournament: Tournament,
 	{ bracket, round }: MatchPlace,
 ): ShownRound => {
-	const leftOut = isFirstRoundAllByes(tournament, bracket) ? 1 : 0;
+	const leftOut = isFirstRoundLeftOut(tournament, bracket) ? 1 : 0;
 	const roundCount = countRounds(getBracket(tournament, bracket)!);
 	return { round: round - leftOut, roundCount: roundCount - leftOut };
 };

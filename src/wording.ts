@@ -1,6 +1,6 @@
 // Wording shared by the organizer and display routes.
 import {
-	findShownRound,
+	getShownRound,
 	type BracketName,
 	type MatchPlace,
 	type Opponent,
@@ -38,6 +38,6 @@ export const describeRound = ({ round, roundCount }: ShownRound): string =>
 
 // A Match's bracket and Round, for a list holding both brackets' Matches: "Losers Bracket · Round 1".
 export const describeBracketRound = (tournament: Tournament, match: MatchPlace): string => {
-	const roundName = describeRound(findShownRound(tournament, match));
+	const roundName = describeRound(getShownRound(tournament, match));
 	return `${bracketTitles[match.bracket]} · ${roundName}`;
 };

@@ -102,7 +102,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 									key={bracketName}
 									tournament={tournament}
 									bracketName={bracketName}
-									matches={matches}
+									matches={matches.filter((m) => m.match.bracket === bracketName)}
 									playing={playing}
 									onWin={recordWinnerOf}
 									onForfeit={recordForfeitBy}

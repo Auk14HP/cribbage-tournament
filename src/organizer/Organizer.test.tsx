@@ -95,9 +95,12 @@ const listBracketHeadings = () =>
 		.getAllByRole('heading')
 		.map((heading) => heading.textContent);
 
+// A Round's name as a Match row shows it, after its Board: "Round 2" or "Final".
+const roundName = /Round \d+|Final/.source;
+
 // The Round a Match row names, after its Board.
 const readRoundName = (row: HTMLElement) =>
-	row.textContent!.match(/^Board \d+(Round \d+|Final)/)?.[1];
+	row.textContent!.match(new RegExp(`^Board \\d+(${roundName})`))?.[1];
 
 // The Board numbers of a list of Match rows, in the order shown.
 const listBoardNumbers = (rows: HTMLElement[]) =>
@@ -115,7 +118,7 @@ const findPlayingRow = () => listMatchRows().find((row) => !isWaitingForWinner(r
 // The name of the Bye Player waiting for a winner.
 const readByePlayerName = () =>
 	findRowAwaitingWinner().textContent!.match(
-		/^Board \d+(?:Round \d+|Final)(.+) vs Winner of/,
+		new RegExp(`^Board \\d+(?:${roundName})(.+) vs Winner of`),
 	)![1];
 
 // The names on a Match row's winner buttons: both its Players, once it is being played.
@@ -127,6 +130,15 @@ const listWinnerNames = (row: HTMLElement) =>
 
 const recordWin = (user: User, row: HTMLElement, winner: string) =>
 	user.click(within(row).getByRole('button', { name: winner }));
+
+/*
+ * Makes the Draw for 8 Players on 4 Boards: four first-Round Matches, each on a Board. Once they are played
+ * and their losers stay, both brackets hold Boards.
+ */
+const drawEightPlayersOnFourBoards = async (user: User) => {
+	const names = ['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev', 'Kim', 'Lou'];
+	await makeTheDraw(user, names, '4');
+};
 
 // Records each Match on the Draw for its first-named Player and returns the losers, who all stay.
 const playTheDrawWithLosersStaying = async (user: User) => {
@@ -482,8 +494,7 @@ describe('the organizer route', () => {
 
 	it('groups the Matches on a Board by bracket, Winners Bracket first, each in Board order', async () => {
 		const user = showOrganizer();
-		const names = ['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev', 'Kim', 'Lou'];
-		await makeTheDraw(user, names, '4');
+		await drawEightPlayersOnFourBoards(user);
 		// Tonight’s Draw seats only the Winners Bracket, so the Losers Bracket’s section is hidden.
 		expect(listBracketHeadings()).toEqual(['Winners Bracket']);
 		await user.click(screen.getByRole('button', { name: 'Start' }));
@@ -513,8 +524,7 @@ describe('the organizer route', () => {
 
 	it('names each Match’s Round, calling each bracket’s last Round the Final', async () => {
 		const user = showOrganizer();
-		const names = ['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev', 'Kim', 'Lou'];
-		await makeTheDraw(user, names, '4');
+		await drawEightPlayersOnFourBoards(user);
 		expect(listMatchRows().map(readRoundName)).toEqual(Array(4).fill('Round 1'));
 		await user.click(screen.getByRole('button', { name: 'Start' }));
 		await playTheDrawWithLosersStaying(user);

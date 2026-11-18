@@ -12,8 +12,8 @@ import { button, windowFilling } from './classes';
 import { Refusal, type Apply } from './controls';
 
 /*
- * The results that can still be undone, latest first, each with its bracket and Round, so an Undo corrects
- * the Match the Organizer means, and its own Undo. None until a result is recorded.
+ * The results that can still be undone, latest first, each with its own Undo. Each names its bracket and
+ * Round, so the Organizer undoes the Match they mean. None until a result is recorded.
  */
 export const Results = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const results = getUndoableResults(tournament);
