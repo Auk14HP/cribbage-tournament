@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { getMatchesOnBoards, setHomeBoard, swapPlayers, type Player } from './index';
+import {
+	getMatchesOnBoards,
+	getWaitingForBoard,
+	setHomeBoard,
+	swapPlayers,
+	type Player,
+} from './index';
 import {
 	createSeededRandom,
 	expectOk,
@@ -8,6 +14,7 @@ import {
 	hasBothPlayersKnown,
 	isByePlayerIn,
 	listSeats,
+	listWaiting,
 	makeDrawAfterHouseRules,
 	makeSeededDraw,
 	setUpTournament,
@@ -57,6 +64,35 @@ describe('swapping two Players on Tonight’s Draw', () => {
 		});
 		expect(findMatchOf(swapped, movingPlayer).board).toBe(4);
 		expect(findMatchOf(swapped, homeOpponent).board).toBe(4);
+	});
+
+	it('puts the Match a Home Board Player leaves first in line for a Board, when their new Match was waiting for one', () => {
+		/*
+		 * 8 Players on 2 Boards, the Home Board 2 for the first Player registered: their Match takes it, another
+		 * takes Board 1, and two wait for a Board.
+		 */
+		const registered = setUpTournament({ players: 8, boards: 2 });
+		const [homePlayer] = registered.players;
+		const withHomeBoard = expectOk(setHomeBoard(registered, homePlayer.id, 2));
+		const random = createSeededRandom(1);
+		const drawn = expectOk(makeDrawAfterHouseRules(withHomeBoard, random));
+		const homeOpponent = findOpponentIn(findMatchOf(drawn, homePlayer), homePlayer);
+		const [firstWaiting, secondWaiting] = getWaitingForBoard(drawn);
+		const [movingPlayer, staying] = secondWaiting.players as [Player, Player];
+		const onBoard1 = listSeats(drawn).find(([board]) => board === 1);
+
+		const swapped = expectOk(swapPlayers(drawn, homePlayer.id, movingPlayer.id));
+
+		expect(findMatchOf(swapped, homePlayer)).toMatchObject({
+			board: 2,
+			players: [homePlayer, staying],
+		});
+		expect(listSeats(swapped)).toContainEqual(onBoard1);
+		const [firstWaitingPlayer, secondWaitingPlayer] = firstWaiting.players as [Player, Player];
+		expect(listWaiting(swapped)).toEqual([
+			[movingPlayer.name, homeOpponent.name],
+			[firstWaitingPlayer.name, secondWaitingPlayer.name],
+		]);
 	});
 
 	it('moves a Bye to whoever is swapped with a Bye Player, including the one waiting for a first-Round winner', () => {
