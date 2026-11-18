@@ -108,21 +108,30 @@ describe('the House Rules screen', () => {
 		);
 	});
 
-	it('gives way to Tonight’s Players on going back to registration, and to Tonight’s Draw once the Draw is made', () => {
+	it('gives way to Tonight’s Players on going back to registration, returns with the same House Rules shown, and gives way to Tonight’s Draw once the Draw is made', () => {
 		const store = showDisplay();
 		const registered = registerPlayers('Big Dave', 'Sue');
 		const withBoards = expectOk(setBoardCount(registered, '1'));
-		const onHouseRules = expectOk(showHouseRules(withBoards));
-		act(() => store.save(onHouseRules));
+		let tournament = expectOk(showHouseRules(withBoards));
+		tournament = expectOk(showNextHouseRule(tournament));
+		tournament = expectOk(showNextHouseRule(tournament));
+		act(() => store.save(tournament));
 		expect(readHeading()).toBe('House Rules');
 
-		saveOutcome(store, goBackToRegistration(onHouseRules));
+		tournament = expectOk(goBackToRegistration(tournament));
+		act(() => store.save(tournament));
 		expect(readHeading()).toBe('Tonight’s Players');
 
-		act(() => store.save(onHouseRules));
+		tournament = expectOk(showHouseRules(tournament));
+		act(() => store.save(tournament));
 		expect(readHeading()).toBe('House Rules');
+		expect(listHouseRulesText()).toEqual([
+			'31 scores 2 points. No extra point for the go.',
+			'No muggins. Don’t claim points your opponent misses.',
+		]);
+
 		const random = createSeededRandom(1);
-		saveOutcome(store, makeDraw(onHouseRules, random));
+		saveOutcome(store, makeDraw(tournament, random));
 		expect(readHeading()).toBe('Tonight’s Draw');
 	});
 });
