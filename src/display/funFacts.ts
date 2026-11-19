@@ -182,7 +182,10 @@ export interface FunFactRotation {
 	readonly fact: string;
 	// The Players filling its slots, {A} first.
 	readonly namedPlayerIds: readonly PlayerId[];
-	// Every fact shown in this pass, the one on show included.
+	/*
+	 * Every fact shown in this pass, the one on show included, the one shown longest ago first. A fact shown
+	 * again as a stand-in moves to the end, and doesn't extend the pass.
+	 */
 	readonly usedThisPass: readonly string[];
 	// Counts the facts shown, so each one is told apart from the last, even when the same fact comes back.
 	readonly turn: number;
@@ -193,8 +196,10 @@ export interface FunFactRotation {
  * registered to fill its slots, and can be shown next when its slots can be filled leaving out every Player the
  * fact on show names, so nobody is named twice in a row. The next is chosen at random from the facts not yet
  * used this pass that can be shown next, and its names at random from the Players it may name. When the only
- * unused facts this pass can't be shown next, a fact already used stands in for one turn and the pass goes
- * on. Once every fitting fact is used, a new pass begins, starting with any fact but the one on show.
+ * unused facts this pass can't be shown next, as can happen with one or two Players, a fact already used
+ * stands in for one turn and the pass goes on: the one shown longest ago, naming nobody if one can, so the
+ * turn after can show an unused fact. Once every fitting fact is used, a new pass begins, starting with any
+ * fact but the one on show.
  */
 export const chooseNextFunFact = (
 	shown: FunFactRotation | undefined,
@@ -203,22 +208,22 @@ export const chooseNextFunFact = (
 ): FunFactRotation => {
 	const namedBefore = shown?.namedPlayerIds ?? [];
 	const namable = players.filter((p) => !namedBefore.includes(p.id));
-	const canShowNext = (fact: string) =>
-		countNameSlots(fact) <= namable.length && fact !== shown?.fact;
+	const canShowNext = (fact: string) => hasEnoughPlayers(fact, namable) && fact !== shown?.fact;
 	const usedBefore = shown?.usedThisPass ?? [];
 	const unused = funFacts.filter(
-		(fact) => countNameSlots(fact) <= players.length && !usedBefore.includes(fact),
+		(fact) => hasEnoughPlayers(fact, players) && !usedBefore.includes(fact),
 	);
 	const unusedShowable = unused.filter(canShowNext);
 	const usedShowable = usedBefore.filter(canShowNext);
+	const usedNameless = usedShowable.filter((fact) => countNameSlots(fact) === 0);
 	let fact: string;
 	let usedThisPass: readonly string[];
 	if (unusedShowable.length > 0) {
 		fact = pickOne(unusedShowable, random);
 		usedThisPass = [...usedBefore, fact];
 	} else if (unused.length > 0 && usedShowable.length > 0) {
-		fact = pickOne(usedShowable, random);
-		usedThisPass = usedBefore;
+		[fact] = usedNameless.length > 0 ? usedNameless : usedShowable;
+		usedThisPass = [...usedBefore.filter((f) => f !== fact), fact];
 	} else {
 		fact = pickOne(funFacts.filter(canShowNext), random);
 		usedThisPass = [fact];
@@ -243,6 +248,10 @@ export const fillFunFact = (rotation: FunFactRotation, players: readonly Player[
 // Whether a Player the fact on show names is no longer registered.
 export const hasRemovedPlayer = (rotation: FunFactRotation, players: readonly Player[]): boolean =>
 	rotation.namedPlayerIds.some((id) => !players.some((p) => p.id === id));
+
+// Whether there are enough of the given Players to fill a fact's slots.
+const hasEnoughPlayers = (fact: string, players: readonly Player[]): boolean =>
+	countNameSlots(fact) <= players.length;
 
 // How many Players a fact names: none, {A} alone, or {A} and {B}.
 const countNameSlots = (fact: string): number => {

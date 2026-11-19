@@ -25,10 +25,10 @@ export const FunFactLine = ({
 	 * Chosen while rendering, with the Players registered now, when the fact's time is up or it names a
 	 * removed Player. Choosing a fact restarts its time.
 	 */
-	let nextFunFact = funFactOnShow;
+	let funFactToShow = funFactOnShow;
 	if (isNextDue || hasRemovedPlayer(funFactOnShow, players)) {
-		nextFunFact = chooseNextFunFact(funFactOnShow, players, random);
-		setFunFactOnShow(nextFunFact);
+		funFactToShow = chooseNextFunFact(funFactOnShow, players, random);
+		setFunFactOnShow(funFactToShow);
 		setIsNextDue(false);
 	}
 	useEffect(() => {
@@ -38,11 +38,11 @@ export const FunFactLine = ({
 	// Keyed by its turn, so each fact starts its fade afresh. The duration reaches the animation through a CSS variable.
 	return (
 		<p
-			key={nextFunFact.turn}
+			key={funFactToShow.turn}
 			style={{ '--fun-fact-duration': `${funFactSeconds}s` } as CSSProperties}
 			className="animate-fun-fact mt-[1.5vh] min-h-[8.4vh] text-[3.5vh] leading-[1.2] text-balance text-gray-200"
 		>
-			{`Fun fact: ${fillFunFact(nextFunFact, players)}`}
+			{`Fun fact: ${fillFunFact(funFactToShow, players)}`}
 		</p>
 	);
 };

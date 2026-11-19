@@ -106,11 +106,11 @@ describe('the Fun Fact line', () => {
 
 		const firstPass = shownFacts.slice(0, namelessCount);
 		expect(firstPass.every(({ names }) => names.length === 0)).toBe(true);
-		const firstPassFacts = firstPass.map(({ fact }) => fact);
-		expect(new Set(firstPassFacts).size).toBe(namelessCount);
+		const firstPassFactLines = firstPass.map(({ fact }) => fact);
+		expect(new Set(firstPassFactLines).size).toBe(namelessCount);
 		// The next pass begins with a fact from the last one.
 		const nextPassFact = shownFacts[namelessCount].fact;
-		expect(firstPassFacts).toContain(nextPassFact);
+		expect(firstPassFactLines).toContain(nextPassFact);
 	});
 
 	it('names a lone Player only in one-name facts, never in two facts in a row', () => {
@@ -127,19 +127,27 @@ describe('the Fun Fact line', () => {
 
 	/*
 	 * With two Players, a fact naming both can't follow one naming either, so once only those are left a fact
-	 * already used stands in for a turn. The pass goes on until every fact has been shown.
+	 * naming nobody stands in for a turn, letting one naming both follow. So at most one stand-in is needed for
+	 * each fact naming two.
 	 */
-	it('with two Players, shows every Fun Fact before a new pass begins, never naming anyone twice in a row', () => {
+	it('with two Players, shows every Fun Fact with at most one stand-in for each naming two, each naming nobody, never naming anyone twice in a row', () => {
 		vi.useFakeTimers();
 		const registered = registerPlayers('Ron', 'Sue');
 		showDisplay(registered);
-		const standInAllowance = 20;
+		const twoNameCount = funFacts.filter((fact) => fact.includes('{B}')).length;
 
-		const shownFacts = collectFunFacts(funFacts.length + standInAllowance, registered.players);
+		const shownFacts = collectFunFacts(funFacts.length + twoNameCount, registered.players);
 
 		const shownFactLines = shownFacts.map(({ fact }) => fact);
 		expect(new Set(shownFactLines).size).toBe(funFacts.length);
 		expect(findNamedTwiceInARow(shownFacts)).toEqual([]);
+		// Where the last fact still unseen first appears: every repeat before it is a stand-in.
+		const firstShownIndexes = shownFactLines.map((fact) => shownFactLines.indexOf(fact));
+		const lastNewFactIndex = Math.max(...firstShownIndexes);
+		const standIns = shownFacts
+			.slice(0, lastNewFactIndex)
+			.filter(({ fact }, index) => shownFactLines.indexOf(fact) < index);
+		expect(standIns.filter(({ names }) => names.length > 0)).toEqual([]);
 	});
 
 	it('picks the names fresh each time, reaching every Player, never the same Player in two facts in a row', () => {
