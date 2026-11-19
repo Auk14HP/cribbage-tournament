@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test';
+import { expectNothingMoves } from './screenStill';
 import { confirmDraw, findMatchesOnBoards, test } from './setUpTournament';
 
 /*
@@ -10,37 +11,37 @@ import { confirmDraw, findMatchesOnBoards, test } from './setUpTournament';
 test.use({ viewport: { width: 1280, height: 720 } });
 
 /*
- * Where each part of Tonight's Draw sits: the button that turns Swap mode on and off, every Match row, on a
- * Board or waiting for one, Start, and the TV screens heading below it.
+ * The parts of Tonight's Draw: the button that turns Swap mode on and off, every Match row, on a Board or
+ * waiting for one, Start, and the TV screens heading below it.
  */
-const measureDrawScreen = async (page: Page) => {
-	const swapModeButton = page.getByRole('button', { name: /^(Swap Players|Done)$/ });
-	const rows = await page.getByRole('main').getByRole('listitem').all();
-	const start = page.getByRole('button', { name: 'Start', exact: true });
-	const tvScreensHeading = page.getByRole('heading', { name: 'TV screens' });
-	const parts = [swapModeButton, ...rows, start, tvScreensHeading];
-	return Promise.all(parts.map((part) => part.boundingBox()));
-};
+const listDrawScreenParts = (page: Page) => [
+	page.getByRole('button', { name: /^(Swap Players|Done)$/ }),
+	page.getByRole('main').getByRole('listitem'),
+	page.getByRole('button', { name: 'Start', exact: true }),
+	page.getByRole('heading', { name: 'TV screens' }),
+];
 
-test('moves nothing on Tonight’s Draw when Swap mode starts, or when a Player is picked', async ({
+test('moves nothing on Tonight’s Draw when Swap mode starts, when a Player is picked, or on Done', async ({
 	page,
 }) => {
 	// 21 Players on 8 Boards: Matches on every Board, more waiting for one, and a Bye Player waiting for a winner.
 	await page.goto('/?players=21&boards=8');
 	await confirmDraw(page);
-	const beforeSwapMode = await measureDrawScreen(page);
+	const parts = listDrawScreenParts(page);
+	const swapLine = page.getByText('Tap two Players to swap them.');
 
 	// The button that turns Swap mode on keeps its box as it becomes Done, so a second click lands on it.
-	await page.getByRole('button', { name: 'Swap Players' }).click();
-	await expect(page.getByText('Tap two Players to swap them.')).toBeVisible();
-	expect(await measureDrawScreen(page)).toEqual(beforeSwapMode);
-
+	await expectNothingMoves(parts, async () => {
+		await page.getByRole('button', { name: 'Swap Players' }).click();
+		await expect(swapLine).toBeVisible();
+	});
 	const firstPlayerButton = findMatchesOnBoards(page).getByRole('button').first();
-	await firstPlayerButton.click();
-	await expect(firstPlayerButton).toHaveAttribute('aria-pressed', 'true');
-	expect(await measureDrawScreen(page)).toEqual(beforeSwapMode);
-
-	await page.getByRole('button', { name: 'Done' }).click();
-	await expect(page.getByText('Tap two Players to swap them.')).toBeHidden();
-	expect(await measureDrawScreen(page)).toEqual(beforeSwapMode);
+	await expectNothingMoves(parts, async () => {
+		await firstPlayerButton.click();
+		await expect(firstPlayerButton).toHaveAttribute('aria-pressed', 'true');
+	});
+	await expectNothingMoves(parts, async () => {
+		await page.getByRole('button', { name: 'Done' }).click();
+		await expect(swapLine).toBeHidden();
+	});
 });
