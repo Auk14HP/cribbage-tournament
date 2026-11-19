@@ -10,14 +10,16 @@ import { confirmDraw, findMatchesOnBoards, test } from './setUpTournament';
 test.use({ viewport: { width: 1280, height: 720 } });
 
 /*
- * Where each part of Tonight's Draw sits: every Match row, on a Board or waiting for one, Start, and the TV
- * screens heading below it.
+ * Where each part of Tonight's Draw sits: the button that turns Swap mode on and off, every Match row, on a
+ * Board or waiting for one, Start, and the TV screens heading below it. The button keeps its box as Swap Players
+ * becomes Done, so a second click lands on it.
  */
 const measureDrawScreen = async (page: Page) => {
+	const swapModeButton = page.getByRole('button', { name: /^(Swap Players|Done)$/ });
 	const rows = await page.getByRole('main').getByRole('listitem').all();
 	const start = page.getByRole('button', { name: 'Start', exact: true });
 	const tvScreensHeading = page.getByRole('heading', { name: 'TV screens' });
-	const parts = [...rows, start, tvScreensHeading];
+	const parts = [swapModeButton, ...rows, start, tvScreensHeading];
 	return Promise.all(parts.map((part) => part.boundingBox()));
 };
 
