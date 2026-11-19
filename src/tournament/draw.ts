@@ -1,4 +1,7 @@
-// Making the Draw for each bracket, from the House Rules step, and Starting the Tournament once Tonight’s Draw is shown.
+/*
+ * Making the Draw for each bracket, from the House Rules step, Swapping Players in the Winners Bracket's Draw
+ * while Tonight’s Draw is shown, and Starting the Tournament.
+ */
 import type { Result } from '../result';
 import { findOpponent, findWinner, isBye, listIndexes, type Entrant } from './bracket';
 import { reseat } from './seating';
@@ -67,6 +70,63 @@ const arrangeBracket = (drawn: readonly Entrant[]): Bracket => {
 	);
 	return { firstRound };
 };
+
+/*
+ * Trades two Players' places in the Winners Bracket's first Round, a Bye place included, before Start.
+ * Which places hold Matches and which hold Byes stays as drawn, so each Match keeps its Board; seating then
+ * brings a Match with a Home Board Player in it to their Home Board.
+ */
+export const swapPlayers = (
+	tournament: Tournament,
+	playerA: PlayerId,
+	playerB: PlayerId,
+): Result<Tournament> => {
+	if (tournament.phase === 'registration' || tournament.phase === 'houseRules') {
+		return { ok: false, reason: 'Make the Draw before swapping Players.' };
+	}
+	if (tournament.phase !== 'drawShown') {
+		return { ok: false, reason: 'Players can’t be swapped once the Tournament has started.' };
+	}
+	const { firstRound } = tournament.winnersBracket!;
+	const placeA = findFirstRoundPlace(firstRound, playerA);
+	const placeB = findFirstRoundPlace(firstRound, playerB);
+	if (placeA === -1 || placeB === -1) {
+		return { ok: false, reason: 'That Player isn’t in the Draw.' };
+	}
+	// Two Bye Players in neighbouring places meet each other in Round 2.
+	const isByePair =
+		isBye(firstRound[placeA]) &&
+		isBye(firstRound[placeB]) &&
+		Math.floor(placeA / 2) === Math.floor(placeB / 2);
+	if (placeA === placeB || isByePair) {
+		return { ok: false, reason: 'Swapping two Players in the same Match changes nothing.' };
+	}
+	const swapEntrant = (entrant: Entrant): Entrant => {
+		if (entrant === playerA) {
+			return playerB;
+		}
+		return entrant === playerB ? playerA : entrant;
+	};
+	const swappedFirstRound = firstRound.map((entry): FirstRoundMatch | Bye =>
+		isBye(entry)
+			? { bye: swapEntrant(entry.bye) as PlayerId }
+			: { players: [swapEntrant(entry.players[0]), swapEntrant(entry.players[1])] },
+	);
+	const swapped: Tournament = {
+		...tournament,
+		winnersBracket: { firstRound: swappedFirstRound },
+	};
+	return { ok: true, value: reseat(swapped) };
+};
+
+// The place in the first Round holding a Player, in a Match or as a Bye, or -1 if none does.
+const findFirstRoundPlace = (
+	firstRound: readonly (FirstRoundMatch | Bye)[],
+	player: PlayerId,
+): number =>
+	firstRound.findIndex((entry) =>
+		isBye(entry) ? entry.bye === player : entry.players.includes(player),
+	);
 
 export const start = (tournament: Tournament): Result<Tournament> => {
 	if (tournament.phase === 'registration' || tournament.phase === 'houseRules') {

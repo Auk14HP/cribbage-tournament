@@ -48,7 +48,7 @@ export {
 	showHouseRules,
 	showNextHouseRule,
 } from './houseRules';
-export { makeDraw, start } from './draw';
+export { makeDraw, start, swapPlayers } from './draw';
 export { isLosersBracketOpenTo, recordForfeit, recordWinner, undoResult } from './results';
 export {
 	getShownRound,

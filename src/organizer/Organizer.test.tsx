@@ -140,12 +140,29 @@ const readByePlayerName = () =>
 		new RegExp(`^Board \\d+(?:${roundName})(.+) vs Winner of`),
 	)![1];
 
-// The names on a Match row's winner buttons: both its Players, once it is being played.
-const listWinnerNames = (row: HTMLElement) =>
+// The names on a Match row's buttons: in Swap mode, its Players known.
+const listButtonNames = (row: HTMLElement) =>
 	within(row)
 		.queryAllByRole('button')
-		.map((b) => b.textContent!)
-		.filter((name) => name !== 'Forfeit');
+		.map((b) => b.textContent!);
+
+// The names on a Match row's winner buttons: both its Players, once it is being played.
+const listWinnerNames = (row: HTMLElement) =>
+	listButtonNames(row).filter((name) => name !== 'Forfeit');
+
+// What each Match row reads, in the order shown.
+const listMatchRowTexts = () => listMatchRows().map((row) => row.textContent);
+
+// The row of the Match on a Board that a Player is in.
+const findRowOf = (name: string) =>
+	listMatchRows().find((row) => within(row).queryByText(name) !== null)!;
+
+// Taps a Player's name in Swap mode.
+const tapPlayer = (user: User, name: string) => clickButton(user, name);
+
+// The Players' names highlighted in Swap mode.
+const listHighlightedNames = () =>
+	screen.queryAllByRole('button', { pressed: true }).map((b) => b.textContent);
 
 const recordWin = (user: User, row: HTMLElement, winner: string) =>
 	user.click(within(row).getByRole('button', { name: winner }));
@@ -488,6 +505,114 @@ describe('the organizer route', () => {
 		expect(listPlayerNames()).toEqual([]);
 		expect(screen.getByLabelText('Number of Boards')).toHaveValue('');
 		expect(screen.getByLabelText('Player name')).toHaveFocus();
+	});
+
+	it('offers Swap Players only on Tonight’s Draw, where Swap mode says what the taps do and disables Start until Done', async () => {
+		const user = showOrganizer();
+		for (const name of ['Dave K.', 'Big Dave', 'Sue']) {
+			await register(user, name);
+		}
+		await setBoardCount(user, '2');
+		await showHouseRules(user);
+		expect(screen.queryByRole('button', { name: 'Swap Players' })).not.toBeInTheDocument();
+		await confirmDraw(user);
+
+		await clickButton(user, 'Swap Players');
+
+		expect(screen.getByText('Tap two Players to swap them.')).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+		expect(screen.queryByRole('button', { name: 'Swap Players' })).not.toBeInTheDocument();
+		await clickButton(user, 'Done');
+		expect(screen.getByRole('button', { name: 'Start' })).toBeEnabled();
+		expect(screen.queryByText('Tap two Players to swap them.')).not.toBeInTheDocument();
+		await clickButton(user, 'Start');
+		expect(screen.queryByRole('button', { name: 'Swap Players' })).not.toBeInTheDocument();
+	});
+
+	it('swaps two Players in different Matches with two taps, staying in Swap mode, and swaps them back', async () => {
+		const user = showOrganizer();
+		await drawEightPlayersOnFourBoards(user);
+		const drawnRows = listMatchRowTexts();
+		const [firstRow] = listMatchRows();
+		expect(listButtonNames(firstRow)).toEqual([]);
+		await clickButton(user, 'Swap Players');
+		const [, , thirdRow] = listMatchRows();
+		const [ann, bob] = listButtonNames(firstRow);
+		const [cat, dan] = listButtonNames(thirdRow);
+
+		await tapPlayer(user, ann);
+		expect(listHighlightedNames()).toEqual([ann]);
+		await tapPlayer(user, dan);
+
+		expect(findRowOf(dan)).toHaveTextContent(`${dan} vs ${bob}`);
+		expect(findRowOf(ann)).toHaveTextContent(`${cat} vs ${ann}`);
+		expect(listHighlightedNames()).toEqual([]);
+		expect(screen.getByText('Tap two Players to swap them.')).toBeInTheDocument();
+		await tapPlayer(user, dan);
+		await tapPlayer(user, ann);
+		expect(listMatchRowTexts()).toEqual(drawnRows);
+	});
+
+	it('clears the highlight, swapping no one, when the highlighted Player or their opponent is tapped', async () => {
+		const user = showOrganizer();
+		await drawEightPlayersOnFourBoards(user);
+		const drawnRows = listMatchRowTexts();
+		await clickButton(user, 'Swap Players');
+		const [firstRow] = listMatchRows();
+		const [ann, bob] = listButtonNames(firstRow);
+
+		await tapPlayer(user, ann);
+		await tapPlayer(user, ann);
+		expect(listHighlightedNames()).toEqual([]);
+		await tapPlayer(user, ann);
+		await tapPlayer(user, bob);
+		expect(listHighlightedNames()).toEqual([]);
+
+		expect(listMatchRowTexts()).toEqual(drawnRows);
+		expect(
+			screen.queryByText('Swapping two Players in the same Match changes nothing.'),
+		).not.toBeInTheDocument();
+	});
+
+	it('gives the Bye to whoever is swapped with the Bye Player, tapped among the Matches waiting for a Board', async () => {
+		const user = showOrganizer();
+		// 3 Players on 1 Board: the first-Round Match takes it, and the Bye Player waits for one.
+		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '1');
+		await clickButton(user, 'Swap Players');
+		const waitingList = within(screen.getByRole('list', { name: 'Waiting for a Board' }));
+		const [byePlayer] = waitingList.getAllByRole('button').map((b) => b.textContent!);
+		const [firstRow] = listMatchRows();
+		const [playerA, playerB] = listButtonNames(firstRow);
+
+		await tapPlayer(user, byePlayer);
+		await tapPlayer(user, playerA);
+		await clickButton(user, 'Done');
+
+		expect(findRowOf(byePlayer)).toHaveTextContent(`${byePlayer} vs ${playerB}`);
+		expect(listWaitingText()).toEqual([
+			`Winners Bracket · Final${playerA} vs Winner of ${byePlayer} / ${playerB}`,
+		]);
+	});
+
+	it('keeps the Swaps when reopened, but not Swap mode', async () => {
+		const user = showOrganizer();
+		await drawEightPlayersOnFourBoards(user);
+		await clickButton(user, 'Swap Players');
+		const [firstRow, secondRow] = listMatchRows();
+		const [ann] = listButtonNames(firstRow);
+		const [, dan] = listButtonNames(secondRow);
+		await tapPlayer(user, ann);
+		await tapPlayer(user, dan);
+		const swappedRows = listMatchRowTexts();
+		await tapPlayer(user, ann);
+		cleanup();
+
+		showOrganizer();
+
+		expect(listMatchRowTexts()).toEqual(swappedRows);
+		expect(screen.queryByText('Tap two Players to swap them.')).not.toBeInTheDocument();
+		expect(listHighlightedNames()).toEqual([]);
+		expect(screen.getByRole('button', { name: 'Start' })).toBeEnabled();
 	});
 
 	it('records each Match’s winner with one tap, through to the champion', async () => {

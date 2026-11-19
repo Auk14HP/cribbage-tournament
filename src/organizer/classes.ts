@@ -5,7 +5,7 @@ export const button =
 	'rounded border border-gray-400 bg-gray-100 px-3 py-1.5 hover:bg-gray-200 disabled:opacity-50 disabled:hover:bg-gray-100';
 export const dangerButton = `${button} text-red-700`;
 export const primaryButton =
-	'rounded bg-blue-700 px-4 py-2 text-lg font-semibold text-white hover:bg-blue-800';
+	'rounded bg-blue-700 px-4 py-2 text-lg font-semibold text-white hover:bg-blue-800 disabled:opacity-50 disabled:hover:bg-blue-700';
 export const confirmButton = 'rounded px-3 py-1.5 font-semibold text-white';
 // A confirm button's colour: red for an action that can't simply be taken back, blue otherwise.
 export const confirmColours = {
@@ -27,4 +27,17 @@ export const windowFilling = {
 	row: 'flex min-h-0 flex-1 gap-12',
 	column: 'flex min-h-0 flex-col',
 	scrollingArea: 'min-h-0 overflow-y-auto',
+};
+
+/*
+ * The box round a Player's name in a listed Match. In Swap mode the name is a button to tap, outlined in dashed
+ * blue so it never looks like the grey buttons that record a winner once Started, and the Player tapped first is
+ * filled in blue. Otherwise the name keeps the same box, its border clear. The box adds no height to the name,
+ * so turning Swap mode on or off moves nothing.
+ */
+export const playerNameBox = {
+	shape: 'inline-block rounded border px-3',
+	plain: 'border-transparent',
+	swappable: 'border-dashed border-blue-600 text-blue-800 hover:bg-blue-50',
+	picked: 'border-blue-700 bg-blue-700 text-white',
 };

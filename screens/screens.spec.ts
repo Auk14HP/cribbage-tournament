@@ -24,10 +24,12 @@ const isShownWithin = async (element: Locator, timeout: number) => {
  *   PLAYERS=29 BOARDS=16 npm run screens    registration
  *   ... HOME_BOARD=3                        with the first Player registered given Home Board 3
  *   ... DRAW=1                              and the House Rules, every one shown, then Tonight's Draw
+ *   ... DRAW=1 SWAP=1                       and Swap mode, the first Player picked, then after swapping them
+ *                                           with the last Player listed
  *   ... DRAW=1 START=1                      and after Start, then Now playing
  *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
  *   ... DRAW=1 START=1 RESULTS=3 FORFEIT=1  and the Forfeit dialog, then after that Forfeit
- * Writes test-results/screens/{organizer,tv}-{registration,house-rules,draw,started,now-playing,results,losers-bracket,results-now-playing,champion,forfeit-dialog,
+ * Writes test-results/screens/{organizer,tv}-{registration,house-rules,draw,swap-picked,swapped,started,now-playing,results,losers-bracket,results-now-playing,champion,forfeit-dialog,
  * forfeit}.png: the organizer at
  * 1280×720, the TV at 1920×1080.
  */
@@ -67,6 +69,15 @@ test('screens', async ({ context, page: organizer }) => {
 	await confirmDrawFromHouseRules(organizer);
 	await tv.getByRole('heading', { name: 'Tonight’s Draw' }).waitFor();
 	await shoot('draw');
+	if (process.env.SWAP) {
+		await organizer.getByRole('button', { name: 'Swap Players' }).click();
+		const playerButtons = findMatchesOnBoards(organizer).getByRole('button');
+		await playerButtons.first().click();
+		await shoot('swap-picked');
+		await playerButtons.last().click();
+		await shoot('swapped');
+		await organizer.getByRole('button', { name: 'Done' }).click();
+	}
 	if (!process.env.START) {
 		return;
 	}

@@ -1,11 +1,13 @@
 import { useId, useRef, useState } from 'react';
 import {
+	getMatchKey,
 	getMatchesOnBoards,
 	getBracketPicture,
 	isLosersBracketOpenTo,
 	recordForfeit,
 	recordWinner,
 	start,
+	swapPlayers,
 	type BracketName,
 	type MatchPlace,
 	type Player,
@@ -13,11 +15,12 @@ import {
 	type Tournament,
 } from '../tournament';
 import { BracketMatches } from './BracketMatches';
-import { primaryButton, windowFilling } from './classes';
+import { button, primaryButton, windowFilling } from './classes';
 import { Refusal, type Apply } from './controls';
 import { Results } from './Results';
 import { ScreenTiming } from './ScreenTiming';
 import { StayingDialog } from './StayingDialog';
+import type { SwapPicking } from './PlayerName';
 import { WaitingForBoard } from './WaitingForBoard';
 
 // A result waiting on the loser's answer to whether they are staying for the Losers Bracket.
@@ -26,15 +29,35 @@ interface ResultAwaitingStayingAnswer {
 	readonly record: (answer: StayingAnswer) => void;
 }
 
+// The Player tapped first in Swap mode, and the Match they are listed in.
+interface PickedToSwap {
+	readonly player: Player;
+	readonly match: MatchPlace;
+}
+
+/*
+ * One of a button's labels, put in the first cell of the button's grid, where its other labels sit too. A label
+ * not shown is hidden but still takes up its space, and isn't read out.
+ */
+const StackedLabel = ({ label, isShown }: { label: string; isShown: boolean }) => (
+	<span
+		aria-hidden={isShown ? undefined : true}
+		className={`col-start-1 row-start-1 ${isShown ? '' : 'invisible'}`}
+	>
+		{label}
+	</span>
+);
+
 // The brackets in the order their Matches are listed: the main bracket first.
 const bracketOrder: readonly BracketName[] = ['winners', 'losers'];
 
 /*
  * The Matches holding a Board, under their bracket's heading: the ones the Draw seats while the TV holds
- * Tonight’s Draw, then the ones being played. Once Started, tapping a Player's name records them as the winner, and a Forfeit records
- * their opponent's. A Player losing their first Match is asked first whether they are staying for the
- * Losers Bracket. Matches waiting for a Board are listed beneath. Results that can still be undone are
- * listed, latest first, to correct a mistake.
+ * Tonight’s Draw, then the ones being played. Before Start, Swap mode makes the Players' names tappable:
+ * the first tap picks a Player and the second swaps them with the Player picked. Once Started, tapping a
+ * Player's name records them as the winner, and a Forfeit records their opponent's. A Player losing their
+ * first Match is asked first whether they are staying for the Losers Bracket. Matches waiting for a Board
+ * are listed beneath. Results that can still be undone are listed, latest first, to correct a mistake.
  */
 export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const matches = getMatchesOnBoards(tournament);
@@ -42,6 +65,13 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 	const losersChampion = getBracketPicture(tournament, 'losers')?.champion;
 	const playing = tournament.phase === 'inProgress';
 	const [refusal, setRefusal] = useState('');
+	// Why a Swap was refused, shown beside the Matches the Organizer is tapping.
+	const [swapRefusal, setSwapRefusal] = useState('');
+	// Swap mode is this screen's own: a reload, or Start, leaves it.
+	const [isSwapModeOn, setSwapModeOn] = useState(false);
+	const drawShown = tournament.phase === 'drawShown';
+	const swapping = drawShown && isSwapModeOn;
+	const [pickedToSwap, setPickedToSwap] = useState<PickedToSwap>();
 	const [pendingResult, setPendingResult] = useState<ResultAwaitingStayingAnswer>();
 	const stayingDialog = useRef<HTMLDialogElement>(null);
 	const matchesHeadingId = useId();
@@ -66,6 +96,25 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 			setRefusal(reason);
 		});
 	};
+	/*
+	 * Picks the Player tapped first, then swaps them with the second. Tapping the picked Player again, or
+	 * their opponent in the same Match, only clears the pick: that Swap would change nothing.
+	 */
+	const tapToSwap = (player: Player, match: MatchPlace) => {
+		if (!pickedToSwap) {
+			setPickedToSwap({ player, match });
+			return;
+		}
+		setPickedToSwap(undefined);
+		if (getMatchKey(pickedToSwap.match) === getMatchKey(match)) {
+			return;
+		}
+		const reason = apply(swapPlayers(tournament, pickedToSwap.player.id, player.id));
+		setSwapRefusal(reason);
+	};
+	const swapPicking: SwapPicking | undefined = swapping
+		? { picked: pickedToSwap?.player.id, onTap: tapToSwap }
+		: undefined;
 	const pressStart = () => {
 		const reason = apply(start(tournament));
 		setRefusal(reason);
@@ -83,9 +132,37 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 				)}
 				{matches.length > 0 && (
 					<>
-						<h2 id={matchesHeadingId} className="text-xl font-bold">
-							Matches
-						</h2>
+						<div className="flex items-center justify-between gap-4">
+							<h2 id={matchesHeadingId} className="text-xl font-bold">
+								Matches
+							</h2>
+							{/* Swap mode's line sits beside Done, in the header, so it moves nothing below. */}
+							{drawShown && (
+								<div className="flex items-center gap-4">
+									{swapping && (
+										<p className="whitespace-nowrap text-gray-700">
+											Tap two Players to swap them.
+										</p>
+									)}
+									{/*
+									 * Its labels share one grid cell, so it is as wide as Swap Players whichever shows, and
+									 * neither wraps nor shrinks: the box under the pointer stays put when it becomes Done.
+									 */}
+									<button
+										type="button"
+										className={`${button} grid shrink-0 text-center whitespace-nowrap`}
+										onClick={() => {
+											setSwapModeOn(!swapping);
+											setPickedToSwap(undefined);
+											setSwapRefusal('');
+										}}
+									>
+										<StackedLabel label="Swap Players" isShown={!swapping} />
+										<StackedLabel label="Done" isShown={swapping} />
+									</button>
+								</div>
+							)}
+						</div>
 						{playing && <p className="mt-1 text-gray-700">Tap a Match’s winner.</p>}
 					</>
 				)}
@@ -104,15 +181,18 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 									bracketName={bracketName}
 									matches={matches.filter((m) => m.match.bracket === bracketName)}
 									playing={playing}
+									swapPicking={swapPicking}
 									onWin={recordWinnerOf}
 									onForfeit={recordForfeitBy}
 								/>
 							))}
 						</section>
 					)}
-					<WaitingForBoard tournament={tournament} />
+					<WaitingForBoard tournament={tournament} swapPicking={swapPicking} />
 				</div>
 				{playing && <Refusal reason={refusal} />}
+				{/* Held open on Tonight’s Draw, so a refusal in Swap mode moves nothing above it. */}
+				{drawShown && <Refusal reason={swapRefusal} />}
 				<StayingDialog
 					ref={stayingDialog}
 					loser={pendingResult?.loser}
@@ -120,7 +200,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 				/>
 			</section>
 			<section className={`${windowFilling.column} w-80`}>
-				{tournament.phase === 'drawShown' && (
+				{drawShown && (
 					<>
 						<p>
 							The TV holds Tonight’s Draw until you press Start, so everyone can find
@@ -129,6 +209,8 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 						<button
 							type="button"
 							className={`${primaryButton} mt-2 w-full`}
+							/* Disabled in Swap mode, so the Tournament can’t Start halfway through a Swap. */
+							disabled={swapping}
 							onClick={pressStart}
 						>
 							Start
