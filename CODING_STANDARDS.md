@@ -38,7 +38,10 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - Size the display route in vh, so text and boxes scale with the TV. Spacing that must fit the TV's width, such as the page's side padding, the gaps between columns and the bracket lines across them, is in vw. The display is read from across the room by an audience mostly 55+: large, high-contrast text.
 - Keep every TV screen inside the TV's safe area (`tvSafeArea` in `src/display/tvSafeArea.ts`), since a TV that overscans crops the picture's edges: a screen that fills the TV takes its height from `tvSafeArea`, and an element fixed to a corner takes its place from `tvSafeArea`.
 - Show a refusal beside the controls that caused it, where the Organizer is already looking.
-- Keep a control still when a line above it comes and goes: give the line its height even when empty (`min-h-6`, as `Refusal` does). Leaving a box can save it and show a line, such as "Placards 1 to N", in the moment the Organizer clicks the button below; a button that moves under the press misses the click.
+- Keep the screen still when a mode, line or control comes and goes, so the Organizer's next click lands where they are looking: a button that moves under the press misses the click.
+    - A line that comes and goes keeps its height even when empty (`min-h-6`, as `Refusal` does). Leaving a box can save it and show a line, such as "Placards 1 to N", in the moment the Organizer clicks the button below.
+    - A mode that changes what a screen offers, such as Swap mode, changes it in place. A control the mode rules out stays where it is, disabled. A name that becomes a button, or a button whose label changes, keeps its box (`StackedLabel` in `src/organizer/Draw.tsx`). The mode's own line takes space already there, such as beside its button.
+    - An issue that says to hide a part asks for a shift: flag it, as a departure from the issue (`docs/agents/issue-tracker.md`, "When a change revises agreed behaviour").
 - Keep Tailwind classes that must change together, such as every use of one colour that means one thing, in one named object, each class written out whole so Tailwind finds it.
 
 ## The Tournament core
@@ -57,6 +60,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - Set-up that two tests in a file share becomes a module-level test helper (`showOrganizer`, `setUpDraw`), so each test shows only what it is about. Once a helper exists, call it wherever its steps appear, including lines written before the helper: `typeNumber` then Enter is `enterNumber`.
 - A test helper's name and comment claim only what it asserts, on the screens that call it.
 - An e2e test of a TV screen checks it with `expectInsideTvSafeArea` (`e2e/tvSafeArea.ts`) at the largest field the screen shows.
+- A change that switches a mode on the organizer route, or makes a part come and go beside or above a control there, gets an e2e test that the rest stays still (jsdom has no layout to measure), through `expectNothingMoves` (`e2e/screenStill.ts`): every part around the change, its own button included, measured before and after, as `e2e/swap-mode.spec.ts` does.
 - A test of when something happens checks both sides of the moment: the old state just before it, the new one at it (still the Winners Bracket at 19 seconds, Now playing at 20).
 - A test that something doesn't happen waits just past the moment it would have happened (still held at 21 seconds, past a 20-second screen), rather than to a round number: a repeating cycle can be back where it started by then.
 - Find a Match in a test by its Players, not by its Board or its place in a list: how Boards are assigned may change.
