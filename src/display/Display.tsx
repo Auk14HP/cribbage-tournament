@@ -5,7 +5,7 @@
  */
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Store } from '../storage';
-import { listTvScreens, type Tournament, type TvScreen } from '../tournament';
+import { listTvScreens, type Random, type Tournament, type TvScreen } from '../tournament';
 import { useTournament } from '../useTournament';
 import { Bracket } from './Bracket';
 import { Champion } from './Champion';
@@ -15,11 +15,14 @@ import { NowPlaying } from './NowPlaying';
 import { Players } from './Players';
 import { tvSafeArea } from './tvSafeArea';
 
-export const Display = ({ store }: { store: Store<Tournament> }) => {
+// Fun Facts are chosen with the random source given, so tests can repeat them.
+export const Display = ({ store, random }: { store: Store<Tournament>; random: Random }) => {
 	const tournament = useTournament(store);
 	return (
 		<main className={`min-h-screen bg-black text-white ${tvSafeArea.page}`}>
-			{tournament.phase === 'registration' && <Players tournament={tournament} />}
+			{tournament.phase === 'registration' && (
+				<Players tournament={tournament} random={random} />
+			)}
 			{tournament.phase === 'houseRules' && <HouseRules tournament={tournament} />}
 			{tournament.phase === 'drawShown' && <Draw tournament={tournament} />}
 			{/* Keyed by phase, so finishing starts the cycle again from its first screen, or the Held screen. */}
