@@ -1,6 +1,6 @@
 import { getMatchKey, getWaitingForBoard, type Tournament } from '../tournament';
 import { describeBracketRound } from '../wording';
-import { PlayerName, type SwapPicking } from './SwapButton';
+import { PlayerName, type SwapPicking } from './PlayerName';
 
 /*
  * The Matches waiting for a Board, in turn, each with its bracket and Round, since the list mixes both

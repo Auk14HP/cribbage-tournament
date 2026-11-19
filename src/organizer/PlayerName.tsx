@@ -1,6 +1,6 @@
 import type { MatchPlace, Opponent, Player, PlayerId } from '../tournament';
 import { getPlayerName } from '../wording';
-import { swapButton } from './classes';
+import { playerNameBox } from './classes';
 
 // Swap mode, as each Match listed sees it: the Player tapped first, if any, and what tapping a Player does.
 export interface SwapPicking {
@@ -24,7 +24,9 @@ export const PlayerName = ({
 	swapPicking && 'name' in player ? (
 		<SwapButton player={player} match={match} swapPicking={swapPicking} />
 	) : (
-		<span className={`${swapButton.shape} border-transparent`}>{getPlayerName(player)}</span>
+		<span className={`${playerNameBox.shape} ${playerNameBox.plain}`}>
+			{getPlayerName(player)}
+		</span>
 	);
 
 // A Player's name in Swap mode, tapped to pick them or to swap them with the Player picked first.
@@ -42,7 +44,7 @@ const SwapButton = ({
 		<button
 			type="button"
 			aria-pressed={isPicked}
-			className={`${swapButton.shape} ${isPicked ? swapButton.picked : swapButton.unpicked}`}
+			className={`${playerNameBox.shape} ${isPicked ? playerNameBox.picked : playerNameBox.swappable}`}
 			onClick={() => onTap(player, match)}
 		>
 			{player.name}

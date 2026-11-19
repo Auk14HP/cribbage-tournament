@@ -30,12 +30,14 @@ export const windowFilling = {
 };
 
 /*
- * A Player's name to tap in Swap mode: outlined in dashed blue, so it never looks like the grey buttons that
- * record a winner once Started. The Player tapped first is filled in blue. The shape adds no height to the
- * name, so a plain name given the same shape, its border clear, is the same size.
+ * The box round a Player's name in a listed Match. In Swap mode the name is a button to tap, outlined in dashed
+ * blue so it never looks like the grey buttons that record a winner once Started, and the Player tapped first is
+ * filled in blue. Otherwise the name keeps the same box, its border clear. The box adds no height to the name,
+ * so turning Swap mode on or off moves nothing.
  */
-export const swapButton = {
+export const playerNameBox = {
 	shape: 'inline-block rounded border px-3',
-	unpicked: 'border-dashed border-blue-600 text-blue-800 hover:bg-blue-50',
+	plain: 'border-transparent',
+	swappable: 'border-dashed border-blue-600 text-blue-800 hover:bg-blue-50',
 	picked: 'border-blue-700 bg-blue-700 text-white',
 };

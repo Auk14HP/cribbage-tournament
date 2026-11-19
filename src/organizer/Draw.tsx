@@ -20,7 +20,7 @@ import { Refusal, type Apply } from './controls';
 import { Results } from './Results';
 import { ScreenTiming } from './ScreenTiming';
 import { StayingDialog } from './StayingDialog';
-import type { SwapPicking } from './SwapButton';
+import type { SwapPicking } from './PlayerName';
 import { WaitingForBoard } from './WaitingForBoard';
 
 // A result waiting on the loser's answer to whether they are staying for the Losers Bracket.
@@ -127,7 +127,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 							{drawShown && (
 								<div className="flex items-center gap-4">
 									{swapping && (
-										<p className="text-gray-700">
+										<p className="whitespace-nowrap text-gray-700">
 											Tap two Players to swap them.
 										</p>
 									)}

@@ -11,7 +11,7 @@ import {
 } from '../tournament';
 import { bracketTitles, describeRound } from '../wording';
 import { button, confirmButton, confirmColours, dangerButton, dialogBox } from './classes';
-import { PlayerName, type SwapPicking } from './SwapButton';
+import { PlayerName, type SwapPicking } from './PlayerName';
 
 /*
  * One bracket's Matches holding a Board, under the bracket's title: each row names its Board, its Round and
