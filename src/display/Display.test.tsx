@@ -85,7 +85,7 @@ describe('the display route', () => {
 });
 
 describe('the Fun Fact line', () => {
-	it('shows a Fun Fact on the Players screen, changing every 12 seconds', () => {
+	it('shows a Fun Fact on Tonight’s Players, changing every 12 seconds', () => {
 		vi.useFakeTimers();
 		showDisplay();
 		const firstFunFact = readFunFact();
@@ -106,10 +106,11 @@ describe('the Fun Fact line', () => {
 
 		const firstPass = shownFacts.slice(0, namelessCount);
 		expect(firstPass.every(({ names }) => names.length === 0)).toBe(true);
-		expect(new Set(firstPass.map(({ fact }) => fact)).size).toBe(namelessCount);
+		const firstPassFacts = firstPass.map(({ fact }) => fact);
+		expect(new Set(firstPassFacts).size).toBe(namelessCount);
 		// The next pass begins with a fact from the last one.
 		const nextPassFact = shownFacts[namelessCount].fact;
-		expect(firstPass.map(({ fact }) => fact)).toContain(nextPassFact);
+		expect(firstPassFacts).toContain(nextPassFact);
 	});
 
 	it('names a lone Player only in one-name facts, never in two facts in a row', () => {
@@ -121,6 +122,23 @@ describe('the Fun Fact line', () => {
 
 		expect(shownFacts.every(({ names }) => names.length <= 1)).toBe(true);
 		expect(shownFacts.some(({ names }) => names.includes('Ron'))).toBe(true);
+		expect(findNamedTwiceInARow(shownFacts)).toEqual([]);
+	});
+
+	/*
+	 * With two Players, a fact naming both can't follow one naming either, so once only those are left a fact
+	 * already used stands in for a turn. The pass goes on until every fact has been shown.
+	 */
+	it('with two Players, shows every Fun Fact before a new pass begins, never naming anyone twice in a row', () => {
+		vi.useFakeTimers();
+		const registered = registerPlayers('Ron', 'Sue');
+		showDisplay(registered);
+		const standInAllowance = 20;
+
+		const shownFacts = collectFunFacts(funFacts.length + standInAllowance, registered.players);
+
+		const shownFactLines = shownFacts.map(({ fact }) => fact);
+		expect(new Set(shownFactLines).size).toBe(funFacts.length);
 		expect(findNamedTwiceInARow(shownFacts)).toEqual([]);
 	});
 
@@ -145,15 +163,15 @@ describe('the Fun Fact line', () => {
 			waitSeconds(12);
 		}
 		const { fact, names } = parseFunFact(tournament.players);
-		const named = tournament.players.find((p) => p.name === names[0])!;
+		const namedPlayer = tournament.players.find((p) => p.name === names[0])!;
 
-		tournament = expectOk(renamePlayer(tournament, named.id, 'Ronnie-Lou'));
+		tournament = expectOk(renamePlayer(tournament, namedPlayer.id, 'Ronnie-Lou'));
 		act(() => store.save(tournament));
 		const renamed = parseFunFact(tournament.players);
 		expect(renamed.fact).toBe(fact);
 		expect(renamed.names).toContain('Ronnie-Lou');
 
-		tournament = expectOk(removePlayer(tournament, named.id));
+		tournament = expectOk(removePlayer(tournament, namedPlayer.id));
 		act(() => store.save(tournament));
 		const replaced = parseFunFact(tournament.players);
 		expect(replaced.fact).not.toBe(fact);

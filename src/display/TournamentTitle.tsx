@@ -1,13 +1,12 @@
 /*
- * The Tournament's title and the night's date, written out so nobody misreads 11/09 as September 11. Opens
- * the Players screen and the champion screen, so a photo of the champions shows which night it was. The
+ * The Tournament's title and the night's date, written out so nobody misreads 11/09 as September 11. The
  * date's line keeps its height before the first Player registers and sets it, so the lines below don't move.
  */
 import type { Tournament } from '../tournament';
 
 const tournamentTitle = 'Farmstrong Brewery Cribbage Tournament';
 
-// The title's element: the Players screen's heading, or a line above the champion screen's own heading.
+// The title's element: the screen's heading, or a line above a heading of the screen's own.
 type TitleElement = 'h1' | 'p';
 
 export const TournamentTitle = ({
