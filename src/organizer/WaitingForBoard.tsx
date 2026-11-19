@@ -1,6 +1,6 @@
 import { getMatchKey, getWaitingForBoard, type Tournament } from '../tournament';
-import { describeBracketRound, getPlayerName } from '../wording';
-import { SwapButton, type SwapPicking } from './SwapButton';
+import { describeBracketRound } from '../wording';
+import { PlayerName, type SwapPicking } from './SwapButton';
 
 /*
  * The Matches waiting for a Board, in turn, each with its bracket and Round, since the list mixes both
@@ -30,29 +30,11 @@ export const WaitingForBoard = ({
 						<span className="w-56 shrink-0 text-gray-700">
 							{describeBracketRound(tournament, match)}
 						</span>
-						{swapPicking ? (
-							<span className="flex items-center gap-2">
-								<SwapButton
-									player={playerA}
-									match={match}
-									swapPicking={swapPicking}
-								/>
-								vs
-								{'name' in playerB ? (
-									<SwapButton
-										player={playerB}
-										match={match}
-										swapPicking={swapPicking}
-									/>
-								) : (
-									getPlayerName(playerB)
-								)}
-							</span>
-						) : (
-							<span>
-								{playerA.name} vs {getPlayerName(playerB)}
-							</span>
-						)}
+						<span>
+							<PlayerName player={playerA} match={match} swapPicking={swapPicking} />
+							<span className="mx-1"> vs </span>
+							<PlayerName player={playerB} match={match} swapPicking={swapPicking} />
+						</span>
 					</li>
 				))}
 			</ol>

@@ -5,7 +5,7 @@ export const button =
 	'rounded border border-gray-400 bg-gray-100 px-3 py-1.5 hover:bg-gray-200 disabled:opacity-50 disabled:hover:bg-gray-100';
 export const dangerButton = `${button} text-red-700`;
 export const primaryButton =
-	'rounded bg-blue-700 px-4 py-2 text-lg font-semibold text-white hover:bg-blue-800';
+	'rounded bg-blue-700 px-4 py-2 text-lg font-semibold text-white hover:bg-blue-800 disabled:opacity-50 disabled:hover:bg-blue-700';
 export const confirmButton = 'rounded px-3 py-1.5 font-semibold text-white';
 // A confirm button's colour: red for an action that can't simply be taken back, blue otherwise.
 export const confirmColours = {
@@ -31,10 +31,11 @@ export const windowFilling = {
 
 /*
  * A Player's name to tap in Swap mode: outlined in dashed blue, so it never looks like the grey buttons that
- * record a winner once Started. The Player tapped first is filled in blue.
+ * record a winner once Started. The Player tapped first is filled in blue. The shape adds no height to the
+ * name, so a plain name given the same shape, its border clear, is the same size.
  */
 export const swapButton = {
-	shape: 'rounded border px-3 py-1.5',
+	shape: 'inline-block rounded border px-3',
 	unpicked: 'border-dashed border-blue-600 text-blue-800 hover:bg-blue-50',
 	picked: 'border-blue-700 bg-blue-700 text-white',
 };

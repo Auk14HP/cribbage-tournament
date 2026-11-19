@@ -507,7 +507,7 @@ describe('the organizer route', () => {
 		expect(screen.getByLabelText('Player name')).toHaveFocus();
 	});
 
-	it('offers Swap Players only on Tonight’s Draw, where Swap mode says what the taps do and hides Start until Done', async () => {
+	it('offers Swap Players only on Tonight’s Draw, where Swap mode says what the taps do and disables Start until Done', async () => {
 		const user = showOrganizer();
 		for (const name of ['Dave K.', 'Big Dave', 'Sue']) {
 			await register(user, name);
@@ -520,9 +520,10 @@ describe('the organizer route', () => {
 		await clickButton(user, 'Swap Players');
 
 		expect(screen.getByText('Tap two Players to swap them.')).toBeInTheDocument();
-		expect(screen.queryByRole('button', { name: 'Start' })).not.toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
 		expect(screen.queryByRole('button', { name: 'Swap Players' })).not.toBeInTheDocument();
 		await clickButton(user, 'Done');
+		expect(screen.getByRole('button', { name: 'Start' })).toBeEnabled();
 		expect(screen.queryByText('Tap two Players to swap them.')).not.toBeInTheDocument();
 		await clickButton(user, 'Start');
 		expect(screen.queryByRole('button', { name: 'Swap Players' })).not.toBeInTheDocument();
@@ -611,7 +612,7 @@ describe('the organizer route', () => {
 		expect(listMatchRowTexts()).toEqual(swappedRows);
 		expect(screen.queryByText('Tap two Players to swap them.')).not.toBeInTheDocument();
 		expect(listHighlightedNames()).toEqual([]);
-		expect(screen.getByRole('button', { name: 'Start' })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Start' })).toBeEnabled();
 	});
 
 	it('records each Match’s winner with one tap, through to the champion', async () => {

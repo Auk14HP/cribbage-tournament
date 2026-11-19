@@ -9,9 +9,9 @@ import {
 	type Player,
 	type Tournament,
 } from '../tournament';
-import { bracketTitles, describeRound, getPlayerName } from '../wording';
+import { bracketTitles, describeRound } from '../wording';
 import { button, confirmButton, confirmColours, dangerButton, dialogBox } from './classes';
-import { SwapButton, type SwapPicking } from './SwapButton';
+import { PlayerName, type SwapPicking } from './SwapButton';
 
 /*
  * One bracket's Matches holding a Board, under the bracket's title: each row names its Board, its Round and
@@ -202,17 +202,12 @@ const MatchPlayer = ({
 	canWin: boolean;
 	swapPicking?: SwapPicking;
 	onWin: () => void;
-}) => {
-	if (!('name' in player) || (!canWin && !swapPicking)) {
-		// Padded as a button is, so names line up whether they can be tapped or not.
-		return <span className="border border-transparent px-3">{getPlayerName(player)}</span>;
-	}
-	return swapPicking ? (
-		<SwapButton player={player} match={match} swapPicking={swapPicking} />
-	) : (
+}) =>
+	canWin && 'name' in player ? (
 		<WinnerButton player={player} onWin={onWin} />
+	) : (
+		<PlayerName player={player} match={match} swapPicking={swapPicking} />
 	);
-};
 
 const WinnerButton = ({ player, onWin }: { player: Player; onWin: () => void }) => (
 	<button type="button" className={button} onClick={onWin}>

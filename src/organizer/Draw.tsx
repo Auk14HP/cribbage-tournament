@@ -52,6 +52,8 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 	const losersChampion = getBracketPicture(tournament, 'losers')?.champion;
 	const playing = tournament.phase === 'inProgress';
 	const [refusal, setRefusal] = useState('');
+	// Why a Swap was refused, shown beside the Matches the Organizer is tapping.
+	const [swapRefusal, setSwapRefusal] = useState('');
 	// Swap mode is this screen's own: a reload, or Start, leaves it.
 	const [isSwapModeOn, setSwapModeOn] = useState(false);
 	const drawShown = tournament.phase === 'drawShown';
@@ -95,7 +97,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 			return;
 		}
 		const reason = apply(swapPlayers(tournament, pickedToSwap.player.id, player.id));
-		setRefusal(reason);
+		setSwapRefusal(reason);
 	};
 	const swapPicking: SwapPicking | undefined = swapping
 		? { picked: pickedToSwap?.player.id, onTap: tapToSwap }
@@ -121,24 +123,29 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 							<h2 id={matchesHeadingId} className="text-xl font-bold">
 								Matches
 							</h2>
+							{/* Swap mode's line sits beside Done, in the header, so it moves nothing below. */}
 							{drawShown && (
-								<button
-									type="button"
-									className={button}
-									onClick={() => {
-										setSwapModeOn(!swapping);
-										setPickedToSwap(undefined);
-										setRefusal('');
-									}}
-								>
-									{swapping ? 'Done' : 'Swap Players'}
-								</button>
+								<div className="flex items-center gap-4">
+									{swapping && (
+										<p className="text-gray-700">
+											Tap two Players to swap them.
+										</p>
+									)}
+									<button
+										type="button"
+										className={button}
+										onClick={() => {
+											setSwapModeOn(!swapping);
+											setPickedToSwap(undefined);
+											setSwapRefusal('');
+										}}
+									>
+										{swapping ? 'Done' : 'Swap Players'}
+									</button>
+								</div>
 							)}
 						</div>
 						{playing && <p className="mt-1 text-gray-700">Tap a Match’s winner.</p>}
-						{swapping && (
-							<p className="mt-1 text-gray-700">Tap two Players to swap them.</p>
-						)}
 					</>
 				)}
 				{/*
@@ -165,7 +172,9 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 					)}
 					<WaitingForBoard tournament={tournament} swapPicking={swapPicking} />
 				</div>
-				{(playing || swapping) && <Refusal reason={refusal} />}
+				{playing && <Refusal reason={refusal} />}
+				{/* Held open on Tonight’s Draw, so a refusal in Swap mode moves nothing above it. */}
+				{drawShown && <Refusal reason={swapRefusal} />}
 				<StayingDialog
 					ref={stayingDialog}
 					loser={pendingResult?.loser}
@@ -173,7 +182,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 				/>
 			</section>
 			<section className={`${windowFilling.column} w-80`}>
-				{drawShown && !swapping && (
+				{drawShown && (
 					<>
 						<p>
 							The TV holds Tonight’s Draw until you press Start, so everyone can find
@@ -182,6 +191,8 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 						<button
 							type="button"
 							className={`${primaryButton} mt-2 w-full`}
+							/* Disabled in Swap mode, so the Tournament can’t Start halfway through a Swap. */
+							disabled={swapping}
 							onClick={pressStart}
 						>
 							Start
