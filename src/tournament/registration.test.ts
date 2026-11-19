@@ -39,6 +39,19 @@ describe('registering Players', () => {
 		expect(registerPlayer(tournament, 'Dave K.  ').ok).toBe(false);
 	});
 
+	it('saves the day the first Player registers as the night’s date, unchanged by later registrations, even after midnight', () => {
+		const monday = new Date(2026, 10, 9, 19, 30);
+		const afterMidnight = new Date(2026, 10, 10, 0, 15);
+		let tournament = createTournament();
+		expect(tournament.date).toBeUndefined();
+
+		tournament = expectOk(registerPlayer(tournament, 'Ron', monday));
+		expect(tournament.date).toBe('2026-11-09');
+
+		tournament = expectOk(registerPlayer(tournament, 'Sue', afterMidnight));
+		expect(tournament.date).toBe('2026-11-09');
+	});
+
 	it('rejects a blank name', () => {
 		const tournament = createTournament();
 

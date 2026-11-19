@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Display } from './Display';
+import { funFacts } from './funFacts';
 import type { Result } from '../result';
 import { createLocalStorageStore, type Store } from '../storage';
 import { listWaitingText } from '../screenTestHelpers';
@@ -20,6 +21,8 @@ import {
 	showNextHouseRule,
 	recordWinner,
 	registerPlayer,
+	removePlayer,
+	renamePlayer,
 	setBoardCount,
 	setScreenSeconds,
 	start,
@@ -39,6 +42,11 @@ import {
 } from '../tournament/testSetup';
 
 const key = 'display-test';
+
+const tournamentTitle = 'Farmstrong Brewery Cribbage Tournament';
+
+// The evening of the brewery's first Tournament.
+const monday = new Date(2026, 10, 9, 19, 30);
 
 afterEach(() => {
 	vi.useRealTimers();
@@ -61,6 +69,108 @@ describe('the display route', () => {
 		expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
 			'Big Dave',
 		]);
+	});
+
+	it('opens with the Tournament’s title and the night’s date, written out', () => {
+		const store = showDisplay();
+		expect(readHeading()).toBe(tournamentTitle);
+
+		const registered = registerPlayer(createTournament(), 'Ron', monday);
+		saveOutcome(store, registered);
+
+		expect(readHeading()).toBe(tournamentTitle);
+		expect(screen.getByText('Monday, November 9, 2026')).toBeInTheDocument();
+		expect(screen.getByText('1 Player registered')).toBeInTheDocument();
+	});
+});
+
+describe('the Fun Fact line', () => {
+	it('shows a Fun Fact on the Players screen, changing every 12 seconds', () => {
+		vi.useFakeTimers();
+		showDisplay();
+		const firstFunFact = readFunFact();
+		expect(firstFunFact).toMatch(/^Fun fact: /);
+
+		waitSeconds(11);
+		expect(readFunFact()).toBe(firstFunFact);
+		waitSeconds(1);
+		expect(readFunFact()).not.toBe(firstFunFact);
+	});
+
+	it('names nobody while nobody is registered, and repeats none until every one that fits has been used', () => {
+		vi.useFakeTimers();
+		showDisplay();
+		const namelessCount = funFacts.filter((fact) => !fact.includes('{A}')).length;
+
+		const shownFacts = collectFunFacts(namelessCount + 1, []);
+
+		const firstPass = shownFacts.slice(0, namelessCount);
+		expect(firstPass.every(({ names }) => names.length === 0)).toBe(true);
+		expect(new Set(firstPass.map(({ fact }) => fact)).size).toBe(namelessCount);
+		// The next pass begins with a fact from the last one.
+		const nextPassFact = shownFacts[namelessCount].fact;
+		expect(firstPass.map(({ fact }) => fact)).toContain(nextPassFact);
+	});
+
+	it('names a lone Player only in one-name facts, never in two facts in a row', () => {
+		vi.useFakeTimers();
+		const registered = registerPlayers('Ron');
+		showDisplay(registered);
+
+		const shownFacts = collectFunFacts(40, registered.players);
+
+		expect(shownFacts.every(({ names }) => names.length <= 1)).toBe(true);
+		expect(shownFacts.some(({ names }) => names.includes('Ron'))).toBe(true);
+		expect(findNamedTwiceInARow(shownFacts)).toEqual([]);
+	});
+
+	it('picks the names fresh each time, reaching every Player, never the same Player in two facts in a row', () => {
+		vi.useFakeTimers();
+		const registered = registerPlayers('Ron', 'Sue', 'Joe', 'Bev');
+		showDisplay(registered);
+
+		const shownFacts = collectFunFacts(80, registered.players);
+
+		const namedPlayers = new Set(shownFacts.flatMap(({ names }) => names));
+		expect([...namedPlayers].sort()).toEqual(['Bev', 'Joe', 'Ron', 'Sue']);
+		expect(shownFacts.some(({ names }) => names.length === 2)).toBe(true);
+		expect(findNamedTwiceInARow(shownFacts)).toEqual([]);
+	});
+
+	it('shows a named Player’s new name at once, and replaces a fact naming a removed Player at once', () => {
+		vi.useFakeTimers();
+		let tournament = registerPlayers('Ron', 'Sue', 'Joe', 'Bev');
+		const store = showDisplay(tournament);
+		while (parseFunFact(tournament.players).names.length === 0) {
+			waitSeconds(12);
+		}
+		const { fact, names } = parseFunFact(tournament.players);
+		const named = tournament.players.find((p) => p.name === names[0])!;
+
+		tournament = expectOk(renamePlayer(tournament, named.id, 'Ronnie-Lou'));
+		act(() => store.save(tournament));
+		const renamed = parseFunFact(tournament.players);
+		expect(renamed.fact).toBe(fact);
+		expect(renamed.names).toContain('Ronnie-Lou');
+
+		tournament = expectOk(removePlayer(tournament, named.id));
+		act(() => store.save(tournament));
+		const replaced = parseFunFact(tournament.players);
+		expect(replaced.fact).not.toBe(fact);
+		expect(replaced.names).not.toContain('Ronnie-Lou');
+	});
+
+	it('is gone once the Organizer moves on from registration', () => {
+		vi.useFakeTimers();
+		const registered = registerPlayers('Ron', 'Sue');
+		const store = showDisplay(registered);
+		expect(readFunFact()).toMatch(/^Fun fact: /);
+
+		saveOutcome(store, showHouseRules(registered));
+
+		expect(screen.queryByText(/^Fun fact: /)).not.toBeInTheDocument();
+		waitSeconds(13);
+		expect(screen.queryByText(/^Fun fact: /)).not.toBeInTheDocument();
 	});
 });
 
@@ -120,7 +230,7 @@ describe('the House Rules screen', () => {
 
 		tournament = expectOk(goBackToRegistration(tournament));
 		act(() => store.save(tournament));
-		expect(readHeading()).toBe('Tonight’s Players');
+		expect(readHeading()).toBe(tournamentTitle);
 
 		tournament = expectOk(showHouseRules(tournament));
 		act(() => store.save(tournament));
@@ -271,7 +381,7 @@ describe('the TV cycle', () => {
 	it('shows a countdown ring that fills over each screen’s time and starts again with each screen and each new time', () => {
 		vi.useFakeTimers();
 		const store = showDisplay();
-		expect(readHeading()).toBe('Tonight’s Players');
+		expect(readHeading()).toBe(tournamentTitle);
 		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
 		let tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 3 });
 		act(() => store.save(tournament));
@@ -364,8 +474,8 @@ describe('a Held screen', () => {
 });
 
 describe('the champion screen', () => {
-	it('shows the champion once the final has a winner, then cycles it with the finished bracket', () => {
-		vi.useFakeTimers();
+	it('shows the champion once the final has a winner, under the title and the night’s date, then cycles it with the finished bracket', () => {
+		vi.useFakeTimers({ now: monday });
 		const store = showDisplay();
 		const drawn = setUpDraw(['Dave K.', 'Big Dave'], { boards: 1 });
 		let tournament = expectOk(start(drawn));
@@ -377,11 +487,15 @@ describe('the champion screen', () => {
 
 		// With no Losers Bracket played, the night has one champion.
 		expect(readHeading()).toBe('Tonight’s Champion');
+		expect(screen.getByText(tournamentTitle)).toBeInTheDocument();
+		expect(screen.getByText('Monday, November 9, 2026')).toBeInTheDocument();
 		expect(screen.getByText(champion.name)).toBeInTheDocument();
 		expect(screen.getByTestId('countdown ring')).toBeInTheDocument();
 
+		// The brackets keep their space for Matches.
 		waitSeconds(20);
 		expect(readHeading()).toBe('Winners Bracket');
+		expect(screen.queryByText(tournamentTitle)).not.toBeInTheDocument();
 		expect(screen.getByText(`Champion: ${champion.name}`)).toBeInTheDocument();
 		expect(screen.getByTestId('countdown ring')).toBeInTheDocument();
 
@@ -488,12 +602,62 @@ describe('the Losers Bracket', () => {
 	});
 });
 
-// The display route, against the real storage adapter. Saving to the store stands in for the Organizer.
-const showDisplay = (): Store<Tournament> => {
+/*
+ * The display route, against the real storage adapter, opened on the Tournament given, if any. Saving to the
+ * store stands in for the Organizer. Fun Facts are chosen by a seeded random source.
+ */
+const showDisplay = (saved?: Tournament): Store<Tournament> => {
 	const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
-	render(<Display store={store} />);
+	if (saved) {
+		store.save(saved);
+	}
+	const random = createSeededRandom(1);
+	render(<Display store={store} random={random} />);
 	return store;
 };
+
+// The Fun Fact line's text, "Fun fact:" included.
+const readFunFact = () => screen.getByText(/^Fun fact: /).textContent;
+
+// A Fun Fact as shown: the line it was written as, and the names filling its slots.
+type ShownFunFact = { fact: string; names: string[] };
+
+/*
+ * Works out which Fun Fact the line shows, and the registered Players it names, by matching it against
+ * each line written, its name slots standing for any registered Player.
+ */
+const parseFunFact = (players: readonly Player[]): ShownFunFact => {
+	const shown = readFunFact()!.replace(/^Fun fact: /, '');
+	const names = players.map((p) => escapeRegExp(p.name)).join('|');
+	for (const fact of funFacts) {
+		const slots = fact.match(/\{[AB]\}/g) ?? [];
+		const pattern = escapeRegExp(fact).replace(/\\\{[AB]\\\}/g, `(${names})`);
+		const match = new RegExp(`^${pattern}$`).exec(shown);
+		if (match && (slots.length === 0 || names !== '')) {
+			return { fact, names: [...new Set(match.slice(1))] };
+		}
+	}
+	throw new Error(`Not a Fun Fact naming registered Players: ${shown}`);
+};
+
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// The Fun Facts shown, one every 12 seconds, starting with the one on show.
+const collectFunFacts = (count: number, players: readonly Player[]): ShownFunFact[] => {
+	const shownFacts = [];
+	for (let i = 0; i < count; i++) {
+		shownFacts.push(parseFunFact(players));
+		waitSeconds(12);
+	}
+	return shownFacts;
+};
+
+// Each Player named in two Fun Facts in a row.
+const findNamedTwiceInARow = (shownFacts: readonly ShownFunFact[]): string[] =>
+	shownFacts.slice(1).flatMap(({ names }, i) => {
+		const previous = shownFacts[i].names;
+		return names.filter((name) => previous.includes(name));
+	});
 
 /*
  * A Tournament with the named Players registered, that many Boards set out, and the Draw made, shuffled by

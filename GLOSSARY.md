@@ -85,8 +85,12 @@ A page the TV shows. Which ones it shows depends on the night's phase.
 _Avoid_: Slide, view
 
 **Tonight's Players**:
-The **TV screen** before the **Draw** that lists every **Player** registered so far. It is the room's view of registration, not the **Organizer**'s.
+The **TV screen** before the **Draw** that lists every **Player** registered so far, under the **Tournament**'s title and date, with a **Fun Fact** along the bottom. It is the room's view of registration, not the **Organizer**'s.
 _Avoid_: Registration page, sign-up screen
+
+**Fun Fact**:
+A made-up, light-hearted line, often naming registered **Players**, shown on the TV during registration.
+_Avoid_: Trivia, joke, tip
 
 **Tonight's Draw**:
 The **TV screen** between the **Draw** and Start that shows each **Match** holding a **Board**, so each **Player** can find their seat, with any Matches **Waiting for a Board** beneath.

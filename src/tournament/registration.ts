@@ -3,7 +3,12 @@ import type { Result } from '../result';
 import { findPlayer, listIndexes } from './bracket';
 import type { BoardNumber, PlayerId, Tournament } from './types';
 
-export const registerPlayer = (tournament: Tournament, typedName: string): Result<Tournament> => {
+// The first Player registered sets the night's date, from now: the moment they register.
+export const registerPlayer = (
+	tournament: Tournament,
+	typedName: string,
+	now = new Date(),
+): Result<Tournament> => {
 	const closed = findRegistrationClosedRefusal(
 		tournament,
 		'Registration closed when the Draw was made.',
@@ -23,8 +28,16 @@ export const registerPlayer = (tournament: Tournament, typedName: string): Resul
 			...tournament,
 			players: [...tournament.players, player],
 			nextPlayerId: tournament.nextPlayerId + 1,
+			date: tournament.date ?? formatDate(now),
 		},
 	};
+};
+
+// A day as YYYY-MM-DD in the laptop's time zone, so a night's date reads the same as its wall clock.
+const formatDate = (day: Date): string => {
+	const month = String(day.getMonth() + 1).padStart(2, '0');
+	const dayOfMonth = String(day.getDate()).padStart(2, '0');
+	return `${day.getFullYear()}-${month}-${dayOfMonth}`;
 };
 
 const notRegistered = 'That Player is no longer registered.';

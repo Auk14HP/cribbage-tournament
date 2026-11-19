@@ -1,0 +1,38 @@
+/*
+ * The Tournament's title and the night's date, written out so nobody misreads 11/09 as September 11. Opens
+ * the Players screen and the champion screen, so a photo of the champions shows which night it was. The
+ * date's line keeps its height before the first Player registers and sets it, so the lines below don't move.
+ */
+import type { Tournament } from '../tournament';
+
+const tournamentTitle = 'Farmstrong Brewery Cribbage Tournament';
+
+// The title's element: the Players screen's heading, or a line above the champion screen's own heading.
+type TitleElement = 'h1' | 'p';
+
+export const TournamentTitle = ({
+	tournament,
+	titleElement: Title,
+}: {
+	tournament: Tournament;
+	titleElement: TitleElement;
+}) => (
+	<header>
+		<Title className="text-[5vh] leading-tight font-bold text-balance">{tournamentTitle}</Title>
+		<p className="mt-[1vh] min-h-[4vh] text-[4vh] leading-none text-gray-300">
+			{tournament.date && describeDate(tournament.date)}
+		</p>
+	</header>
+);
+
+// A YYYY-MM-DD date written out in full: "Monday, November 9, 2026".
+const describeDate = (date: string): string => {
+	const [year, month, dayOfMonth] = date.split('-').map(Number);
+	const day = new Date(year, month - 1, dayOfMonth);
+	return day.toLocaleDateString('en-US', {
+		weekday: 'long',
+		month: 'long',
+		day: 'numeric',
+		year: 'numeric',
+	});
+};
