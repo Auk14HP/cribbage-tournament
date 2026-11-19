@@ -11,8 +11,7 @@ test.use({ viewport: { width: 1280, height: 720 } });
 
 /*
  * Where each part of Tonight's Draw sits: the button that turns Swap mode on and off, every Match row, on a
- * Board or waiting for one, Start, and the TV screens heading below it. The button keeps its box as Swap Players
- * becomes Done, so a second click lands on it.
+ * Board or waiting for one, Start, and the TV screens heading below it.
  */
 const measureDrawScreen = async (page: Page) => {
 	const swapModeButton = page.getByRole('button', { name: /^(Swap Players|Done)$/ });
@@ -31,6 +30,7 @@ test('moves nothing on Tonight’s Draw when Swap mode starts, or when a Player 
 	await confirmDraw(page);
 	const beforeSwapMode = await measureDrawScreen(page);
 
+	// The button that turns Swap mode on keeps its box as it becomes Done, so a second click lands on it.
 	await page.getByRole('button', { name: 'Swap Players' }).click();
 	await expect(page.getByText('Tap two Players to swap them.')).toBeVisible();
 	expect(await measureDrawScreen(page)).toEqual(beforeSwapMode);
@@ -38,5 +38,9 @@ test('moves nothing on Tonight’s Draw when Swap mode starts, or when a Player 
 	const firstPlayerButton = findMatchesOnBoards(page).getByRole('button').first();
 	await firstPlayerButton.click();
 	await expect(firstPlayerButton).toHaveAttribute('aria-pressed', 'true');
+	expect(await measureDrawScreen(page)).toEqual(beforeSwapMode);
+
+	await page.getByRole('button', { name: 'Done' }).click();
+	await expect(page.getByText('Tap two Players to swap them.')).toBeHidden();
 	expect(await measureDrawScreen(page)).toEqual(beforeSwapMode);
 });

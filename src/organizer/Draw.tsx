@@ -36,12 +36,12 @@ interface PickedToSwap {
 }
 
 /*
- * One of a button's labels, all of them in one place inside it: the button is as wide as the longest, so it keeps
- * its size whichever one shows, and a second click lands where the first did. Only the label shown is read out.
+ * One of a button's labels, put in the first cell of the button's grid, where its other labels sit too. A label
+ * not shown is hidden but still takes up its space, and isn't read out.
  */
 const StackedLabel = ({ label, isShown }: { label: string; isShown: boolean }) => (
 	<span
-		aria-hidden={!isShown}
+		aria-hidden={isShown ? undefined : true}
 		className={`col-start-1 row-start-1 ${isShown ? '' : 'invisible'}`}
 	>
 		{label}
@@ -144,9 +144,13 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 											Tap two Players to swap them.
 										</p>
 									)}
+									{/*
+									 * Its labels share one grid cell, so it is as wide as Swap Players whichever shows, and
+									 * neither wraps nor shrinks: the box under the pointer stays put when it becomes Done.
+									 */}
 									<button
 										type="button"
-										className={`${button} grid text-center`}
+										className={`${button} grid shrink-0 text-center whitespace-nowrap`}
 										onClick={() => {
 											setSwapModeOn(!swapping);
 											setPickedToSwap(undefined);
