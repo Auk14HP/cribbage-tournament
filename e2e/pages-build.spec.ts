@@ -28,7 +28,9 @@ test('the built app sets up test Players and opens the TV display beside the Org
 	await expect(tv.getByText('16 Players registered')).toBeVisible();
 
 	await confirmDraw(organizer);
-	await expect(tv.getByRole('list', { name: 'Matches' }).getByRole('listitem')).toHaveCount(8);
+	await tv.getByRole('heading', { name: 'Tonight’s Draw' }).waitFor();
+	const roundOneCards = tv.getByRole('list', { name: 'Round 1' }).getByTestId('match card');
+	await expect(roundOneCards).toHaveCount(8);
 });
 
 test('a direct load of the built display route shows the TV display', async ({ page: tv }) => {

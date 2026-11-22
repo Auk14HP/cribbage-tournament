@@ -110,6 +110,25 @@ export const answerIsLoserStayingDialogIfAsked = async (
 	return true;
 };
 
+/*
+ * Records results, each loser of a first Match staying for the Losers Bracket, until every first Match has
+ * one, which draws the Losers Bracket. Counts the losers asked rather than clicks, since a click may record a
+ * later Match whose loser isn't asked.
+ */
+export const playFirstMatchesWithLosersStaying = async (
+	organizer: Page,
+	firstMatchCount: number,
+) => {
+	const nextWinnerButton = findMatchesOnBoards(organizer).getByRole('button').first();
+	let stayingCount = 0;
+	while (stayingCount < firstMatchCount) {
+		await nextWinnerButton.click();
+		if (await answerIsLoserStayingDialogIfAsked(organizer, 'Staying')) {
+			stayingCount++;
+		}
+	}
+};
+
 export const playToFinal = (page: Page) => playUntilMatchesLeft(page, 0);
 
 export const playUntilTheFinal = (page: Page) => playUntilMatchesLeft(page, 1);

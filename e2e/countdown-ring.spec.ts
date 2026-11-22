@@ -1,9 +1,8 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import {
-	answerIsLoserStayingDialogIfAsked,
-	findMatchesOnBoards,
 	holdScreen,
 	openTv,
+	playFirstMatchesWithLosersStaying,
 	playToFinal,
 	startTournament,
 	test,
@@ -40,21 +39,6 @@ const expectClearOfRing = async (tv: Page, cards: Locator) => {
 const findBracketSlots = (tv: Page) =>
 	tv.getByRole('list', { name: /^(Round \d+|Final)$/ }).getByRole('listitem');
 
-/*
- * Records first-Round results, each loser staying, until one is asked about: two staying losers draw the
- * Losers Bracket.
- */
-const playUntilLosersBracketDrawn = async (organizer: Page) => {
-	const nextWinnerButton = findMatchesOnBoards(organizer).getByRole('button').first();
-	let stayingCount = 0;
-	while (stayingCount < 2) {
-		await nextWinnerButton.click();
-		if (await answerIsLoserStayingDialogIfAsked(organizer, 'Staying')) {
-			stayingCount++;
-		}
-	}
-};
-
 for (const tvSize of tvSizes) {
 	test.describe(`on a ${tvSize.width}×${tvSize.height} TV with 32 Players`, () => {
 		test.beforeEach(async ({ page: organizer }) => {
@@ -64,7 +48,8 @@ for (const tvSize of tvSizes) {
 		test('the ring covers no Match on the Winners Bracket once the Losers Bracket is drawn', async ({
 			page: organizer,
 		}) => {
-			await playUntilLosersBracketDrawn(organizer);
+			// 32 Players open 16 first Matches; the Losers Bracket is drawn once all are played.
+			await playFirstMatchesWithLosersStaying(organizer, 16);
 			const tv = await openTv(organizer, tvSize);
 
 			await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
