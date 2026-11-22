@@ -72,7 +72,7 @@ export const funFacts: readonly string[] = [
 	'Hold four fives and cut any ten, jack, queen or king, and the hand scores 28.',
 	'Four of a kind in the play, a double pair royal, pegs 12 points.',
 	'Win before your opponent reaches 91 and it’s a skunk, often counted as two games.',
-	'A cribbage board from the World War II submarine USS Wahoo is kept on the oldest active submarine in the US Pacific Fleet.',
+	'A cribbage board from USS Wahoo, sunk in 1943, is handed down to the oldest submarine still serving in the Pacific Fleet.',
 
 	// One name.
 	'{A} has never once lost an argument with a cribbage board.',
