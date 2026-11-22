@@ -6,6 +6,8 @@
 
 `npm run check` must pass to commit (pre-commit hook). CI also runs `npm run e2e`, the two-window browser tests the hook skips; run it before pushing a UI change.
 
+A PR that changes a screen shows it before and after: see "Screenshots in a PR" in the run-app skill.
+
 Commit before running `code-review`: it reviews commits, so a file not yet committed falls outside it.
 
 A commit made after the branch's last `code-review` that changes behaviour (a fix the user asks for, a follow-up) gets its own `code-review` before it is pushed. A commit that only applies the last review's findings, renames or rewords comments is ready to push as it is.
