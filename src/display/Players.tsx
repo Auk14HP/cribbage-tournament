@@ -15,7 +15,10 @@ export const Players = ({ tournament, random }: { tournament: Tournament; random
 		<p className="mt-[1.5vh] mb-[2vh] text-[4.5vh] leading-none text-yellow-300">
 			{describePlayersRegistered(tournament.players.length)}
 		</p>
-		<ul className="min-h-0 flex-1 columns-3 gap-x-[4vw] text-[4.2vh] leading-tight font-semibold">
+		<ul
+			aria-label="Players"
+			className="min-h-0 flex-1 columns-3 gap-x-[4vw] text-[4.2vh] leading-tight font-semibold"
+		>
 			{tournament.players.map((p) => (
 				<li key={p.id}>{p.name}</li>
 			))}
