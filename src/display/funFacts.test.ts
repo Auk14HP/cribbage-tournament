@@ -30,7 +30,7 @@ describe('the Fun Fact list', () => {
 		expect(funFacts.filter((fact) => /pegged/i.test(fact))).toEqual([]);
 	});
 
-	it('fits in two lines on a narrow TV, even naming the longest test names', () => {
+	it('fits in two lines on the narrower TV the browser tests use, even naming the test Tournament’s longest names', () => {
 		const tooLong = funFacts.filter((fact) => {
 			const line = `Fun fact: ${fact.replaceAll('{A}', 'Frank the Tank').replaceAll('{B}', 'Christopher')}`;
 			return line.length > twoLineCharacterBudget;
