@@ -52,6 +52,16 @@ for (const tvSize of tvSizes) {
 				.waitFor();
 			await expectInsideTvSafeArea(tv);
 
+			/*
+			 * Every name fully shown, too: the safe-area check measures only what clipping leaves visible, so a
+			 * name clipped out of sight by its list would pass it. On screen in full counts only what's visible.
+			 */
+			const names = tv.getByRole('listitem');
+			await expect(names).toHaveCount(playerCount);
+			for (const name of await names.all()) {
+				await expect(name).toBeInViewport({ ratio: 1 });
+			}
+
 			// Every House Rule shown, the most the House Rules screen holds, down to the last.
 			await showHouseRules(organizer);
 			await organizer.getByRole('button', { name: 'Show all' }).click();
