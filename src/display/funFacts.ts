@@ -1,9 +1,10 @@
 /*
  * The Fun Facts the TV rotates along the bottom of Tonight’s Players during registration: light-hearted,
  * mostly made up, with a few true facts about cribbage. Each names no Players, one in {A}, or two in {A} and
- * {B}, filled with registered Players' names. Every line keeps to the ground rules: kind, a made-up one
- * clearly made up, no he, she, him, her, his or hers, nothing about looks, age, money, relationships or how
- * much anyone drinks, and nothing that reads aloud in a busy bar as a joke at a Player's expense.
+ * {B}, filled with registered Players' names. Every line keeps to the ground rules. Each is kind: no he,
+ * she, him, her, his or hers, nothing about looks, age, money, relationships or how much anyone drinks, and
+ * nothing that reads aloud in a busy bar as a joke at a Player's expense. A made-up line is clearly made up;
+ * a true one is a real fact about cribbage and names nobody.
  */
 import type { Player, PlayerId, Random } from '../tournament';
 
@@ -33,7 +34,6 @@ export const funFacts: readonly string[] = [
 	'Kings count as ten in cribbage. The kings have been told this is “an honor.”',
 	'If cards could talk, the five of hearts would never stop.',
 	'Fifteen two, fifteen four, and a pair is six. Nobody has ever said it without a little pride.',
-	'Cribbage was a favorite on submarines, which is why its players stay so calm under pressure.',
 	'Card players never get lost. They always follow suit.',
 	'The deck was nervous about tonight, but it pulled itself together after a good shuffle.',
 	'The longest cribbage game on record ended when both players agreed to just call it fifteen two.',
@@ -65,14 +65,14 @@ export const funFacts: readonly string[] = [
 	'Cribbage boards don’t have favorites. They just keep very close track of everyone.',
 
 	// True, with no names: real facts about cribbage can be fun too.
-	'Cribbage was invented around 1630 by the English poet Sir John Suckling, from an older game called noddy.',
+	'The English poet Sir John Suckling is credited with inventing cribbage around 1630, from an older game called noddy.',
 	'The highest hand in cribbage is 29: three fives and the jack of the turn-up’s suit, with the fourth five cut.',
-	'The odds of being dealt a 29 hand are about 1 in 216,580.',
+	'The odds of getting a 29 hand are about 1 in 216,580.',
 	'No cribbage hand can score 19, 25, 26 or 27 points.',
 	'Hold four fives and cut any ten, jack, queen or king, and the hand scores 28.',
 	'Four of a kind in the play, a double pair royal, pegs 12 points.',
 	'Win before your opponent reaches 91 and it’s a skunk, often counted as two games.',
-	'A cribbage board from the World War II submarine USS Wahoo is kept on the oldest submarine in the US Pacific Fleet.',
+	'A cribbage board from the World War II submarine USS Wahoo is kept on the oldest active submarine in the US Pacific Fleet.',
 
 	// One name.
 	'{A} has never once lost an argument with a cribbage board.',
