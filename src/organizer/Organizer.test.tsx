@@ -914,20 +914,19 @@ describe('the organizer route', () => {
 		expect(screen.queryByRole('group', { name: 'TV shows' })).not.toBeInTheDocument();
 
 		await clickButton(user, 'Start');
-		expect(listTvChoices()).toEqual(['Auto', 'Winners Bracket', 'Now playing']);
+		expect(listTvChoices()).toEqual(['Auto', 'Winners Bracket']);
 		expect(screen.getByRole('radio', { name: 'Auto' })).toBeChecked();
 
-		await user.click(screen.getByRole('radio', { name: 'Now playing' }));
+		await user.click(screen.getByRole('radio', { name: 'Winners Bracket' }));
 		cleanup();
 		showOrganizer();
-		expect(screen.getByRole('radio', { name: 'Now playing' })).toBeChecked();
+		expect(screen.getByRole('radio', { name: 'Winners Bracket' })).toBeChecked();
 	});
 
-	it('offers the finished Tournament’s screens, falling back to Auto from a screen it doesn’t have', async () => {
+	it('offers the finished Tournament’s screens, the champions first', async () => {
 		const user = showOrganizer();
 		await makeTheDraw(user, ['Dave K.', 'Big Dave'], '1');
 		await clickButton(user, 'Start');
-		await user.click(screen.getByRole('radio', { name: 'Now playing' }));
 
 		const [champion] = listWinnerNames(findPlayingRow());
 		await recordWin(user, findPlayingRow(), champion);

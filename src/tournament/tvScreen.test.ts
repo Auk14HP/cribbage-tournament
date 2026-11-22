@@ -26,12 +26,12 @@ describe('choosing what the TV shows', () => {
 		expect(chooseTvScreen(drawn, 'auto')).toEqual(refusal);
 	});
 
-	it('offers the Winners Bracket and Now playing while in progress, and holds the one chosen', () => {
+	it('offers only the Winners Bracket while in progress before a Losers Bracket, and holds it when chosen', () => {
 		const started = startTournament({ players: 4, boards: 2 });
-		expect(listTvScreens(started)).toEqual(['winnersBracket', 'nowPlaying']);
+		expect(listTvScreens(started)).toEqual(['winnersBracket']);
 
-		const holding = expectOk(chooseTvScreen(started, 'nowPlaying'));
-		expect(holding.tvChoice).toBe('nowPlaying');
+		const holding = expectOk(chooseTvScreen(started, 'winnersBracket'));
+		expect(holding.tvChoice).toBe('winnersBracket');
 		const auto = expectOk(chooseTvScreen(holding, 'auto'));
 		expect(auto.tvChoice).toBe('auto');
 	});
@@ -44,7 +44,7 @@ describe('choosing what the TV shows', () => {
 			ok: false,
 			reason: 'The TV has no Losers Bracket screen right now.',
 		});
-		expect(listTvScreens(playing)).toEqual(['winnersBracket', 'losersBracket', 'nowPlaying']);
+		expect(listTvScreens(playing)).toEqual(['winnersBracket', 'losersBracket']);
 		expect(expectOk(chooseTvScreen(playing, 'losersBracket')).tvChoice).toBe('losersBracket');
 	});
 
@@ -57,10 +57,6 @@ describe('choosing what the TV shows', () => {
 			reason: 'The TV has no Champion screen right now.',
 		});
 		expect(listTvScreens(finished)).toEqual(['champion', 'winnersBracket']);
-		expect(chooseTvScreen(finished, 'nowPlaying')).toEqual({
-			ok: false,
-			reason: 'The TV has no Now playing screen right now.',
-		});
 	});
 });
 
@@ -73,13 +69,6 @@ describe('a Held screen when the Tournament finishes or is undone', () => {
 
 		expect(finished.phase).toBe('finished');
 		expect(finished.tvChoice).toBe('winnersBracket');
-	});
-
-	it('falls back to Auto when the finished Tournament has no such screen', () => {
-		const started = startTwoPlayerTournament();
-		const holding = expectOk(chooseTvScreen(started, 'nowPlaying'));
-
-		expect(winFinal(holding).tvChoice).toBe('auto');
 	});
 
 	it('falls back to Auto when undoing the final takes the champion screen away', () => {

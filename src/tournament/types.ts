@@ -86,7 +86,7 @@ export interface BoardTaken {
 export type Phase = 'registration' | 'houseRules' | 'drawShown' | 'inProgress' | 'finished';
 
 // A screen the TV cycles through once Started.
-export type TvScreen = 'winnersBracket' | 'losersBracket' | 'nowPlaying' | 'champion';
+export type TvScreen = 'winnersBracket' | 'losersBracket' | 'champion';
 
 /*
  * auto: the TV cycles the current phase's screens, each for the Tournament's screenSeconds.

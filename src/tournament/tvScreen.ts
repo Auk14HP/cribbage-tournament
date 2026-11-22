@@ -9,13 +9,12 @@ import type { Tournament, TvChoice, TvScreen } from './types';
 export const tvScreenNames: Record<TvScreen, string> = {
 	winnersBracket: 'Winners Bracket',
 	losersBracket: 'Losers Bracket',
-	nowPlaying: 'Now playing',
 	champion: 'Champion',
 };
 
 /*
- * Returns the screens the TV cycles through on Auto, in the order it shows them: during play the brackets,
- * then Now playing; once finished the champions first, then the brackets. The Losers Bracket's screen is
+ * Returns the screens the TV cycles through on Auto, in the order it shows them: during play the brackets;
+ * once finished the champions first, then the brackets. The Losers Bracket's screen is
  * there once it is drawn. None before Start, when the TV shows its own screens.
  */
 export const listTvScreens = (tournament: Tournament): readonly TvScreen[] => {
@@ -24,7 +23,7 @@ export const listTvScreens = (tournament: Tournament): readonly TvScreen[] => {
 		: ['winnersBracket'];
 	switch (tournament.phase) {
 		case 'inProgress':
-			return [...bracketScreens, 'nowPlaying'];
+			return bracketScreens;
 		case 'finished':
 			return ['champion', ...bracketScreens];
 		default:

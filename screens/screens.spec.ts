@@ -26,11 +26,11 @@ const isShownWithin = async (element: Locator, timeout: number) => {
  *   ... DRAW=1                              and the House Rules, every one shown, then Tonight's Draw
  *   ... DRAW=1 SWAP=1                       and Swap mode, the first Player picked, then after swapping them
  *                                           with the last Player listed
- *   ... DRAW=1 START=1                      and after Start, then Now playing
+ *   ... DRAW=1 START=1                      and after Start
  *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
  *   ... DRAW=1 START=1 RESULTS=3 FORFEIT=1  and the Forfeit dialog, then after that Forfeit
- * Writes test-results/screens/{organizer,tv}-{registration,house-rules,draw,swap-picked,swapped,started,now-playing,results,losers-bracket,results-now-playing,champion,forfeit-dialog,
- * forfeit}.png: the organizer at
+ * Writes test-results/screens/{organizer,tv}-{registration,house-rules,draw,swap-picked,swapped,started,results,losers-bracket,champion,
+ * forfeit-dialog,forfeit}.png: the organizer at
  * 1280×720, the TV at 1920×1080.
  */
 const players = process.env.PLAYERS ?? '26';
@@ -86,13 +86,11 @@ test('screens', async ({ context, page: organizer }) => {
 	await organizer.getByRole('button', { name: 'Start', exact: true }).click();
 	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 	await shoot('started');
-	// Each screen for 1 second, so the TV soon moves on to Now playing.
-	await organizer.getByLabel('Seconds per TV screen').fill('1');
-	await tv.getByRole('heading', { name: 'Now playing' }).waitFor();
-	await shoot('now-playing');
 	if (!process.env.RESULTS) {
 		return;
 	}
+	// Each screen for 1 second, so the TV soon cycles to each bracket once the Losers Bracket is drawn.
+	await organizer.getByLabel('Seconds per TV screen').fill('1');
 	// The first Match on the list that can be won goes to its first-named Player each time.
 	const results = process.env.RESULTS === 'all' ? Infinity : Number(process.env.RESULTS);
 	const nextWinnerButton = findMatchesOnBoards(organizer).getByRole('button').first();
@@ -104,13 +102,11 @@ test('screens', async ({ context, page: organizer }) => {
 	// The TV cycles each second, so wait for the screen to shoot: the bracket, then the champion once finished.
 	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 	await shoot('results');
-	// With a Losers Bracket drawn, its screen, then Now playing with any Matches waiting for a Board beneath.
+	// With a Losers Bracket drawn, its screen.
 	const losersHeading = tv.getByRole('heading', { name: 'Losers Bracket' });
 	const isLosersBracketShown = await isShownWithin(losersHeading, 5000);
 	if (isLosersBracketShown && (await nextWinnerButton.count()) > 0) {
 		await shoot('losers-bracket');
-		await tv.getByRole('heading', { name: 'Now playing' }).waitFor();
-		await shoot('results-now-playing');
 	}
 	if ((await nextWinnerButton.count()) === 0) {
 		await tv.getByRole('heading', { name: /^Tonight’s Champions?$/ }).waitFor();

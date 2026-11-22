@@ -18,14 +18,17 @@ const bracketText = ['text-[5vh]', 'text-[5vh]', 'text-[4vh]', 'text-[3.2vh]', '
 /*
  * A whole bracket: its two halves run in from either side to the final in the middle. Each Round's Matches
  * share their column's height equally and sit in the middle of their share, so every Match is centred
- * between the two that feed it, and bracket lines join them.
+ * between the two that feed it, and bracket lines join them. Headed with the bracket's title, or the
+ * heading given.
  */
 export const Bracket = ({
 	tournament,
 	bracketName,
+	heading = bracketTitles[bracketName],
 }: {
 	tournament: Tournament;
 	bracketName: BracketName;
+	heading?: string;
 }) => {
 	const { rounds, champion } = getBracketPicture(tournament, bracketName)!;
 	const isStillInBracket = (player: PlayerId) => !hasLostIn(tournament, bracketName, player);
@@ -35,7 +38,7 @@ export const Bracket = ({
 	return (
 		<div className={`flex flex-col ${tvSafeArea.fullHeight}`}>
 			<div className="flex items-baseline justify-between">
-				<h1 className="text-[6vh] leading-none font-bold">{bracketTitles[bracketName]}</h1>
+				<h1 className="text-[6vh] leading-none font-bold">{heading}</h1>
 				{champion && (
 					<p className="text-[6vh] leading-none font-bold text-yellow-300">
 						Champion: {champion.name}

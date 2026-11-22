@@ -73,25 +73,25 @@ for (const tvSize of tvSizes) {
 			await expectInsideTvSafeArea(tv);
 		});
 
-		test('the Winners Bracket, its countdown ring and Now playing sit inside the safe area at Start', async ({
+		test('the Winners Bracket sits inside the safe area at Start', async ({
 			page: organizer,
 		}) => {
 			await startTournament(organizer, { players: playerCount });
 			const tv = await openTv(organizer, tvSize);
 			await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
-			await expect(tv.getByTestId('countdown ring')).toBeAttached();
-			await expectInsideTvSafeArea(tv);
-
-			await holdScreen(organizer, tv, 'Now playing');
 			await expectInsideTvSafeArea(tv);
 		});
 
-		test('the Losers Bracket sits inside the safe area once drawn', async ({
+		test('the Losers Bracket and the countdown ring sit inside the safe area once drawn', async ({
 			page: organizer,
 		}) => {
 			await startTournament(organizer, { players: playerCount });
 			await playFirstMatchesWithLosersStaying(organizer);
 			const tv = await openTv(organizer, tvSize);
+			await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
+			await expect(tv.getByTestId('countdown ring')).toBeAttached();
+			await expectInsideTvSafeArea(tv);
+
 			await holdScreen(organizer, tv, 'Losers Bracket');
 			await expectInsideTvSafeArea(tv);
 		});

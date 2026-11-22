@@ -40,8 +40,8 @@ export interface MatchOnBoard {
 }
 
 /*
- * Every Match holding a Board, in Board order, so each Player can find their seat: on Tonight’s Draw
- * screen, and as the Matches being played once Started. None before the Draw.
+ * Every Match holding a Board, in Board order, so the Organizer can find each Match's seat: on Tonight’s
+ * Draw, and as the Matches being played once Started. None before the Draw.
  */
 export const getMatchesOnBoards = (tournament: Tournament): readonly MatchOnBoard[] =>
 	tournament.onBoards
@@ -89,24 +89,6 @@ export const getWaitingForBoard = (tournament: Tournament): readonly MatchWaitin
 		match,
 		players: findSeatedPlayers(tournament, match),
 	}));
-
-export interface MatchBeingPlayed {
-	readonly board: BoardNumber;
-	readonly players: readonly [Player, Player];
-}
-
-/*
- * Every Match being played, in Board order: both its Players are known and sit at its Board. A Player
- * waiting for their opponent is not playing yet. None before Start.
- */
-export const getNowPlaying = (tournament: Tournament): readonly MatchBeingPlayed[] => {
-	if (tournament.phase !== 'inProgress') {
-		return [];
-	}
-	return getMatchesOnBoards(tournament).flatMap(({ board, players: [a, b] }) =>
-		'name' in b ? [{ board, players: [a, b] as const }] : [],
-	);
-};
 
 /*
  * One side of a Match in a bracket's picture: a Player known, the place held for a Bye Player, or undefined

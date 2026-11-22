@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
 	getBracketPicture,
 	getMatchesOnBoards,
-	getNowPlaying,
 	isLosersBracketOpenTo,
 	recordWinner,
 	undoResult,
@@ -35,7 +34,7 @@ describe('a Player waiting alone when Boards run short', () => {
 		expect(listWaiting(tournament)).toHaveLength(1);
 		tournament = expectOk(recordWinner(tournament, firstMatch.match, loser.id, 'leaving'));
 		expect(listWaiting(tournament)).toEqual([]);
-		expect(getNowPlaying(tournament)).toHaveLength(1);
+		expect(getMatchesOnBoards(tournament).filter(hasBothPlayersKnown)).toHaveLength(1);
 	});
 
 	it('moves the Player seated latest when a Match ready to play needs a Board', () => {

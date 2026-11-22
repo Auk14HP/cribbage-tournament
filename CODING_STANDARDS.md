@@ -47,7 +47,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 ## The Tournament core
 
 - A command that can be refused returns `Result<T>` (`src/result.ts`). The refusal reason is a sentence the Organizer reads on screen, in `GLOSSARY.md` terms.
-- Read a Tournament's plain fields directly (`tournament.players`). Add a query function only for a view that must be worked out from the data, such as Now playing or the champions.
+- Read a Tournament's plain fields directly (`tournament.players`). Add a query function only for a view that must be worked out from the data, such as the Matches waiting for a Board or the champions.
 - The core has no React or browser imports (ADR-0002); its tests run in plain Node.
 
 ## Tests
@@ -61,11 +61,11 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - A test helper's name and comment claim only what it asserts, on the screens that call it.
 - An e2e test of a TV screen checks it with `expectInsideTvSafeArea` (`e2e/tvSafeArea.ts`) at the largest field the screen shows.
 - A change that switches a mode on the organizer route, or makes a part come and go beside or above a control there, gets an e2e test that the rest stays still (jsdom has no layout to measure), through `expectNothingMoves` (`e2e/screenStill.ts`): every part around the change, its own button included, measured before and after, as `e2e/swap-mode.spec.ts` does.
-- A test of when something happens checks both sides of the moment: the old state just before it, the new one at it (still the Winners Bracket at 19 seconds, Now playing at 20).
+- A test of when something happens checks both sides of the moment: the old state just before it, the new one at it (still the Winners Bracket at 19 seconds, the Losers Bracket at 20).
 - A test that something doesn't happen waits just past the moment it would have happened (still held at 21 seconds, past a 20-second screen), rather than to a round number: a repeating cycle can be back where it started by then.
 - Find a Match in a test by its Players, not by its Board or its place in a list: how Boards are assigned may change.
 - A test written after its code earns its place by failing once the behaviour is broken: break it, watch the test go red, restore.
 
 ## Routing
 
-- Choose the route with a plain URL check against the base path: `findRoute` in `src/routes.ts`, called from `src/main.tsx`. Reach for a router when the app grows beyond the organizer and display routes; the display route's cycling screens (brackets, Now playing) are screens within one route.
+- Choose the route with a plain URL check against the base path: `findRoute` in `src/routes.ts`, called from `src/main.tsx`. Reach for a router when the app grows beyond the organizer and display routes; the display route's cycling screens (the brackets, the champions) are screens within one route.
