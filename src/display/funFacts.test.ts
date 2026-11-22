@@ -29,4 +29,20 @@ describe('the Fun Fact list', () => {
 	it('never says “pegged”', () => {
 		expect(funFacts.filter((fact) => /pegged/i.test(fact))).toEqual([]);
 	});
+
+	it('fits in two lines on a narrow TV, even naming the longest test names', () => {
+		const tooLong = funFacts.filter((fact) => {
+			const line = `Fun fact: ${fact.replaceAll('{A}', 'Frank the Tank').replaceAll('{B}', 'Christopher')}`;
+			return line.length > twoLineCharacterBudget;
+		});
+
+		expect(tooLong).toEqual([]);
+	});
 });
+
+/*
+ * The most characters a Fun Fact line holds in two lines on the 1258×955 TV the browser tests use. Measured in
+ * Chrome on macOS, the shortest line that wraps to three is 152 characters; this leaves room for a wider font
+ * on another system. A third line would take room from the names above.
+ */
+const twoLineCharacterBudget = 140;

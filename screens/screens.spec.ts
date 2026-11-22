@@ -1,4 +1,4 @@
-import type { Locator } from '@playwright/test';
+import { expect, type Locator } from '@playwright/test';
 import {
 	answerIsLoserStayingDialogIfAsked,
 	confirmDrawFromHouseRules,
@@ -58,6 +58,8 @@ test('screens', async ({ context, page: organizer }) => {
 		// The first Player registered: the first option after Nobody.
 		await homeBoardForSelect.selectOption({ index: 1 });
 	}
+	// The Fun Fact fades in over its first second, so Tonight's Players is shot once it is fully shown.
+	await expect(tv.getByText(/^Fun fact: /)).toHaveCSS('opacity', '1');
 	await shoot('registration');
 	if (!process.env.DRAW) {
 		return;
