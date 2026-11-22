@@ -1,15 +1,14 @@
 /*
- * The Fun Facts the TV rotates along the bottom of Tonight’s Players during registration: made up and
- * light-hearted. Each names no Players, one in {A}, or two in {A} and {B}, filled with registered Players'
- * names. Every line keeps to the ground rules: clearly made up and kind, no he, she, him, her, his or hers,
- * nothing about looks, age, money, relationships or how much anyone drinks, and nothing that reads aloud
- * in a busy bar as a joke at a Player's expense.
+ * The Fun Facts the TV rotates along the bottom of Tonight’s Players during registration: light-hearted,
+ * mostly made up, with a few true facts about cribbage. Each names no Players, one in {A}, or two in {A} and
+ * {B}, filled with registered Players' names. Every line keeps to the ground rules: kind, a made-up one
+ * clearly made up, no he, she, him, her, his or hers, nothing about looks, age, money, relationships or how
+ * much anyone drinks, and nothing that reads aloud in a busy bar as a joke at a Player's expense.
  */
 import type { Player, PlayerId, Random } from '../tournament';
 
 export const funFacts: readonly string[] = [
 	// No names, so the line works before anyone registers.
-	'Cribbage boards were invented after someone tried keeping score on a sandwich.',
 	'Cribbage is the only game where “fifteen two, fifteen four” counts as small talk.',
 	'9 out of 10 cribbage boards would rather be here tonight. The tenth is a chessboard in disguise.',
 	'A perfect 29 hand is so rare that everyone who has seen one is still telling the story.',
@@ -26,14 +25,13 @@ export const funFacts: readonly string[] = [
 	'The number fifteen has worked on cribbage boards for 400 years and has asked for a day off.',
 	'A double double run is worth 16 points and roughly three minutes of counting out loud.',
 	'The muggins rule was dropped in this room after an incident nobody will discuss.',
-	'Tonight’s Draw was made by a computer. It was very nervous. It has never even held a card.',
+	'Tonight’s Draw will be made by a computer. It’s very nervous. It has never even held a card.',
 	'The cut card is the only card in the deck that gets a dramatic entrance.',
 	'Every cribbage board secretly races the others when nobody is looking.',
 	'Cribbage is excellent exercise. Every game has at least one run.',
 	'The ace is the lowest card in cribbage, and it is handling it with remarkable grace.',
 	'Kings count as ten in cribbage. The kings have been told this is “an honor.”',
 	'If cards could talk, the five of hearts would never stop.',
-	'This Fun Fact has been checked by the Organizer and found to be 100% made up.',
 	'Fifteen two, fifteen four, and a pair is six. Nobody has ever said it without a little pride.',
 	'Cribbage was a favorite on submarines, which is why its players stay so calm under pressure.',
 	'Card players never get lost. They always follow suit.',
@@ -65,6 +63,16 @@ export const funFacts: readonly string[] = [
 	'Cards prefer being shuffled to being dealt, but they understand it’s part of the job.',
 	'The deck in your hand tonight has traveled farther than most people, mostly in a drawer.',
 	'Cribbage boards don’t have favorites. They just keep very close track of everyone.',
+
+	// True, with no names: real facts about cribbage can be fun too.
+	'Cribbage was invented around 1630 by the English poet Sir John Suckling, from an older game called noddy.',
+	'The highest hand in cribbage is 29: three fives and the jack of the turn-up’s suit, with the fourth five cut.',
+	'The odds of being dealt a 29 hand are about 1 in 216,580.',
+	'No cribbage hand can score 19, 25, 26 or 27 points.',
+	'Hold four fives and cut any ten, jack, queen or king, and the hand scores 28.',
+	'Four of a kind in the play, a double pair royal, pegs 12 points.',
+	'Win before your opponent reaches 91 and it’s a skunk, often counted as two games.',
+	'A cribbage board from the World War II submarine USS Wahoo is kept on the oldest submarine in the US Pacific Fleet.',
 
 	// One name.
 	'{A} has never once lost an argument with a cribbage board.',

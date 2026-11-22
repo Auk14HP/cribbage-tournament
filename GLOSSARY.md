@@ -89,7 +89,7 @@ The **TV screen** before the **Draw** that lists every **Player** registered so 
 _Avoid_: Registration page, sign-up screen
 
 **Fun Fact**:
-A made-up, light-hearted line, often naming registered **Players**, shown on the TV during registration.
+A light-hearted line, mostly made up but sometimes a true fact about cribbage, often naming registered **Players**, shown on the TV during registration.
 _Avoid_: Trivia, joke, tip
 
 **Tonight's Draw**:
