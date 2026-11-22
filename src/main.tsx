@@ -18,6 +18,10 @@ if (route === 'organizer') {
 
 createRoot(document.querySelector('#app')!).render(
 	<StrictMode>
-		{route === 'display' ? <Display store={store} /> : <Organizer store={store} />}
+		{route === 'display' ? (
+			<Display store={store} random={Math.random} />
+		) : (
+			<Organizer store={store} />
+		)}
 	</StrictMode>,
 );

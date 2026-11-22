@@ -22,7 +22,9 @@ test('the built app sets up test Players and opens the TV display beside the Org
 	await organizer.getByRole('link', { name: 'Open TV display' }).click();
 	const tv = await tvOpening;
 	await expect(tv).toHaveURL(new URL(`${pagesBase}display`, organizer.url()).href);
-	await expect(tv.getByRole('heading', { name: 'Tonight’s Players' })).toBeVisible();
+	await expect(
+		tv.getByRole('heading', { name: 'Farmstrong Brewery Cribbage Tournament' }),
+	).toBeVisible();
 	await expect(tv.getByText('16 Players registered')).toBeVisible();
 
 	await confirmDraw(organizer);
@@ -31,7 +33,9 @@ test('the built app sets up test Players and opens the TV display beside the Org
 
 test('a direct load of the built display route shows the TV display', async ({ page: tv }) => {
 	await tv.goto(`${pagesBase}display`);
-	await expect(tv.getByRole('heading', { name: 'Tonight’s Players' })).toBeVisible();
+	await expect(
+		tv.getByRole('heading', { name: 'Farmstrong Brewery Cribbage Tournament' }),
+	).toBeVisible();
 });
 
 /*

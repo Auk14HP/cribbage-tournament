@@ -16,3 +16,26 @@
 		}
 	}
 }
+
+/*
+ * Each Fun Fact on the TV fades in at the start of its time and out at the end, so one fades into the next.
+ * Inline, so the utility reads --fun-fact-duration where it is used.
+ */
+@theme inline {
+	--animate-fun-fact: fun-fact var(--fun-fact-duration) ease-in-out forwards;
+
+	@keyframes fun-fact {
+		0% {
+			opacity: 0;
+		}
+		6% {
+			opacity: 1;
+		}
+		94% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+		}
+	}
+}

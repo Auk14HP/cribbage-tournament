@@ -99,6 +99,11 @@ export interface Tournament {
 	readonly players: readonly Player[];
 	readonly nextPlayerId: PlayerId;
 	/*
+	 * The night's date: the day the first Player registered, as YYYY-MM-DD in the laptop's time zone. Later
+	 * registrations, even after midnight, don't change it. Undefined until the first Player registers.
+	 */
+	readonly date?: string;
+	/*
 	 * How many of the House Rules the TV shows on the House Rules step, from the first. Kept when the
 	 * Organizer goes back to registration, so returning picks up where they left off.
 	 */
@@ -131,7 +136,7 @@ export interface Tournament {
 }
 
 // Bump whenever the Tournament's shape changes, so a Tournament saved in an older shape loads as blank.
-export const tournamentVersion = 10;
+export const tournamentVersion = 11;
 
 export const createTournament = (): Tournament => ({
 	phase: 'registration',

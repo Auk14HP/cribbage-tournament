@@ -47,7 +47,9 @@ for (const tvSize of tvSizes) {
 		}) => {
 			await organizer.goto(`/?players=${playerCount}&boards=${firstMatchCount}`);
 			const tv = await openTv(organizer, tvSize);
-			await tv.getByRole('heading', { name: 'Tonight’s Players' }).waitFor();
+			await tv
+				.getByRole('heading', { name: 'Farmstrong Brewery Cribbage Tournament' })
+				.waitFor();
 			await expectInsideTvSafeArea(tv);
 
 			// Every House Rule shown, the most the House Rules screen holds, down to the last.
