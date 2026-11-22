@@ -39,7 +39,7 @@ The app solves these issues by displaying the Players, the current Matches, the 
 
 ## Screenshots
 
-![The TV showing Tonight's Draw, each Match with its Board](docs/images/tv-draw.png)
+![The TV showing Tonight's Draw as the Winners Bracket, each first Match with its Board](docs/images/tv-draw.png)
 ![The TV showing the Winners Bracket, with each Match's Board](docs/images/tv-results.png)
 ![The Organizer's screen while Matches are being played](docs/images/organizer-now-playing.png)
 
