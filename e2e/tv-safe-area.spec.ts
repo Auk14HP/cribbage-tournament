@@ -69,7 +69,7 @@ for (const tvSize of tvSizes) {
 			page: organizer,
 		}) => {
 			await startTournament(organizer, { players: playerCount });
-			await playFirstMatchesWithLosersStaying(organizer, firstMatchCount);
+			await playFirstMatchesWithLosersStaying(organizer, { firstMatchCount });
 			const tv = await openTv(organizer, tvSize);
 			await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 			await expect(tv.getByTestId('countdown ring')).toBeAttached();

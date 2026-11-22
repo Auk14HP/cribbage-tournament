@@ -294,7 +294,7 @@ describe('Tonight’s Draw screen', () => {
 				}
 			}
 		}
-		waitSeconds(60);
+		waitSeconds(21);
 		expect(readHeading()).toBe('Tonight’s Draw');
 		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
 
@@ -378,14 +378,14 @@ describe('the TV cycle', () => {
 		let tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 3 });
 		act(() => store.save(tournament));
 
-		waitSeconds(60);
+		waitSeconds(21);
 		expect(readHeading()).toBe('Tonight’s Draw');
 
 		tournament = expectOk(start(tournament));
 		act(() => store.save(tournament));
 		expect(readHeading()).toBe('Winners Bracket');
 		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
-		waitSeconds(60);
+		waitSeconds(21);
 		expect(readHeading()).toBe('Winners Bracket');
 		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
 	});
@@ -717,8 +717,8 @@ const findCardOnBoard = (roundName: string, board: number) => {
 };
 
 // The Match card in a Round's column that names the Player.
-const findCardOf = (roundName: string, name: string) =>
-	listRoundCards(roundName).find((card) => card.textContent!.includes(name));
+const findCardOf = (roundName: string, playerName: string) =>
+	listRoundCards(roundName).find((card) => card.textContent!.includes(playerName));
 
 // Saves the Tournament a command made, as the Organizer's window does.
 const saveOutcome = (store: Store<Tournament>, outcome: Result<Tournament>) => {

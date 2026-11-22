@@ -49,7 +49,7 @@ for (const tvSize of tvSizes) {
 			page: organizer,
 		}) => {
 			// 32 Players open 16 first Matches; the Losers Bracket is drawn once all are played.
-			await playFirstMatchesWithLosersStaying(organizer, 16);
+			await playFirstMatchesWithLosersStaying(organizer, { firstMatchCount: 16 });
 			const tv = await openTv(organizer, tvSize);
 
 			await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();

@@ -44,9 +44,8 @@ const tvScreens: Record<TvScreen, (tournament: Tournament) => ReactNode> = {
 /*
  * On Auto, shows each of the phase's screens in turn, each for the Tournament's screenSeconds, from the
  * first. A Held screen stays on show, with no countdown ring, as does a phase's only screen: there is
- * nothing to count down to. Choosing Auto again starts the cycle from the
- * screen on show, with a fresh screen time. A new screenSeconds restarts the current screen's time, so the
- * change shows at once.
+ * nothing to count down to. Choosing Auto again starts the cycle from the screen on show, with a fresh
+ * screen time. A new screenSeconds restarts the current screen's time, so the change shows at once.
  */
 const Cycle = ({ tournament }: { tournament: Tournament }) => {
 	const screens = listTvScreens(tournament);

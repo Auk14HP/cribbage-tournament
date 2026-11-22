@@ -117,7 +117,7 @@ export const answerIsLoserStayingDialogIfAsked = async (
  */
 export const playFirstMatchesWithLosersStaying = async (
 	organizer: Page,
-	firstMatchCount: number,
+	{ firstMatchCount }: { firstMatchCount: number },
 ) => {
 	const nextWinnerButton = findMatchesOnBoards(organizer).getByRole('button').first();
 	let stayingCount = 0;

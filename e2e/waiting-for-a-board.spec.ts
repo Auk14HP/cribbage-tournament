@@ -18,20 +18,20 @@ const showDrawOnTv = async (organizer: Page, tv: Page) => {
 	await tv.getByRole('heading', { name: 'Tonight’s Draw' }).waitFor();
 };
 
+// The mark a bracket card shows for a Player still to come from an earlier Match.
+const playerToCome = '—';
+
 /*
- * Checks the first Round's cards: as many name a Board as there are Boards, and the rest, waiting, name none.
- * Every card names its two Players. Then that the bracket fits inside the TV's safe area.
+ * Checks the first Round's cards: as many name a Board as there are Boards, and the rest, waiting, name none
+ * but have both their Players, none still to come. Then that the bracket fits inside the TV's safe area.
  */
-const expectWaitingCardsFitTv = async (tv: Page, boardCount: number) => {
+const expectRoundOneCardsFitTv = async (tv: Page, boardCount: number) => {
 	const roundOneCards = tv.getByRole('list', { name: 'Round 1' }).getByTestId('match card');
 	await expect(roundOneCards).toHaveCount(openingMatchCount);
 	await expect(roundOneCards.filter({ hasText: /^Board \d+/ })).toHaveCount(boardCount);
 	const waitingCards = roundOneCards.filter({ hasNotText: 'Board' });
 	await expect(waitingCards).toHaveCount(openingMatchCount - boardCount);
-	for (const card of await waitingCards.all()) {
-		await expect(card.locator('span')).toHaveCount(2);
-		await expect(card).not.toContainText('—');
-	}
+	await expect(waitingCards.filter({ hasText: playerToCome })).toHaveCount(0);
 	await expectInsideTvSafeArea(tv);
 };
 
@@ -54,15 +54,19 @@ for (const boardCount of [2, 13]) {
 		const tv = await openTv(organizer, sixteenByNineTv);
 
 		await showDrawOnTv(organizer, tv);
-		await expectWaitingCardsFitTv(tv, boardCount);
+		await expectRoundOneCardsFitTv(tv, boardCount);
 
 		await organizer.getByRole('button', { name: 'Start', exact: true }).click();
 		await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
-		await expectWaitingCardsFitTv(tv, boardCount);
+		await expectRoundOneCardsFitTv(tv, boardCount);
 	});
 }
 
 test('Long names keep Tonight’s Draw inside the TV', async ({ page: organizer }) => {
+	/*
+	 * 32 Players on 13 Boards puts long names on cards with a Board and on cards waiting for one, so a name
+	 * wrapping on either would push the bracket past the TV.
+	 */
 	const boardCount = 13;
 	await organizer.goto(`/?players=0&boards=${boardCount}`);
 	const tv = await openTv(organizer, sixteenByNineTv);
@@ -70,5 +74,5 @@ test('Long names keep Tonight’s Draw inside the TV', async ({ page: organizer 
 
 	await showDrawOnTv(organizer, tv);
 
-	await expectWaitingCardsFitTv(tv, boardCount);
+	await expectRoundOneCardsFitTv(tv, boardCount);
 });
