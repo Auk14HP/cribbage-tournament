@@ -1,20 +1,49 @@
 #!/usr/bin/env bash
 # Publishes screenshots for a PR: adds each file to the pr-screenshots branch under the folder given, pushes
-# it, and prints a Markdown image link per file for the PR body. The branch is never merged or checked out:
-# the commit is built in a scratch index, so the working tree, the current branch and the pre-commit hook are
-# untouched. Links name the commit, so a later shot with the same name never changes an older PR.
-#   screens/publish.sh issue-83 <scratchpad>/before-draw.png <scratchpad>/after-draw.png
+# it, and prints a Markdown table pairing each screen's before and after, for the PR's Evidence section. Each
+# file is named before-<screen>.png or after-<screen>.png; every screen needs an after, and a new screen has no
+# before. With more than one screen, a first column names each row's screen.
+# The branch is never merged or checked out: the commit is built in a scratch index, so the working tree, the
+# current branch and the pre-commit hook are untouched. Links name the commit, so a later shot with the same
+# name never changes an older PR.
+#   screens/publish.sh issue-83 <scratchpad>/publish/before-tv-draw.png <scratchpad>/publish/after-tv-draw.png
 set -euo pipefail
 
 if [ "$#" -lt 2 ]; then
-	echo "Usage: screens/publish.sh <folder> <file>..." >&2
+	echo "Usage: screens/publish.sh <folder> <before-|after-><screen>.png..." >&2
 	exit 1
 fi
 branch=pr-screenshots
 folder=$1
 shift
-repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 
+# Each file's name, and each screen once, in the order given. Checked before anything is pushed.
+names=" "
+screens=()
+for file in "$@"; do
+	name=$(basename "$file")
+	case $name in
+		before-*.png) screen=${name#before-} ;;
+		after-*.png) screen=${name#after-} ;;
+		*)
+			echo "Name each file before-<screen>.png or after-<screen>.png, not $name" >&2
+			exit 1
+			;;
+	esac
+	screen=${screen%.png}
+	if [[ $names != *" before-$screen.png "* && $names != *" after-$screen.png "* ]]; then
+		screens+=("$screen")
+	fi
+	names="$names$name "
+done
+for screen in "${screens[@]}"; do
+	if [[ $names != *" after-$screen.png "* ]]; then
+		echo "The $screen screen has no after-$screen.png" >&2
+		exit 1
+	fi
+done
+
+repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 parent=
 if git fetch -q origin "$branch" 2>/dev/null; then
 	parent=$(git rev-parse FETCH_HEAD)
@@ -39,7 +68,25 @@ if ! pushOutput=$(git push -q origin "$commit:refs/heads/$branch" 2>&1); then
 	exit 1
 fi
 
-for file in "$@"; do
-	path=$folder/$(basename "$file")
-	echo "![$(basename "$file" .png)](https://github.com/$repo/blob/$commit/$path?raw=true)"
-done
+# One cell of the table: the shot's image, or a note when a new screen has no before.
+printCell() {
+	local name=$1
+	if [[ $names == *" $name "* ]]; then
+		printf '![%s](https://github.com/%s/blob/%s/%s/%s?raw=true)' \
+			"${name%.png}" "$repo" "$commit" "$folder" "$name"
+	else
+		printf 'New screen'
+	fi
+}
+
+if [ "${#screens[@]}" -eq 1 ]; then
+	echo "| Before | After |"
+	echo "| --- | --- |"
+	echo "| $(printCell "before-${screens[0]}.png") | $(printCell "after-${screens[0]}.png") |"
+else
+	echo "| Screen | Before | After |"
+	echo "| --- | --- | --- |"
+	for screen in "${screens[@]}"; do
+		echo "| $screen | $(printCell "before-$screen.png") | $(printCell "after-$screen.png") |"
+	done
+fi

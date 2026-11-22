@@ -31,7 +31,7 @@ Done when every screen the change touches has been screenshotted and looked at, 
 
 ## Screenshots in a PR
 
-A PR that changes a screen shows it, before and after, in its Evidence section. `gh` can't upload images, so `screens/publish.sh` hosts them: it adds the files to the `pr-screenshots` branch, which is never merged, and prints a Markdown image link for each one. It builds the commit in a scratch index, so the working tree and the current branch stay put and the pre-commit hook doesn't run.
+A PR that changes a screen shows it, before and after, in its Evidence section. `gh` can't upload images, so `screens/publish.sh` hosts them: it adds the files to the `pr-screenshots` branch, which is never merged, and prints a Markdown table with each screen's before and after side by side, so a reviewer compares them at a glance instead of scrolling between them. It builds the commit in a scratch index, so the working tree and the current branch stay put and the pre-commit hook doesn't run.
 
 1. **Before:** shoot `main` from a worktree in the scratchpad, with the same options as the after, and the project's `node_modules` linked in:
 
@@ -50,6 +50,6 @@ A PR that changes a screen shows it, before and after, in its Evidence section. 
     screens/publish.sh issue-83 <scratchpad>/publish/before-tv-draw.png <scratchpad>/publish/after-tv-draw.png
     ```
 
-4. Paste the printed links into the PR's **Before** and **After** lines, with a sentence on the field size and what to look for. Remove the worktree with `git worktree remove <scratchpad>/main`.
+4. Paste the printed table into the PR's Evidence section in place of the template's **Before** and **After** lines, under a sentence on the field size and what to look for. A table's cells shrink each shot to about half its width, so name any detail too small to see there (a name cut short, a text size); a click opens the full image. Remove the worktree with `git worktree remove <scratchpad>/main`.
 
-Done when every screen the PR changes has a before and an after in the PR body (an after alone for a new screen).
+Done when every screen the PR changes has a before and an after in the PR body ("New screen" in the before cell for a screen that is new).
