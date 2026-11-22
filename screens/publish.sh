@@ -16,6 +16,12 @@ fi
 branch=pr-screenshots
 folder=$1
 shift
+# The folder and each screen's name go into a URL, a table cell and a space-separated list.
+plainName='^[A-Za-z0-9-]+$'
+if [[ ! $folder =~ $plainName ]]; then
+	echo "Name the folder with letters, digits and hyphens only, not $folder" >&2
+	exit 1
+fi
 
 # Each file's name, and each screen once, in the order given. Checked before anything is pushed.
 names=" "
@@ -31,6 +37,10 @@ for file in "$@"; do
 			;;
 	esac
 	screen=${screen%.png}
+	if [[ ! $screen =~ $plainName ]]; then
+		echo "Name each screen with letters, digits and hyphens only, not $screen" >&2
+		exit 1
+	fi
 	if [[ $names != *" before-$screen.png "* && $names != *" after-$screen.png "* ]]; then
 		screens+=("$screen")
 	fi
@@ -44,9 +54,17 @@ for screen in "${screens[@]}"; do
 done
 
 repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+# A branch that doesn't exist yet makes this the first publish; any other failure stops here.
+# ls-remote --exit-code exits 2 when origin has no such branch.
 parent=
-if git fetch -q origin "$branch" 2>/dev/null; then
+lookupStatus=0
+git ls-remote -q --exit-code --heads origin "$branch" >/dev/null || lookupStatus=$?
+if [ "$lookupStatus" -eq 0 ]; then
+	git fetch -q origin "$branch"
 	parent=$(git rev-parse FETCH_HEAD)
+elif [ "$lookupStatus" -ne 2 ]; then
+	echo "Couldn't reach origin to find the $branch branch." >&2
+	exit 1
 fi
 scratch=$(mktemp -d)
 trap 'rm -rf "$scratch"' EXIT
@@ -65,6 +83,7 @@ commit=$(git commit-tree "$tree" ${parent:+-p "$parent"} -m "Screenshots for $fo
 # GitHub answers a push to a new branch with a PR link; show its output only when the push fails.
 if ! pushOutput=$(git push -q origin "$commit:refs/heads/$branch" 2>&1); then
 	echo "$pushOutput" >&2
+	echo "If another publish pushed first, run this again: it builds on the branch as it is now." >&2
 	exit 1
 fi
 

@@ -41,7 +41,7 @@ A PR that changes a screen shows it, before and after, in its Evidence section. 
     ln -s "$PWD/node_modules" <scratchpad>/main/node_modules
     ```
 
-    Then run `npm run screens` inside `<scratchpad>/main`. Skip the before for a screen that is new.
+    Then run `CI=1 npm run screens` inside `<scratchpad>/main`. `CI=1` makes it start its own dev server from `main` rather than reuse one already on the port, which may be the branch's and would shoot the branch. If it reports the port taken, stop that server and run it again. Skip the before for a screen that is new.
 
 2. **After:** shoot the branch as in "Screenshot a screen".
 3. Copy the shots that show the change into one scratchpad folder, named `before-<screen>.png` and `after-<screen>.png`, then publish them under the ticket's number:
@@ -50,6 +50,7 @@ A PR that changes a screen shows it, before and after, in its Evidence section. 
     screens/publish.sh issue-83 <scratchpad>/publish/before-tv-draw.png <scratchpad>/publish/after-tv-draw.png
     ```
 
-4. Paste the printed table into the PR's Evidence section in place of the template's **Before** and **After** lines, under a sentence on the field size and what to look for. A table's cells shrink each shot to about half its width, so name any detail too small to see there (a name cut short, a text size); a click opens the full image. Remove the worktree with `git worktree remove <scratchpad>/main`.
+4. Paste the printed table into the PR's Evidence section in place of the `pr` skill template's **Before** and **After** lines, under a sentence on the field size and what to look for. A table's cells shrink each shot to about half its width, so name any detail too small to see there (a name cut short, a text size); a click opens the full image.
+5. Remove the worktree with `git worktree remove <scratchpad>/main`, so the next before can be shot there.
 
-Done when every screen the PR changes has a before and an after in the PR body ("New screen" in the before cell for a screen that is new).
+Done when every screen the PR changes has a before and an after in the PR body ("New screen" in the before cell for a screen that is new), and `git worktree list` shows no `<scratchpad>/main`.
