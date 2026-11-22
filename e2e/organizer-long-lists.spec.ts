@@ -6,6 +6,7 @@ import {
 	startTournament,
 	test,
 } from './setUpTournament';
+import { expectWhollyOnScreen } from './whollyOnScreen';
 
 /*
  * The organizer route fills the laptop's window and never scrolls as a page: a long list scrolls on its own,
@@ -22,13 +23,6 @@ const expectPageDoesNotScroll = async (page: Page) => {
 		windowHeight: window.innerHeight,
 	}));
 	expect(pageHeight).toBe(windowHeight);
-};
-
-// Wholly on screen: inside the window and not cut off by a list scrolled past it.
-const expectWhollyOnScreen = async (elements: Locator[]) => {
-	for (const element of elements) {
-		await expect(element).toBeInViewport({ ratio: 1 });
-	}
 };
 
 // Every refusal line on the page, empty or not, is wholly on screen, ready for a refusal to show in.

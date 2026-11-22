@@ -12,6 +12,7 @@ import {
 	tvSizes,
 } from './setUpTournament';
 import { expectInsideTvSafeArea } from './tvSafeArea';
+import { expectWhollyOnScreen } from './whollyOnScreen';
 
 // The field that fills the most of each TV screen.
 const playerCount = 32;
@@ -42,7 +43,7 @@ const playFirstMatchesWithLosersStaying = async (organizer: Page) => {
 
 for (const tvSize of tvSizes) {
 	test.describe(`on a ${tvSize.width}×${tvSize.height} TV with ${playerCount} Players`, () => {
-		test('Tonight’s Players, the House Rules and Tonight’s Draw sit inside the safe area', async ({
+		test('Tonight’s Players, every name wholly shown, the House Rules and Tonight’s Draw sit inside the safe area', async ({
 			page: organizer,
 		}) => {
 			await organizer.goto(`/?players=${playerCount}&boards=${firstMatchCount}`);
@@ -51,6 +52,15 @@ for (const tvSize of tvSizes) {
 				.getByRole('heading', { name: 'Farmstrong Brewery Cribbage Tournament' })
 				.waitFor();
 			await expectInsideTvSafeArea(tv);
+
+			/*
+			 * Every Player's name wholly on screen, too. The safe-area check measures only the part of each
+			 * element its list leaves visible, so a name the list clips out of sight would still pass it.
+			 */
+			const playersList = tv.getByRole('list', { name: 'Players' });
+			const playerNameItems = playersList.getByRole('listitem');
+			await expect(playerNameItems).toHaveCount(playerCount);
+			await expectWhollyOnScreen(await playerNameItems.all());
 
 			// Every House Rule shown, the most the House Rules screen holds, down to the last.
 			await showHouseRules(organizer);
