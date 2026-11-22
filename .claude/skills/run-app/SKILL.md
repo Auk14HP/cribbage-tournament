@@ -1,6 +1,6 @@
 ---
 name: run-app
-description: Run the cribbage app and screenshot its screens. Use when checking that a UI change looks right on the organizer or display route, or when asked to run or show the app.
+description: Run the cribbage app and screenshot its screens. Use when checking that a UI change looks right on the organizer or display route, when a PR changes a screen, or when asked to run or show the app.
 ---
 
 Behaviour across the two windows, and the Winners Bracket's layout, are covered by `npm run e2e` (`e2e/`, Playwright against the installed Google Chrome). This skill is for what a test can't judge: how a screen looks. Every screenshot you take, you open and look at.
@@ -28,3 +28,29 @@ On the organizer route, check inputs show their full placeholder and controls li
 To see the Organizer's own Tournament rather than a test one, open `localhost:5173/display` (or `/`) in a new Claude in Chrome tab: it shares the local storage of the Organizer's Chrome, so it shows their saved Tournament exactly. Measure a layout there with JavaScript (element sizes and positions) instead of judging a screenshot by eye.
 
 Done when every screen the change touches has been screenshotted and looked at, and anything wrong is fixed or reported.
+
+## Screenshots in a PR
+
+A PR that changes a screen shows it, before and after, in its Evidence section. `gh` can't upload images, so `screens/publish.sh` hosts them: it adds the files to the `pr-screenshots` branch, which is never merged, and prints a Markdown table with each screen's before and after side by side, so a reviewer compares them at a glance instead of scrolling between them. It builds the commit in a scratch index, so the working tree and the current branch stay put and the pre-commit hook doesn't run.
+
+1. **Before:** shoot `main` from a worktree in the scratchpad, with the same options as the after, and the project's `node_modules` linked in:
+
+    ```bash
+    git fetch origin main
+    git worktree add --detach <scratchpad>/main origin/main
+    ln -s "$PWD/node_modules" <scratchpad>/main/node_modules
+    ```
+
+    Then run `CI=1 npm run screens` inside `<scratchpad>/main`. `CI=1` makes it start its own dev server from `main` rather than reuse one already on the port, which may be the branch's and would shoot the branch. If it reports the port taken, stop that server and run it again. Skip the before for a screen that is new.
+
+2. **After:** shoot the branch as in "Screenshot a screen".
+3. Copy the shots that show the change into one scratchpad folder, named `before-<screen>.png` and `after-<screen>.png`, then publish them under the ticket's number:
+
+    ```bash
+    screens/publish.sh issue-83 <scratchpad>/publish/before-tv-draw.png <scratchpad>/publish/after-tv-draw.png
+    ```
+
+4. Paste the printed table into the PR's Evidence section in place of the `pr` skill template's **Before** and **After** lines, under a sentence on the field size and what to look for. A table's cells shrink each shot to about half its width, so name any detail too small to see there (a name cut short, a text size); a click opens the full image.
+5. Remove the worktree with `git worktree remove <scratchpad>/main`, so the next before can be shot there.
+
+Done when every screen the PR changes has a before and an after in the PR body ("New screen" in the before cell for a screen that is new), and `git worktree list` shows no `<scratchpad>/main`.
