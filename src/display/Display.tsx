@@ -22,9 +22,18 @@ export const Display = ({ store, random }: { store: Store<Tournament>; random: R
 				<Players tournament={tournament} random={random} />
 			)}
 			{tournament.phase === 'houseRules' && <HouseRules tournament={tournament} />}
-			{/* Tonight's Draw: the Winners Bracket as the Draw stands, until Start. */}
+			{/*
+			 * Tonight's Draw: the Winners Bracket as the Draw stands, until Start. It keeps clear of the
+			 * countdown ring's strip as the cycle's screens do, so the bracket doesn't shift at Start.
+			 */}
 			{tournament.phase === 'drawShown' && (
-				<Bracket tournament={tournament} bracketName="winners" heading="Tonight’s Draw" />
+				<div className={countdownRing.clearance}>
+					<Bracket
+						tournament={tournament}
+						bracketName="winners"
+						heading="Tonight’s Draw"
+					/>
+				</div>
 			)}
 			{/* Keyed by phase, so finishing starts the cycle again from its first screen, or the Held screen. */}
 			{(tournament.phase === 'inProgress' || tournament.phase === 'finished') && (
@@ -84,8 +93,8 @@ const Cycle = ({ tournament }: { tournament: Tournament }) => {
 };
 
 /*
- * The ring's size, and the strip down the safe area's right edge the screen keeps clear for it: the ring's
- * width and a gap. Both in vh, so the ring stays round and its strip fits it on any TV.
+ * The ring's size, and the strip down the safe area's right edge the screen keeps clear for it, from Tonight's
+ * Draw on: the ring's width and a gap. Both in vh, so the ring stays round and its strip fits it on any TV.
  */
 const countdownRing = { size: 'h-[3vh] w-[3vh]', clearance: 'pr-[4vh]' };
 

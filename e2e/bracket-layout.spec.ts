@@ -1,5 +1,7 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { expectNothingMoves } from './screenStill';
 import {
+	confirmDraw,
 	holdScreen,
 	openTv,
 	playToFinal,
@@ -138,4 +140,26 @@ for (const { players, rounds } of [
 			});
 		}
 	}
+}
+
+/*
+ * Tonight's Draw is the Winners Bracket before Start, so pressing Start changes only its heading: every Round
+ * header and Match card stays where it was. With 21 Players, Byes put Matches in later Rounds too.
+ */
+for (const tvSize of tvSizes) {
+	test(`with 21 Players on a ${tvSize.width}×${tvSize.height} TV, the bracket stays still from Tonight’s Draw to Start`, async ({
+		page: organizer,
+	}) => {
+		await organizer.goto('/?players=21&boards=8');
+		const tv = await openTv(organizer, tvSize);
+		await confirmDraw(organizer);
+		await tv.getByRole('heading', { name: 'Tonight’s Draw' }).waitFor();
+		const roundHeaders = tv.getByRole('heading', { level: 2 });
+		const matchCards = tv.getByTestId('match card');
+
+		await expectNothingMoves([roundHeaders, matchCards], async () => {
+			await organizer.getByRole('button', { name: 'Start', exact: true }).click();
+			await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
+		});
+	});
 }
