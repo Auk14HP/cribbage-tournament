@@ -124,10 +124,11 @@ export const ThemeMenu = ({
 	return (
 		/*
 		 * Closes the menu when focus leaves it and its button, as a click elsewhere on the screen moves it. A
-		 * click on the button itself keeps focus inside, so the button's own toggle decides.
+		 * click on the button itself keeps focus inside, so the button's own toggle decides. A flex box, so the
+		 * button stretches to whatever height the header gives it.
 		 */
 		<div
-			className="relative"
+			className="relative flex"
 			onBlur={(event) => {
 				if (!event.currentTarget.contains(event.relatedTarget)) {
 					setIsOpen(false);

@@ -70,7 +70,11 @@ export const Organizer = ({
 		<main className="border-fill bg-canvas font-organizer text-ink flex h-dvh flex-col border-t-4 px-8 py-6">
 			<header className="flex items-center justify-between gap-4">
 				<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
-				<nav className="flex items-center gap-2">
+				{/*
+				 * Stretched to one height, so the palette button, holding an icon rather than a line of text, is as
+				 * tall as the buttons beside it.
+				 */}
+				<nav className="flex items-stretch gap-2">
 					{/*
 					 * Outlined on the canvas, not filled like the buttons the night runs on, so it doesn't draw the
 					 * Organizer's eye. Its dialog still asks before anything is cleared.

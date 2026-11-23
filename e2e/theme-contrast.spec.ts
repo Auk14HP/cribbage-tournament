@@ -161,3 +161,20 @@ test('moves nothing in the header when the theme menu opens or closes', async ({
 		await expect(themeMenu).toBeHidden();
 	});
 });
+
+test('draws the header’s buttons at one height, the palette button too', async ({ page }) => {
+	await page.goto('/');
+	const headerControls = [
+		page.getByRole('button', { name: 'Start a new Tournament' }),
+		page.getByRole('link', { name: 'Open TV display' }),
+		page.getByRole('button', { name: 'Theme' }),
+	];
+
+	const heights = [];
+	for (const control of headerControls) {
+		const box = await control.boundingBox();
+		heights.push(box!.height);
+	}
+
+	expect(new Set(heights).size, `heights ${heights.join(', ')}`).toBe(1);
+});
