@@ -11,6 +11,7 @@ Judgement calls for review. Anything mechanical is enforced by `npm run check` (
 - Name a test helper for the role it finds, not for the test data that fills it: `findByePlayer`, not `findCat`.
 - Give a step whose job isn't obvious at a glance a named helper: `isShownWithin(heading, 5000)` says what `.then(() => true, () => false)` leaves the reader to work out.
 - React components and hooks keep React's conventions: a component is a PascalCase noun (`Organizer`), a hook starts with `use` (`useTournament`).
+- A new word the Organizer reads on screen gets its `GLOSSARY.md` entry in the same PR, and shares no word with another glossary term it could be read as: "Match laptop" reads as a **Match**, so the Theme choice is Same as laptop.
 
 ## Readability
 

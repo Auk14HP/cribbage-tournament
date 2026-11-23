@@ -51,6 +51,7 @@ A PR that changes a screen shows it, before and after, in its Evidence section. 
     ```
 
 4. Paste the printed table into the PR's Evidence section in place of the `pr` skill template's **Before** and **After** lines, under a sentence on the field size and what to look for. A table's cells shrink each shot to about half its width, so name any detail too small to see there (a name cut short, a text size); a click opens the full image.
-5. Remove the worktree with `git worktree remove <scratchpad>/main`, so the next before can be shot there.
+5. Retake each image in `docs/images/` (the README's screenshots) that shows a changed screen, from the branch, and commit it to the PR.
+6. Remove the worktree with `git worktree remove <scratchpad>/main`, so the next before can be shot there.
 
-Done when every screen the PR changes has a before and an after in the PR body ("New screen" in the before cell for a screen that is new), and `git worktree list` shows no `<scratchpad>/main`.
+Done when every screen the PR changes has a before and an after in the PR body ("New screen" in the before cell for a screen that is new), every `docs/images/` shot of a changed screen is retaken, and `git worktree list` shows no `<scratchpad>/main`.
