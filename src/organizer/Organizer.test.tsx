@@ -247,10 +247,16 @@ const listPlayerNames = () =>
 		.queryAllByRole('listitem')
 		.map((item) => item.querySelector('span')?.textContent);
 
-// The theme the Organizer screen is drawn in: Light or Dark.
-const readScreenTheme = () => screen.getByRole('main').dataset.theme;
+// The theme the Organizer screen is drawn in, set on the page's root: Light or Dark.
+const readScreenTheme = () => document.documentElement.dataset.theme;
 
 const openThemeMenu = (user: User) => clickButton(user, 'Theme');
+
+// Picks a theme from the palette menu in the header.
+const chooseTheme = async (user: User, themeName: string) => {
+	await openThemeMenu(user);
+	await user.click(screen.getByRole('menuitemradio', { name: themeName }));
+};
 
 // The theme menu's choices, by name, and which one is chosen.
 const listThemeChoices = () =>
@@ -1040,16 +1046,14 @@ describe('the organizer route', () => {
 		setLaptopScheme('light');
 		expect(readScreenTheme()).toBe('light');
 
-		await openThemeMenu(user);
-		await user.click(screen.getByRole('menuitemradio', { name: 'Light' }));
+		await chooseTheme(user, 'Light');
 		setLaptopScheme('dark');
 		expect(readScreenTheme()).toBe('light');
 	});
 
 	it('keeps the theme chosen through a new Tournament and when reopened', async () => {
 		const user = showOrganizer();
-		await openThemeMenu(user);
-		await user.click(screen.getByRole('menuitemradio', { name: 'Dark' }));
+		await chooseTheme(user, 'Dark');
 
 		await clickButton(user, 'Start a new Tournament');
 		await answerDialog(user, 'Start a new Tournament');
@@ -1060,5 +1064,15 @@ describe('the organizer route', () => {
 		expect(readScreenTheme()).toBe('dark');
 		await openThemeMenu(reopenedUser);
 		expect(screen.getByRole('menuitemradio', { name: 'Dark' })).toBeChecked();
+	});
+
+	it('draws the screen to match the laptop when the saved theme is one the menu no longer offers', async () => {
+		createLocalStorageStore<string>(themeKey, themeChoiceVersion).save('christmas');
+		setLaptopScheme('dark');
+		const user = showOrganizer();
+
+		expect(readScreenTheme()).toBe('dark');
+		await openThemeMenu(user);
+		expect(screen.getByRole('menuitemradio', { name: 'Match laptop' })).toBeChecked();
 	});
 });

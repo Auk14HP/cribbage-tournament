@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
+import { expectNothingMoves } from './screenStill';
 import {
 	confirmDrawFromHouseRules,
 	findMatchesOnBoards,
@@ -93,7 +94,8 @@ test.describe('every phase reads at 4.5:1 or more', () => {
 });
 
 test('turns with the laptop on Match laptop while the screen is open', async ({ page }) => {
-	const screenRoot = page.getByRole('main');
+	// The theme is set on the page's root element, which no role or label finds.
+	const screenRoot = page.locator('html');
 	await page.emulateMedia({ colorScheme: 'light' });
 	await page.goto('/');
 	await expect(screenRoot).toHaveAttribute('data-theme', 'light');
@@ -108,7 +110,10 @@ test('draws the Organizer screen in Inter served with the app, asking no font se
 	baseURL,
 }) => {
 	const requestedOrigins = new Set<string>();
-	page.on('request', (request) => requestedOrigins.add(new URL(request.url()).origin));
+	page.on('request', (request) => {
+		const origin = new URL(request.url()).origin;
+		requestedOrigins.add(origin);
+	});
 
 	await page.goto('/');
 	const isInterLoaded = await page.evaluate(async () => {
@@ -129,8 +134,30 @@ test('keeps the TV’s look whatever the Organizer screen’s theme', async ({ p
 	const tv = await openTv(page, tvSizes[0]);
 	const tvScreen = tv.getByRole('main');
 
-	await expect(tvScreen).not.toHaveAttribute('data-theme');
+	await expect(tv.locator('html')).not.toHaveAttribute('data-theme');
 	await expect(tvScreen).toHaveCSS('background-color', 'rgb(0, 0, 0)');
 	await expect(tvScreen).toHaveCSS('color', 'rgb(255, 255, 255)');
 	await expect(tvScreen).not.toHaveCSS('font-family', /Inter/);
+});
+
+test('moves nothing in the header when the theme menu opens or closes', async ({ page }) => {
+	await page.goto('/');
+	const header = page.getByRole('banner');
+	const headerParts = [
+		header.getByRole('heading'),
+		header.getByRole('link', { name: 'Open TV display' }),
+		header.getByRole('button', { name: 'Theme' }),
+		header.getByRole('button', { name: 'Start a new Tournament' }),
+		page.getByLabel('Player name'),
+	];
+	const themeMenu = page.getByRole('menu', { name: 'Theme' });
+
+	await expectNothingMoves(headerParts, async () => {
+		await page.getByRole('button', { name: 'Theme' }).click();
+		await expect(themeMenu).toBeVisible();
+	});
+	await expectNothingMoves(headerParts, async () => {
+		await page.keyboard.press('Escape');
+		await expect(themeMenu).toBeHidden();
+	});
 });

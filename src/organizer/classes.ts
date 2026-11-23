@@ -1,7 +1,7 @@
 // The organizer route's shared Tailwind classes: buttons, text boxes and dialogs.
 
 /*
- * Every colour below is a theme colour (`src/style.css`), so a class reads the same in Light and Dark. A button
+ * Every colour below is a theme colour (`src/style.css`), so each class reads well in Light and in Dark. A button
  * the Organizer can't use right now is faded, and doesn't light up under the pointer.
  */
 export const button =
@@ -34,10 +34,10 @@ export const windowFilling = {
 };
 
 /*
- * The box round a Player's name in a listed Match. In Swap mode the name is a button to tap, outlined in dashed
- * in the theme's accent so it never looks like the plain buttons that record a winner once Started, and the Player
- * tapped first is filled with the theme's fill. Otherwise the name keeps the same box, its border clear. The box adds no height to the name,
- * so turning Swap mode on or off moves nothing.
+ * The box round a Player's name in a listed Match. In Swap mode the name is a button to tap, outlined dashed in
+ * the theme's accent so it never looks like the plain buttons that record a winner once Started, and the Player
+ * tapped first is filled with the theme's fill. Otherwise the name keeps the same box, its border clear. The box
+ * adds no height to the name, so turning Swap mode on or off moves nothing.
  */
 export const playerNameBox = {
 	shape: 'inline-block rounded border px-3',

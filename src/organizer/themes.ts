@@ -30,12 +30,20 @@ const subscribeToLaptopScheme = (listener: () => void) => {
 const findLaptopTheme = (): Theme =>
 	window.matchMedia(darkSchemeQuery).matches ? 'dark' : 'light';
 
+// Whether a saved choice is one the theme menu still offers: a theme since dropped is not.
+const isOffered = (saved: ThemeChoice | undefined): saved is ThemeChoice =>
+	themeChoices.some((c) => c.choice === saved);
+
 /*
- * The Organizer's saved theme choice, Match laptop until they pick another, and the theme it draws the screen
- * in: re-renders when the choice changes, or when the laptop turns light or dark while the screen is open.
+ * The Organizer's saved theme choice, Match laptop until they pick another or if the saved one is no longer
+ * offered, and the theme it draws the screen in: re-renders when the choice changes, or when the laptop turns
+ * light or dark while the screen is open.
  */
 export const useTheme = (store: Store<ThemeChoice>) => {
-	const choice = useSyncExternalStore(store.subscribe, () => store.load() ?? 'laptop');
+	const choice = useSyncExternalStore(store.subscribe, () => {
+		const saved = store.load();
+		return isOffered(saved) ? saved : 'laptop';
+	});
 	const laptopTheme = useSyncExternalStore(subscribeToLaptopScheme, findLaptopTheme);
 	const theme: Theme = choice === 'laptop' ? laptopTheme : choice;
 	return { choice, theme };

@@ -73,13 +73,13 @@ export const ThemeMenu = ({
 	const [isOpen, setIsOpen] = useState(false);
 	const menuId = useId();
 	const menuButton = useRef<HTMLButtonElement>(null);
-	const items = useRef<(HTMLButtonElement | null)[]>([]);
+	const themeItems = useRef<(HTMLButtonElement | null)[]>([]);
 	const chosenIndex = themeChoices.findIndex((c) => c.choice === choice);
 
 	// Opening the menu puts focus on the chosen theme, so the arrow keys start from it.
 	useEffect(() => {
 		if (isOpen) {
-			items.current[chosenIndex]?.focus();
+			themeItems.current[chosenIndex]?.focus();
 		}
 	}, [isOpen, chosenIndex]);
 
@@ -93,7 +93,7 @@ export const ThemeMenu = ({
 		closeToButton();
 	};
 
-	const moveFocus = (event: KeyboardEvent, index: number) => {
+	const answerItemKey = (event: KeyboardEvent, index: number) => {
 		if (event.key === 'Escape') {
 			event.preventDefault();
 			closeToButton();
@@ -106,7 +106,7 @@ export const ThemeMenu = ({
 		const nextIndex = findNextIndex(event.key, index, themeChoices.length);
 		if (nextIndex !== undefined) {
 			event.preventDefault();
-			items.current[nextIndex]?.focus();
+			themeItems.current[nextIndex]?.focus();
 		}
 	};
 
@@ -149,7 +149,7 @@ export const ThemeMenu = ({
 						<button
 							key={option.choice}
 							ref={(item) => {
-								items.current[index] = item;
+								themeItems.current[index] = item;
 							}}
 							type="button"
 							role="menuitemradio"
@@ -157,7 +157,7 @@ export const ThemeMenu = ({
 							tabIndex={-1}
 							className={menuClasses.item}
 							onClick={() => choose(option.choice)}
-							onKeyDown={(event) => moveFocus(event, index)}
+							onKeyDown={(event) => answerItemKey(event, index)}
 						>
 							<CheckIcon isShown={option.choice === choice} />
 							{option.label}

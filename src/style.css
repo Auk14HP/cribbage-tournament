@@ -35,6 +35,11 @@
  * tells the browser which way to draw its own controls, such as a number box's arrows.
  */
 @layer base {
+	/* The page behind the screen, seen at the window's edges, is the theme's too. */
+	[data-theme] {
+		background-color: var(--theme-canvas);
+	}
+
 	[data-theme='light'] {
 		color-scheme: light;
 		--theme-canvas: #f4f5f7;

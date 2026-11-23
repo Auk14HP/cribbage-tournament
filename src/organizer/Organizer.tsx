@@ -2,7 +2,7 @@
  * The organizer route: shown on the laptop. Forwards the Organizer's actions to the Tournament core,
  * saves accepted changes through the store, and shows the core's reason when a change is refused.
  */
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { makeDisplayPath } from '../routes';
 import type { Store } from '../storage';
 import { createTournament, type Phase, type Tournament } from '../tournament';
@@ -32,6 +32,17 @@ export const Organizer = ({
 }) => {
 	const tournament = useTournament(store);
 	const { choice: themeChoice, theme } = useTheme(themeStore);
+
+	/*
+	 * The theme goes on the page's root, not only this screen, so the window's own edges and scrollbar take its
+	 * colours too. Before paint, so the screen never shows a frame in the wrong theme.
+	 */
+	useLayoutEffect(() => {
+		document.documentElement.dataset.theme = theme;
+		return () => {
+			delete document.documentElement.dataset.theme;
+		};
+	}, [theme]);
 	// Bumped by a new Tournament, so registration starts afresh: empty boxes, nothing being renamed.
 	const [newTournaments, setNewTournaments] = useState(0);
 
@@ -55,10 +66,7 @@ export const Organizer = ({
 		 * Fills the window and never scrolls as a page: a long list scrolls on its own inside it, so the controls
 		 * around the list stay on screen.
 		 */
-		<main
-			data-theme={theme}
-			className="bg-canvas font-organizer text-ink flex h-dvh flex-col px-8 py-6"
-		>
+		<main className="bg-canvas font-organizer text-ink flex h-dvh flex-col px-8 py-6">
 			<header className="flex items-center justify-between gap-4">
 				<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
 				<nav className="flex items-center gap-4">
