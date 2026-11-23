@@ -33,13 +33,13 @@ The app solves these issues by displaying the Players, the current Matches, the 
 - Displays the current Matches.
 - Displays the Winners Bracket.
 - Draws and displays a Losers Bracket if enough Players opt into it after losing their first Match of the night.
-- Cycles through different screens (Winners Bracket, Losers Bracket, Now playing, etc.) on the TV at a configurable interval. The Organizer can also hold the TV on one screen when desired.
+- Cycles through different screens (Winners Bracket, Losers Bracket, Champion) on the TV at a configurable interval. The Organizer can also hold the TV on one screen when desired.
 - Allows one Player to be given a Home Board: a Board where they play all of their Matches, so they don't need to move around.
 - Puts Matches in line, Waiting for a Board, when there are fewer Boards than Matches to play.
 
 ## Screenshots
 
-![The TV showing Tonight's Draw, each Match with its Board](docs/images/tv-draw.png)
+![The TV showing Tonight's Draw as the Winners Bracket, each first Match with its Board](docs/images/tv-draw.png)
 ![The TV showing the Winners Bracket, with each Match's Board](docs/images/tv-results.png)
 ![The Organizer's screen while Matches are being played](docs/images/organizer-now-playing.png)
 

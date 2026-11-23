@@ -1,10 +1,9 @@
-import { expect, type Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 import {
-	answerIsLoserStayingDialogIfAsked,
 	confirmDrawFromHouseRules,
-	findMatchesOnBoards,
 	holdScreen,
 	openTv,
+	playFirstMatchesWithLosersStaying,
 	playToFinal,
 	showHouseRules,
 	startTournament,
@@ -19,22 +18,6 @@ const playerCount = 32;
 
 // A field with no Byes opens a first Match for every two Players.
 const firstMatchCount = playerCount / 2;
-
-/*
- * Records results, each loser of a first Match staying for the Losers Bracket, until every first Match has
- * one. Counts the losers asked rather than clicks, since a click may record a later Match whose loser isn't
- * asked.
- */
-const playFirstMatchesWithLosersStaying = async (organizer: Page) => {
-	const nextWinnerButton = findMatchesOnBoards(organizer).getByRole('button').first();
-	let stayingCount = 0;
-	while (stayingCount < firstMatchCount) {
-		await nextWinnerButton.click();
-		if (await answerIsLoserStayingDialogIfAsked(organizer, 'Staying')) {
-			stayingCount++;
-		}
-	}
-};
 
 /*
  * Every TV screen keeps its content, the countdown ring included, inside the safe area a TV that overscans
@@ -73,25 +56,25 @@ for (const tvSize of tvSizes) {
 			await expectInsideTvSafeArea(tv);
 		});
 
-		test('the Winners Bracket, its countdown ring and Now playing sit inside the safe area at Start', async ({
+		test('the Winners Bracket sits inside the safe area at Start', async ({
 			page: organizer,
 		}) => {
 			await startTournament(organizer, { players: playerCount });
 			const tv = await openTv(organizer, tvSize);
 			await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
-			await expect(tv.getByTestId('countdown ring')).toBeAttached();
-			await expectInsideTvSafeArea(tv);
-
-			await holdScreen(organizer, tv, 'Now playing');
 			await expectInsideTvSafeArea(tv);
 		});
 
-		test('the Losers Bracket sits inside the safe area once drawn', async ({
+		test('the Losers Bracket and the countdown ring sit inside the safe area once drawn', async ({
 			page: organizer,
 		}) => {
 			await startTournament(organizer, { players: playerCount });
-			await playFirstMatchesWithLosersStaying(organizer);
+			await playFirstMatchesWithLosersStaying(organizer, { firstMatchCount });
 			const tv = await openTv(organizer, tvSize);
+			await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
+			await expect(tv.getByTestId('countdown ring')).toBeAttached();
+			await expectInsideTvSafeArea(tv);
+
 			await holdScreen(organizer, tv, 'Losers Bracket');
 			await expectInsideTvSafeArea(tv);
 		});

@@ -88,13 +88,19 @@ test('the TV holds Tonight’s Draw from the moment the Draw is made until the O
 	await organizer.getByLabel('Number of Boards').fill('3');
 	await confirmDraw(organizer);
 
-	// 6 Players: two first-Round Matches and a Match between the two Bye Players, on Boards 1 to 3.
+	/*
+	 * 6 Players, Tonight's Draw shown as the Winners Bracket: two first-Round Matches, and in Round 2 a
+	 * Match between the two Bye Players, on Boards 1 to 3.
+	 */
 	await expect(tv.getByRole('heading', { name: 'Tonight’s Draw' })).toBeVisible();
-	const tvMatches = tv.getByRole('list', { name: 'Matches' }).getByRole('listitem');
-	await expect(tvMatches).toHaveCount(3);
-	await expect(tvMatches.nth(0)).toContainText('Board 1');
-	await expect(tvMatches.nth(1)).toContainText('Board 2');
-	await expect(tvMatches.nth(2)).toContainText('Board 3');
+	const roundOneCards = tv.getByRole('list', { name: 'Round 1' }).getByTestId('match card');
+	const roundTwoCards = tv.getByRole('list', { name: 'Round 2' }).getByTestId('match card');
+	await expect(roundOneCards).toHaveCount(2);
+	await expect(roundTwoCards.filter({ hasText: /^Board \d+/ })).toHaveCount(1);
+	await expect(tv.getByTestId('match card').getByText(/^Board \d+$/)).toHaveCount(3);
+	for (const board of ['Board 1', 'Board 2', 'Board 3']) {
+		await expect(tv.getByText(board, { exact: true })).toBeVisible();
+	}
 
 	await tv.reload();
 	await expect(tv.getByRole('heading', { name: 'Tonight’s Draw' })).toBeVisible();

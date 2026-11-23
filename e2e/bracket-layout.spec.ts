@@ -1,5 +1,7 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { expectNothingMoves } from './screenStill';
 import {
+	confirmDraw,
 	holdScreen,
 	openTv,
 	playToFinal,
@@ -15,7 +17,8 @@ import { expectInsideTvSafeArea } from './tvSafeArea';
  * and Board label is one line, every column's Matches start level, every Match sits level with the middle of the two that
  * feed it, and everything sits inside the TV's safe area. A Bye's place in the first Round has no Match, so its empty
  * slot is measured instead. Measured at Start; at the final, when the narrow final column names its Board;
- * and after the final, when winners' names fill later Rounds. On a 16:9 TV and on a narrower one.
+ * and after the final, when winners' names fill later Rounds. On a 16:9 TV and on a narrower one. Last, every
+ * Round header and Match card stays put from Tonight's Draw through Start.
  */
 
 const findMiddle = async (slot: Locator): Promise<number> => {
@@ -138,4 +141,26 @@ for (const { players, rounds } of [
 			});
 		}
 	}
+}
+
+/*
+ * Tonight's Draw is the Winners Bracket before Start, so pressing Start moves none of its Round headers or
+ * Match cards. With 21 Players, Byes put Matches in later Rounds too.
+ */
+for (const tvSize of tvSizes) {
+	test(`with 21 Players on a ${tvSize.width}×${tvSize.height} TV, every Round header and Match card stays still from Tonight’s Draw to Start`, async ({
+		page: organizer,
+	}) => {
+		await organizer.goto('/?players=21&boards=8');
+		const tv = await openTv(organizer, tvSize);
+		await confirmDraw(organizer);
+		await tv.getByRole('heading', { name: 'Tonight’s Draw' }).waitFor();
+		const roundHeaders = tv.getByRole('heading', { level: 2 });
+		const matchCards = tv.getByTestId('match card');
+
+		await expectNothingMoves([roundHeaders, matchCards], async () => {
+			await organizer.getByRole('button', { name: 'Start', exact: true }).click();
+			await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
+		});
+	});
 }

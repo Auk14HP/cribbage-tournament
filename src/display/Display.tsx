@@ -9,9 +9,7 @@ import { listTvScreens, type Random, type Tournament, type TvScreen } from '../t
 import { useTournament } from '../useTournament';
 import { Bracket } from './Bracket';
 import { Champion } from './Champion';
-import { Draw } from './Draw';
 import { HouseRules } from './HouseRules';
-import { NowPlaying } from './NowPlaying';
 import { Players } from './Players';
 import { tvSafeArea } from './tvSafeArea';
 
@@ -24,10 +22,25 @@ export const Display = ({ store, random }: { store: Store<Tournament>; random: R
 				<Players tournament={tournament} random={random} />
 			)}
 			{tournament.phase === 'houseRules' && <HouseRules tournament={tournament} />}
-			{tournament.phase === 'drawShown' && <Draw tournament={tournament} />}
-			{/* Keyed by phase, so finishing starts the cycle again from its first screen, or the Held screen. */}
-			{(tournament.phase === 'inProgress' || tournament.phase === 'finished') && (
-				<Cycle key={tournament.phase} tournament={tournament} />
+			{/*
+			 * From Tonight's Draw on, every screen keeps clear of the countdown ring's strip, ring or not, so
+			 * the bracket doesn't shift at Start and holding a screen doesn't shift it.
+			 */}
+			{tournament.phase !== 'registration' && tournament.phase !== 'houseRules' && (
+				<div className={countdownRing.clearance}>
+					{/* Tonight's Draw: the Winners Bracket as the Draw stands, until Start. */}
+					{tournament.phase === 'drawShown' && (
+						<Bracket
+							tournament={tournament}
+							bracketName="winners"
+							heading="Tonight’s Draw"
+						/>
+					)}
+					{/* Keyed by phase, so finishing starts the cycle again from its first screen, or the Held screen. */}
+					{(tournament.phase === 'inProgress' || tournament.phase === 'finished') && (
+						<Cycle key={tournament.phase} tournament={tournament} />
+					)}
+				</div>
 			)}
 		</main>
 	);
@@ -37,20 +50,20 @@ export const Display = ({ store, random }: { store: Store<Tournament>; random: R
 const tvScreens: Record<TvScreen, (tournament: Tournament) => ReactNode> = {
 	winnersBracket: (tournament) => <Bracket tournament={tournament} bracketName="winners" />,
 	losersBracket: (tournament) => <Bracket tournament={tournament} bracketName="losers" />,
-	nowPlaying: (tournament) => <NowPlaying tournament={tournament} />,
 	champion: (tournament) => <Champion tournament={tournament} />,
 };
 
 /*
  * On Auto, shows each of the phase's screens in turn, each for the Tournament's screenSeconds, from the
- * first. A Held screen stays on show, with no countdown ring. Choosing Auto again starts the cycle from the
- * screen on show, with a fresh screen time. A new screenSeconds restarts the current screen's time, so the
- * change shows at once.
+ * first. A Held screen stays on show, with no countdown ring, as does a phase's only screen: there is
+ * nothing to count down to. Choosing Auto again starts the cycle from the screen on show, with a fresh
+ * screen time. A new screenSeconds restarts the current screen's time, so the change shows at once.
  */
 const Cycle = ({ tournament }: { tournament: Tournament }) => {
 	const screens = listTvScreens(tournament);
 	const held = tournament.tvChoice === 'auto' ? undefined : tournament.tvChoice;
 	const isHeld = held !== undefined;
+	const isStill = isHeld || screens.length === 1;
 	const [shown, setShown] = useState(held ?? screens[0]);
 	// While a screen is held it is the screen on show, so Auto picks up from it.
 	if (isHeld && shown !== held) {
@@ -59,20 +72,17 @@ const Cycle = ({ tournament }: { tournament: Tournament }) => {
 	const shownIndex = screens.indexOf(shown);
 	const nextScreen = screens[(shownIndex + 1) % screens.length];
 	useEffect(() => {
-		if (isHeld) {
+		if (isStill) {
 			return;
 		}
 		const timer = setTimeout(() => setShown(nextScreen), tournament.screenSeconds * 1000);
 		return () => clearTimeout(timer);
-	}, [shown, nextScreen, isHeld, tournament.screenSeconds]);
-	/*
-	 * Keyed like the timer, so the ring starts again exactly when the screen's time does. The screen keeps
-	 * clear of the ring's strip down the safe area's right edge, held or not, so holding doesn't shift it.
-	 */
+	}, [shown, nextScreen, isStill, tournament.screenSeconds]);
+	// Keyed like the timer, so the ring starts again exactly when the screen's time does.
 	return (
 		<>
-			<div className={countdownRing.clearance}>{tvScreens[shown](tournament)}</div>
-			{!isHeld && (
+			{tvScreens[shown](tournament)}
+			{!isStill && (
 				<CountdownRing
 					key={`${shown} ${tournament.screenSeconds}`}
 					seconds={tournament.screenSeconds}
@@ -83,14 +93,14 @@ const Cycle = ({ tournament }: { tournament: Tournament }) => {
 };
 
 /*
- * The ring's size, and the strip down the safe area's right edge the screen keeps clear for it: the ring's
- * width and a gap. Both in vh, so the ring stays round and its strip fits it on any TV.
+ * The ring's size, and the strip down the safe area's right edge the screen keeps clear for it, from Tonight's
+ * Draw on: the ring's width and a gap. Both in vh, so the ring stays round and its strip fits it on any TV.
  */
 const countdownRing = { size: 'h-[3vh] w-[3vh]', clearance: 'pr-[4vh]' };
 
 /*
  * A ring in the safe area's bottom-right corner that fills over the screen's time, so the room sees a change
- * coming. It sits in the strip the screen keeps clear for it, clear of every Match and Now playing card.
+ * coming. It sits in the strip the screen keeps clear for it, clear of every Match card.
  * Decorative, so hidden from assistive technology. The duration reaches the animation through an
  * inherited CSS variable.
  */

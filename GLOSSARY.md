@@ -93,12 +93,8 @@ A light-hearted line, mostly made up but sometimes a true fact about cribbage, o
 _Avoid_: Trivia, joke, tip
 
 **Tonight's Draw**:
-The **TV screen** between the **Draw** and Start that shows each **Match** holding a **Board**, so each **Player** can find their seat, with any Matches **Waiting for a Board** beneath.
+The **TV screen** between the **Draw** and Start: the **Winners Bracket** as the Draw stands, with any **Swaps**, so each **Player** can find their seat and see which **Round** they start in.
 _Avoid_: Pairings, draw sheet
-
-**Now playing**:
-The **TV screen** during play that shows each **Match** on a **Board**, with any Matches **Waiting for a Board** beneath.
-_Avoid_: Current matches, board list
 
 **Champion screen**:
 The **TV screen** once the **Tournament** is finished that names each bracket's champion.
@@ -109,5 +105,5 @@ The **Organizer**'s choice that has the TV cycle the current phase's screens onc
 _Avoid_: Cycle mode, rotate
 
 **Held screen**:
-The screen the **Organizer** has chosen for the TV once Started, which the TV shows until they choose **Auto**. Choosing Auto cycles on from it. A Held screen the night's next phase doesn't have, such as Now playing once the **Tournament** is finished, falls back to Auto.
+The screen the **Organizer** has chosen for the TV once Started, which the TV shows until they choose **Auto**. Choosing Auto cycles on from it. A Held screen the night's next phase doesn't have, such as **Champion** once an undo takes the **Tournament** back into play, falls back to Auto.
 _Avoid_: Pinned screen, locked screen

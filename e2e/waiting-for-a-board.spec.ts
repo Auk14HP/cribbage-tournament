@@ -1,17 +1,11 @@
 import { expect, type Page } from '@playwright/test';
-import { confirmDraw, holdScreen, openTv, test, tvSizes } from './setUpTournament';
+import { confirmDraw, openTv, test, tvSizes } from './setUpTournament';
 import { expectInsideTvSafeArea } from './tvSafeArea';
 
 /*
- * Checks that the whole Waiting for a Board list, and all else on the screen, fits inside the TV's safe area.
- * The tests below use the fields that fill the most of the TV for each of Now playing's sizes, and check both
- * Tonight's Draw and Now playing.
+ * A Match waiting for a Board shows on the TV's bracket as a card with its Players and no Board, on Tonight's
+ * Draw and once Started, and the bracket still fits inside the TV's safe area.
  */
-const expectWaitingListFitsTv = async (tv: Page, waitingMatchCount: number) => {
-	const waiting = tv.getByRole('list', { name: 'Waiting for a Board' }).getByRole('listitem');
-	await expect(waiting).toHaveCount(waitingMatchCount);
-	await expectInsideTvSafeArea(tv);
-};
 
 // 32 Players open 16 Matches, and those without a Board wait for one.
 const openingMatchCount = 16;
@@ -22,6 +16,23 @@ const [sixteenByNineTv] = tvSizes;
 const showDrawOnTv = async (organizer: Page, tv: Page) => {
 	await confirmDraw(organizer);
 	await tv.getByRole('heading', { name: 'Tonight’s Draw' }).waitFor();
+};
+
+// The mark a bracket card shows for a Player still to come from an earlier Match.
+const playerToCome = '—';
+
+/*
+ * Checks the first Round's cards: as many name a Board as there are Boards, and the rest, waiting, name none
+ * but have both their Players, none still to come. Then that the bracket fits inside the TV's safe area.
+ */
+const expectRoundOneCardsFitTv = async (tv: Page, boardCount: number) => {
+	const roundOneCards = tv.getByRole('list', { name: 'Round 1' }).getByTestId('match card');
+	await expect(roundOneCards).toHaveCount(openingMatchCount);
+	await expect(roundOneCards.filter({ hasText: /^Board \d+/ })).toHaveCount(boardCount);
+	const waitingCards = roundOneCards.filter({ hasNotText: 'Board' });
+	await expect(waitingCards).toHaveCount(openingMatchCount - boardCount);
+	await expect(waitingCards.filter({ hasText: playerToCome })).toHaveCount(0);
+	await expectInsideTvSafeArea(tv);
 };
 
 const registerPlayers = async (organizer: Page, names: string[]) => {
@@ -35,54 +46,27 @@ const registerPlayers = async (organizer: Page, names: string[]) => {
 const makeLongNames = (playerCount: number) =>
 	Array.from({ length: playerCount }, (_, index) => `Bartholomew Featherstonehaugh ${index + 1}`);
 
-/*
- * Names as long as the room's longest: a long first name, "Bartholomew" or "Christopher", with one of the
- * widest initials, so each is as wide as the longest name in the test Tournament. Any two of them make a pair
- * at least as long as the room is likely to see. Up to 32 Players, one per initial and first name.
- */
-const makeLongestRealisticNames = (playerCount: number) => {
-	const initials = 'WMQOGDHNUCBRKAVX';
-	return Array.from(
-		{ length: playerCount },
-		(_, index) =>
-			`${index % 2 === 0 ? 'Bartholomew' : 'Christopher'} ${initials[Math.floor(index / 2)]}.`,
-	);
-};
-
-/*
- * Registers 31 Players on 16 Boards, where the Bye Player waiting for a winner has a card of their own, and
- * returns that card's line naming the Match they wait for. The Draw is seeded so the same pair of names is
- * awaited every run.
- */
-const showAwaitedMatchLineOnTv = async (organizer: Page, names: string[]) => {
-	await organizer.goto('/?players=0&boards=16');
-	const tv = await openTv(organizer, sixteenByNineTv);
-	await registerPlayers(organizer, names);
-	await showDrawOnTv(organizer, tv);
-	return { tv, awaitedMatchLine: tv.getByText(/^Winner of /) };
-};
-
-for (const boardCount of [2, 5, 6, 7, 13]) {
-	const waitingMatchCount = openingMatchCount - boardCount;
-
-	test(`Waiting for a Board stays on the TV at 32 Players on ${boardCount} Boards`, async ({
+for (const boardCount of [2, 13]) {
+	test(`Matches waiting for a Board show on the TV's bracket at 32 Players on ${boardCount} Boards`, async ({
 		page: organizer,
 	}) => {
 		await organizer.goto(`/?players=32&boards=${boardCount}`);
 		const tv = await openTv(organizer, sixteenByNineTv);
 
 		await showDrawOnTv(organizer, tv);
-		await expectWaitingListFitsTv(tv, waitingMatchCount);
+		await expectRoundOneCardsFitTv(tv, boardCount);
 
 		await organizer.getByRole('button', { name: 'Start', exact: true }).click();
 		await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
-		await holdScreen(organizer, tv, 'Now playing');
-		await expectWaitingListFitsTv(tv, waitingMatchCount);
+		await expectRoundOneCardsFitTv(tv, boardCount);
 	});
 }
 
-test('Long names stay on one line on Tonight’s Draw', async ({ page: organizer }) => {
-	// 32 Players on 13 Boards leaves no slack, so one name wrapping would push the page past the TV.
+test('Long names keep Tonight’s Draw inside the TV', async ({ page: organizer }) => {
+	/*
+	 * 32 Players on 13 Boards puts long names on cards with a Board and on cards waiting for one, so a name
+	 * wrapping on either would push the bracket past the TV.
+	 */
 	const boardCount = 13;
 	await organizer.goto(`/?players=0&boards=${boardCount}`);
 	const tv = await openTv(organizer, sixteenByNineTv);
@@ -90,31 +74,5 @@ test('Long names stay on one line on Tonight’s Draw', async ({ page: organizer
 
 	await showDrawOnTv(organizer, tv);
 
-	await expectWaitingListFitsTv(tv, openingMatchCount - boardCount);
-});
-
-test('A Bye Player’s card shows the whole Match they wait for', async ({ page: organizer }) => {
-	const { tv, awaitedMatchLine } = await showAwaitedMatchLineOnTv(
-		organizer,
-		makeLongestRealisticNames(31),
-	);
-
-	const isCutShort = await awaitedMatchLine.evaluate(
-		(line) => line.scrollWidth > line.clientWidth || line.scrollHeight > line.clientHeight,
-	);
-	expect(isCutShort).toBe(false);
-	await expectInsideTvSafeArea(tv);
-});
-
-test('A very long Match a Bye Player waits for takes three lines at most', async ({
-	page: organizer,
-}) => {
-	const { tv, awaitedMatchLine } = await showAwaitedMatchLineOnTv(organizer, makeLongNames(31));
-
-	const lineCount = await awaitedMatchLine.evaluate((line) => {
-		const lineHeight = parseFloat(getComputedStyle(line).lineHeight);
-		return Math.round(line.clientHeight / lineHeight);
-	});
-	expect(lineCount).toBeLessThanOrEqual(3);
-	await expectInsideTvSafeArea(tv);
+	await expectRoundOneCardsFitTv(tv, boardCount);
 });

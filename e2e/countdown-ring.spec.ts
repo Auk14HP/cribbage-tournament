@@ -1,9 +1,18 @@
 import { expect, type Locator, type Page } from '@playwright/test';
-import { holdScreen, openTv, playToFinal, startTournament, test, tvSizes } from './setUpTournament';
+import {
+	holdScreen,
+	openTv,
+	playFirstMatchesWithLosersStaying,
+	playToFinal,
+	startTournament,
+	test,
+	tvSizes,
+} from './setUpTournament';
 
 /*
  * The TV's countdown ring sits in a corner, clear of every card: measured from where the browser drew it
- * and each Match or Now playing card, with a full 32-place bracket, on a 16:9 TV and on a narrower one.
+ * and each Match card, with a full 32-place bracket, on a 16:9 TV and on a narrower one. The ring shows only
+ * while the TV has two screens to cycle: once the Losers Bracket is drawn, or once finished.
  */
 
 type Box = { x: number; y: number; width: number; height: number };
@@ -36,17 +45,16 @@ for (const tvSize of tvSizes) {
 			await startTournament(organizer, { players: 32 });
 		});
 
-		test('the ring covers no Match on the Winners Bracket or card on Now playing at Start', async ({
+		test('the ring covers no Match on the Winners Bracket once the Losers Bracket is drawn', async ({
 			page: organizer,
 		}) => {
+			// 32 Players open 16 first Matches; the Losers Bracket is drawn once all are played.
+			await playFirstMatchesWithLosersStaying(organizer, { firstMatchCount: 16 });
 			const tv = await openTv(organizer, tvSize);
 
 			await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
+			await expect(tv.getByTestId('countdown ring')).toBeAttached();
 			await expectClearOfRing(tv, findBracketSlots(tv));
-
-			await holdScreen(organizer, tv, 'Now playing');
-			const cards = tv.getByRole('list', { name: 'Matches' }).getByRole('listitem');
-			await expectClearOfRing(tv, cards);
 		});
 
 		test('the ring covers no Match on the finished Winners Bracket', async ({
