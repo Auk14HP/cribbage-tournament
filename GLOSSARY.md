@@ -84,6 +84,14 @@ _Avoid_: Waitlist, backlog
 The page on the laptop the **Organizer** runs the **Tournament** from.
 _Avoid_: Admin page, dashboard, control room
 
+**Theme**:
+The colours the **Organizer screen** is drawn in: Light or Dark. It is the laptop's setting, so it stays the same from one **Tournament** to the next.
+_Avoid_: Skin, colour scheme, mode
+
+**Match laptop**:
+The **Theme** choice that follows the laptop's own light or dark setting. It is the choice until the **Organizer** picks another.
+_Avoid_: System, Auto (Auto is what the TV shows)
+
 ### The TV
 
 **TV screen**:
