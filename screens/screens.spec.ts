@@ -29,9 +29,9 @@ const isShownWithin = async (element: Locator, timeout: number) => {
  *   ... DRAW=1 START=1                      and after Start
  *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
  *   ... DRAW=1 START=1 RESULTS=3 FORFEIT=1  and the Forfeit dialog, then after that Forfeit
- *   ... SCHEME=dark                          with the laptop set dark (or light), which the Organizer screen's
+ *   ... SCHEME=dark                         with the laptop set dark (or light), which the Organizer screen's
  *                                           Same as laptop Theme follows
- *   ... THEME_MENU=1                         and the Theme menu open at registration
+ *   ... THEME_MENU=1                        and the Theme menu open at registration
  * Writes test-results/screens/{organizer,tv}-{registration,theme-menu,house-rules,draw,swap-picked,swapped,started,results,losers-bracket,champion,
  * forfeit-dialog,forfeit}.png: the organizer at
  * 1280×720, the TV at 1920×1080.
@@ -44,7 +44,10 @@ test('screens', async ({ context, page: organizer }) => {
 	test.setTimeout(120_000);
 	await organizer.setViewportSize({ width: 1280, height: 720 });
 	const laptopScheme = process.env.SCHEME;
-	if (laptopScheme === 'light' || laptopScheme === 'dark') {
+	if (laptopScheme !== undefined && laptopScheme !== 'light' && laptopScheme !== 'dark') {
+		throw new Error(`SCHEME must be light or dark, not ${laptopScheme}`);
+	}
+	if (laptopScheme) {
 		await organizer.emulateMedia({ colorScheme: laptopScheme });
 	}
 	await organizer.goto(`/?players=${players}&boards=${boards}`);
@@ -72,6 +75,8 @@ test('screens', async ({ context, page: organizer }) => {
 		await organizer.getByRole('button', { name: 'Theme' }).click();
 		await shoot('theme-menu');
 		await organizer.keyboard.press('Escape');
+		// Closed before going on, so no later shot shows the menu.
+		await expect(organizer.getByRole('menu', { name: 'Theme' })).toBeHidden();
 	}
 	if (!process.env.DRAW) {
 		return;
