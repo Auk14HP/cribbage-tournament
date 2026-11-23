@@ -78,6 +78,12 @@ _Avoid_: Preferred board, reserved board, fixed board, pinned board
 The line of **Matches**, from both brackets, that need a **Board** while none is free. Matches ready to play, both **Players** known, go ahead of those still waiting on a Player, and a Player waiting alone at a **Board** other than their **Home Board** gives it up to one. A Match moved off a **Home Board** when its Player comes back to it, through an undo, goes first in line. Otherwise it is first come, first served.
 _Avoid_: Waitlist, backlog
 
+### The laptop
+
+**Organizer screen**:
+The page on the laptop the **Organizer** runs the **Tournament** from.
+_Avoid_: Admin page, dashboard, control room
+
 ### The TV
 
 **TV screen**:
