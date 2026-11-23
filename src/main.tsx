@@ -1,3 +1,4 @@
+import '@fontsource-variable/inter';
 import './style.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -6,9 +7,15 @@ import { Organizer } from './organizer/Organizer';
 import { findRoute } from './routes';
 import { createLocalStorageStore } from './storage';
 import { setUpTestTournament } from './testTournament';
+import { themeChoiceVersion, type ThemeChoice } from './organizer/themes';
 import { tournamentVersion, type Tournament } from './tournament';
 
 const store = createLocalStorageStore<Tournament>('cribbage-tournament', tournamentVersion);
+// The Organizer's theme is the laptop's setting, kept apart from the Tournament so a new one keeps it.
+const themeStore = createLocalStorageStore<ThemeChoice>(
+	'cribbage-organizer-theme',
+	themeChoiceVersion,
+);
 const route = findRoute(import.meta.env.BASE_URL, location.pathname);
 
 // A stray path shows the organizer route too, but only the organizer route itself sets up test Players.
@@ -21,7 +28,7 @@ createRoot(document.querySelector('#app')!).render(
 		{route === 'display' ? (
 			<Display store={store} random={Math.random} />
 		) : (
-			<Organizer store={store} />
+			<Organizer store={store} themeStore={themeStore} />
 		)}
 	</StrictMode>,
 );

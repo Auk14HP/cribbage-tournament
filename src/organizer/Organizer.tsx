@@ -2,7 +2,7 @@
  * The organizer route: shown on the laptop. Forwards the Organizer's actions to the Tournament core,
  * saves accepted changes through the store, and shows the core's reason when a change is refused.
  */
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { makeDisplayPath } from '../routes';
 import type { Store } from '../storage';
 import { createTournament, type Phase, type Tournament } from '../tournament';
@@ -12,6 +12,8 @@ import { ConfirmDialog, type Apply } from './controls';
 import { Draw } from './Draw';
 import { HouseRules } from './HouseRules';
 import { Registration } from './Registration';
+import { ThemeMenu } from './ThemeMenu';
+import { useTheme, type ThemeChoice } from './themes';
 
 const headings: Record<Phase, string> = {
 	registration: 'Register Players',
@@ -21,8 +23,26 @@ const headings: Record<Phase, string> = {
 	finished: 'Tournament finished',
 };
 
-export const Organizer = ({ store }: { store: Store<Tournament> }) => {
+export const Organizer = ({
+	store,
+	themeStore,
+}: {
+	store: Store<Tournament>;
+	themeStore: Store<ThemeChoice>;
+}) => {
 	const tournament = useTournament(store);
+	const { choice: themeChoice, theme } = useTheme(themeStore);
+
+	/*
+	 * The theme goes on the page's root, not only this screen, so the window's own edges and scrollbar take its
+	 * colours too. Before paint, so the screen never shows a frame in the wrong theme.
+	 */
+	useLayoutEffect(() => {
+		document.documentElement.dataset.theme = theme;
+		return () => {
+			delete document.documentElement.dataset.theme;
+		};
+	}, [theme]);
 	// Bumped by a new Tournament, so registration starts afresh: empty boxes, nothing being renamed.
 	const [newTournaments, setNewTournaments] = useState(0);
 
@@ -46,17 +66,18 @@ export const Organizer = ({ store }: { store: Store<Tournament> }) => {
 		 * Fills the window and never scrolls as a page: a long list scrolls on its own inside it, so the controls
 		 * around the list stay on screen.
 		 */
-		<main className="flex h-dvh flex-col px-8 py-6">
+		<main className="bg-canvas font-organizer text-ink flex h-dvh flex-col px-8 py-6">
 			<header className="flex items-center justify-between gap-4">
 				<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
 				<nav className="flex items-center gap-4">
 					<a
 						href={makeDisplayPath(import.meta.env.BASE_URL)}
 						target="cribbage-display"
-						className="text-blue-700 underline"
+						className="text-accent underline"
 					>
 						Open TV display
 					</a>
+					<ThemeMenu choice={themeChoice} onChoose={themeStore.save} />
 					<button
 						type="button"
 						className={dangerButton}

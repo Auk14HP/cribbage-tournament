@@ -127,7 +127,7 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 						) : (
 							<li
 								key={player.id}
-								className="flex items-center gap-2 border-b border-gray-300 py-1.5"
+								className="border-divider flex items-center gap-2 border-b py-1.5"
 							>
 								<span className="flex-1 text-lg">{player.name}</span>
 								<button
@@ -161,7 +161,7 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 					 * Its line is kept even when empty, so saving the Boards as the Organizer leaves the box for
 					 * Show House Rules doesn't move the button out from under their click.
 					 */}
-					<p className="mt-2 min-h-6 text-gray-700">
+					<p className="text-muted mt-2 min-h-6">
 						{!boardsRefusal &&
 							tournament.boards.length > 0 &&
 							`Placards 1 to ${tournament.boards.length}`}
@@ -198,7 +198,7 @@ const RenameRow = ({
 		row.current?.scrollIntoView({ block: 'nearest' });
 	}, []);
 	return (
-		<li ref={row} className="border-b border-gray-300 py-1.5">
+		<li ref={row} className="border-divider border-b py-1.5">
 			<form
 				onSubmit={(event) => {
 					event.preventDefault();

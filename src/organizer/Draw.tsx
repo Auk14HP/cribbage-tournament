@@ -123,10 +123,10 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 		<div className={`${windowFilling.row} mt-6`}>
 			<section className={`${windowFilling.column} flex-1`}>
 				{champion && (
-					<p className="text-2xl font-bold text-green-800">Champion: {champion.name}</p>
+					<p className="text-accent text-2xl font-bold">Champion: {champion.name}</p>
 				)}
 				{losersChampion && (
-					<p className="text-2xl font-bold text-green-800">
+					<p className="text-accent text-2xl font-bold">
 						Losers Bracket champion: {losersChampion.name}
 					</p>
 				)}
@@ -140,7 +140,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 							{drawShown && (
 								<div className="flex items-center gap-4">
 									{swapping && (
-										<p className="whitespace-nowrap text-gray-700">
+										<p className="text-muted whitespace-nowrap">
 											Tap two Players to swap them.
 										</p>
 									)}
@@ -163,7 +163,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 								</div>
 							)}
 						</div>
-						{playing && <p className="mt-1 text-gray-700">Tap a Match’s winner.</p>}
+						{playing && <p className="text-muted mt-1">Tap a Match’s winner.</p>}
 					</>
 				)}
 				{/*

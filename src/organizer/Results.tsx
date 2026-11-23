@@ -28,15 +28,15 @@ export const Results = ({ tournament, apply }: { tournament: Tournament; apply: 
 	return (
 		<section className={`${windowFilling.column} mt-8`}>
 			<h2 className="text-xl font-bold">Results</h2>
-			<p className="mt-1 text-gray-700">Undo a result to correct it.</p>
+			<p className="text-muted mt-1">Undo a result to correct it.</p>
 			<ul aria-label="Results" className={`${windowFilling.scrollingArea} mt-2`}>
 				{results.map((result) => (
 					<li
 						key={getMatchKey(result.match)}
-						className="flex items-center gap-2 border-b border-gray-300 py-1.5"
+						className="border-divider flex items-center gap-2 border-b py-1.5"
 					>
 						<div className="flex-1">
-							<span className="block text-sm text-gray-700">
+							<span className="text-muted block text-sm">
 								{describeBracketRound(tournament, result.match)}
 							</span>
 							<span className="block">{describeResult(result)}</span>
