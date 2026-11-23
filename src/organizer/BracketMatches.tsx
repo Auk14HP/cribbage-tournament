@@ -121,7 +121,7 @@ const ForfeitButton = ({
  * Player sits against the "vs", like a scoreboard, so it is as close to one name as to the other.
  */
 const matchRow =
-	'grid grid-cols-[6rem_6rem_11rem_3rem_1fr_auto] items-center border-b border-gray-300 py-1.5 text-lg';
+	'grid grid-cols-[6rem_6rem_11rem_3rem_1fr_auto] items-center border-b border-divider py-1.5 text-lg';
 
 /*
  * One Match's row: its Board, its Round and both Players. Once Started, a Match with both Players known can be won by
@@ -155,7 +155,7 @@ const MatchRow = ({
 	return (
 		<li className={matchRow}>
 			<span className="font-semibold">Board {board}</span>
-			<span className="text-gray-700">{roundName}</span>
+			<span className="text-muted">{roundName}</span>
 			<div className="text-right">
 				<MatchPlayer
 					player={a}

@@ -51,7 +51,7 @@ export const ConfirmDialog = ({
 };
 
 export const Refusal = ({ reason }: { reason: string }) => (
-	<p role="alert" className="mt-2 min-h-6 font-semibold text-red-700">
+	<p role="alert" className="text-danger mt-2 min-h-6 font-semibold">
 		{reason}
 	</p>
 );

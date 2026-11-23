@@ -1,6 +1,78 @@
 @import 'tailwindcss';
 
 /*
+ * The Organizer screen's theme colours and font. Tailwind's colour utilities read the theme's custom properties
+ * (`bg-panel` reads --theme-panel), so a class names what a colour is for and the screen's `data-theme` picks
+ * the colour. A new theme, such as a season's, is one more set of the same properties below. Inline, so each
+ * utility reads the property where it is used, inside whichever theme encloses it. The TV sets no theme, so it
+ * draws with its own colours.
+ */
+@theme inline {
+	--color-canvas: var(--theme-canvas);
+	--color-panel: var(--theme-panel);
+	--color-raised: var(--theme-raised);
+	--color-divider: var(--theme-divider);
+	--color-line: var(--theme-line);
+	--color-ink: var(--theme-ink);
+	--color-muted: var(--theme-muted);
+	--color-faint: var(--theme-faint);
+	--color-fill: var(--theme-fill);
+	--color-on-fill: var(--theme-on-fill);
+	--color-accent: var(--theme-accent);
+	--color-danger: var(--theme-danger);
+	--color-on-danger: var(--theme-on-danger);
+	--color-scrim: var(--theme-scrim);
+	--font-organizer: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+ * What each theme colour is for: the page behind everything (canvas), a box on it (panel), a button or a row
+ * standing out from its box (raised), a quiet rule between rows (divider), a control's outline (line), text
+ * (ink), secondary text (muted), text for what hasn't happened yet (faint), the yellow of a main button (fill)
+ * and the text on it (on-fill), text in the theme's accent, such as a link (accent), a warning or destructive
+ * action (danger) and the text on it (on-danger), and the shade behind an open dialog (scrim). Every text
+ * colour reads at 4.5:1 or more on the backgrounds it is used on (e2e/theme-contrast.spec.ts). color-scheme
+ * tells the browser which way to draw its own controls, such as a number box's arrows.
+ */
+@layer base {
+	[data-theme='light'] {
+		color-scheme: light;
+		--theme-canvas: #f4f5f7;
+		--theme-panel: #ffffff;
+		--theme-raised: #f7f8fa;
+		--theme-divider: #e1e4ea;
+		--theme-line: #c9cfd9;
+		--theme-ink: #161a22;
+		--theme-muted: #4a5263;
+		--theme-faint: #646b78;
+		--theme-fill: #ffd23f;
+		--theme-on-fill: #161a22;
+		--theme-accent: #8a6500;
+		--theme-danger: #b42318;
+		--theme-on-danger: #ffffff;
+		--theme-scrim: rgb(16 24 40 / 0.45);
+	}
+
+	[data-theme='dark'] {
+		color-scheme: dark;
+		--theme-canvas: #0d1015;
+		--theme-panel: #161b23;
+		--theme-raised: #1c222c;
+		--theme-divider: #252c37;
+		--theme-line: #343c49;
+		--theme-ink: #eef1f5;
+		--theme-muted: #a9b1be;
+		--theme-faint: #7d8796;
+		--theme-fill: #ffd23f;
+		--theme-on-fill: #0d1015;
+		--theme-accent: #ffd23f;
+		--theme-danger: #ff9b8f;
+		--theme-on-danger: #0d1015;
+		--theme-scrim: rgb(0 0 0 / 0.62);
+	}
+}
+
+/*
  * The TV's countdown ring fills over each screen's time. Inline, so the utility reads
  * --countdown-duration where it is used, set from the Tournament's screenSeconds.
  */

@@ -20,14 +20,14 @@ export const WaitingForBoard = ({
 	return (
 		<>
 			<h2 className="mt-6 text-xl font-bold">Waiting for a Board</h2>
-			<p className="mt-1 text-gray-700">The next Board to free goes to the first.</p>
+			<p className="text-muted mt-1">The next Board to free goes to the first.</p>
 			<ol aria-label="Waiting for a Board" className="mt-2">
 				{waiting.map(({ match, players: [playerA, playerB] }) => (
 					<li
 						key={getMatchKey(match)}
-						className="flex gap-4 border-b border-gray-300 py-1.5 text-lg"
+						className="border-divider flex gap-4 border-b py-1.5 text-lg"
 					>
-						<span className="w-56 shrink-0 text-gray-700">
+						<span className="text-muted w-56 shrink-0">
 							{describeBracketRound(tournament, match)}
 						</span>
 						<span>

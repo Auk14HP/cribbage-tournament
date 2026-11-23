@@ -12,6 +12,8 @@ import { ConfirmDialog, type Apply } from './controls';
 import { Draw } from './Draw';
 import { HouseRules } from './HouseRules';
 import { Registration } from './Registration';
+import { ThemeMenu } from './ThemeMenu';
+import { useTheme, type ThemeChoice } from './themes';
 
 const headings: Record<Phase, string> = {
 	registration: 'Register Players',
@@ -21,8 +23,15 @@ const headings: Record<Phase, string> = {
 	finished: 'Tournament finished',
 };
 
-export const Organizer = ({ store }: { store: Store<Tournament> }) => {
+export const Organizer = ({
+	store,
+	themeStore,
+}: {
+	store: Store<Tournament>;
+	themeStore: Store<ThemeChoice>;
+}) => {
 	const tournament = useTournament(store);
+	const { choice: themeChoice, theme } = useTheme(themeStore);
 	// Bumped by a new Tournament, so registration starts afresh: empty boxes, nothing being renamed.
 	const [newTournaments, setNewTournaments] = useState(0);
 
@@ -46,17 +55,21 @@ export const Organizer = ({ store }: { store: Store<Tournament> }) => {
 		 * Fills the window and never scrolls as a page: a long list scrolls on its own inside it, so the controls
 		 * around the list stay on screen.
 		 */
-		<main className="flex h-dvh flex-col px-8 py-6">
+		<main
+			data-theme={theme}
+			className="bg-canvas font-organizer text-ink flex h-dvh flex-col px-8 py-6"
+		>
 			<header className="flex items-center justify-between gap-4">
 				<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
 				<nav className="flex items-center gap-4">
 					<a
 						href={makeDisplayPath(import.meta.env.BASE_URL)}
 						target="cribbage-display"
-						className="text-blue-700 underline"
+						className="text-accent underline"
 					>
 						Open TV display
 					</a>
+					<ThemeMenu choice={themeChoice} onChoose={themeStore.save} />
 					<button
 						type="button"
 						className={dangerButton}

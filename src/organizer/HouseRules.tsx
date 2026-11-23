@@ -29,13 +29,13 @@ export const HouseRules = ({ tournament, apply }: { tournament: Tournament; appl
 
 	return (
 		<section aria-label="House Rules" className="mt-6 flex max-w-3xl flex-col">
-			<p className="text-gray-700">
+			<p className="text-muted">
 				{shownRuleCount} of {houseRules.length} shown on the TV
 			</p>
 			{/* Every House Rule, so the Organizer sees what comes next: those not yet on the TV are greyed. */}
 			<ol className="mt-3 list-decimal space-y-2 pl-8 text-lg">
 				{houseRules.map((rule, index) => (
-					<li key={rule} className={index < shownRuleCount ? '' : 'text-gray-400'}>
+					<li key={rule} className={index < shownRuleCount ? '' : 'text-faint'}>
 						{rule}
 					</li>
 				))}
@@ -82,7 +82,7 @@ export const HouseRules = ({ tournament, apply }: { tournament: Tournament; appl
 			<Refusal reason={refusal} />
 			<button
 				type="button"
-				className="mt-4 self-start text-blue-700 underline"
+				className="text-accent mt-4 self-start underline"
 				onClick={() => applyHere(goBackToRegistration(tournament))}
 			>
 				Back to registration

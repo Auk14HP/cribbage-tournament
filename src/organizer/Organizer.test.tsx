@@ -1,14 +1,28 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { act, cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Organizer } from './Organizer';
 import { listWaitingText } from '../screenTestHelpers';
 import { createLocalStorageStore } from '../storage';
 import { tournamentVersion, type Tournament } from '../tournament';
+import { themeChoiceVersion, type ThemeChoice } from './themes';
 
 const key = 'organizer-test';
+const themeKey = 'organizer-theme-test';
+
+/*
+ * jsdom has no media queries, so this stands in for the laptop's light or dark setting, which a test can
+ * change while the screen is open, as the laptop does at dusk.
+ */
+let isLaptopDark = false;
+const laptopSchemeListeners = new Set<() => void>();
+
+const setLaptopScheme = (scheme: 'light' | 'dark') => {
+	isLaptopDark = scheme === 'dark';
+	act(() => laptopSchemeListeners.forEach((listener) => listener()));
+};
 
 /*
  * jsdom has no modal dialogs, so these stand in for the browser's, opening and closing only. Escape and
@@ -23,17 +37,36 @@ beforeAll(() => {
 	HTMLDialogElement.prototype.close = function () {
 		this.open = false;
 	};
+	window.matchMedia = (query: string) =>
+		({
+			media: query,
+			get matches() {
+				return query === '(prefers-color-scheme: dark)' && isLaptopDark;
+			},
+			addEventListener: (_type: string, listener: () => void) => {
+				laptopSchemeListeners.add(listener);
+			},
+			removeEventListener: (_type: string, listener: () => void) => {
+				laptopSchemeListeners.delete(listener);
+			},
+		}) as unknown as MediaQueryList;
 });
 
 afterEach(() => {
 	cleanup();
 	localStorage.clear();
+	isLaptopDark = false;
 });
 
 type User = ReturnType<typeof userEvent.setup>;
 
 const showOrganizer = () => {
-	render(<Organizer store={createLocalStorageStore<Tournament>(key, tournamentVersion)} />);
+	render(
+		<Organizer
+			store={createLocalStorageStore<Tournament>(key, tournamentVersion)}
+			themeStore={createLocalStorageStore<ThemeChoice>(themeKey, themeChoiceVersion)}
+		/>,
+	);
 	return userEvent.setup();
 };
 
@@ -213,6 +246,18 @@ const listPlayerNames = () =>
 	within(screen.getByRole('list', { name: 'Players' }))
 		.queryAllByRole('listitem')
 		.map((item) => item.querySelector('span')?.textContent);
+
+// The theme the Organizer screen is drawn in: Light or Dark.
+const readScreenTheme = () => screen.getByRole('main').dataset.theme;
+
+const openThemeMenu = (user: User) => clickButton(user, 'Theme');
+
+// The theme menu's choices, by name, and which one is chosen.
+const listThemeChoices = () =>
+	screen.getAllByRole('menuitemradio').map((item) => ({
+		name: item.textContent,
+		isChosen: item.getAttribute('aria-checked') === 'true',
+	}));
 
 describe('the organizer route', () => {
 	it('registers a Player, lists them with the running count, and clears the name box', async () => {
@@ -944,5 +989,76 @@ describe('the organizer route', () => {
 		showOrganizer();
 
 		expect(listPlayerNames()).toEqual(['Dave K.']);
+	});
+
+	it('offers Match laptop, Light and Dark in the theme menu, Match laptop chosen at first, and draws the screen in the one picked', async () => {
+		const user = showOrganizer();
+		expect(readScreenTheme()).toBe('light');
+
+		await openThemeMenu(user);
+		expect(listThemeChoices()).toEqual([
+			{ name: 'Match laptop', isChosen: true },
+			{ name: 'Light', isChosen: false },
+			{ name: 'Dark', isChosen: false },
+		]);
+		await user.click(screen.getByRole('menuitemradio', { name: 'Dark' }));
+
+		expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+		expect(readScreenTheme()).toBe('dark');
+		await openThemeMenu(user);
+		expect(screen.getByRole('menuitemradio', { name: 'Dark' })).toBeChecked();
+	});
+
+	it('works the theme menu by keyboard: opens on the chosen theme, moves with the arrows, picks with Enter, and closes on Escape', async () => {
+		const user = showOrganizer();
+		const themeButton = screen.getByRole('button', { name: 'Theme' });
+		themeButton.focus();
+
+		await user.keyboard('{Enter}');
+		expect(screen.getByRole('menuitemradio', { name: 'Match laptop' })).toHaveFocus();
+		await user.keyboard('{ArrowDown}{ArrowDown}');
+		expect(screen.getByRole('menuitemradio', { name: 'Dark' })).toHaveFocus();
+		await user.keyboard('{ArrowDown}');
+		expect(screen.getByRole('menuitemradio', { name: 'Match laptop' })).toHaveFocus();
+		await user.keyboard('{ArrowUp}{Enter}');
+
+		expect(readScreenTheme()).toBe('dark');
+		expect(themeButton).toHaveFocus();
+		await user.keyboard('{ArrowDown}');
+		expect(screen.getByRole('menuitemradio', { name: 'Dark' })).toHaveFocus();
+		await user.keyboard('{Escape}');
+		expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+		expect(themeButton).toHaveFocus();
+		expect(readScreenTheme()).toBe('dark');
+	});
+
+	it('follows the laptop on Match laptop, even when it turns dark or light while the screen is open', async () => {
+		setLaptopScheme('dark');
+		const user = showOrganizer();
+		expect(readScreenTheme()).toBe('dark');
+
+		setLaptopScheme('light');
+		expect(readScreenTheme()).toBe('light');
+
+		await openThemeMenu(user);
+		await user.click(screen.getByRole('menuitemradio', { name: 'Light' }));
+		setLaptopScheme('dark');
+		expect(readScreenTheme()).toBe('light');
+	});
+
+	it('keeps the theme chosen through a new Tournament and when reopened', async () => {
+		const user = showOrganizer();
+		await openThemeMenu(user);
+		await user.click(screen.getByRole('menuitemradio', { name: 'Dark' }));
+
+		await clickButton(user, 'Start a new Tournament');
+		await answerDialog(user, 'Start a new Tournament');
+		expect(readScreenTheme()).toBe('dark');
+		cleanup();
+		const reopenedUser = showOrganizer();
+
+		expect(readScreenTheme()).toBe('dark');
+		await openThemeMenu(reopenedUser);
+		expect(screen.getByRole('menuitemradio', { name: 'Dark' })).toBeChecked();
 	});
 });
