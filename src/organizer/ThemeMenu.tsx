@@ -3,14 +3,14 @@
  * the chosen one ticked. It works by keyboard as a menu button does: Enter, Space or the down arrow opens it
  * on the chosen theme, the arrow keys, Home and End move between the themes, Enter or Space picks one, and
  * Escape closes it, focus back on the button. Tab, a click elsewhere or a pick closes it too. Pointing at a
- * theme moves focus to it, so only one theme is ever lit, and it is the one Enter would pick.
+ * theme moves focus to it, so only one theme is ever highlighted, and it is the one Enter would pick.
  */
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { button } from './classes';
 import { themeChoices, type ThemeChoice } from './themes';
 
 /*
- * The menu floats below the button, over the screen, so opening it moves nothing. The focused theme is lit and
+ * The menu floats below the button, over the screen, so opening it moves nothing. The focused theme is highlighted and
  * outlined, the outline drawn inside its own box so the theme below it can't cover its edge.
  */
 const menuClasses = {

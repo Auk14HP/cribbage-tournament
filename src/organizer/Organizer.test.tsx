@@ -1080,11 +1080,13 @@ describe('the organizer route', () => {
 		const user = showOrganizer();
 		await chooseTheme(user, 'Light');
 		await openThemeMenu(user);
+		const darkItem = screen.getByRole('menuitemradio', { name: 'Dark' });
+		const lightItem = screen.getByRole('menuitemradio', { name: 'Light' });
 
-		await user.hover(screen.getByRole('menuitemradio', { name: 'Dark' }));
+		await user.hover(darkItem);
 
-		expect(screen.getByRole('menuitemradio', { name: 'Dark' })).toHaveFocus();
-		expect(screen.getByRole('menuitemradio', { name: 'Light' })).toBeChecked();
-		expect(screen.getByRole('menuitemradio', { name: 'Dark' })).not.toBeChecked();
+		expect(darkItem).toHaveFocus();
+		expect(lightItem).toBeChecked();
+		expect(darkItem).not.toBeChecked();
 	});
 });
