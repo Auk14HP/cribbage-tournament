@@ -34,11 +34,13 @@ export const getDraw = (tournament: Tournament, bracket: BracketName): Draw | un
 	bracket === 'winners' ? tournament.winnersDraw : (tournament.losersDraw ?? undefined);
 
 /*
- * A drawn bracket holds twice as many Players as its Draw has places, halving each Round to the final.
- * Only for a bracket whose Draw is made.
+ * A drawn bracket holds twice as many Players as its Draw has places, halving each Round to the final. A
+ * bracket has no Rounds before its Draw is made, or when no Losers Bracket is played.
  */
-export const countRounds = (tournament: Tournament, bracket: BracketName): number =>
-	Math.log2(2 * getDraw(tournament, bracket)!.length);
+export const countRounds = (tournament: Tournament, bracket: BracketName): number => {
+	const draw = getDraw(tournament, bracket);
+	return draw ? Math.log2(2 * draw.length) : 0;
+};
 
 export const isSameMatch = (a: MatchPlace, b: MatchPlace): boolean =>
 	a.bracket === b.bracket && a.round === b.round && a.place === b.place;
