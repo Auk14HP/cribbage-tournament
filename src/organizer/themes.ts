@@ -19,6 +19,10 @@ export const themeChoices: { choice: ThemeChoice; label: string }[] = [
 	{ choice: 'dark', label: 'Dark' },
 ];
 
+/*
+ * The laptop is set either light or dark, so asking whether it is dark answers both: not dark is light. Only
+ * Match laptop asks; Light and Dark draw their own theme whatever the laptop is set to.
+ */
 const darkSchemeQuery = '(prefers-color-scheme: dark)';
 
 const subscribeToLaptopScheme = (listener: () => void) => {

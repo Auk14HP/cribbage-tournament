@@ -37,6 +37,11 @@ beforeAll(() => {
 	HTMLDialogElement.prototype.close = function () {
 		this.open = false;
 	};
+	/*
+	 * The browser's `window.matchMedia(query)` answers whether a CSS media query fits the page now, such as
+	 * `(prefers-color-scheme: dark)` while the laptop is set dark, and tells listeners when the answer changes.
+	 * `matches` is a getter, so each read answers for the laptop's setting at that moment, as the browser's does.
+	 */
 	window.matchMedia = (query: string) =>
 		({
 			media: query,

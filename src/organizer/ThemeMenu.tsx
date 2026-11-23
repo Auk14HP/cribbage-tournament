@@ -87,20 +87,20 @@ export const ThemeMenu = ({
 		}
 	}, [isOpen, chosenIndex]);
 
-	const closeToButton = () => {
+	const closeAndFocusButton = () => {
 		setIsOpen(false);
 		menuButton.current?.focus();
 	};
 
 	const choose = (picked: ThemeChoice) => {
 		onChoose(picked);
-		closeToButton();
+		closeAndFocusButton();
 	};
 
 	const answerItemKey = (event: KeyboardEvent, index: number) => {
 		if (event.key === 'Escape') {
 			event.preventDefault();
-			closeToButton();
+			closeAndFocusButton();
 			return;
 		}
 		if (event.key === 'Tab') {

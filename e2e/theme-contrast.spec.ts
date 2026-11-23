@@ -105,7 +105,7 @@ test('turns with the laptop on Match laptop while the screen is open', async ({ 
 	await expect(screenRoot).toHaveAttribute('data-theme', 'dark');
 });
 
-test('draws the Organizer screen in Inter served with the app, asking no font service', async ({
+test('draws the Organizer screen in Inter from the app itself, not from a font site such as Google Fonts', async ({
 	page,
 	baseURL,
 }) => {
@@ -128,7 +128,7 @@ test('draws the Organizer screen in Inter served with the app, asking no font se
 	expect([...requestedOrigins]).toEqual([new URL(baseURL!).origin]);
 });
 
-test('keeps the TV’s look whatever the Organizer screen’s theme', async ({ page }) => {
+test('keeps the TV’s look despite the Organizer screen’s current theme', async ({ page }) => {
 	await page.goto('/?players=9&boards=4');
 	await chooseTheme(page, 'Dark');
 	const tv = await openTv(page, tvSizes[0]);
