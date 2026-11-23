@@ -1,5 +1,5 @@
 /*
- * The palette button in the Organizer screen's header and the menu it opens: Match laptop, Light and Dark,
+ * The palette button in the Organizer screen's header and the menu it opens: Same as laptop, Light and Dark,
  * the chosen one ticked. It works by keyboard as a menu button does: Enter, Space or the down arrow opens it
  * on the chosen theme, the arrow keys, Home and End move between the themes, Enter or Space picks one, and
  * Escape closes it, focus back on the button. Tab, a click elsewhere or a pick closes it too. Pointing at a

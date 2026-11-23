@@ -18,7 +18,7 @@ import {
  */
 
 // Picks a theme from the palette menu in the Organizer screen's header.
-const chooseTheme = async (page: Page, themeName: 'Match laptop' | 'Light' | 'Dark') => {
+const chooseTheme = async (page: Page, themeName: 'Same as laptop' | 'Light' | 'Dark') => {
 	await page.getByRole('button', { name: 'Theme' }).click();
 	await page.getByRole('menuitemradio', { name: themeName }).click();
 };
@@ -86,14 +86,14 @@ test.describe('every phase reads at 4.5:1 or more', () => {
 	}
 
 	for (const laptopScheme of ['light', 'dark'] as const) {
-		test(`in Match laptop, the laptop set ${laptopScheme}`, async ({ page }) => {
+		test(`in Same as laptop, the laptop set ${laptopScheme}`, async ({ page }) => {
 			await page.emulateMedia({ colorScheme: laptopScheme });
 			await expectEveryPhaseReadable(page);
 		});
 	}
 });
 
-test('turns with the laptop on Match laptop while the screen is open', async ({ page }) => {
+test('turns with the laptop on Same as laptop while the screen is open', async ({ page }) => {
 	// The theme is set on the page's root element, which no role or label finds.
 	const screenRoot = page.locator('html');
 	await page.emulateMedia({ colorScheme: 'light' });

@@ -1002,13 +1002,13 @@ describe('the organizer route', () => {
 		expect(listPlayerNames()).toEqual(['Dave K.']);
 	});
 
-	it('offers Match laptop, Light and Dark in the theme menu, Match laptop chosen at first, and draws the screen in the one picked', async () => {
+	it('offers Same as laptop, Light and Dark in the theme menu, Same as laptop chosen at first, and draws the screen in the one picked', async () => {
 		const user = showOrganizer();
 		expect(readScreenTheme()).toBe('light');
 
 		await openThemeMenu(user);
 		expect(listThemeChoices()).toEqual([
-			{ name: 'Match laptop', isChosen: true },
+			{ name: 'Same as laptop', isChosen: true },
 			{ name: 'Light', isChosen: false },
 			{ name: 'Dark', isChosen: false },
 		]);
@@ -1026,11 +1026,11 @@ describe('the organizer route', () => {
 		themeButton.focus();
 
 		await user.keyboard('{Enter}');
-		expect(screen.getByRole('menuitemradio', { name: 'Match laptop' })).toHaveFocus();
+		expect(screen.getByRole('menuitemradio', { name: 'Same as laptop' })).toHaveFocus();
 		await user.keyboard('{ArrowDown}{ArrowDown}');
 		expect(screen.getByRole('menuitemradio', { name: 'Dark' })).toHaveFocus();
 		await user.keyboard('{ArrowDown}');
-		expect(screen.getByRole('menuitemradio', { name: 'Match laptop' })).toHaveFocus();
+		expect(screen.getByRole('menuitemradio', { name: 'Same as laptop' })).toHaveFocus();
 		await user.keyboard('{ArrowUp}{Enter}');
 
 		expect(readScreenTheme()).toBe('dark');
@@ -1043,7 +1043,7 @@ describe('the organizer route', () => {
 		expect(readScreenTheme()).toBe('dark');
 	});
 
-	it('follows the laptop on Match laptop, even when it turns dark or light while the screen is open', async () => {
+	it('follows the laptop on Same as laptop, even when it turns dark or light while the screen is open', async () => {
 		setLaptopScheme('dark');
 		const user = showOrganizer();
 		expect(readScreenTheme()).toBe('dark');
@@ -1078,7 +1078,7 @@ describe('the organizer route', () => {
 
 		expect(readScreenTheme()).toBe('dark');
 		await openThemeMenu(user);
-		expect(screen.getByRole('menuitemradio', { name: 'Match laptop' })).toBeChecked();
+		expect(screen.getByRole('menuitemradio', { name: 'Same as laptop' })).toBeChecked();
 	});
 
 	it('moves focus in the theme menu to the theme under the pointer, the chosen theme keeping its tick', async () => {

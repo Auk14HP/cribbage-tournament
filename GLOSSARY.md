@@ -88,9 +88,9 @@ _Avoid_: Admin page, dashboard, control room
 The colours the **Organizer screen** is drawn in, such as Light or Dark. It is the laptop's setting, so it stays the same from one **Tournament** to the next.
 _Avoid_: Skin, colour scheme, mode
 
-**Match laptop**:
+**Same as laptop**:
 The choice of **Theme** that follows the laptop's own light or dark setting. It is the choice until the **Organizer** picks another.
-_Avoid_: System, Auto (the TV's cycling choice)
+_Avoid_: System, Auto (the TV's cycling choice), Match laptop (a **Match** is a game)
 
 ### The TV
 

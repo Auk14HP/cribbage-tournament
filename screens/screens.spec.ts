@@ -30,7 +30,7 @@ const isShownWithin = async (element: Locator, timeout: number) => {
  *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
  *   ... DRAW=1 START=1 RESULTS=3 FORFEIT=1  and the Forfeit dialog, then after that Forfeit
  *   ... SCHEME=dark                          with the laptop set dark (or light), which the Organizer screen's
- *                                           Match laptop Theme follows
+ *                                           Same as laptop Theme follows
  *   ... THEME_MENU=1                         and the Theme menu open at registration
  * Writes test-results/screens/{organizer,tv}-{registration,theme-menu,house-rules,draw,swap-picked,swapped,started,results,losers-bracket,champion,
  * forfeit-dialog,forfeit}.png: the organizer at
