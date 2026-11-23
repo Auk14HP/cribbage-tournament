@@ -8,7 +8,7 @@ import {
 	type Tournament,
 } from '../tournament';
 import { describeBracketRound } from '../wording';
-import { button, windowFilling } from './classes';
+import { button, panel, windowFilling } from './classes';
 import { Refusal, type Apply } from './controls';
 
 /*
@@ -26,7 +26,7 @@ export const Results = ({ tournament, apply }: { tournament: Tournament; apply: 
 		return null;
 	}
 	return (
-		<section className={`${windowFilling.column} mt-8`}>
+		<section className={`${panel} ${windowFilling.column}`}>
 			<h2 className="text-xl font-bold">Results</h2>
 			<p className="text-muted mt-1">Undo a result to correct it.</p>
 			<ul aria-label="Results" className={`${windowFilling.scrollingArea} mt-2`}>

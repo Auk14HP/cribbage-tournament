@@ -32,6 +32,7 @@ test('the TV shows each change the Organizer makes, live, and both windows resum
 	watchConsole(tv, consoleErrors);
 	await tv.goto('/display');
 	const tvNames = tv.getByRole('listitem');
+	const playerRows = organizer.getByRole('list', { name: 'Players' }).getByRole('listitem');
 
 	await register(organizer, 'Dave K');
 	await register(organizer, 'Big Dave');
@@ -39,25 +40,17 @@ test('the TV shows each change the Organizer makes, live, and both windows resum
 	await expect(tv.getByText('3 Players registered')).toBeVisible();
 	await expect(tvNames).toHaveText(['Dave K', 'Big Dave', 'Sue']);
 
-	await organizer
-		.getByRole('listitem')
-		.filter({ hasText: 'Dave K' })
-		.getByRole('button', { name: 'Rename' })
-		.click();
+	await playerRows.filter({ hasText: 'Dave K' }).getByRole('button', { name: 'Rename' }).click();
 	await organizer.getByLabel('New name for Dave K').fill('Dave K.');
 	await organizer.getByLabel('New name for Dave K').press('Enter');
 	await expect(tvNames).toHaveText(['Dave K.', 'Big Dave', 'Sue']);
 
-	await organizer
-		.getByRole('listitem')
-		.filter({ hasText: 'Sue' })
-		.getByRole('button', { name: 'Remove' })
-		.click();
+	await playerRows.filter({ hasText: 'Sue' }).getByRole('button', { name: 'Remove' }).click();
 	await expect(tvNames).toHaveText(['Dave K.', 'Big Dave']);
 
 	await organizer.reload();
 	await tv.reload();
-	await expect(organizer.getByRole('listitem')).toHaveCount(2);
+	await expect(playerRows).toHaveCount(2);
 	await expect(tvNames).toHaveText(['Dave K.', 'Big Dave']);
 
 	await organizer.getByRole('button', { name: 'Start a new Tournament' }).click();
