@@ -270,7 +270,7 @@ const listThemeChoices = () =>
 		isChosen: item.getAttribute('aria-checked') === 'true',
 	}));
 
-// The step bar under the header: Register, House Rules, Draw, Now playing and Finished.
+// The step bar: Register, House Rules, Draw, Now playing and Finished.
 const getStepBar = () => screen.getByRole('list', { name: 'Tournament steps' });
 
 // The step the step bar marks as the current one.
@@ -283,9 +283,9 @@ describe('the organizer route', () => {
 		await register(user, 'Dave K.');
 		await register(user, 'Big Dave');
 		await setBoardCount(user, '1');
-		const steps = within(getStepBar())
-			.getAllByRole('listitem')
-			.map((step) => step.textContent);
+		// The step bar stays on screen through every phase, so it is found once.
+		const stepBar = within(getStepBar());
+		const steps = stepBar.getAllByRole('listitem').map((step) => step.textContent);
 		expect(steps).toEqual(['Register', 'House Rules', 'Draw', 'Now playing', 'Finished']);
 		expect(readCurrentStep()).toBe('Register');
 
@@ -303,8 +303,8 @@ describe('the organizer route', () => {
 		await answerDialog(user, 'Leaving');
 		expect(readCurrentStep()).toBe('Finished');
 
-		expect(within(getStepBar()).queryAllByRole('button')).toEqual([]);
-		expect(within(getStepBar()).queryAllByRole('link')).toEqual([]);
+		expect(stepBar.queryAllByRole('button')).toEqual([]);
+		expect(stepBar.queryAllByRole('link')).toEqual([]);
 	});
 
 	it('registers a Player, lists them with the running count, and clears the name box', async () => {

@@ -7,7 +7,7 @@ import { makeDisplayPath } from '../routes';
 import type { Store } from '../storage';
 import { createTournament, type Phase, type Tournament } from '../tournament';
 import { useTournament } from '../useTournament';
-import { button, dangerButton } from './classes';
+import { quietButtons } from './classes';
 import { ConfirmDialog, type Apply } from './controls';
 import { Draw } from './Draw';
 import { HouseRules } from './HouseRules';
@@ -69,15 +69,15 @@ export const Organizer = ({
 		 */
 		<main className="border-fill bg-canvas font-organizer text-ink flex h-dvh flex-col border-t-4 px-8 py-6">
 			<header className="flex items-center justify-between gap-4">
-				{/* The TV open or closed badge will sit before the heading. */}
-				<div className="flex items-center gap-4">
-					<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
-				</div>
+				<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
 				<nav className="flex items-center gap-2">
-					{/* Quiet, so it is hard to press by mistake during the night. Its dialog still asks first. */}
+					{/*
+					 * Outlined on the canvas, not filled like the buttons the night runs on, so it doesn't draw the
+					 * Organizer's eye. Its dialog still asks before anything is cleared.
+					 */}
 					<button
 						type="button"
-						className={dangerButton}
+						className={quietButtons.danger}
 						onClick={() => newTournamentDialog.current?.showModal()}
 					>
 						Start a new Tournament
@@ -85,7 +85,7 @@ export const Organizer = ({
 					<a
 						href={makeDisplayPath(import.meta.env.BASE_URL)}
 						target="cribbage-display"
-						className={button}
+						className={quietButtons.plain}
 					>
 						Open TV display
 					</a>

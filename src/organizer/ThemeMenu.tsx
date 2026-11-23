@@ -6,7 +6,7 @@
  * theme moves focus to it, so only one theme is ever highlighted, and it is the one Enter would pick.
  */
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
-import { button } from './classes';
+import { quietButtons } from './classes';
 import { themeChoices, type ThemeChoice } from './themes';
 
 /*
@@ -141,7 +141,7 @@ export const ThemeMenu = ({
 				aria-haspopup="menu"
 				aria-expanded={isOpen}
 				aria-controls={isOpen ? menuId : undefined}
-				className={button}
+				className={quietButtons.plain}
 				onClick={() => setIsOpen((wasOpen) => !wasOpen)}
 				onKeyDown={openFromKeyboard}
 			>

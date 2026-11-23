@@ -6,6 +6,9 @@
  */
 import type { Phase } from '../tournament';
 
+// Where a step stands: already done, the phase the Tournament is in, or still to come.
+type StepStatus = 'done' | 'current' | 'later';
+
 const steps: readonly { phase: Phase; name: string }[] = [
 	{ phase: 'registration', name: 'Register' },
 	{ phase: 'houseRules', name: 'House Rules' },
@@ -18,8 +21,8 @@ const steps: readonly { phase: Phase; name: string }[] = [
  * Each step's mark, centred in a box of the same size whichever it is, so the line through them meets every
  * mark at its middle. The ring round the current step is drawn outside its box, the canvas showing between.
  */
-const markClasses = {
-	box: 'grid size-5 place-items-center',
+const markBox = 'grid size-5 place-items-center';
+const markClasses: Record<StepStatus, string> = {
 	done: 'size-5 rounded-full bg-fill text-on-fill',
 	current: 'size-5 rounded-full bg-fill ring-2 ring-fill ring-offset-4 ring-offset-canvas',
 	later: 'size-4 rounded-full border-2 border-line bg-canvas',
@@ -40,29 +43,29 @@ const TickIcon = () => (
 	</svg>
 );
 
+// Whether the step at the index is done, current or still to come, given the current step's index.
+const findStepStatus = (index: number, currentIndex: number): StepStatus => {
+	if (index < currentIndex) {
+		return 'done';
+	}
+	return index === currentIndex ? 'current' : 'later';
+};
+
 // One step: its mark, then its name. Only the current step is marked as such for a screen reader.
-const Step = ({
-	name,
-	isDone,
-	isCurrent,
-}: {
-	name: string;
-	isDone: boolean;
-	isCurrent: boolean;
-}) => (
-	<li aria-current={isCurrent ? 'step' : undefined} className="flex flex-col items-center gap-2">
-		<span aria-hidden="true" className={markClasses.box}>
-			{isDone && (
-				<span className={markClasses.done}>
-					<TickIcon />
-				</span>
-			)}
-			{isCurrent && <span className={markClasses.current} />}
-			{!isDone && !isCurrent && <span className={markClasses.later} />}
-		</span>
-		<span className={isCurrent ? 'font-bold' : 'text-muted'}>{name}</span>
-	</li>
-);
+const Step = ({ name, status }: { name: string; status: StepStatus }) => {
+	const isCurrent = status === 'current';
+	return (
+		<li
+			aria-current={isCurrent ? 'step' : undefined}
+			className="flex flex-col items-center gap-2"
+		>
+			<span aria-hidden="true" className={markBox}>
+				<span className={markClasses[status]}>{status === 'done' && <TickIcon />}</span>
+			</span>
+			<span className={isCurrent ? 'font-bold' : 'text-muted'}>{name}</span>
+		</li>
+	);
+};
 
 export const StepBar = ({ phase }: { phase: Phase }) => {
 	const currentIndex = steps.findIndex((step) => step.phase === phase);
@@ -87,8 +90,7 @@ export const StepBar = ({ phase }: { phase: Phase }) => {
 					<Step
 						key={step.phase}
 						name={step.name}
-						isDone={index < currentIndex}
-						isCurrent={index === currentIndex}
+						status={findStepStatus(index, currentIndex)}
 					/>
 				))}
 			</ol>

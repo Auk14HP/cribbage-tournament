@@ -36,9 +36,9 @@ const isScrollable = (list: Locator) =>
 /*
  * The area a long list scrolls in fills the space left on screen: the column holding it, made of panels, ends at
  * the bottom of the window, above the page's own padding. The area is the only box in the column that shrinks,
- * so the column reaches the bottom only if the area grows to fill what the other boxes leave. The area is the
- * list itself or the nearest box around it that scrolls, and its column is the box beside the other column,
- * in the row they share.
+ * so the column reaches the bottom only if the area grows to fill what the other boxes leave. The column is
+ * the list's outermost box short of the row it shares with the other column, and this measures the bottom of
+ * the last box drawn in it.
  */
 const expectScrollingAreaFillsSpaceLeft = async (list: Locator) => {
 	const { columnBottom, spaceBottom } = await list.evaluate((element) => {

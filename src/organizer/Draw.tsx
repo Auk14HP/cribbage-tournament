@@ -180,7 +180,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 						{/*
 						 * The Matches and those waiting for a Board scroll together, so neither list is squeezed to make room
 						 * for the other: a waiting Match is reached by scrolling past the Matches holding a Board. Hidden while
-						 * both are empty, as once there is a Champion, so it leaves no gap.
+						 * both are empty, so it leaves no gap.
 						 */}
 						<div className={`${windowFilling.scrollingArea} mt-2 empty:hidden`}>
 							{matches.length > 0 && (
