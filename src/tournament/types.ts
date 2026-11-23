@@ -61,13 +61,12 @@ export interface MatchResult {
 // A first-Match loser's answer to whether they are staying for the Losers Bracket.
 export type StayingAnswer = 'staying' | 'leaving';
 
-export interface Bracket {
-	/*
-	 * The first Round, in bracket order. Each entry is a first-Round Match or a Bye, and sends one Player on
-	 * to Round 2, where each pair of neighbouring entries' Players meet.
-	 */
-	readonly firstRound: readonly (FirstRoundMatch | Bye)[];
-}
+/*
+ * A bracket's first Round, in bracket order. Each entry is a first-Round Match or a Bye, and sends one
+ * Player on to Round 2, where each pair of neighbouring entries' Players meet. Every later Round is worked
+ * out from it and the results recorded.
+ */
+export type Draw = readonly (FirstRoundMatch | Bye)[];
 
 // A Match holding a Board: being played, or held for a Player who sits there waiting for their opponent.
 export interface BoardTaken {
@@ -112,14 +111,14 @@ export interface Tournament {
 	readonly boards: readonly BoardNumber[];
 	// One for each Player given a Home Board; for now no more than one Player has one.
 	readonly homeBoards: readonly HomeBoard[];
-	readonly winnersBracket?: Bracket;
+	readonly winnersDraw?: Draw;
 	/*
 	 * Drawn with the Winners Bracket, from the same random source, so the Losers Draw needs none of its
 	 * own: every Player in the order the Losers Draw takes those staying.
 	 */
 	readonly losersDrawOrder?: readonly PlayerId[];
 	// Undefined until the Losers Draw is made; null once it found fewer than two Players staying.
-	readonly losersBracket?: Bracket | null;
+	readonly losersDraw?: Draw | null;
 	// Each Match holding a Board: those at a Home Board, then the rest in the order they took their Boards.
 	readonly onBoards: readonly BoardTaken[];
 	// Each Match with a Player known but no Board free, in turn.
@@ -136,7 +135,7 @@ export interface Tournament {
 }
 
 // Bump whenever the Tournament's shape changes, so a Tournament saved in an older shape loads as blank.
-export const tournamentVersion = 11;
+export const tournamentVersion = 12;
 
 export const createTournament = (): Tournament => ({
 	phase: 'registration',

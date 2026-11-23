@@ -18,7 +18,7 @@ export const tvScreenNames: Record<TvScreen, string> = {
  * there once it is drawn. None before Start, when the TV shows its own screens.
  */
 export const listTvScreens = (tournament: Tournament): readonly TvScreen[] => {
-	const bracketScreens: TvScreen[] = tournament.losersBracket
+	const bracketScreens: TvScreen[] = tournament.losersDraw
 		? ['winnersBracket', 'losersBracket']
 		: ['winnersBracket'];
 	switch (tournament.phase) {

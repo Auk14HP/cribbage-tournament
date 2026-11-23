@@ -11,7 +11,7 @@ import {
 	findPlayers,
 	findSettledEntry,
 	findWinner,
-	getBracket,
+	getDraw,
 	isBye,
 	listIndexes,
 	type Seat,
@@ -122,8 +122,8 @@ export const getBracketPicture = (
 	tournament: Tournament,
 	name: BracketName,
 ): BracketPicture | undefined => {
-	const bracket = getBracket(tournament, name);
-	if (!bracket) {
+	const draw = getDraw(tournament, name);
+	if (!draw) {
 		return undefined;
 	}
 	const findBracketPlayer = (from: Seat): BracketPlayer => {
@@ -143,8 +143,8 @@ export const getBracketPicture = (
 			winner: winner === undefined ? undefined : findPlayer(tournament, winner),
 		};
 	};
-	const allRounds = listIndexes(countRounds(bracket)).map((r) =>
-		listIndexes(bracket.firstRound.length / 2 ** r).map((place) =>
+	const allRounds = listIndexes(countRounds(tournament, name)).map((r) =>
+		listIndexes(draw.length / 2 ** r).map((place) =>
 			r === 0 && isBye(findSettledEntry(tournament, { bracket: name, round: 1, place }))
 				? undefined
 				: pictureMatch({ bracket: name, round: r + 1, place }),
@@ -160,10 +160,9 @@ export const getBracketPicture = (
  * bracket looks the size of its field.
  */
 const isFirstRoundLeftOut = (tournament: Tournament, name: BracketName): boolean => {
-	const bracket = getBracket(tournament, name)!;
 	return (
-		countRounds(bracket) > 1 &&
-		listIndexes(bracket.firstRound.length).every((place) =>
+		countRounds(tournament, name) > 1 &&
+		listIndexes(getDraw(tournament, name)!.length).every((place) =>
 			isBye(findSettledEntry(tournament, { bracket: name, round: 1, place })),
 		)
 	);
@@ -181,7 +180,7 @@ export const getShownRound = (
 	{ bracket, round }: MatchPlace,
 ): ShownRound => {
 	const leftOut = isFirstRoundLeftOut(tournament, bracket) ? 1 : 0;
-	const roundCount = countRounds(getBracket(tournament, bracket)!);
+	const roundCount = countRounds(tournament, bracket);
 	return { round: round - leftOut, roundCount: roundCount - leftOut };
 };
 
