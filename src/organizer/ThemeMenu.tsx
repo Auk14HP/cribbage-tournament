@@ -2,19 +2,20 @@
  * The palette button in the Organizer screen's header and the menu it opens: Match laptop, Light and Dark,
  * the chosen one ticked. It works by keyboard as a menu button does: Enter, Space or the down arrow opens it
  * on the chosen theme, the arrow keys, Home and End move between the themes, Enter or Space picks one, and
- * Escape closes it, focus back on the button. Tab, a click elsewhere or a pick closes it too.
+ * Escape closes it, focus back on the button. Tab, a click elsewhere or a pick closes it too. Pointing at a
+ * theme moves focus to it, so only one theme is ever lit, and it is the one Enter would pick.
  */
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { button } from './classes';
 import { themeChoices, type ThemeChoice } from './themes';
 
 /*
- * The menu floats below the button, over the screen, so opening it moves nothing. The focused theme's outline
- * is drawn inside its own box, so the next theme lit up under the pointer can't cover it.
+ * The menu floats below the button, over the screen, so opening it moves nothing. The focused theme is lit and
+ * outlined, the outline drawn inside its own box so the theme below it can't cover its edge.
  */
 const menuClasses = {
 	menu: 'absolute top-full right-0 z-10 mt-2 flex min-w-48 flex-col rounded-lg border border-divider bg-panel p-1 shadow-xl',
-	item: 'flex items-center gap-2 rounded px-3 py-2 text-left hover:bg-raised focus:bg-raised focus:outline-2 focus:-outline-offset-2 focus:outline-accent',
+	item: 'flex items-center gap-2 rounded px-3 py-2 text-left focus:bg-raised focus:outline-2 focus:-outline-offset-2 focus:outline-accent',
 };
 
 // Where each arrow key, Home and End moves focus in a list of the given length, wrapping round at the ends.
@@ -160,6 +161,7 @@ export const ThemeMenu = ({
 							tabIndex={-1}
 							className={menuClasses.item}
 							onClick={() => choose(option.choice)}
+							onPointerMove={(event) => event.currentTarget.focus()}
 							onKeyDown={(event) => answerItemKey(event, index)}
 						>
 							<CheckIcon isShown={option.choice === choice} />

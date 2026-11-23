@@ -1075,4 +1075,16 @@ describe('the organizer route', () => {
 		await openThemeMenu(user);
 		expect(screen.getByRole('menuitemradio', { name: 'Match laptop' })).toBeChecked();
 	});
+
+	it('moves focus in the theme menu to the theme under the pointer, the chosen theme keeping its tick', async () => {
+		const user = showOrganizer();
+		await chooseTheme(user, 'Light');
+		await openThemeMenu(user);
+
+		await user.hover(screen.getByRole('menuitemradio', { name: 'Dark' }));
+
+		expect(screen.getByRole('menuitemradio', { name: 'Dark' })).toHaveFocus();
+		expect(screen.getByRole('menuitemradio', { name: 'Light' })).toBeChecked();
+		expect(screen.getByRole('menuitemradio', { name: 'Dark' })).not.toBeChecked();
+	});
 });
