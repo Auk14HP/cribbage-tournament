@@ -23,21 +23,24 @@ export const Display = ({ store, random }: { store: Store<Tournament>; random: R
 			)}
 			{tournament.phase === 'houseRules' && <HouseRules tournament={tournament} />}
 			{/*
-			 * Tonight's Draw: the Winners Bracket as the Draw stands, until Start. It keeps clear of the
-			 * countdown ring's strip as the cycle's screens do, so the bracket doesn't shift at Start.
+			 * From Tonight's Draw on, every screen keeps clear of the countdown ring's strip, ring or not, so
+			 * the bracket doesn't shift at Start and holding a screen doesn't shift it.
 			 */}
-			{tournament.phase === 'drawShown' && (
+			{tournament.phase !== 'registration' && tournament.phase !== 'houseRules' && (
 				<div className={countdownRing.clearance}>
-					<Bracket
-						tournament={tournament}
-						bracketName="winners"
-						heading="Tonight’s Draw"
-					/>
+					{/* Tonight's Draw: the Winners Bracket as the Draw stands, until Start. */}
+					{tournament.phase === 'drawShown' && (
+						<Bracket
+							tournament={tournament}
+							bracketName="winners"
+							heading="Tonight’s Draw"
+						/>
+					)}
+					{/* Keyed by phase, so finishing starts the cycle again from its first screen, or the Held screen. */}
+					{(tournament.phase === 'inProgress' || tournament.phase === 'finished') && (
+						<Cycle key={tournament.phase} tournament={tournament} />
+					)}
 				</div>
-			)}
-			{/* Keyed by phase, so finishing starts the cycle again from its first screen, or the Held screen. */}
-			{(tournament.phase === 'inProgress' || tournament.phase === 'finished') && (
-				<Cycle key={tournament.phase} tournament={tournament} />
 			)}
 		</main>
 	);
@@ -75,13 +78,10 @@ const Cycle = ({ tournament }: { tournament: Tournament }) => {
 		const timer = setTimeout(() => setShown(nextScreen), tournament.screenSeconds * 1000);
 		return () => clearTimeout(timer);
 	}, [shown, nextScreen, isStill, tournament.screenSeconds]);
-	/*
-	 * Keyed like the timer, so the ring starts again exactly when the screen's time does. The screen keeps
-	 * clear of the ring's strip down the safe area's right edge, held or not, so holding doesn't shift it.
-	 */
+	// Keyed like the timer, so the ring starts again exactly when the screen's time does.
 	return (
 		<>
-			<div className={countdownRing.clearance}>{tvScreens[shown](tournament)}</div>
+			{tvScreens[shown](tournament)}
 			{!isStill && (
 				<CountdownRing
 					key={`${shown} ${tournament.screenSeconds}`}
