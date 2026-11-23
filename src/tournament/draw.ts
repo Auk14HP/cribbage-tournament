@@ -63,7 +63,7 @@ const createDraw = (shuffled: readonly Entrant[]): Draw => {
 };
 
 /*
- * Trades two Players' places in the Winners Bracket's first Round, a Bye place included, before Start.
+ * Trades two Players' places in the Winners Draw, a Bye place included, before Start.
  * Which places hold Matches and which hold Byes stays as drawn, so each Match keeps its Board; seating then
  * brings a Match with a Home Board Player in it to their Home Board.
  */
@@ -110,7 +110,7 @@ export const swapPlayers = (
 	return { ok: true, value: reseat(swapped) };
 };
 
-// The place in the first Round holding a Player, in a Match or as a Bye, or -1 if none does.
+// The place in a Draw holding a Player, in a Match or as a Bye, or -1 if none does.
 const findDrawPlace = (draw: Draw, player: PlayerId): number =>
 	draw.findIndex((entry) =>
 		isBye(entry) ? entry.bye === player : entry.players.includes(player),
