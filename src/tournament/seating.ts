@@ -106,9 +106,7 @@ export const isInTournament = (tournament: Tournament, player: PlayerId): boolea
 	}
 	// Only a Player losing their first Match is asked whether they are staying.
 	const loss = listResultsOf(tournament, 'winners', player).find((r) => r.winner !== player)!;
-	return (
-		loss.loserAnswer === 'staying' && tournament.losersBracket !== null && isStillIn('losers')
-	);
+	return loss.loserAnswer === 'staying' && tournament.losersDraw !== null && isStillIn('losers');
 };
 
 // Matches ready to play first, both Players known, then those still waiting on a Player, each in turn.

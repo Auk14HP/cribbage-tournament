@@ -3,10 +3,10 @@
  * and the Match a winner goes on to. Every other part of the core reads the brackets through these.
  */
 import type {
-	Bracket,
 	BracketName,
 	BoardNumber,
 	Bye,
+	Draw,
 	FirstRoundMatch,
 	HeldPlace,
 	MatchPlace,
@@ -29,12 +29,18 @@ export const listIndexes = (count: number): number[] => Array.from({ length: cou
 export const findPlayer = (tournament: Tournament, id: PlayerId): Player =>
 	tournament.players.find((p) => p.id === id)!;
 
-// A bracket once drawn, or undefined: the Losers Bracket before its Draw, or with none played.
-export const getBracket = (tournament: Tournament, bracket: BracketName): Bracket | undefined =>
-	bracket === 'winners' ? tournament.winnersBracket : (tournament.losersBracket ?? undefined);
+// A bracket's Draw once made, or undefined: the Losers Bracket before its Draw, or with none played.
+export const getDraw = (tournament: Tournament, bracket: BracketName): Draw | undefined =>
+	bracket === 'winners' ? tournament.winnersDraw : (tournament.losersDraw ?? undefined);
 
-// The bracket holds twice as many Players as its first Round has places, halving each Round to the final.
-export const countRounds = (bracket: Bracket): number => Math.log2(2 * bracket.firstRound.length);
+/*
+ * Counts a bracket's Rounds: twice as many Players as its Draw has places, halving each Round to the final,
+ * so 0 before its Draw is made or when no Losers Bracket is played.
+ */
+export const countRounds = (tournament: Tournament, bracket: BracketName): number => {
+	const draw = getDraw(tournament, bracket);
+	return draw ? Math.log2(2 * draw.length) : 0;
+};
 
 export const isSameMatch = (a: MatchPlace, b: MatchPlace): boolean =>
 	a.bracket === b.bracket && a.round === b.round && a.place === b.place;
@@ -51,7 +57,7 @@ export const findWinner = (tournament: Tournament, match: MatchPlace): PlayerId 
 
 // The Match a Match's winner goes on to, or undefined for the final.
 export const findFollowing = (tournament: Tournament, match: MatchPlace): MatchPlace | undefined =>
-	match.round === countRounds(getBracket(tournament, match.bracket)!)
+	match.round === countRounds(tournament, match.bracket)
 		? undefined
 		: { bracket: match.bracket, round: match.round + 1, place: Math.floor(match.place / 2) };
 
@@ -85,7 +91,7 @@ export const findSettledEntry = (
 	tournament: Tournament,
 	match: MatchPlace,
 ): FirstRoundMatch | Bye => {
-	const entry = getBracket(tournament, match.bracket)!.firstRound[match.place];
+	const entry = getDraw(tournament, match.bracket)![match.place];
 	if (isBye(entry)) {
 		return entry;
 	}
@@ -153,12 +159,12 @@ export const findOpponent = (
  */
 export const listLiveMatches = (tournament: Tournament): MatchPlace[] =>
 	(['winners', 'losers'] as const).flatMap((name) => {
-		const bracket = getBracket(tournament, name);
-		if (!bracket) {
+		const draw = getDraw(tournament, name);
+		if (!draw) {
 			return [];
 		}
-		return listIndexes(countRounds(bracket)).flatMap((r) =>
-			listIndexes(bracket.firstRound.length / 2 ** r)
+		return listIndexes(countRounds(tournament, name)).flatMap((r) =>
+			listIndexes(draw.length / 2 ** r)
 				.map((place): MatchPlace => ({ bracket: name, round: r + 1, place }))
 				.filter(
 					(match) =>
@@ -171,11 +177,10 @@ export const listLiveMatches = (tournament: Tournament): MatchPlace[] =>
 
 // Whether a bracket's final has a winner: false while the bracket is still to be drawn.
 export const hasChampion = (tournament: Tournament, bracket: BracketName): boolean => {
-	const drawn = getBracket(tournament, bracket);
-	if (!drawn) {
+	if (!getDraw(tournament, bracket)) {
 		return false;
 	}
-	const final: MatchPlace = { bracket, round: countRounds(drawn), place: 0 };
+	const final: MatchPlace = { bracket, round: countRounds(tournament, bracket), place: 0 };
 	return findWinner(tournament, final) !== undefined;
 };
 

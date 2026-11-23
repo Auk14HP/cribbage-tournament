@@ -15,7 +15,7 @@ import {
 	isSameMatch,
 	listResultsOf,
 } from './bracket';
-import { drawLosersBracketIfDue, isHeldFor } from './draw';
+import { isHeldFor, makeLosersDrawIfDue } from './draw';
 import { reseat } from './seating';
 import { dropHeldScreenIfGone } from './tvScreen';
 import type { MatchPlace, PlayerId, StayingAnswer, Tournament } from './types';
@@ -90,15 +90,13 @@ export const isLosersBracketOpenTo = (tournament: Tournament, player: PlayerId):
 	if (listResultsOf(tournament, 'winners', player).length > 0) {
 		return false;
 	}
-	const { losersBracket } = tournament;
-	if (losersBracket === undefined) {
+	const { losersDraw } = tournament;
+	if (losersDraw === undefined) {
 		return true;
 	}
 	return (
-		losersBracket !== null &&
-		losersBracket.firstRound.some(
-			(entry) => !isBye(entry) && entry.players.some((e) => isHeldFor(e, player)),
-		)
+		losersDraw !== null &&
+		losersDraw.some((entry) => !isBye(entry) && entry.players.some((e) => isHeldFor(e, player)))
 	);
 };
 
@@ -143,7 +141,7 @@ const settleMatch = (
 	const loser = findOpponent(tournament, match, winner);
 	// Kept only from a loser who was asked.
 	const asked = isLosersBracketOpenTo(tournament, loser) ? { loserAnswer } : {};
-	const recorded = drawLosersBracketIfDue({
+	const recorded = makeLosersDrawIfDue({
 		...tournament,
 		results: [...tournament.results, { match, winner, board, isForfeit, ...asked }],
 	});
@@ -156,7 +154,7 @@ const isFinished = (tournament: Tournament): boolean => {
 	if (!hasChampion(tournament, 'winners')) {
 		return false;
 	}
-	return tournament.losersBracket === null || hasChampion(tournament, 'losers');
+	return tournament.losersDraw === null || hasChampion(tournament, 'losers');
 };
 
 /*
@@ -174,11 +172,11 @@ export const undoResult = (tournament: Tournament, match: MatchPlace): Result<To
 	if (refusal) {
 		return { ok: false, reason: refusal };
 	}
-	const isLosersDrawUndone = isFirstMatch(tournament, match) && tournament.losersBracket === null;
+	const isLosersDrawUndone = isFirstMatch(tournament, match) && tournament.losersDraw === null;
 	const undone: Tournament = {
 		...tournament,
 		results: tournament.results.filter((r) => !isSameMatch(r.match, match)),
-		losersBracket: isLosersDrawUndone ? undefined : tournament.losersBracket,
+		losersDraw: isLosersDrawUndone ? undefined : tournament.losersDraw,
 	};
 	// Undoing the final takes the champion back out, so the Tournament is in progress again.
 	const reseated = reseat(undone, { match, board: result.board });
@@ -193,7 +191,7 @@ export const findUndoRefusal = (tournament: Tournament, match: MatchPlace): stri
 	if (hasPlayedOn(tournament, match)) {
 		return 'That result can’t be undone: its winner has already played their next Match.';
 	}
-	if (isFirstMatch(tournament, match) && tournament.losersBracket) {
+	if (isFirstMatch(tournament, match) && tournament.losersDraw) {
 		return 'That result can’t be undone: the Losers Bracket has been drawn.';
 	}
 	return undefined;
