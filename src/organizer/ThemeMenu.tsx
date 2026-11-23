@@ -8,10 +8,13 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { button } from './classes';
 import { themeChoices, type ThemeChoice } from './themes';
 
-// The menu floats below the button, over the screen, so opening it moves nothing.
+/*
+ * The menu floats below the button, over the screen, so opening it moves nothing. The focused theme's outline
+ * is drawn inside its own box, so the next theme lit up under the pointer can't cover it.
+ */
 const menuClasses = {
 	menu: 'absolute top-full right-0 z-10 mt-2 flex min-w-48 flex-col rounded-lg border border-divider bg-panel p-1 shadow-xl',
-	item: 'flex items-center gap-2 rounded px-3 py-2 text-left hover:bg-raised focus:bg-raised focus:outline-2 focus:outline-accent',
+	item: 'flex items-center gap-2 rounded px-3 py-2 text-left hover:bg-raised focus:bg-raised focus:outline-2 focus:-outline-offset-2 focus:outline-accent',
 };
 
 // Where each arrow key, Home and End moves focus in a list of the given length, wrapping round at the ends.
