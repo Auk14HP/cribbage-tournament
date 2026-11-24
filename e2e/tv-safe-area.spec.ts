@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 import {
 	confirmDrawFromHouseRules,
-	holdScreen,
+	parkCycleOn,
 	openTv,
 	playFirstMatchesWithLosersStaying,
 	playToFinal,
@@ -75,7 +75,7 @@ for (const tvSize of tvSizes) {
 			await expect(tv.getByTestId('countdown ring')).toBeAttached();
 			await expectInsideTvSafeArea(tv);
 
-			await holdScreen(organizer, tv, 'Losers Bracket');
+			await parkCycleOn(organizer, tv, 'Losers Bracket');
 			await expectInsideTvSafeArea(tv);
 		});
 

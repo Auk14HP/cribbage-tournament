@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import {
-	holdScreen,
+	parkCycleOn,
 	openTv,
 	playFirstMatchesWithLosersStaying,
 	playToFinal,
@@ -54,9 +54,9 @@ for (const tvSize of tvSizes) {
 
 			/*
 			 * The TV picks up Auto's cycle where the clock has it, which may be the Losers Bracket by the time it
-			 * opens, so the cycle is moved on to the Winners Bracket and held there.
+			 * opens, so the cycle is moved on to the Winners Bracket and parked there.
 			 */
-			await holdScreen(organizer, tv, 'Winners Bracket');
+			await parkCycleOn(organizer, tv, 'Winners Bracket');
 			await expect(tv.getByTestId('countdown ring')).toBeAttached();
 			await expectClearOfRing(tv, findBracketSlots(tv));
 		});
@@ -67,8 +67,46 @@ for (const tvSize of tvSizes) {
 			await playToFinal(organizer);
 			const tv = await openTv(organizer, tvSize);
 
-			await holdScreen(organizer, tv, 'Winners Bracket');
+			await parkCycleOn(organizer, tv, 'Winners Bracket');
 			await expectClearOfRing(tv, findBracketSlots(tv));
 		});
 	});
 }
+
+/*
+ * How far the ring has filled, from 0 (empty) to 1 (full), and the animation the browser plays on it. Read
+ * from the browser's computed style, since jsdom plays no animations: a line of the ring's CSS the browser
+ * rejects drops the whole animation.
+ */
+const readRingFill = async (tv: Page) => {
+	const ring = tv.getByTestId('countdown ring');
+	const computed = await ring.evaluate((svg) => {
+		const filling = getComputedStyle(svg.lastElementChild!);
+		return { animationName: filling.animationName, dashOffset: filling.strokeDashoffset };
+	});
+	// The filling's dash offset runs from 1 (empty) down to 0 (full).
+	return { animationName: computed.animationName, fill: 1 - parseFloat(computed.dashOffset) };
+};
+
+test('a TV reloaded halfway through a screen shows its ring half full', async ({
+	page: organizer,
+}) => {
+	await startTournament(organizer, { players: 6 });
+	// 6 Players open 3 first Matches; the Losers Bracket is drawn once all are played.
+	await playFirstMatchesWithLosersStaying(organizer, { firstMatchCount: 3 });
+	const tv = await openTv(organizer, tvSizes[0]);
+	// A new time starts the cycle again, so the screen's time is known from here.
+	const secondsInput = organizer.getByLabel('Seconds per TV screen');
+	await secondsInput.fill('10');
+	await secondsInput.press('Enter');
+	const halfAScreenMs = 5000;
+	await tv.waitForTimeout(halfAScreenMs);
+
+	await tv.reload();
+
+	const ringFill = await readRingFill(tv);
+	expect(ringFill.animationName).toBe('countdown');
+	// Half full, give or take the reload's time.
+	expect(ringFill.fill).toBeGreaterThan(0.3);
+	expect(ringFill.fill).toBeLessThan(0.7);
+});

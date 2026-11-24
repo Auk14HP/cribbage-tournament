@@ -2,7 +2,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 import { expectNothingMoves } from './screenStill';
 import {
 	confirmDraw,
-	holdScreen,
+	parkCycleOn,
 	openTv,
 	playToFinal,
 	playUntilTheFinal,
@@ -68,7 +68,7 @@ for (const { players, rounds } of [
 				const tv = await openTv(organizer, tvSize);
 				if (moment === 'after the final') {
 					// Once finished, the TV opens on the champion.
-					await holdScreen(organizer, tv, 'Winners Bracket');
+					await parkCycleOn(organizer, tv, 'Winners Bracket');
 				}
 				await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 

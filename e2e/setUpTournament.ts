@@ -134,18 +134,19 @@ export const playToFinal = (page: Page) => playUntilMatchesLeft(page, 0);
 export const playUntilTheFinal = (page: Page) => playUntilMatchesLeft(page, 1);
 
 /*
- * How long holdScreen waits before checking the held screen is still shown. Longer than one 1-second screen,
- * so if the hold was saved too late and the TV had already moved on, the wrong screen is showing by then.
+ * How long parkCycleOn waits before checking the screen is still shown. Longer than one 1-second screen, so if
+ * the long time was saved too late and the TV had already moved on, the wrong screen is showing by then.
  */
-const msBeforeCheckingHold = 1500;
+const msBeforeCheckingParked = 1500;
 
 /*
- * Moves the TV's cycle on to the named screen and holds it there: a second per screen moves it on, and a
- * long one then holds it, since a new time restarts the screen shown. The long one can land after the second
- * is up, holding the wrong screen, so the screen is checked once after saving and a miss goes round again.
+ * Moves Auto's cycle on to the named screen and parks it there, still on Auto, so the countdown ring stays
+ * (a Held screen has none): a second per screen moves it on, and a 600-second screen then keeps it, since a
+ * new time starts the cycle again from the screen on show. The long time can land after the second is up,
+ * parking the wrong screen, so the screen is checked once after saving and a miss goes round again.
  * Each time is saved with Enter, as an Organizer would.
  */
-export const holdScreen = async (organizer: Page, tv: Page, screenHeading: string) => {
+export const parkCycleOn = async (organizer: Page, tv: Page, screenHeading: string) => {
 	const secondsInput = organizer.getByLabel('Seconds per TV screen');
 	const heading = tv.getByRole('heading', { name: screenHeading });
 	await expect(async () => {
@@ -154,7 +155,7 @@ export const holdScreen = async (organizer: Page, tv: Page, screenHeading: strin
 		await heading.waitFor();
 		await secondsInput.fill('600');
 		await secondsInput.press('Enter');
-		await tv.waitForTimeout(msBeforeCheckingHold);
+		await tv.waitForTimeout(msBeforeCheckingParked);
 		expect(await heading.isVisible()).toBe(true);
 	}).toPass({ timeout: 20_000 });
 };

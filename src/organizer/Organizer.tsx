@@ -51,7 +51,10 @@ export const Organizer = ({
 		if (!outcome.ok) {
 			return outcome.reason;
 		}
-		// Starts Auto's TV cycle again now if the command calls for it, so every window works out the same screen.
+		/*
+		 * Starts Auto's TV cycle again now if the command calls for it, so every window works out the same screen.
+		 * Every save of a Started Tournament goes through here: docs/adr/0003-tv-cycle-runs-from-the-clock.md.
+		 */
 		const now = Date.now();
 		store.save(restartTvCycleIfDue({ before: tournament, after: outcome.value, now }));
 		return '';
