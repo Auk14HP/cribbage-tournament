@@ -13,6 +13,7 @@ test('Start a new Tournament asks first: Escape and Cancel keep the Tournament, 
 	await page.getByLabel('Player name').press('Enter');
 	const opener = page.getByRole('button', { name: 'Start a new Tournament' });
 	const dialog = page.getByRole('dialog');
+	const playerRows = page.getByRole('list', { name: 'Players' }).getByRole('listitem');
 
 	await opener.click();
 	await expect(dialog).toContainText(
@@ -22,17 +23,17 @@ test('Start a new Tournament asks first: Escape and Cancel keep the Tournament, 
 	await page.keyboard.press('Escape');
 	await expect(dialog).toBeHidden();
 	await expect(opener).toBeFocused();
-	await expect(page.getByRole('listitem')).toContainText(['Dave K.']);
+	await expect(playerRows).toContainText(['Dave K.']);
 
 	await opener.click();
 	await dialog.getByRole('button', { name: 'Cancel' }).click();
 	await expect(dialog).toBeHidden();
 	await expect(opener).toBeFocused();
-	await expect(page.getByRole('listitem')).toContainText(['Dave K.']);
+	await expect(playerRows).toContainText(['Dave K.']);
 
 	await opener.click();
 	await dialog.getByRole('button', { name: 'Start a new Tournament' }).click();
 	await expect(dialog).toBeHidden();
-	await expect(page.getByRole('listitem')).toHaveCount(0);
+	await expect(playerRows).toHaveCount(0);
 	await expect(page.getByLabel('Player name')).toBeFocused();
 });

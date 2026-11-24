@@ -34,38 +34,39 @@ const isScrollable = (list: Locator) =>
 	list.evaluate((element) => element.scrollHeight > element.clientHeight);
 
 /*
- * The area a long list scrolls in fills the space left on screen: it ends at the bottom of the window, above
- * the page's own padding and any boxes beneath it in its column, such as the refusal line once Started. The
- * area is the list itself or the nearest box around it that scrolls.
+ * The area a long list scrolls in fills the space left on screen: the column holding it, made of panels, ends at
+ * the bottom of the window, above the page's own padding. The area is the only box in the column that shrinks,
+ * so the column reaches the bottom only if the area grows to fill what the other boxes leave. The column is
+ * the list's outermost box short of the row it shares with the other column, and this measures the bottom of
+ * the last box drawn in it.
  */
 const expectScrollingAreaFillsSpaceLeft = async (list: Locator) => {
-	const { areaBottom, spaceBottom } = await list.evaluate((element) => {
-		let area: Element = element;
-		while (getComputedStyle(area).overflowY !== 'auto' && area.parentElement) {
-			area = area.parentElement;
+	const { columnBottom, spaceBottom } = await list.evaluate((element) => {
+		// A box that isn't a flex box reports a flex direction of row too, so the row is the flex box among them.
+		const isFlexRow = (box: Element) => {
+			const { display, flexDirection } = getComputedStyle(box);
+			return display === 'flex' && flexDirection === 'row';
+		};
+		let column: Element = element;
+		while (!isFlexRow(column.parentElement!)) {
+			column = column.parentElement!;
 		}
+		// A closed dialog has no height, so the column's last box is the last one drawn.
+		const drawnBoxes = [...column.children].filter(
+			(box) => box.getBoundingClientRect().height > 0,
+		);
+		const lastBox = drawnBoxes[drawnBoxes.length - 1];
 		const main = element.closest('main')!;
-		let spaceBottom = window.innerHeight - parseFloat(getComputedStyle(main).paddingBottom);
-		/*
-		 * Each box shown beneath the area, such as the refusal line, takes its height and margins from the
-		 * space left. A closed dialog has no height, so it takes nothing.
-		 */
-		for (
-			let boxBelow = area.nextElementSibling;
-			boxBelow;
-			boxBelow = boxBelow.nextElementSibling
-		) {
-			const { marginTop, marginBottom } = getComputedStyle(boxBelow);
-			const boxHeight = boxBelow.getBoundingClientRect().height;
-			if (boxHeight > 0) {
-				spaceBottom -= boxHeight + parseFloat(marginTop) + parseFloat(marginBottom);
-			}
-		}
-		return { areaBottom: area.getBoundingClientRect().bottom, spaceBottom };
+		return {
+			columnBottom:
+				lastBox.getBoundingClientRect().bottom +
+				parseFloat(getComputedStyle(lastBox).marginBottom),
+			spaceBottom: window.innerHeight - parseFloat(getComputedStyle(main).paddingBottom),
+		};
 	});
 	// toBeCloseTo counts the digits after the point that must match: none, so to the whole pixel.
 	const digitsAfterPoint = 0;
-	expect(areaBottom).toBeCloseTo(spaceBottom, digitsAfterPoint);
+	expect(columnBottom).toBeCloseTo(spaceBottom, digitsAfterPoint);
 };
 
 /*

@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { expectNothingMoves } from './screenStill';
 import {
 	confirmDrawFromHouseRules,
@@ -12,9 +12,10 @@ import {
 } from './setUpTournament';
 
 /*
- * The Organizer screen's themes, in a real browser: every phase's text is readable in Light, Dark, and Match
+ * The Organizer screen's themes, in a real browser: every phase's text is readable in Light, Dark, and Same as
  * laptop with the laptop set light or dark; the screen draws in Inter served with the app; and the TV keeps
- * its own look whatever the Organizer's theme.
+ * its own look whatever the Organizer's theme. The header holding the theme menu is checked here too: opening
+ * the menu moves nothing, and the palette button is as tall as the buttons beside it.
  */
 
 // Picks a theme from the palette menu in the Organizer screen's header.
@@ -140,14 +141,31 @@ test('keeps the TV’s look despite the Organizer screen’s current theme', asy
 	await expect(tvScreen).not.toHaveCSS('font-family', /Inter/);
 });
 
+/*
+ * The buttons in the Organizer screen's header: Start a new Tournament, Open TV display and the palette button.
+ * The header sits inside the page's main landmark, so it is no banner of its own: each is found by its name.
+ */
+const findHeaderButtons = (page: Page) => [
+	page.getByRole('button', { name: 'Start a new Tournament' }),
+	page.getByRole('link', { name: 'Open TV display' }),
+	page.getByRole('button', { name: 'Theme' }),
+];
+
+// The height of each element on screen, in the order given.
+const measureHeights = async (elements: Locator[]) => {
+	const heights: number[] = [];
+	for (const element of elements) {
+		const box = await element.boundingBox();
+		heights.push(box!.height);
+	}
+	return heights;
+};
+
 test('moves nothing in the header when the theme menu opens or closes', async ({ page }) => {
 	await page.goto('/');
-	const header = page.getByRole('banner');
 	const headerParts = [
-		header.getByRole('heading'),
-		header.getByRole('link', { name: 'Open TV display' }),
-		header.getByRole('button', { name: 'Theme' }),
-		header.getByRole('button', { name: 'Start a new Tournament' }),
+		page.getByRole('heading', { level: 1 }),
+		...findHeaderButtons(page),
 		page.getByLabel('Player name'),
 	];
 	const themeMenu = page.getByRole('menu', { name: 'Theme' });
@@ -160,4 +178,12 @@ test('moves nothing in the header when the theme menu opens or closes', async ({
 		await page.keyboard.press('Escape');
 		await expect(themeMenu).toBeHidden();
 	});
+});
+
+test('draws the header’s buttons at one height, the palette button too', async ({ page }) => {
+	await page.goto('/');
+
+	const [startHeight, ...otherHeights] = await measureHeights(findHeaderButtons(page));
+
+	expect(otherHeights).toEqual([startHeight, startHeight]);
 });

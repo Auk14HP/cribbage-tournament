@@ -1,13 +1,14 @@
 import { expect, type Locator } from '@playwright/test';
 
 /*
- * Where each part sits on the page: every element each locator finds, in order, by its box. A locator that
- * finds many elements, such as every Match row, gives a box for each.
+ * Where each part sits on the page: how many elements each locator finds, and every element's box, in order.
+ * A locator that finds many elements, such as every Match row, gives a box for each.
  */
 const measureParts = async (parts: readonly Locator[]) => {
 	const locatedParts = await Promise.all(parts.map((part) => part.all()));
 	const elements = locatedParts.flat();
-	return Promise.all(elements.map((element) => element.boundingBox()));
+	const boxes = await Promise.all(elements.map((element) => element.boundingBox()));
+	return { partCounts: locatedParts.map((found) => found.length), boxes };
 };
 
 /*
@@ -22,8 +23,8 @@ export const expectNothingMoves = async (
 	change: () => Promise<void>,
 ) => {
 	const before = await measureParts(parts);
-	expect(before.length, 'every part found').toBeGreaterThan(0);
-	expect(before, 'every part shown').not.toContain(null);
+	expect(before.partCounts, 'every part found').not.toContain(0);
+	expect(before.boxes, 'every part shown').not.toContain(null);
 	await change();
 	expect(await measureParts(parts)).toEqual(before);
 };

@@ -7,11 +7,12 @@ import { makeDisplayPath } from '../routes';
 import type { Store } from '../storage';
 import { createTournament, type Phase, type Tournament } from '../tournament';
 import { useTournament } from '../useTournament';
-import { dangerButton } from './classes';
+import { quietButtons } from './classes';
 import { ConfirmDialog, type Apply } from './controls';
 import { Draw } from './Draw';
 import { HouseRules } from './HouseRules';
 import { Registration } from './Registration';
+import { StepBar } from './StepBar';
 import { ThemeMenu } from './ThemeMenu';
 import { useTheme, type ThemeChoice } from './themes';
 
@@ -64,29 +65,38 @@ export const Organizer = ({
 	return (
 		/*
 		 * Fills the window and never scrolls as a page: a long list scrolls on its own inside it, so the controls
-		 * around the list stay on screen.
+		 * around the list stay on screen. A band of the theme's yellow along its top edge matches the TV's.
 		 */
-		<main className="bg-canvas font-organizer text-ink flex h-dvh flex-col px-8 py-6">
+		<main className="border-fill bg-canvas font-organizer text-ink flex h-dvh flex-col border-t-4 px-8 py-6">
 			<header className="flex items-center justify-between gap-4">
 				<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
-				<nav className="flex items-center gap-4">
-					<a
-						href={makeDisplayPath(import.meta.env.BASE_URL)}
-						target="cribbage-display"
-						className="text-accent underline"
-					>
-						Open TV display
-					</a>
-					<ThemeMenu choice={themeChoice} onChoose={themeStore.save} />
+				{/*
+				 * Stretched to one height, so the palette button, holding an icon rather than a line of text, is as
+				 * tall as the buttons beside it.
+				 */}
+				<nav className="flex items-stretch gap-2">
+					{/*
+					 * Outlined on the canvas, not filled like the buttons the night runs on, so it doesn't draw the
+					 * Organizer's eye. Its dialog still asks before anything is cleared.
+					 */}
 					<button
 						type="button"
-						className={dangerButton}
+						className={quietButtons.danger}
 						onClick={() => newTournamentDialog.current?.showModal()}
 					>
 						Start a new Tournament
 					</button>
+					<a
+						href={makeDisplayPath(import.meta.env.BASE_URL)}
+						target="cribbage-display"
+						className={quietButtons.plain}
+					>
+						Open TV display
+					</a>
+					<ThemeMenu choice={themeChoice} onChoose={themeStore.save} />
 				</nav>
 			</header>
+			<StepBar phase={tournament.phase} />
 			<ConfirmDialog
 				ref={newTournamentDialog}
 				message="Start a new Tournament? Every Player, Board and the Draw will be cleared."

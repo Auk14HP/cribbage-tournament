@@ -270,7 +270,43 @@ const listThemeChoices = () =>
 		isChosen: item.getAttribute('aria-checked') === 'true',
 	}));
 
+// The step bar: Register, House Rules, Draw, Now playing and Finished.
+const getStepBar = () => screen.getByRole('list', { name: 'Tournament steps' });
+
+// The step the step bar marks as the current one.
+const readCurrentStep = () =>
+	within(getStepBar()).getByRole('listitem', { current: 'step' }).textContent;
+
 describe('the organizer route', () => {
+	it('marks the phase’s step current in the step bar, from Register to Finished, offering no controls there', async () => {
+		const user = showOrganizer();
+		await register(user, 'Dave K.');
+		await register(user, 'Big Dave');
+		await setBoardCount(user, '1');
+		// The step bar stays on screen through every phase, so it is found once.
+		const stepBar = within(getStepBar());
+		const steps = stepBar.getAllByRole('listitem').map((step) => step.textContent);
+		expect(steps).toEqual(['Register', 'House Rules', 'Draw', 'Now playing', 'Finished']);
+		expect(readCurrentStep()).toBe('Register');
+
+		await showHouseRules(user);
+		expect(readCurrentStep()).toBe('House Rules');
+
+		await confirmDraw(user);
+		expect(readCurrentStep()).toBe('Draw');
+
+		await clickButton(user, 'Start');
+		expect(readCurrentStep()).toBe('Now playing');
+
+		const [champion] = listWinnerNames(findPlayingRow());
+		await recordWin(user, findPlayingRow(), champion);
+		await answerDialog(user, 'Leaving');
+		expect(readCurrentStep()).toBe('Finished');
+
+		expect(stepBar.queryAllByRole('button')).toEqual([]);
+		expect(stepBar.queryAllByRole('link')).toEqual([]);
+	});
+
 	it('registers a Player, lists them with the running count, and clears the name box', async () => {
 		const user = showOrganizer();
 
@@ -429,7 +465,9 @@ describe('the organizer route', () => {
 
 		await confirmDraw(user);
 
-		expect(getRefusalIn('House Rules')).toHaveTextContent('The Draw needs at least one Board.');
+		expect(getRefusalIn('Make the Draw')).toHaveTextContent(
+			'The Draw needs at least one Board.',
+		);
 	});
 
 	it('offers Show House Rules in place of Make the Draw, starting with no House Rule shown', async () => {

@@ -12,7 +12,7 @@ import {
 	type Tournament,
 } from '../tournament';
 import { describePlayersRegistered } from '../wording';
-import { button, dangerButton, primaryButton, textInput, windowFilling } from './classes';
+import { button, dangerButton, panel, primaryButton, textInput, windowFilling } from './classes';
 import { NumberBox, Refusal, type Apply } from './controls';
 import { HomeBoardPicker } from './HomeBoardPicker';
 import { ScreenTiming } from './ScreenTiming';
@@ -80,77 +80,79 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 	};
 
 	return (
-		<div className={`${windowFilling.row} mt-6`}>
-			<section aria-label="Players" className={`${windowFilling.column} flex-1`}>
-				<form onSubmit={register} className="flex items-center gap-2">
-					<label className="flex items-center gap-2">
-						Player name
-						<input
-							ref={nameInput}
-							type="text"
-							placeholder="Name the room knows them by"
-							autoComplete="off"
-							autoFocus
-							value={name}
-							onChange={(event) => setName(event.target.value)}
-							className={`${textInput} w-80`}
-						/>
-					</label>
-					<button type="submit" className={button}>
-						Register
-					</button>
-				</form>
-				<Refusal reason={playersRefusal} />
-				<p className="mt-2">{describePlayersRegistered(tournament.players.length)}</p>
-				<ul
-					ref={playersList}
-					aria-label="Players"
-					className={`${windowFilling.scrollingArea} mt-2`}
-				>
-					{tournament.players.map((player) =>
-						player.id === renaming ? (
-							<RenameRow
-								key={player.id}
-								player={player}
-								onSave={(newName) => {
-									const refusal = apply(
-										renamePlayer(tournament, player.id, newName),
-									);
-									if (refusal) {
-										setPlayersRefusal(refusal);
-									} else {
-										stopRenaming();
-									}
-								}}
-								onCancel={stopRenaming}
+		<div className={windowFilling.row}>
+			<div className={windowFilling.mainColumn}>
+				<section aria-label="Players" className={`${panel} ${windowFilling.column}`}>
+					<form onSubmit={register} className="flex items-center gap-2">
+						<label className="flex items-center gap-2">
+							Player name
+							<input
+								ref={nameInput}
+								type="text"
+								placeholder="Name the room knows them by"
+								autoComplete="off"
+								autoFocus
+								value={name}
+								onChange={(event) => setName(event.target.value)}
+								className={`${textInput} w-80`}
 							/>
-						) : (
-							<li
-								key={player.id}
-								className="border-divider flex items-center gap-2 border-b py-1.5"
-							>
-								<span className="flex-1 text-lg">{player.name}</span>
-								<button
-									type="button"
-									className={button}
-									onClick={() => startRenaming(player.id)}
+						</label>
+						<button type="submit" className={button}>
+							Register
+						</button>
+					</form>
+					<Refusal reason={playersRefusal} />
+					<p className="mt-2">{describePlayersRegistered(tournament.players.length)}</p>
+					<ul
+						ref={playersList}
+						aria-label="Players"
+						className={`${windowFilling.scrollingArea} mt-2`}
+					>
+						{tournament.players.map((player) =>
+							player.id === renaming ? (
+								<RenameRow
+									key={player.id}
+									player={player}
+									onSave={(newName) => {
+										const refusal = apply(
+											renamePlayer(tournament, player.id, newName),
+										);
+										if (refusal) {
+											setPlayersRefusal(refusal);
+										} else {
+											stopRenaming();
+										}
+									}}
+									onCancel={stopRenaming}
+								/>
+							) : (
+								<li
+									key={player.id}
+									className="border-divider flex items-center gap-2 border-b py-1.5"
 								>
-									Rename
-								</button>
-								<button
-									type="button"
-									className={dangerButton}
-									onClick={() => remove(player.id)}
-								>
-									Remove
-								</button>
-							</li>
-						),
-					)}
-				</ul>
-			</section>
-			<div className="w-80">
-				<section aria-label="Boards">
+									<span className="flex-1 text-lg">{player.name}</span>
+									<button
+										type="button"
+										className={button}
+										onClick={() => startRenaming(player.id)}
+									>
+										Rename
+									</button>
+									<button
+										type="button"
+										className={dangerButton}
+										onClick={() => remove(player.id)}
+									>
+										Remove
+									</button>
+								</li>
+							),
+						)}
+					</ul>
+				</section>
+			</div>
+			<div className={windowFilling.sideColumn}>
+				<section aria-label="Boards" className={panel}>
 					<h2 className="text-xl font-bold">Boards</h2>
 					<NumberBox
 						label="Number of Boards"

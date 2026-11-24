@@ -7,6 +7,7 @@ import {
 	type Tournament,
 	type TvChoice,
 } from '../tournament';
+import { panel } from './classes';
 import { NumberBox, Refusal, type Apply } from './controls';
 
 /*
@@ -26,7 +27,7 @@ export const ScreenTiming = ({ tournament, apply }: { tournament: Tournament; ap
 	};
 	const screens = listTvScreens(tournament);
 	return (
-		<section aria-label="TV screens" className="mt-8 first:mt-0">
+		<section aria-label="TV screens" className={panel}>
 			<h2 className="text-xl font-bold">TV screens</h2>
 			<NumberBox
 				label="Seconds per TV screen"
