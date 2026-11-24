@@ -5,7 +5,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { makeDisplayPath } from '../routes';
 import type { Store } from '../storage';
-import { createTournament, type Phase, type Tournament } from '../tournament';
+import { createTournament, restartTvCycleIfDue, type Phase, type Tournament } from '../tournament';
 import { useTournament } from '../useTournament';
 import { quietButtons } from './classes';
 import { ConfirmDialog, type Apply } from './controls';
@@ -51,7 +51,9 @@ export const Organizer = ({
 		if (!outcome.ok) {
 			return outcome.reason;
 		}
-		store.save(outcome.value);
+		// Starts Auto's TV cycle again now if the command calls for it, so every window works out the same screen.
+		const now = Date.now();
+		store.save(restartTvCycleIfDue({ before: tournament, after: outcome.value, now }));
 		return '';
 	};
 

@@ -78,11 +78,13 @@
 }
 
 /*
- * The TV's countdown ring fills over each screen's time. Inline, so the utility reads
- * --countdown-duration where it is used, set from the Tournament's screenSeconds.
+ * The TV's countdown ring fills over each screen's time. Inline, so the utility reads --countdown-duration
+ * where it is used, set from the Tournament's screenSeconds, and --countdown-elapsed, the part of that time
+ * already gone when the ring appears: a TV window reloaded mid-screen starts the ring part filled.
  */
 @theme inline {
-	--animate-countdown: countdown var(--countdown-duration) linear forwards;
+	--animate-countdown: countdown var(--countdown-duration) linear
+		calc(-1 * var(--countdown-elapsed, 0s)) forwards;
 
 	@keyframes countdown {
 		from {

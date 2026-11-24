@@ -5,7 +5,7 @@
  */
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Store } from '../storage';
-import { listTvScreens, type Random, type Tournament, type TvScreen } from '../tournament';
+import { findTvScreenOnShow, type Random, type Tournament, type TvScreen } from '../tournament';
 import { useTournament } from '../useTournament';
 import { Bracket } from './Bracket';
 import { Champion } from './Champion';
@@ -36,9 +36,8 @@ export const Display = ({ store, random }: { store: Store<Tournament>; random: R
 							heading="Tonight’s Draw"
 						/>
 					)}
-					{/* Keyed by phase, so finishing starts the cycle again from its first screen, or the Held screen. */}
 					{(tournament.phase === 'inProgress' || tournament.phase === 'finished') && (
-						<Cycle key={tournament.phase} tournament={tournament} />
+						<Cycle tournament={tournament} />
 					)}
 				</div>
 			)}
@@ -54,38 +53,36 @@ const tvScreens: Record<TvScreen, (tournament: Tournament) => ReactNode> = {
 };
 
 /*
- * On Auto, shows each of the phase's screens in turn, each for the Tournament's screenSeconds, from the
- * first. A Held screen stays on show, with no countdown ring, as does a phase's only screen: there is
- * nothing to count down to. Choosing Auto again starts the cycle from the screen on show, with a fresh
- * screen time. A new screenSeconds restarts the current screen's time, so the change shows at once.
+ * Shows the screen the TV has on show, worked out from the Tournament and the clock, so a reloaded TV picks
+ * up the cycle where it was. On Auto it looks at the clock again the moment the screen's time is up, and
+ * shows a countdown ring over the screen's time; a Held screen, or a phase's only screen, has none.
  */
 const Cycle = ({ tournament }: { tournament: Tournament }) => {
-	const screens = listTvScreens(tournament);
-	const held = tournament.tvChoice === 'auto' ? undefined : tournament.tvChoice;
-	const isHeld = held !== undefined;
-	const isStill = isHeld || screens.length === 1;
-	const [shown, setShown] = useState(held ?? screens[0]);
-	// While a screen is held it is the screen on show, so Auto picks up from it.
-	if (isHeld && shown !== held) {
-		setShown(held);
-	}
-	const shownIndex = screens.indexOf(shown);
-	const nextScreen = screens[(shownIndex + 1) % screens.length];
+	// The time the screen on show was last worked out at.
+	const [now, setNow] = useState(() => Date.now());
+	// Shown only from Start, so there is always a screen on show.
+	const onShow = findTvScreenOnShow(tournament, now)!;
+	const { secondsLeft } = onShow;
+	const screenEnd = secondsLeft === undefined ? undefined : now + secondsLeft * 1000;
 	useEffect(() => {
-		if (isStill) {
+		if (screenEnd === undefined) {
 			return;
 		}
-		const timer = setTimeout(() => setShown(nextScreen), tournament.screenSeconds * 1000);
+		const timer = setTimeout(() => setNow(Date.now()), screenEnd - Date.now());
 		return () => clearTimeout(timer);
-	}, [shown, nextScreen, isStill, tournament.screenSeconds]);
-	// Keyed like the timer, so the ring starts again exactly when the screen's time does.
+	}, [screenEnd]);
+	/*
+	 * Keyed by the cycle's start and the screen, so the ring starts again exactly when the screen changes or
+	 * the cycle starts again.
+	 */
 	return (
 		<>
-			{tvScreens[shown](tournament)}
-			{!isStill && (
+			{tvScreens[onShow.screen](tournament)}
+			{secondsLeft !== undefined && (
 				<CountdownRing
-					key={`${shown} ${tournament.screenSeconds}`}
+					key={`${tournament.tvCycleStart?.time} ${onShow.screen}`}
 					seconds={tournament.screenSeconds}
+					secondsLeft={secondsLeft}
 				/>
 			)}
 		</>
@@ -100,27 +97,36 @@ const countdownRing = { size: 'h-[3vh] w-[3vh]', clearance: 'pr-[4vh]' };
 
 /*
  * A ring in the safe area's bottom-right corner that fills over the screen's time, so the room sees a change
- * coming. It sits in the strip the screen keeps clear for it, clear of every Match card.
- * Decorative, so hidden from assistive technology. The duration reaches the animation through an
- * inherited CSS variable.
+ * coming. It sits in the strip the screen keeps clear for it, clear of every Match card. It starts filled as
+ * far as the time already gone when it appears, and fills on from there.
+ * Decorative, so hidden from assistive technology. The times reach the animation through inherited CSS
+ * variables.
  */
-const CountdownRing = ({ seconds }: { seconds: number }) => (
-	<svg
-		data-testid="countdown ring"
-		aria-hidden
-		viewBox="0 0 36 36"
-		style={{ '--countdown-duration': `${seconds}s` } as CSSProperties}
-		className={`fixed -rotate-90 ${tvSafeArea.bottomRightCorner} ${countdownRing.size}`}
-	>
-		<circle {...ringCircle} className="stroke-gray-700" />
-		<circle
-			{...ringCircle}
-			pathLength={1}
-			strokeDasharray={1}
-			className="animate-countdown stroke-white"
-		/>
-	</svg>
-);
+const CountdownRing = ({ seconds, secondsLeft }: { seconds: number; secondsLeft: number }) => {
+	// Kept from when the ring appears: the animation counts on from there by itself.
+	const [elapsedSeconds] = useState(seconds - secondsLeft);
+	const countdownTimes = {
+		'--countdown-duration': `${seconds}s`,
+		'--countdown-elapsed': `${elapsedSeconds}s`,
+	} as CSSProperties;
+	return (
+		<svg
+			data-testid="countdown ring"
+			aria-hidden
+			viewBox="0 0 36 36"
+			style={countdownTimes}
+			className={`fixed -rotate-90 ${tvSafeArea.bottomRightCorner} ${countdownRing.size}`}
+		>
+			<circle {...ringCircle} className="stroke-gray-700" />
+			<circle
+				{...ringCircle}
+				pathLength={1}
+				strokeDasharray={1}
+				className="animate-countdown stroke-white"
+			/>
+		</svg>
+	);
+};
 
 // The ring's track and its filling share one circle.
 const ringCircle = { cx: 18, cy: 18, r: 15, fill: 'none', strokeWidth: 6 };

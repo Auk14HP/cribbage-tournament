@@ -52,7 +52,11 @@ for (const tvSize of tvSizes) {
 			await playFirstMatchesWithLosersStaying(organizer, { firstMatchCount: 16 });
 			const tv = await openTv(organizer, tvSize);
 
-			await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
+			/*
+			 * The TV picks up Auto's cycle where the clock has it, which may be the Losers Bracket by the time it
+			 * opens, so the cycle is moved on to the Winners Bracket and held there.
+			 */
+			await holdScreen(organizer, tv, 'Winners Bracket');
 			await expect(tv.getByTestId('countdown ring')).toBeAttached();
 			await expectClearOfRing(tv, findBracketSlots(tv));
 		});

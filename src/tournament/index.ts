@@ -27,9 +27,17 @@ export {
 	type StayingAnswer,
 	type Tournament,
 	type TvChoice,
+	type TvCycleStart,
 	type TvScreen,
 } from './types';
-export { chooseTvScreen, listTvScreens, tvScreenNames } from './tvScreen';
+export {
+	chooseTvScreen,
+	findTvScreenOnShow,
+	listTvScreens,
+	restartTvCycleIfDue,
+	tvScreenNames,
+	type TvScreenOnShow,
+} from './tvScreen';
 export { getMatchKey, hasLostIn } from './bracket';
 export {
 	clearHomeBoard,
