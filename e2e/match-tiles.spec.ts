@@ -1,4 +1,5 @@
 import { expect, type Locator } from '@playwright/test';
+import { expectNothingMoves } from './screenStill';
 import {
 	confirmDraw,
 	findMatchesOnBoards,
@@ -8,6 +9,7 @@ import {
 
 /*
  * The Organizer's Match tiles, laid out in a real browser: jsdom can't measure where a tile draws its parts.
+ * The Forfeit stays beside each tile's second Player, and Start, which brings it, moves nothing.
  */
 
 test.use({ viewport: { width: 1280, height: 900 } });
@@ -56,4 +58,24 @@ test('keeps each Forfeit level with its second Player, beside a tile made taller
 		const digitsAfterPoint = 0;
 		expect(forfeitFoot).toBeCloseTo(secondPlayerFoot, digitsAfterPoint);
 	}
+});
+
+test('moves no tile, Board number or Round when Start brings each tile its Forfeit', async ({
+	page,
+}) => {
+	// 21 Players on 8 Boards: Bye Players meet in Round 2 beside Round 1's Matches, so tiles name their Rounds.
+	await page.goto('/?players=21&boards=8');
+	await confirmDraw(page);
+	const tiles = findMatchesOnBoards(page).getByRole('listitem');
+	const parts = [
+		tiles,
+		tiles.getByText(/^\d+$/),
+		tiles.getByText(/^(Round \d+|Final)$/),
+		page.getByRole('heading', { name: 'Winners Bracket' }),
+	];
+
+	await expectNothingMoves(parts, async () => {
+		await page.getByRole('button', { name: 'Start', exact: true }).click();
+		await expect(tiles.getByRole('button', { name: 'Forfeit' }).first()).toBeVisible();
+	});
 });

@@ -51,10 +51,17 @@ const expectReadableText = async (page: Page, moment: string) => {
 const playUntilLosersBracketOpens = async (page: Page) => {
 	const losersPanel = page.getByRole('region', { name: 'Losers Bracket' });
 	const nextWinnerButton = findMatchesOnBoards(page).getByRole('button').first();
-	while (!(await losersPanel.isVisible())) {
+	// The walk's 9 Players play 8 Winners Bracket Matches: the Losers Bracket opens within them, or never.
+	const winnersMatchCount = 8;
+	for (
+		let recorded = 0;
+		recorded < winnersMatchCount && !(await losersPanel.isVisible());
+		recorded++
+	) {
 		await nextWinnerButton.click();
 		await answerIsLoserStayingDialogIfAsked(page, 'Staying');
 	}
+	await expect(losersPanel, 'the Losers Bracket opens').toBeVisible();
 };
 
 /*
