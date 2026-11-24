@@ -12,12 +12,12 @@ import { tvSafeArea } from './tvSafeArea';
 export const Players = ({ tournament, random }: { tournament: Tournament; random: Random }) => (
 	<div className={`flex flex-col ${tvSafeArea.fullHeight}`}>
 		<TournamentTitle tournament={tournament} titleElement="h1" />
-		<p className="mt-[1.5vh] mb-[2vh] text-[4.5vh] leading-none text-yellow-300">
+		<p className="mt-[1.5cqh] mb-[2cqh] text-[4.5cqh] leading-none text-yellow-300">
 			{describePlayersRegistered(tournament.players.length)}
 		</p>
 		<ul
 			aria-label="Players"
-			className="min-h-0 flex-1 columns-3 gap-x-[4vw] text-[4.2vh] leading-tight font-semibold"
+			className="min-h-0 flex-1 columns-3 gap-x-[4cqw] text-[4.2cqh] leading-tight font-semibold"
 		>
 			{tournament.players.map((p) => (
 				<li key={p.id}>{p.name}</li>

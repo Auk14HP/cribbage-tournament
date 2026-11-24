@@ -15,6 +15,7 @@ import {
 } from '../tournament';
 import { button, panel, primaryButton, windowFilling } from './classes';
 import { ConfirmDialog, Refusal, type Apply } from './controls';
+import { TvDisplay } from './TvDisplay';
 
 export const HouseRules = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const [refusal, setRefusal] = useState('');
@@ -95,6 +96,7 @@ export const HouseRules = ({ tournament, apply }: { tournament: Tournament; appl
 						Back to registration
 					</button>
 				</section>
+				<TvDisplay tournament={tournament} apply={apply} />
 			</div>
 		</div>
 	);

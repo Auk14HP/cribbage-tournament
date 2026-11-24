@@ -15,6 +15,9 @@ import { expectWhollyOnScreen } from './whollyOnScreen';
 
 const windowSize = { width: 1280, height: 720 };
 
+// The Organizer's Players panel, apart from the TV Display panel's thumbnail, which shows the count too.
+const findPlayersPanel = (page: Page) => page.getByRole('region', { name: 'Players' });
+
 test.use({ viewport: windowSize });
 
 const expectPageDoesNotScroll = async (page: Page) => {
@@ -115,10 +118,10 @@ test.describe('Registering a long field', () => {
 		await expectWhollyOnScreen([
 			page.getByLabel('Player name'),
 			page.getByRole('button', { name: 'Register' }),
-			page.getByText('32 Players registered'),
+			findPlayersPanel(page).getByText('32 Players registered'),
 			page.getByRole('heading', { name: 'Boards' }),
 			page.getByRole('button', { name: 'Show House Rules' }),
-			page.getByRole('heading', { name: 'TV screens' }),
+			page.getByRole('heading', { name: 'TV Display' }),
 		]);
 		expect(await isScrollable(players)).toBe(true);
 		await expectScrollingAreaFillsSpaceLeft(players);
@@ -156,7 +159,7 @@ test.describe('Registering a long field', () => {
 });
 
 test.describe('Playing a long field', () => {
-	test('keeps Start and the TV screens on screen on Tonight’s Draw while the Matches list scrolls', async ({
+	test('keeps Start and the TV Display panel on screen on Tonight’s Draw while the Matches list scrolls', async ({
 		page,
 	}) => {
 		await page.goto('/?players=32&boards=16');
@@ -165,7 +168,7 @@ test.describe('Playing a long field', () => {
 		const controls = [
 			page.getByRole('heading', { name: 'Matches' }),
 			page.getByRole('button', { name: 'Start', exact: true }),
-			page.getByRole('heading', { name: 'TV screens' }),
+			page.getByRole('heading', { name: 'TV Display' }),
 		];
 
 		await expectPageDoesNotScroll(page);
@@ -176,7 +179,7 @@ test.describe('Playing a long field', () => {
 		await expectWhollyOnScreen(controls);
 	});
 
-	test('keeps the Matches heading, its refusal line and the TV screens on screen once Started, as Results pile up', async ({
+	test('keeps the Matches heading, its refusal line and the TV Display panel on screen once Started, as Results pile up', async ({
 		page,
 	}) => {
 		await startWithTwelveResults(page);
@@ -185,7 +188,7 @@ test.describe('Playing a long field', () => {
 		await expectWhollyOnScreen([
 			page.getByRole('heading', { name: 'Matches' }),
 			page.getByText('Tap a Match’s winner.'),
-			page.getByRole('heading', { name: 'TV screens' }),
+			page.getByRole('heading', { name: 'TV Display' }),
 			page.getByRole('heading', { name: 'Results' }),
 		]);
 		await expectRefusalLinesOnScreen(page);
@@ -194,7 +197,7 @@ test.describe('Playing a long field', () => {
 		await expectRowScrollsIntoView(page, findLastRow(matches));
 	});
 
-	test('scrolls the Results list on its own in a short window, keeping the TV screens on screen', async ({
+	test('scrolls the Results list on its own in a short window, keeping the TV Display panel on screen', async ({
 		page,
 	}) => {
 		await startWithTwelveResults(page);
@@ -204,7 +207,7 @@ test.describe('Playing a long field', () => {
 
 		await expectPageDoesNotScroll(page);
 		await expectWhollyOnScreen([
-			page.getByRole('heading', { name: 'TV screens' }),
+			page.getByRole('heading', { name: 'TV Display' }),
 			page.getByRole('heading', { name: 'Results' }),
 		]);
 		expect(await isScrollable(page.getByRole('list', { name: 'Results' }))).toBe(true);
@@ -284,7 +287,9 @@ test.describe('Fields of several shapes', () => {
 			page,
 		}) => {
 			await page.goto(`/?players=${playerCount}&boards=${boardCount}`);
-			await expect(page.getByText(`${playerCount} Players registered`)).toBeVisible();
+			await expect(
+				findPlayersPanel(page).getByText(`${playerCount} Players registered`),
+			).toBeVisible();
 			await expect(page.getByLabel('Number of Boards')).toHaveValue(String(boardCount));
 			await expectEveryLastRowReachable(page);
 

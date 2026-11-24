@@ -15,7 +15,7 @@ import { describePlayersRegistered } from '../wording';
 import { button, dangerButton, panel, primaryButton, textInput, windowFilling } from './classes';
 import { NumberBox, Refusal, type Apply } from './controls';
 import { HomeBoardPicker } from './HomeBoardPicker';
-import { ScreenTiming } from './ScreenTiming';
+import { TvDisplay } from './TvDisplay';
 
 export const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const [name, setName] = useState('');
@@ -178,7 +178,7 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 					</button>
 					<Refusal reason={boardsRefusal} />
 				</section>
-				<ScreenTiming tournament={tournament} apply={apply} />
+				<TvDisplay tournament={tournament} apply={apply} />
 			</div>
 		</div>
 	);

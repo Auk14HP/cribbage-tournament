@@ -97,6 +97,24 @@
 }
 
 /*
+ * The Organizer's countdown strip, beneath the TV's thumbnail, empties over each screen's time, in step with
+ * the TV's countdown ring. It reads the same variables as the ring.
+ */
+@theme inline {
+	--animate-countdown-strip: countdown-strip var(--countdown-duration) linear
+		calc(-1 * var(--countdown-elapsed, 0s)) forwards;
+
+	@keyframes countdown-strip {
+		from {
+			transform: scaleX(1);
+		}
+		to {
+			transform: scaleX(0);
+		}
+	}
+}
+
+/*
  * Each Fun Fact on the TV fades in at the start of its time and out at the end, so one fades into the next.
  * Inline, so the utility reads --fun-fact-duration where it is used.
  */

@@ -12,14 +12,14 @@ test.use({ viewport: { width: 1280, height: 720 } });
 
 /*
  * The parts of Tonight's Draw: the button that turns Swap mode on and off, every Match row, on a Board or
- * waiting for one, Start, and the TV screens heading below it.
+ * waiting for one, Start, and the TV Display heading below it.
  */
 const listDrawScreenParts = (page: Page) => [
 	page.getByRole('button', { name: /^(Swap Players|Done)$/ }),
 	findMatchesOnBoards(page).getByRole('listitem'),
 	page.getByRole('list', { name: 'Waiting for a Board' }).getByRole('listitem'),
 	page.getByRole('button', { name: 'Start', exact: true }),
-	page.getByRole('heading', { name: 'TV screens' }),
+	page.getByRole('heading', { name: 'TV Display' }),
 ];
 
 test('moves nothing on Tonight’s Draw when Swap mode starts, when a Player is picked, or on Done', async ({

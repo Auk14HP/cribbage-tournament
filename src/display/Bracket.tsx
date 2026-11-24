@@ -13,7 +13,7 @@ import { tvSafeArea } from './tvSafeArea';
 import { describeFinal, describeHalf, getPathShade, type BracketSlot } from './bracketLines';
 
 // Text shrinks as the bracket grows, so a 32-place bracket's nine columns fit across the TV.
-const bracketText = ['text-[5vh]', 'text-[5vh]', 'text-[4vh]', 'text-[3.2vh]', 'text-[2.5vh]'];
+const bracketText = ['text-[5cqh]', 'text-[5cqh]', 'text-[4cqh]', 'text-[3.2cqh]', 'text-[2.5cqh]'];
 
 /*
  * A whole bracket: its two halves run in from either side to the final in the middle. Each Round's Matches
@@ -38,15 +38,15 @@ export const Bracket = ({
 	return (
 		<div className={`flex flex-col ${tvSafeArea.fullHeight}`}>
 			<div className="flex items-baseline justify-between">
-				<h1 className="text-[6vh] leading-none font-bold">{heading}</h1>
+				<h1 className="text-[6cqh] leading-none font-bold">{heading}</h1>
 				{champion && (
-					<p className="text-[6vh] leading-none font-bold text-yellow-300">
+					<p className="text-[6cqh] leading-none font-bold text-yellow-300">
 						Champion: {champion.name}
 					</p>
 				)}
 			</div>
 			<div
-				className={`mt-[2vh] flex flex-1 gap-[1vw] leading-[1.15] ${bracketText[rounds.length - 1]}`}
+				className={`mt-[2cqh] flex flex-1 gap-[1cqw] leading-[1.15] ${bracketText[rounds.length - 1]}`}
 			>
 				{earlier.map((round) => (
 					<BracketColumn
@@ -88,7 +88,7 @@ const BracketColumn = ({
 	champion?: Player;
 }) => (
 	<section className="flex min-w-min flex-auto flex-col">
-		<h2 className="text-center text-[2.5vh] font-bold whitespace-nowrap text-gray-300">
+		<h2 className="text-center text-[2.5cqh] font-bold whitespace-nowrap text-gray-300">
 			{name}
 		</h2>
 		<ul aria-label={name} className="flex flex-1 flex-col">
@@ -134,7 +134,7 @@ const MatchBox = ({
 }) => (
 	<div
 		data-testid="match card"
-		className={`w-full rounded-[1vh] border-[0.3vh] px-[0.6vw] py-[0.3vh] font-semibold ${champion ? 'border-yellow-300 bg-yellow-300 text-black' : getPathShade('card', isOnPath)}`}
+		className={`w-full rounded-[1cqh] border-[0.3cqh] px-[0.6cqw] py-[0.3cqh] font-semibold ${champion ? 'border-yellow-300 bg-yellow-300 text-black' : getPathShade('card', isOnPath)}`}
 	>
 		{match.board !== undefined && (
 			<span className="block whitespace-nowrap text-yellow-300">Board {match.board}</span>

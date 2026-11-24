@@ -18,7 +18,7 @@ import { BracketMatches } from './BracketMatches';
 import { button, panel, primaryButton, windowFilling } from './classes';
 import { Refusal, type Apply } from './controls';
 import { Results } from './Results';
-import { ScreenTiming } from './ScreenTiming';
+import { TvDisplay } from './TvDisplay';
 import { StayingDialog } from './StayingDialog';
 import type { SwapPicking } from './PlayerName';
 import { WaitingForBoard } from './WaitingForBoard';
@@ -233,8 +233,8 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 						<Refusal reason={refusal} />
 					</section>
 				)}
-				{/* Below the TV screens box, so the list growing never moves that box. */}
-				<ScreenTiming tournament={tournament} apply={apply} />
+				{/* Below the TV Display panel, so the list growing never moves that box. */}
+				<TvDisplay tournament={tournament} apply={apply} />
 				<Results tournament={tournament} apply={apply} />
 			</div>
 		</div>
