@@ -99,6 +99,7 @@ const expectRowScrollsIntoView = async (page: Page, row: Locator) => {
  * mouse wheel: the side column scrolls, and the page itself stays put.
  */
 const expectReachableInSideColumn = async (page: Page, part: Locator) => {
+	await expect(part).not.toBeInViewport({ ratio: 1 });
 	await expectWhollyOnScreenOnceScrolledTo(part);
 	await expectPageDoesNotScroll(page);
 };
@@ -201,8 +202,8 @@ test.describe('Playing a long field', () => {
 			page.getByRole('heading', { name: 'Matches' }),
 			page.getByText('Tap a Match’s winner.'),
 			page.getByRole('heading', { name: 'TV Display' }),
+			page.getByRole('heading', { name: 'Results' }),
 		]);
-		await expectReachableInSideColumn(page, page.getByRole('heading', { name: 'Results' }));
 		const matches = findMatchesOnBoards(page);
 		await expectScrollingAreaFillsSpaceLeft(matches);
 		await expectRowScrollsIntoView(page, findLastRow(matches));
@@ -219,8 +220,8 @@ test.describe('Playing a long field', () => {
 		await expectPageDoesNotScroll(page);
 		await expectWhollyOnScreen([page.getByRole('heading', { name: 'TV Display' })]);
 		const results = page.getByRole('list', { name: 'Results' });
-		await expectReachableInSideColumn(page, page.getByRole('heading', { name: 'Results' }));
 		await expectReachableInSideColumn(page, results.getByRole('listitem').first());
+		await expectWhollyOnScreen([page.getByRole('heading', { name: 'Results' })]);
 		expect(await isScrollable(results)).toBe(true);
 	});
 

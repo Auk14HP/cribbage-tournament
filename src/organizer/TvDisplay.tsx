@@ -39,8 +39,8 @@ export const TvDisplay = ({ tournament, apply }: { tournament: Tournament; apply
 		setRefusal(reason);
 	};
 	const screens = listTvScreens(tournament);
-	// Before Start the TV shows one screen per phase on its own: there is never a choice to make.
-	const isStarted = tournament.phase === 'inProgress' || tournament.phase === 'finished';
+	// Before Start the TV shows each phase's one screen on its own: it has no screens to choose between.
+	const isStarted = screens.length > 0;
 	// With only the Winners Bracket to show, there is nothing to cycle yet: no Auto, and no time to set.
 	const hasScreensToCycle = screens.length > 1;
 	const countdown = describeCountdown(tournament, onShow);
@@ -78,6 +78,7 @@ export const TvDisplay = ({ tournament, apply }: { tournament: Tournament; apply
 									key={tvScreen}
 									choice={tvScreen}
 									label={tvScreenNames[tvScreen]}
+									// The lone pill, the Winners Bracket, is the screen on show, whatever choice is saved.
 									isChosen={
 										!hasScreensToCycle || tournament.tvChoice === tvScreen
 									}
@@ -111,14 +112,14 @@ const phaseScreenNames: Partial<Record<Phase, string>> = {
 const nameTvScreen = (tournament: Tournament, onShow: TvScreenOnShow | undefined) =>
 	onShow ? tvScreenNames[onShow.screen] : phaseScreenNames[tournament.phase];
 
-// How many numbers drawRandomApartFromMathRandom asks the browser for at a time.
+// How many numbers pickRandomApartFromMathRandom asks the browser for at a time.
 const randomNumberCount = 1;
 
 /*
  * Returns a number from 0 up to 1, as Math.random does, without drawing on Math.random: the browser tests
  * replace Math.random to repeat the Draw, and the thumbnail's Fun Facts mustn't use up its numbers.
  */
-const drawRandomApartFromMathRandom = () => {
+const pickRandomApartFromMathRandom = () => {
 	const [randomWhole] = crypto.getRandomValues(new Uint32Array(randomNumberCount));
 	return randomWhole / 2 ** 32;
 };
@@ -146,7 +147,7 @@ const TvThumbnail = ({
 			<TvScreenView
 				tournament={tournament}
 				onShow={onShow}
-				random={drawRandomApartFromMathRandom}
+				random={pickRandomApartFromMathRandom}
 			/>
 		</div>
 	</div>

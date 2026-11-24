@@ -22,6 +22,7 @@ export const Results = ({ tournament, apply }: { tournament: Tournament; apply: 
 		const reason = apply(undoResult(tournament, match));
 		setRefusal(reason);
 	};
+	const minHeight = minHeightByResultCount[Math.min(results.length, maxKeptRows)];
 	if (results.length === 0 && !refusal) {
 		return null;
 	}
@@ -29,10 +30,7 @@ export const Results = ({ tournament, apply }: { tournament: Tournament; apply: 
 		<section className={`${panel} ${windowFilling.column}`}>
 			<h2 className="text-xl font-bold">Results</h2>
 			<p className="text-muted mt-1">Undo a result to correct it.</p>
-			<ul
-				aria-label="Results"
-				className={`mt-2 overflow-y-auto ${keptRowHeights[Math.min(results.length, keptRowHeights.length - 1)]}`}
-			>
+			<ul aria-label="Results" className={`mt-2 overflow-y-auto ${minHeight}`}>
 				{results.map((result) => (
 					<li
 						key={getMatchKey(result.match)}
@@ -64,7 +62,8 @@ export const Results = ({ tournament, apply }: { tournament: Tournament; apply: 
  * rows, a little under their own height. Below that it shrinks to the space left and scrolls; the side column
  * scrolls to it, so it never shrinks to nothing. Written out whole so Tailwind finds each class.
  */
-const keptRowHeights = ['min-h-0', 'min-h-14', 'min-h-28'];
+const minHeightByResultCount = ['min-h-0', 'min-h-14', 'min-h-28'];
+const maxKeptRows = minHeightByResultCount.length - 1;
 
 const describeResult = ({ board, winner, loser, isForfeit }: RecordedResult): string =>
 	isForfeit

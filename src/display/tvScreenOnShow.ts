@@ -29,8 +29,8 @@ export const useTvScreenOnShow = (tournament: Tournament): TvScreenOnShow | unde
 };
 
 /*
- * The countdown over the screen on show: how long the screen shows, the seconds left of it, and the key that
- * tells one screen's countdown from the next, the cycle's start and the screen. A countdown keyed by it
+ * The countdown over the screen on show holds how long the screen shows, the seconds left of it, and the key
+ * that tells one screen's countdown from the next: the cycle's start and the screen. A countdown keyed by it
  * starts again exactly when the screen changes or the cycle starts again.
  */
 export interface Countdown {

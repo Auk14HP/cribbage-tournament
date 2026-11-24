@@ -327,9 +327,7 @@ describe('the organizer route', () => {
 		await clickButton(user, 'Start');
 		expect(readCurrentStep()).toBe('Now playing');
 
-		const [champion] = listWinnerNames(findPlayingRow());
-		await recordWin(user, findPlayingRow(), champion);
-		await answerDialog(user, 'Leaving');
+		await winTheFinal(user);
 		expect(readCurrentStep()).toBe('Finished');
 
 		expect(stepBar.queryAllByRole('button')).toEqual([]);
@@ -1024,7 +1022,7 @@ describe('the organizer route', () => {
 		expect(screen.getByLabelText('Seconds per TV screen')).toHaveValue('20');
 	});
 
-	it('offers the TV’s choice and seconds from Start, disabled until there are screens to cycle, the champions first, and saves the screen held', async () => {
+	it('offers the TV’s choice and seconds from Start, disabled until there are screens to cycle', async () => {
 		const user = showOrganizer();
 		expectTvControlsHidden();
 		await makeTheDraw(user, ['Dave K.', 'Big Dave'], '1');
@@ -1037,14 +1035,20 @@ describe('the organizer route', () => {
 		expect(screen.getByRole('radio', { name: 'Winners Bracket' })).toBeDisabled();
 		expect(screen.getByLabelText('Seconds per TV screen')).toBeDisabled();
 
-		const [champion] = listWinnerNames(findPlayingRow());
-		await recordWin(user, findPlayingRow(), champion);
-		await answerDialog(user, 'Leaving');
+		// The champions' screen joins the Winners Bracket: two screens to cycle.
+		await winTheFinal(user);
+		expect(screen.getByRole('radio', { name: 'Auto' })).toBeEnabled();
+		expect(screen.getByLabelText('Seconds per TV screen')).toBeEnabled();
+	});
+
+	it('offers the finished Tournament’s screens, the champions first, and saves the screen held', async () => {
+		const user = showOrganizer();
+		await makeTheDraw(user, ['Dave K.', 'Big Dave'], '1');
+		await clickButton(user, 'Start');
+		await winTheFinal(user);
 
 		expect(listTvChoices()).toEqual(['Auto', 'Champion', 'Winners Bracket']);
 		expect(screen.getByRole('radio', { name: 'Auto' })).toBeChecked();
-		expect(screen.getByRole('radio', { name: 'Auto' })).toBeEnabled();
-		expect(screen.getByLabelText('Seconds per TV screen')).toBeEnabled();
 
 		await user.click(screen.getByRole('radio', { name: 'Winners Bracket' }));
 		cleanup();
@@ -1258,6 +1262,13 @@ const showOrganizerWithStore = (saved?: Tournament): Store<Tournament> => {
 const showOrganizerCyclingScreens = () => {
 	showOrganizerWithStore(playIntoLosersBracket());
 	return userEvent.setup();
+};
+
+// Records the only Match left, the Final, for its first-named Player, the loser leaving: the Tournament finished.
+const winTheFinal = async (user: User) => {
+	const [champion] = listWinnerNames(findPlayingRow());
+	await recordWin(user, findPlayingRow(), champion);
+	await answerDialog(user, 'Leaving');
 };
 
 // Checks the choice of what the TV shows, and its seconds, are gone: before Start there is never a choice.

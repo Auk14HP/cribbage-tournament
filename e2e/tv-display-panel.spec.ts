@@ -3,6 +3,7 @@ import { expectNothingMoves } from './screenStill';
 import {
 	confirmDrawFromHouseRules,
 	openTv,
+	playToFinal,
 	playFirstMatchesWithLosersStaying,
 	showHouseRules,
 	startTournament,
@@ -129,16 +130,16 @@ test('moves nothing in the TV Display panel when the strip comes and goes with a
 });
 
 // The TV Display panel's heading and thumbnail: where the Organizer looks for what the TV shows.
-const findPanelTop = (organizer: Page) => {
+const findPanelTopParts = (organizer: Page) => {
 	const panel = organizer.getByRole('region', { name: 'TV Display' });
 	return [panel.getByRole('heading', { name: 'TV Display' }), findThumbnail(organizer)];
 };
 
-test('keeps the TV Display panel in one place from registration to Now playing', async ({
+test('keeps the TV Display panel in one place from registration to the finish', async ({
 	page: organizer,
 }) => {
 	await organizer.goto('/?players=6&boards=3');
-	const panelTop = findPanelTop(organizer);
+	const panelTop = findPanelTopParts(organizer);
 
 	await expectNothingMoves(panelTop, async () => {
 		await showHouseRules(organizer);
@@ -152,6 +153,10 @@ test('keeps the TV Display panel in one place from registration to Now playing',
 		await organizer.getByRole('button', { name: 'Start', exact: true }).click();
 		await expect(organizer.getByRole('heading', { name: 'Now playing' })).toBeVisible();
 	});
+	await expectNothingMoves(panelTop, async () => {
+		await playToFinal(organizer);
+		await expect(organizer.getByRole('heading', { name: 'Tournament finished' })).toBeVisible();
+	});
 });
 
 test('moves nothing below the TV Display panel when the Losers Bracket brings screens to cycle', async ({
@@ -161,7 +166,7 @@ test('moves nothing below the TV Display panel when the Losers Bracket brings sc
 	await startTournament(organizer, { players: 6 });
 	await playFirstMatchesWithLosersStaying(organizer, { firstMatchCount: 2 });
 	const resultsHeading = organizer.getByRole('heading', { name: 'Results' });
-	const parts = [...findPanelTop(organizer), resultsHeading];
+	const parts = [...findPanelTopParts(organizer), resultsHeading];
 	const autoChoice = organizer.getByRole('radio', { name: 'Auto' });
 	await expect(autoChoice).toHaveCount(0);
 
