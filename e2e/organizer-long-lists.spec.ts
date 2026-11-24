@@ -16,6 +16,9 @@ import { expectWhollyOnScreen } from './whollyOnScreen';
 
 const windowSize = { width: 1280, height: 720 };
 
+// A window too short for the side column's panels together, such as a laptop browser with its toolbars open.
+const shortWindowHeight = 505;
+
 // The Organizer's Players panel, apart from the TV Display panel's thumbnail, which shows the count too.
 const findPlayersPanel = (page: Page) => page.getByRole('region', { name: 'Players' });
 
@@ -223,18 +226,19 @@ test.describe('Playing a long field', () => {
 		await expectRowScrollsIntoView(page, findLastRow(matches));
 	});
 
-	test('scrolls the side column to every Result in a short window, the Results panel holding them all', async ({
+	test('scrolls the side column to the last result in a short window, the Results panel keeping its whole height', async ({
 		page,
 	}) => {
 		// 8 Players open 4 first Matches; their 4 results, losers staying, draw the Losers Bracket.
 		await startTournament(page, { players: 8 });
 		await playFirstMatchesWithLosersStaying(page, { firstMatchCount: 4 });
 		// Too short for the TV Display panel and the Results together.
-		await page.setViewportSize({ width: windowSize.width, height: 505 });
+		await page.setViewportSize({ width: windowSize.width, height: shortWindowHeight });
 		const resultsPanel = page.getByRole('region', { name: 'Results' });
 		const results = resultsPanel.getByRole('list', { name: 'Results' });
 
 		await expectPageDoesNotScroll(page);
+		await expectWhollyOnScreen([page.getByRole('heading', { name: 'TV Display' })]);
 		expect(await isScrollable(results)).toBe(false);
 		await expectPanelHoldsEveryPart(resultsPanel, [
 			resultsPanel.getByRole('heading', { name: 'Results' }),
