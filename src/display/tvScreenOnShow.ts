@@ -1,5 +1,5 @@
 // What both the TV and the Organizer's thumbnail of it need to draw the TV screen on show.
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { findTvScreenOnShow, type Tournament, type TvScreenOnShow } from '../tournament';
 
 /*
@@ -29,11 +29,43 @@ export const useTvScreenOnShow = (tournament: Tournament): TvScreenOnShow | unde
 };
 
 /*
- * Returns what tells one screen's countdown from the next: the cycle's start and the screen. A countdown keyed
- * by it starts again exactly when the screen changes or the cycle starts again.
+ * The countdown over the screen on show: how long the screen shows, the seconds left of it, and the key that
+ * tells one screen's countdown from the next, the cycle's start and the screen. A countdown keyed by it
+ * starts again exactly when the screen changes or the cycle starts again.
  */
-export const findCountdownKey = (tournament: Tournament, onShow: TvScreenOnShow) =>
-	`${tournament.tvCycleStart?.time} ${onShow.screen}`;
+export interface Countdown {
+	readonly key: string;
+	readonly seconds: number;
+	readonly secondsLeft: number;
+}
+
+/*
+ * Returns the countdown over the screen on show, or undefined when there is nothing to count down to: before
+ * Start, on a Held screen, or on a phase's only screen.
+ */
+export const describeCountdown = (
+	tournament: Tournament,
+	onShow: TvScreenOnShow | undefined,
+): Countdown | undefined =>
+	onShow?.secondsLeft === undefined
+		? undefined
+		: {
+				key: `${tournament.tvCycleStart?.time} ${onShow.screen}`,
+				seconds: tournament.screenSeconds,
+				secondsLeft: onShow.secondsLeft,
+			};
+
+/*
+ * Returns the CSS variables a countdown's animation reads: the screen's whole time, and the part of it already
+ * gone when the countdown appears. The time gone is kept from then: the animation counts on by itself.
+ */
+export const useCountdownTimes = ({ seconds, secondsLeft }: Countdown): CSSProperties => {
+	const [elapsedSeconds] = useState(seconds - secondsLeft);
+	return {
+		'--countdown-duration': `${seconds}s`,
+		'--countdown-elapsed': `${elapsedSeconds}s`,
+	} as CSSProperties;
+};
 
 /*
  * The TV's countdown ring's size, and the strip down the safe area's right edge the screen keeps clear for it,

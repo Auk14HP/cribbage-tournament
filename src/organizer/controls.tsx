@@ -59,16 +59,19 @@ export const Refusal = ({ reason }: { reason: string }) => (
 /*
  * A box for a number the Organizer types, saved only once they are done with it: when the box loses focus
  * or they press Enter. Until then the Tournament keeps the number last saved. Leaving the box unchanged
- * saves nothing, so tabbing through it neither refuses a blank nor saves the same number again.
+ * saves nothing, so tabbing through it neither refuses a blank nor saves the same number again. A disabled
+ * box is faded and can't be typed in.
  */
 export const NumberBox = ({
 	label,
 	saved,
 	onSave,
+	disabled = false,
 }: {
 	label: string;
 	saved: string;
 	onSave: (typed: string) => void;
+	disabled?: boolean;
 }) => {
 	const [typed, setTyped] = useState(saved);
 	const [lastSaved, setLastSaved] = useState(saved);
@@ -86,6 +89,7 @@ export const NumberBox = ({
 				inputMode="numeric"
 				autoComplete="off"
 				value={typed}
+				disabled={disabled}
 				onChange={(event) => setTyped(event.target.value)}
 				onBlur={save}
 				onKeyDown={(event) => {
@@ -93,7 +97,7 @@ export const NumberBox = ({
 						save();
 					}
 				}}
-				className={`${textInput} w-20`}
+				className={`${textInput} w-20 disabled:opacity-50`}
 			/>
 		</label>
 	);

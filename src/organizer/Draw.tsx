@@ -215,6 +215,8 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 				/>
 			</div>
 			<div className={windowFilling.sideColumn}>
+				{/* First in the side column on every step, so it stays in one place all night. */}
+				<TvDisplay tournament={tournament} apply={apply} />
 				{drawShown && (
 					<section aria-label="Start" className={panel}>
 						<p>
@@ -233,8 +235,6 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 						<Refusal reason={refusal} />
 					</section>
 				)}
-				{/* Below the TV Display panel, so the list growing never moves that box. */}
-				<TvDisplay tournament={tournament} apply={apply} />
 				<Results tournament={tournament} apply={apply} />
 			</div>
 		</div>

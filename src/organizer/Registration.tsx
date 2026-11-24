@@ -152,6 +152,8 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 				</section>
 			</div>
 			<div className={windowFilling.sideColumn}>
+				{/* First in the side column on every step, so it stays in one place all night. */}
+				<TvDisplay tournament={tournament} apply={apply} />
 				<section aria-label="Boards" className={panel}>
 					<h2 className="text-xl font-bold">Boards</h2>
 					<NumberBox
@@ -178,7 +180,6 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 					</button>
 					<Refusal reason={boardsRefusal} />
 				</section>
-				<TvDisplay tournament={tournament} apply={apply} />
 			</div>
 		</div>
 	);

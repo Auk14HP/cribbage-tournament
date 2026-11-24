@@ -3,13 +3,19 @@
  * Sizes scale with the TV: large and high-contrast text, readable from across the room.
  * Everything sits inside the TV's safe area, since a TV that overscans crops the picture's edges.
  */
-import { useState, type CSSProperties } from 'react';
 import type { Store } from '../storage';
 import type { Random, Tournament } from '../tournament';
 import { useTournament } from '../useTournament';
 import { tvSafeArea } from './tvSafeArea';
 import { TvScreenView } from './TvScreenView';
-import { countdownRing, findCountdownKey, tvFrame, useTvScreenOnShow } from './tvScreenOnShow';
+import {
+	countdownRing,
+	describeCountdown,
+	tvFrame,
+	useCountdownTimes,
+	useTvScreenOnShow,
+	type Countdown,
+} from './tvScreenOnShow';
 
 /*
  * Fun Facts are chosen with the random source given, so tests can repeat them. The window is the TV screen's
@@ -19,18 +25,12 @@ import { countdownRing, findCountdownKey, tvFrame, useTvScreenOnShow } from './t
 export const Display = ({ store, random }: { store: Store<Tournament>; random: Random }) => {
 	const tournament = useTournament(store);
 	const onShow = useTvScreenOnShow(tournament);
-	const secondsLeft = onShow?.secondsLeft;
+	const countdown = describeCountdown(tournament, onShow);
 	return (
 		<div className={`h-screen w-screen ${tvFrame}`}>
 			<main className={`min-h-full bg-black text-white ${tvSafeArea.page}`}>
 				<TvScreenView tournament={tournament} onShow={onShow} random={random} />
-				{onShow && secondsLeft !== undefined && (
-					<CountdownRing
-						key={findCountdownKey(tournament, onShow)}
-						seconds={tournament.screenSeconds}
-						secondsLeft={secondsLeft}
-					/>
-				)}
+				{countdown && <CountdownRing key={countdown.key} countdown={countdown} />}
 			</main>
 		</div>
 	);
@@ -43,13 +43,8 @@ export const Display = ({ store, random }: { store: Store<Tournament>; random: R
  * Decorative, so hidden from assistive technology. The times reach the animation through inherited CSS
  * variables.
  */
-const CountdownRing = ({ seconds, secondsLeft }: { seconds: number; secondsLeft: number }) => {
-	// Kept from when the ring appears: the animation counts on from there by itself.
-	const [elapsedSeconds] = useState(seconds - secondsLeft);
-	const countdownTimes = {
-		'--countdown-duration': `${seconds}s`,
-		'--countdown-elapsed': `${elapsedSeconds}s`,
-	} as CSSProperties;
+const CountdownRing = ({ countdown }: { countdown: Countdown }) => {
+	const countdownTimes = useCountdownTimes(countdown);
 	return (
 		<svg
 			data-testid="countdown ring"

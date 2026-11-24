@@ -97,8 +97,8 @@
 }
 
 /*
- * The Organizer's countdown strip, beneath the TV's thumbnail, empties over each screen's time, in step with
- * the TV's countdown ring. It reads the same variables as the ring.
+ * The Organizer's countdown strip, beneath the TV's thumbnail, fills over each screen's time, in step with the
+ * TV's countdown ring. It reads the same variables as the ring.
  */
 @theme inline {
 	--animate-countdown-strip: countdown-strip var(--countdown-duration) linear
@@ -106,10 +106,10 @@
 
 	@keyframes countdown-strip {
 		from {
-			transform: scaleX(1);
+			transform: scaleX(0);
 		}
 		to {
-			transform: scaleX(0);
+			transform: scaleX(1);
 		}
 	}
 }

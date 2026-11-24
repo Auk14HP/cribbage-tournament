@@ -94,6 +94,15 @@ const expectRowScrollsIntoView = async (page: Page, row: Locator) => {
 	await expectPageDoesNotScroll(page);
 };
 
+/*
+ * A part of the side column below what fits in the window is scrolled to, as the Organizer would with the
+ * mouse wheel: the side column scrolls, and the page itself stays put.
+ */
+const expectReachableInSideColumn = async (page: Page, part: Locator) => {
+	await expectWhollyOnScreenOnceScrolledTo(part);
+	await expectPageDoesNotScroll(page);
+};
+
 // Starts 32 Players on 16 Boards and records 12 results, each loser staying for the Losers Bracket.
 const startWithTwelveResults = async (page: Page) => {
 	await startTournament(page, { players: 32 });
@@ -119,12 +128,15 @@ test.describe('Registering a long field', () => {
 			page.getByLabel('Player name'),
 			page.getByRole('button', { name: 'Register' }),
 			findPlayersPanel(page).getByText('32 Players registered'),
-			page.getByRole('heading', { name: 'Boards' }),
-			page.getByRole('button', { name: 'Show House Rules' }),
 			page.getByRole('heading', { name: 'TV Display' }),
 		]);
 		expect(await isScrollable(players)).toBe(true);
 		await expectScrollingAreaFillsSpaceLeft(players);
+		// Below the TV Display panel's full-size thumbnail, a window this short scrolls the side column to it.
+		await expectReachableInSideColumn(
+			page,
+			page.getByRole('button', { name: 'Show House Rules' }),
+		);
 	});
 
 	test('brings a newly registered Player into view, keeping the name box ready', async ({
@@ -189,15 +201,14 @@ test.describe('Playing a long field', () => {
 			page.getByRole('heading', { name: 'Matches' }),
 			page.getByText('Tap a Match’s winner.'),
 			page.getByRole('heading', { name: 'TV Display' }),
-			page.getByRole('heading', { name: 'Results' }),
 		]);
-		await expectRefusalLinesOnScreen(page);
+		await expectReachableInSideColumn(page, page.getByRole('heading', { name: 'Results' }));
 		const matches = findMatchesOnBoards(page);
 		await expectScrollingAreaFillsSpaceLeft(matches);
 		await expectRowScrollsIntoView(page, findLastRow(matches));
 	});
 
-	test('scrolls the Results list on its own in a short window, keeping the TV Display panel on screen', async ({
+	test('scrolls the Results list on its own in a short window, the side column scrolling to it', async ({
 		page,
 	}) => {
 		await startWithTwelveResults(page);
@@ -206,11 +217,11 @@ test.describe('Playing a long field', () => {
 		await page.setViewportSize({ width: windowSize.width, height: 520 });
 
 		await expectPageDoesNotScroll(page);
-		await expectWhollyOnScreen([
-			page.getByRole('heading', { name: 'TV Display' }),
-			page.getByRole('heading', { name: 'Results' }),
-		]);
-		expect(await isScrollable(page.getByRole('list', { name: 'Results' }))).toBe(true);
+		await expectWhollyOnScreen([page.getByRole('heading', { name: 'TV Display' })]);
+		const results = page.getByRole('list', { name: 'Results' });
+		await expectReachableInSideColumn(page, page.getByRole('heading', { name: 'Results' }));
+		await expectReachableInSideColumn(page, results.getByRole('listitem').first());
+		expect(await isScrollable(results)).toBe(true);
 	});
 
 	test('keeps the Matches and Waiting for a Board headings on screen when most Matches wait', async ({

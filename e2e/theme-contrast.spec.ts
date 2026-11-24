@@ -35,7 +35,7 @@ const expectReadableText = async (page: Page, moment: string) => {
 	 */
 	const results = await new AxeBuilder({ page })
 		.withRules(['color-contrast'])
-		.exclude('[aria-label^="The TV showing"]')
+		.exclude('[data-testid="tv thumbnail"]')
 		.analyze();
 	const hardToRead = results.violations.flatMap((violation) =>
 		violation.nodes.map((node) => `${node.html}: ${node.failureSummary}`),

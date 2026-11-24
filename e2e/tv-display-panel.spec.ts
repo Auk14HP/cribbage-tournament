@@ -1,8 +1,10 @@
 import { expect, type Page } from '@playwright/test';
 import { expectNothingMoves } from './screenStill';
 import {
+	confirmDrawFromHouseRules,
 	openTv,
 	playFirstMatchesWithLosersStaying,
+	showHouseRules,
 	startTournament,
 	test,
 	tvSizes,
@@ -94,6 +96,11 @@ test('choosing a screen, or a new time, shows on the TV and the thumbnail at onc
 	await expect(tv.getByTestId('countdown ring')).toHaveCSS('--countdown-duration', '45s', {
 		timeout: sameMomentMs,
 	});
+	// A new time starts the cycle again from the screen on show, which both windows still agree on.
+	const tvScreenName = await findTvHeading(tv).textContent();
+	await expect(findThumbnail(organizer)).toHaveAccessibleName(`The TV showing ${tvScreenName}`, {
+		timeout: sameMomentMs,
+	});
 });
 
 test('moves nothing in the TV Display panel when the strip comes and goes with a Held screen', async ({
@@ -118,5 +125,49 @@ test('moves nothing in the TV Display panel when the strip comes and goes with a
 	await expectNothingMoves(parts, async () => {
 		await pickTvChoice(organizer, 'Auto');
 		await expect(strip).toBeVisible();
+	});
+});
+
+// The TV Display panel's heading and thumbnail: where the Organizer looks for what the TV shows.
+const findPanelTop = (organizer: Page) => {
+	const panel = organizer.getByRole('region', { name: 'TV Display' });
+	return [panel.getByRole('heading', { name: 'TV Display' }), findThumbnail(organizer)];
+};
+
+test('keeps the TV Display panel in one place from registration to Now playing', async ({
+	page: organizer,
+}) => {
+	await organizer.goto('/?players=6&boards=3');
+	const panelTop = findPanelTop(organizer);
+
+	await expectNothingMoves(panelTop, async () => {
+		await showHouseRules(organizer);
+		await expect(organizer.getByRole('heading', { name: 'House Rules' })).toBeVisible();
+	});
+	await expectNothingMoves(panelTop, async () => {
+		await confirmDrawFromHouseRules(organizer);
+		await expect(organizer.getByRole('button', { name: 'Start', exact: true })).toBeVisible();
+	});
+	await expectNothingMoves(panelTop, async () => {
+		await organizer.getByRole('button', { name: 'Start', exact: true }).click();
+		await expect(organizer.getByRole('heading', { name: 'Now playing' })).toBeVisible();
+	});
+});
+
+test('moves nothing below the TV Display panel when the Losers Bracket brings screens to cycle', async ({
+	page: organizer,
+}) => {
+	// 6 Players open 3 first Matches; the Losers Bracket is drawn once all are played.
+	await startTournament(organizer, { players: 6 });
+	await playFirstMatchesWithLosersStaying(organizer, { firstMatchCount: 2 });
+	const resultsHeading = organizer.getByRole('heading', { name: 'Results' });
+	const parts = [...findPanelTop(organizer), resultsHeading];
+	const autoChoice = organizer.getByRole('radio', { name: 'Auto' });
+	await expect(autoChoice).toHaveCount(0);
+
+	await expectNothingMoves(parts, async () => {
+		// The last first Match's loser staying draws the Losers Bracket.
+		await playFirstMatchesWithLosersStaying(organizer, { firstMatchCount: 1 });
+		await expect(autoChoice).toBeVisible();
 	});
 });

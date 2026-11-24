@@ -15,13 +15,21 @@ import { createLocalStorageStore, type Store } from '../storage';
 import {
 	chooseTvScreen,
 	getMatchesOnBoards,
-	recordWinner,
+	makeDraw,
+	setBoardCount as setBoardCountOn,
 	showHouseRules as showHouseRulesOn,
 	start,
 	tournamentVersion,
 	type Tournament,
 } from '../tournament';
-import { expectOk, registerPlayers } from '../tournament/testSetup';
+import {
+	createSeededRandom,
+	expectOk,
+	hasBothPlayersKnown,
+	playDrawStaying,
+	recordWin as recordWinOn,
+	registerPlayers,
+} from '../tournament/testSetup';
 import { themeChoiceVersion, type ThemeChoice } from './themes';
 
 const key = 'organizer-test';
@@ -82,12 +90,7 @@ afterEach(() => {
 type User = ReturnType<typeof userEvent.setup>;
 
 const showOrganizer = () => {
-	render(
-		<Organizer
-			store={createLocalStorageStore<Tournament>(key, tournamentVersion)}
-			themeStore={createLocalStorageStore<ThemeChoice>(themeKey, themeChoiceVersion)}
-		/>,
-	);
+	showOrganizerWithStore();
 	return userEvent.setup();
 };
 
@@ -117,6 +120,10 @@ const answerDialog = async (user: User, button: string) => {
 	const dialog = within(screen.getByRole('dialog'));
 	await user.click(dialog.getByRole('button', { name: button }));
 };
+
+// Every refusal line holding a refusal, wherever it is on the screen.
+const listRefusalsShown = () =>
+	screen.getAllByRole('alert').filter((line) => line.textContent !== '');
 
 // A refusal shows beside the controls that caused it.
 const getRefusalIn = (section: string) =>
@@ -968,18 +975,11 @@ describe('the organizer route', () => {
 		]);
 	});
 
-	it('sets how long the TV shows each screen, from 20 seconds, before or after Start', async () => {
-		const user = showOrganizer();
+	it('sets how long the TV shows each screen, from 20 seconds, once it has screens to cycle', async () => {
+		const user = showOrganizerCyclingScreens();
 		const getSecondsBox = () => screen.getByLabelText('Seconds per TV screen');
 		expect(getSecondsBox()).toHaveValue('20');
 
-		await enterNumber(user, 'Seconds per TV screen', '30');
-		cleanup();
-		showOrganizer();
-		expect(getSecondsBox()).toHaveValue('30');
-
-		await makeTheDraw(user, ['Dave K.', 'Big Dave'], '1');
-		await clickButton(user, 'Start');
 		await enterNumber(user, 'Seconds per TV screen', '45');
 		cleanup();
 		showOrganizer();
@@ -987,7 +987,7 @@ describe('the organizer route', () => {
 	});
 
 	it('saves a screen time only once the Organizer leaves the box or presses Enter', async () => {
-		let user = showOrganizer();
+		let user = showOrganizerCyclingScreens();
 		const getSecondsBox = () => screen.getByLabelText('Seconds per TV screen');
 
 		await typeNumber(user, 'Seconds per TV screen', '30');
@@ -1008,7 +1008,7 @@ describe('the organizer route', () => {
 	});
 
 	it('shows why a screen time is refused, beside it, once the Organizer is done typing', async () => {
-		const user = showOrganizer();
+		const user = showOrganizerCyclingScreens();
 
 		await typeNumber(user, 'Seconds per TV screen', '0');
 		expect(getRefusalIn('TV Display')).toBeEmptyDOMElement();
@@ -1017,32 +1017,25 @@ describe('the organizer route', () => {
 		expect(getRefusalIn('TV Display')).toHaveTextContent(
 			'The TV shows each screen for a whole number of seconds above zero, like 20.',
 		);
-		expect(getRefusalIn('Boards')).toBeEmptyDOMElement();
+		// Beside the box, and nowhere else.
+		expect(listRefusalsShown()).toHaveLength(1);
 		cleanup();
 		showOrganizer();
 		expect(screen.getByLabelText('Seconds per TV screen')).toHaveValue('20');
 	});
 
-	it('offers the TV’s screens only once Started, Auto chosen, and saves the screen the Organizer holds', async () => {
+	it('offers the TV’s choice and seconds from Start, disabled until there are screens to cycle, the champions first, and saves the screen held', async () => {
 		const user = showOrganizer();
-		expect(screen.queryByRole('group', { name: 'TV shows' })).not.toBeInTheDocument();
+		expectTvControlsHidden();
 		await makeTheDraw(user, ['Dave K.', 'Big Dave'], '1');
-		expect(screen.queryByRole('group', { name: 'TV shows' })).not.toBeInTheDocument();
+		expectTvControlsHidden();
 
+		// Only the Winners Bracket to show: nothing to cycle yet.
 		await clickButton(user, 'Start');
-		expect(listTvChoices()).toEqual(['Auto', 'Winners Bracket']);
-		expect(screen.getByRole('radio', { name: 'Auto' })).toBeChecked();
-
-		await user.click(screen.getByRole('radio', { name: 'Winners Bracket' }));
-		cleanup();
-		showOrganizer();
+		expect(listTvChoices()).toEqual(['Winners Bracket']);
 		expect(screen.getByRole('radio', { name: 'Winners Bracket' })).toBeChecked();
-	});
-
-	it('offers the finished Tournament’s screens, the champions first', async () => {
-		const user = showOrganizer();
-		await makeTheDraw(user, ['Dave K.', 'Big Dave'], '1');
-		await clickButton(user, 'Start');
+		expect(screen.getByRole('radio', { name: 'Winners Bracket' })).toBeDisabled();
+		expect(screen.getByLabelText('Seconds per TV screen')).toBeDisabled();
 
 		const [champion] = listWinnerNames(findPlayingRow());
 		await recordWin(user, findPlayingRow(), champion);
@@ -1050,6 +1043,13 @@ describe('the organizer route', () => {
 
 		expect(listTvChoices()).toEqual(['Auto', 'Champion', 'Winners Bracket']);
 		expect(screen.getByRole('radio', { name: 'Auto' })).toBeChecked();
+		expect(screen.getByRole('radio', { name: 'Auto' })).toBeEnabled();
+		expect(screen.getByLabelText('Seconds per TV screen')).toBeEnabled();
+
+		await user.click(screen.getByRole('radio', { name: 'Winners Bracket' }));
+		cleanup();
+		showOrganizer();
+		expect(screen.getByRole('radio', { name: 'Winners Bracket' })).toBeChecked();
 	});
 
 	it('resumes the saved Tournament when reopened', async () => {
@@ -1160,21 +1160,26 @@ describe('the TV Display panel', () => {
 	it('shows a thumbnail of the screen the TV shows, named, on every phase', () => {
 		vi.useFakeTimers();
 		const store = showOrganizerWithStore();
-		const registered = registerPlayers('Dave K.', 'Big Dave');
+		const registered = registerPlayers('Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev');
 		saveTournament(store, registered);
 		expect(readThumbnailName()).toBe('The TV showing Tonight’s Players');
-		expect(listThumbnailPlayers()).toEqual(['Dave K.', 'Big Dave']);
+		expect(listThumbnailPlayers()).toEqual(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev']);
 
-		const onHouseRules = expectOk(showHouseRulesOn(registered));
+		const withBoards = expectOk(setBoardCountOn(registered, '3'));
+		const onHouseRules = expectOk(showHouseRulesOn(withBoards));
 		saveTournament(store, onHouseRules);
 		expect(readThumbnailName()).toBe('The TV showing House Rules');
 		expect(readThumbnailHeading()).toBe('House Rules');
 
-		saveTournament(store, setUpDraw(['Dave K.', 'Big Dave'], { boards: 1 }));
+		const seededRandom = createSeededRandom(1);
+		const drawn = expectOk(makeDraw(onHouseRules, seededRandom));
+		saveTournament(store, drawn);
 		expect(readThumbnailName()).toBe('The TV showing Tonight’s Draw');
 		expect(readThumbnailHeading()).toBe('Tonight’s Draw');
 
-		saveTournament(store, playIntoLosersBracket());
+		const started = expectOk(start(drawn));
+		const intoLosersBracket = playDrawStaying(started);
+		saveTournament(store, intoLosersBracket);
 		expect(readThumbnailName()).toBe('The TV showing Winners Bracket');
 		expect(readThumbnailHeading()).toBe('Winners Bracket');
 		waitSeconds(19);
@@ -1183,9 +1188,9 @@ describe('the TV Display panel', () => {
 		expect(readThumbnailName()).toBe('The TV showing Losers Bracket');
 		expect(readThumbnailHeading()).toBe('Losers Bracket');
 
-		saveTournament(store, finishTwoPlayerTournament());
+		saveTournament(store, playToTheEnd(intoLosersBracket));
 		expect(readThumbnailName()).toBe('The TV showing Champion');
-		expect(readThumbnailHeading()).toBe('Tonight’s Champion');
+		expect(readThumbnailHeading()).toBe('Tonight’s Champions');
 	});
 
 	it('shows a countdown strip that starts again with each screen, and none with nothing to count down to', () => {
@@ -1231,9 +1236,15 @@ describe('the TV Display panel', () => {
 	});
 });
 
-// The organizer route, and the store it saves to, which a test saves to as well, as the Organizer's own steps would.
-const showOrganizerWithStore = (): Store<Tournament> => {
+/*
+ * The organizer route, opened on the Tournament given, if any, and the store it saves to, which a test saves
+ * to as well, as the Organizer's own steps would.
+ */
+const showOrganizerWithStore = (saved?: Tournament): Store<Tournament> => {
 	const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
+	if (saved) {
+		saveTournament(store, saved);
+	}
 	render(
 		<Organizer
 			store={store}
@@ -1241,6 +1252,18 @@ const showOrganizerWithStore = (): Store<Tournament> => {
 		/>,
 	);
 	return store;
+};
+
+// The organizer route once the Losers Bracket is drawn, when the TV has two screens to cycle.
+const showOrganizerCyclingScreens = () => {
+	showOrganizerWithStore(playIntoLosersBracket());
+	return userEvent.setup();
+};
+
+// Checks the choice of what the TV shows, and its seconds, are gone: before Start there is never a choice.
+const expectTvControlsHidden = () => {
+	expect(screen.queryByRole('group', { name: 'TV shows' })).not.toBeInTheDocument();
+	expect(screen.queryByLabelText('Seconds per TV screen')).not.toBeInTheDocument();
 };
 
 // The thumbnail of the TV screen on show, in the TV Display panel.
@@ -1260,11 +1283,15 @@ const listThumbnailPlayers = () => {
 	return playerList.getAllByRole('listitem', { hidden: true }).map((item) => item.textContent);
 };
 
-// Two Players, Started, and the Final won by one of them: the Tournament finished.
-const finishTwoPlayerTournament = () => {
-	const drawn = setUpDraw(['Dave K.', 'Big Dave'], { boards: 1 });
-	const started = expectOk(start(drawn));
-	const [final] = getMatchesOnBoards(started);
-	const [champion] = final.players;
-	return expectOk(recordWinner(started, final.match, champion.id, 'leaving'));
+/*
+ * Plays every Match left, the first-named Player winning each and every loser leaving, until both brackets
+ * have their champion: the Tournament finished.
+ */
+const playToTheEnd = (playing: Tournament): Tournament => {
+	let tournament = playing;
+	while (tournament.phase !== 'finished') {
+		const nextMatch = getMatchesOnBoards(tournament).find(hasBothPlayersKnown)!;
+		tournament = recordWinOn(tournament, nextMatch, 'leaving');
+	}
+	return tournament;
 };

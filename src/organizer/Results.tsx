@@ -29,7 +29,10 @@ export const Results = ({ tournament, apply }: { tournament: Tournament; apply: 
 		<section className={`${panel} ${windowFilling.column}`}>
 			<h2 className="text-xl font-bold">Results</h2>
 			<p className="text-muted mt-1">Undo a result to correct it.</p>
-			<ul aria-label="Results" className={`${windowFilling.scrollingArea} mt-2`}>
+			<ul
+				aria-label="Results"
+				className={`mt-2 overflow-y-auto ${keptRowHeights[Math.min(results.length, keptRowHeights.length - 1)]}`}
+			>
 				{results.map((result) => (
 					<li
 						key={getMatchKey(result.match)}
@@ -55,6 +58,13 @@ export const Results = ({ tournament, apply }: { tournament: Tournament; apply: 
 		</section>
 	);
 };
+
+/*
+ * The height the Results list keeps however short the window, by how many results it holds: room for up to two
+ * rows, a little under their own height. Below that it shrinks to the space left and scrolls; the side column
+ * scrolls to it, so it never shrinks to nothing. Written out whole so Tailwind finds each class.
+ */
+const keptRowHeights = ['min-h-0', 'min-h-14', 'min-h-28'];
 
 const describeResult = ({ board, winner, loser, isForfeit }: RecordedResult): string =>
 	isForfeit
