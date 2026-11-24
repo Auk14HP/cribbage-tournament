@@ -16,7 +16,8 @@ test.use({ viewport: { width: 1280, height: 720 } });
  */
 const listDrawScreenParts = (page: Page) => [
 	page.getByRole('button', { name: /^(Swap Players|Done)$/ }),
-	page.getByRole('main').getByRole('listitem'),
+	findMatchesOnBoards(page).getByRole('listitem'),
+	page.getByRole('list', { name: 'Waiting for a Board' }).getByRole('listitem'),
 	page.getByRole('button', { name: 'Start', exact: true }),
 	page.getByRole('heading', { name: 'TV screens' }),
 ];

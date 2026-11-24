@@ -22,7 +22,10 @@ export const HouseRules = ({ tournament }: { tournament: Tournament }) => {
 				{describePlayersTonight(tournament.players.length)}
 			</p>
 			{/* A rule too long for one line has its lines balanced to about the same length. */}
-			<ol className="list-decimal space-y-[3vh] pl-[3vw] text-[5.5vh] leading-tight text-balance">
+			<ol
+				aria-label="House Rules"
+				className="list-decimal space-y-[3vh] pl-[3vw] text-[5.5vh] leading-tight text-balance"
+			>
 				{shownRules.map((rule, index) => (
 					<HouseRule key={rule} rule={rule} isLatest={index === latestIndex} />
 				))}

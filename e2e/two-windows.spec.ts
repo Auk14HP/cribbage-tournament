@@ -31,7 +31,7 @@ test('the TV shows each change the Organizer makes, live, and both windows resum
 	const tv = await context.newPage();
 	watchConsole(tv, consoleErrors);
 	await tv.goto('/display');
-	const tvNames = tv.getByRole('listitem');
+	const tvNames = tv.getByRole('list', { name: 'Players' }).getByRole('listitem');
 	const playerRows = organizer.getByRole('list', { name: 'Players' }).getByRole('listitem');
 
 	await register(organizer, 'Dave K');
