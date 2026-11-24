@@ -120,7 +120,7 @@ const ForfeitButton = ({
 		<>
 			<button
 				type="button"
-				className="text-danger hover:bg-divider -mr-1.5 min-h-8 rounded-lg px-1.5 text-xs font-bold tracking-widest uppercase"
+				className="text-danger hover:bg-divider min-h-7 rounded-lg px-1.5 text-xs font-bold tracking-widest uppercase"
 				onClick={() => dialog.current?.showModal()}
 			>
 				Forfeit
@@ -167,11 +167,10 @@ const playerSlots = {
 };
 
 /*
- * One Match's tile. Its top line holds the Round, when given, and at its end the Forfeit, once the Match can be
- * forfeited; the line keeps its height without them, so Start moves nothing. Beneath, the Players one above the
- * other. Beside both lines, the Board, its label close above its large number, sits in the middle of the tile.
- * Once Started, a Match with both Players known can be won by tapping either. The Forfeit comes after the
- * Players in the tile's own order, so it is read and tabbed to last.
+ * One Match's tile: a narrow column with its Board, a label above its large number, then its Round, in smaller
+ * type, when given, and at the foot the Forfeit, once the Match can be forfeited; beside it, the Players one
+ * above the other. Once Started, a Match with both Players known can be won by tapping either. The Forfeit
+ * comes after the Players in the tile's own order, so it is read and tabbed to last.
  */
 const MatchTile = ({
 	matchOnBoard: {
@@ -200,24 +199,26 @@ const MatchTile = ({
 	const forfeitMatch = (player: Player) => onForfeit(match, player);
 	return (
 		/*
-		 * Relative, so the "vs" read out between the Players, drawn nowhere, stays inside the tile rather than
-		 * stretching the page below the list it scrolls in.
+		 * The Board's column has two rows beside the Players: the Board and its Round at the top, the Forfeit at
+		 * the foot, so the Board stays put when Start brings the Forfeit. Relative, so the "vs" read out between
+		 * the Players, drawn nowhere, stays inside the tile rather than stretching the page below the list it
+		 * scrolls in.
 		 */
-		<li className="border-divider bg-raised relative grid grid-cols-[3.25rem_minmax(0,1fr)_auto] grid-rows-[minmax(2rem,auto)_auto] gap-x-3 gap-y-1 rounded-xl border p-3">
-			<span className="col-start-1 row-span-2 row-start-1 flex flex-col items-center self-center">
+		<li className="border-divider bg-raised relative grid grid-cols-[3.5rem_minmax(0,1fr)] grid-rows-[1fr_auto] gap-x-3 rounded-xl border p-3">
+			<span className="col-start-1 row-start-1 flex flex-col items-center">
 				<span className="text-muted text-xs font-bold tracking-widest uppercase">
 					Board
 				</span>{' '}
 				<span className="text-board-number text-4xl leading-none font-extrabold">
 					{board}
 				</span>
+				{roundName && (
+					<span className="text-muted mt-1 text-xs font-semibold whitespace-nowrap">
+						{roundName}
+					</span>
+				)}
 			</span>
-			{roundName && (
-				<span className="text-muted col-start-2 row-start-1 self-center text-sm font-semibold">
-					{roundName}
-				</span>
-			)}
-			<div className="col-span-2 col-start-2 row-start-2 flex flex-col gap-2">
+			<div className="col-start-2 row-span-2 row-start-1 flex flex-col gap-2">
 				<MatchPlayer
 					player={playerA}
 					match={match}
@@ -235,7 +236,7 @@ const MatchTile = ({
 				/>
 			</div>
 			{canWin && (
-				<div className="col-start-3 row-start-1 self-center">
+				<div className="col-start-1 row-start-2 flex justify-center">
 					<ForfeitButton
 						board={board}
 						players={[playerA, knownPlayerB]}
