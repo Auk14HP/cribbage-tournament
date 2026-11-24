@@ -200,11 +200,13 @@ const MatchTile = ({
 	return (
 		/*
 		 * The Board's column has two rows beside the Players: the Board and its Round at the top, the Forfeit at
-		 * the foot, so the Board stays put when Start brings the Forfeit. Relative, so the "vs" read out between
-		 * the Players, drawn nowhere, stays inside the tile rather than stretching the page below the list it
-		 * scrolls in.
+		 * the foot, level with the foot of the second Player, so the Board stays put when Start brings the Forfeit.
+		 * A tile stretches to the tallest in its line, such as one whose Player waits on a winner named over two
+		 * lines; its rows keep their own height at the top, so the Forfeit stays beside the second Player and the
+		 * space left is below. Relative, so the "vs" read out between the Players, drawn nowhere, stays inside the
+		 * tile rather than stretching the page below the list it scrolls in.
 		 */
-		<li className="border-divider bg-raised relative grid grid-cols-[3.5rem_minmax(0,1fr)] grid-rows-[1fr_auto] gap-x-3 rounded-xl border p-3">
+		<li className="border-divider bg-raised relative grid grid-cols-[3.5rem_minmax(0,1fr)] grid-rows-[auto_auto] content-start gap-x-3 rounded-xl border p-3">
 			<span className="col-start-1 row-start-1 flex flex-col items-center">
 				<span className="text-muted text-xs font-bold tracking-widest uppercase">
 					Board
@@ -236,7 +238,7 @@ const MatchTile = ({
 				/>
 			</div>
 			{canWin && (
-				<div className="col-start-1 row-start-2 flex justify-center">
+				<div className="col-start-1 row-start-2 flex justify-center self-end">
 					<ForfeitButton
 						board={board}
 						players={[playerA, knownPlayerB]}
