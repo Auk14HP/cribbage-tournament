@@ -3,6 +3,7 @@ import {
 	answerIsLoserStayingDialogIfAsked,
 	confirmDraw,
 	findMatchesOnBoards,
+	playFirstMatchesWithLosersStaying,
 	startTournament,
 	test,
 } from './setUpTournament';
@@ -102,6 +103,19 @@ const expectReachableInSideColumn = async (page: Page, part: Locator) => {
 	await expect(part).not.toBeInViewport({ ratio: 1 });
 	await expectWhollyOnScreenOnceScrolledTo(part);
 	await expectPageDoesNotScroll(page);
+};
+
+/*
+ * Every part given sits inside its panel's box, top to bottom: a panel squeezed shorter than what it holds
+ * would leave its parts spilling out below it.
+ */
+const expectPanelHoldsEveryPart = async (panel: Locator, parts: Locator[]) => {
+	const panelBox = (await panel.boundingBox())!;
+	for (const part of parts) {
+		const partBox = (await part.boundingBox())!;
+		expect(partBox.y).toBeGreaterThanOrEqual(panelBox.y);
+		expect(partBox.y + partBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height);
+	}
 };
 
 // Starts 32 Players on 16 Boards and records 12 results, each loser staying for the Losers Bracket.
@@ -209,20 +223,24 @@ test.describe('Playing a long field', () => {
 		await expectRowScrollsIntoView(page, findLastRow(matches));
 	});
 
-	test('scrolls the Results list on its own in a short window, the side column scrolling to it', async ({
+	test('scrolls the side column to every Result in a short window, the Results panel holding them all', async ({
 		page,
 	}) => {
-		await startWithTwelveResults(page);
-
-		// Too short for the few results that can still be undone after 12.
-		await page.setViewportSize({ width: windowSize.width, height: 520 });
+		// 8 Players open 4 first Matches; their 4 results, losers staying, draw the Losers Bracket.
+		await startTournament(page, { players: 8 });
+		await playFirstMatchesWithLosersStaying(page, { firstMatchCount: 4 });
+		// Too short for the TV Display panel and the Results together.
+		await page.setViewportSize({ width: windowSize.width, height: 505 });
+		const resultsPanel = page.getByRole('region', { name: 'Results' });
+		const results = resultsPanel.getByRole('list', { name: 'Results' });
 
 		await expectPageDoesNotScroll(page);
-		await expectWhollyOnScreen([page.getByRole('heading', { name: 'TV Display' })]);
-		const results = page.getByRole('list', { name: 'Results' });
-		await expectReachableInSideColumn(page, results.getByRole('listitem').first());
-		await expectWhollyOnScreen([page.getByRole('heading', { name: 'Results' })]);
-		expect(await isScrollable(results)).toBe(true);
+		expect(await isScrollable(results)).toBe(false);
+		await expectPanelHoldsEveryPart(resultsPanel, [
+			resultsPanel.getByRole('heading', { name: 'Results' }),
+			findLastRow(results),
+		]);
+		await expectReachableInSideColumn(page, findLastRow(results));
 	});
 
 	test('keeps the Matches and Waiting for a Board headings on screen when most Matches wait', async ({

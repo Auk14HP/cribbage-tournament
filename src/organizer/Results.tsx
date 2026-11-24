@@ -8,12 +8,14 @@ import {
 	type Tournament,
 } from '../tournament';
 import { describeBracketRound } from '../wording';
-import { button, panel, windowFilling } from './classes';
+import { button, panel } from './classes';
 import { Refusal, type Apply } from './controls';
 
 /*
  * The results that can still be undone, latest first, each with its own Undo. Each names its bracket and
- * Round, so the Organizer undoes the Match they mean. None until a result is recorded.
+ * Round, so the Organizer undoes the Match they mean. None until a result is recorded. The panel keeps its
+ * whole height: in a window too short for it, the side column scrolls to every result, so there is one
+ * scrollbar rather than one inside another.
  */
 export const Results = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const results = getUndoableResults(tournament);
@@ -22,15 +24,14 @@ export const Results = ({ tournament, apply }: { tournament: Tournament; apply: 
 		const reason = apply(undoResult(tournament, match));
 		setRefusal(reason);
 	};
-	const minHeight = minHeightByResultCount[Math.min(results.length, maxKeptRows)];
 	if (results.length === 0 && !refusal) {
 		return null;
 	}
 	return (
-		<section className={`${panel} ${windowFilling.column}`}>
+		<section aria-label="Results" className={panel}>
 			<h2 className="text-xl font-bold">Results</h2>
 			<p className="text-muted mt-1">Undo a result to correct it.</p>
-			<ul aria-label="Results" className={`mt-2 overflow-y-auto ${minHeight}`}>
+			<ul aria-label="Results" className="mt-2">
 				{results.map((result) => (
 					<li
 						key={getMatchKey(result.match)}
@@ -56,14 +57,6 @@ export const Results = ({ tournament, apply }: { tournament: Tournament; apply: 
 		</section>
 	);
 };
-
-/*
- * The height the Results list keeps however short the window, by how many results it holds: room for up to two
- * rows, a little under their own height. Below that it shrinks to the space left and scrolls; the side column
- * scrolls to it, so it never shrinks to nothing. Written out whole so Tailwind finds each class.
- */
-const minHeightByResultCount = ['min-h-0', 'min-h-14', 'min-h-28'];
-const maxKeptRows = minHeightByResultCount.length - 1;
 
 const describeResult = ({ board, winner, loser, isForfeit }: RecordedResult): string =>
 	isForfeit
