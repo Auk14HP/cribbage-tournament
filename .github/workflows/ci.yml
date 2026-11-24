@@ -32,9 +32,8 @@ jobs:
         permissions:
             contents: read
             pages: read
-        # Named for the run attempt, so re-running a failed deploy finds only its own artifact, not the first try's too.
-        # The deploy reads the name from this job's output: "Re-run failed jobs" re-runs only the deploy, under a new
-        # attempt number, and it must still find the artifact this job uploaded.
+        # Named for the run attempt, so a re-run that builds again deploys its own artifact, not an earlier attempt's.
+        # Handed on as an output, so the deploy uses the name this job uploaded under.
         env:
             ARTIFACT_NAME: github-pages-${{ github.run_attempt }}
         outputs:
@@ -71,4 +70,6 @@ jobs:
             - id: deployment
               uses: actions/deploy-pages@v5
               with:
+                  # Read from build-pages, not worked out again: "Re-run failed jobs" re-runs only this job, under a new
+                  # attempt number, and it must still find the artifact build-pages uploaded.
                   artifact_name: ${{ needs.build-pages.outputs.artifact-name }}
