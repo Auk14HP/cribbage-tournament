@@ -25,7 +25,7 @@ export const getPathShade = (element: keyof typeof pathShade, isPath: boolean) =
 
 /*
  * Bracket lines, drawn with CSS on each slot and sized to half the gap between Round columns. They are in
- * vw, not vh, because that gap is 1vw wide: a line sized in vh would fall short of the next column, or
+ * cqw, not cqh, because that gap is 1cqw wide: a line sized in cqh would fall short of the next column, or
  * run into it, on a TV that isn't 16:9. A Match draws its line out on ::after: across to the gap's middle,
  * then down or up to meet its pair halfway, which is level with the Match they feed. That Match draws the
  * rest on ::before: across from the gap's middle to its own box. The final, fed from both sides, draws its
@@ -35,24 +35,24 @@ export const getPathShade = (element: keyof typeof pathShade, isPath: boolean) =
  */
 const linePieces = {
 	after: {
-		base: 'after:absolute after:w-[0.5vw]',
-		edge: { left: 'after:-left-[0.5vw]', right: 'after:-right-[0.5vw]' },
+		base: 'after:absolute after:w-[0.5cqw]',
+		edge: { left: 'after:-left-[0.5cqw]', right: 'after:-right-[0.5cqw]' },
 		shape: {
-			straight: 'after:top-[calc(50%-0.15vh)] after:border-t-[0.3vh]',
-			down: 'after:top-[calc(50%-0.15vh)] after:h-[calc(50%+0.15vh)] after:border-t-[0.3vh]',
-			up: 'after:top-0 after:h-[calc(50%+0.15vh)] after:border-b-[0.3vh]',
+			straight: 'after:top-[calc(50%-0.15cqh)] after:border-t-[0.3cqh]',
+			down: 'after:top-[calc(50%-0.15cqh)] after:h-[calc(50%+0.15cqh)] after:border-t-[0.3cqh]',
+			up: 'after:top-0 after:h-[calc(50%+0.15cqh)] after:border-b-[0.3cqh]',
 		},
-		turn: { left: 'after:border-l-[0.3vh]', right: 'after:border-r-[0.3vh]' },
+		turn: { left: 'after:border-l-[0.3cqh]', right: 'after:border-r-[0.3cqh]' },
 	},
 	before: {
-		base: 'before:absolute before:w-[0.5vw]',
-		edge: { left: 'before:-left-[0.5vw]', right: 'before:-right-[0.5vw]' },
+		base: 'before:absolute before:w-[0.5cqw]',
+		edge: { left: 'before:-left-[0.5cqw]', right: 'before:-right-[0.5cqw]' },
 		shape: {
-			straight: 'before:top-[calc(50%-0.15vh)] before:border-t-[0.3vh]',
-			down: 'before:top-[calc(50%-0.15vh)] before:h-[calc(50%+0.15vh)] before:border-t-[0.3vh]',
-			up: 'before:top-0 before:h-[calc(50%+0.15vh)] before:border-b-[0.3vh]',
+			straight: 'before:top-[calc(50%-0.15cqh)] before:border-t-[0.3cqh]',
+			down: 'before:top-[calc(50%-0.15cqh)] before:h-[calc(50%+0.15cqh)] before:border-t-[0.3cqh]',
+			up: 'before:top-0 before:h-[calc(50%+0.15cqh)] before:border-b-[0.3cqh]',
 		},
-		turn: { left: 'before:border-l-[0.3vh]', right: 'before:border-r-[0.3vh]' },
+		turn: { left: 'before:border-l-[0.3cqh]', right: 'before:border-r-[0.3cqh]' },
 	},
 };
 

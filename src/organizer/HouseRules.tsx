@@ -15,6 +15,7 @@ import {
 } from '../tournament';
 import { button, panel, primaryButton, windowFilling } from './classes';
 import { ConfirmDialog, Refusal, type Apply } from './controls';
+import { TvDisplay } from './TvDisplay';
 
 export const HouseRules = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const [refusal, setRefusal] = useState('');
@@ -72,6 +73,8 @@ export const HouseRules = ({ tournament, apply }: { tournament: Tournament; appl
 			</div>
 			{/* The next step and the way back sit together in the side column. */}
 			<div className={windowFilling.sideColumn}>
+				{/* First in the side column on every step, so it stays in one place all night. */}
+				<TvDisplay tournament={tournament} apply={apply} />
 				<section aria-label="Make the Draw" className={`${panel} flex flex-col`}>
 					<button
 						type="button"

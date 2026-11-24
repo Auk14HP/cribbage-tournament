@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { act, cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Display } from './Display';
 import { funFacts } from './funFacts';
@@ -20,7 +20,6 @@ import {
 	recordWinner,
 	registerPlayer,
 	removePlayer,
-	restartTvCycleIfDue,
 	renamePlayer,
 	setBoardCount,
 	setScreenSeconds,
@@ -31,6 +30,12 @@ import {
 	type Player,
 	type Tournament,
 } from '../tournament';
+import {
+	playIntoLosersBracket,
+	saveTournament,
+	setUpDraw,
+	waitSeconds,
+} from '../screenTestHelpers';
 import {
 	createSeededRandom,
 	expectOk,
@@ -705,29 +710,6 @@ const findNamedTwiceInARow = (shownFacts: readonly ShownFunFact[]): string[] =>
 		return names.filter((name) => previous.includes(name));
 	});
 
-/*
- * A Tournament with the named Players registered, that many Boards set out, and the Draw made, shuffled by
- * a seeded random source.
- */
-const setUpDraw = (names: readonly string[], { boards }: { boards: number }): Tournament => {
-	const registered = registerPlayers(...names);
-	const typed = String(boards);
-	const withBoards = expectOk(setBoardCount(registered, typed));
-	const onHouseRules = expectOk(showHouseRules(withBoards));
-	const random = createSeededRandom(1);
-	return expectOk(makeDraw(onHouseRules, random));
-};
-
-/*
- * 6 Players on 3 Boards, Started, the Draw's three Matches played and their losers staying: the Losers
- * Bracket is one Match on a Board and a Bye Player waiting for one.
- */
-const playIntoLosersBracket = (): Tournament => {
-	const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev'], { boards: 3 });
-	const started = expectOk(start(drawn));
-	return playDrawStaying(started);
-};
-
 // Each Match card in a Round's column, both halves of it.
 const listRoundCards = (roundName: string) =>
 	screen
@@ -743,16 +725,6 @@ const findCardOnBoard = (roundName: string, board: number) => {
 // The Match card in a Round's column that names the Player.
 const findCardOf = (roundName: string, playerName: string) =>
 	listRoundCards(roundName).find((card) => card.textContent!.includes(playerName));
-
-/*
- * Saves the Tournament as the Organizer's window does: Auto's cycle starts again now if the change from the
- * Tournament saved before calls for it.
- */
-const saveTournament = (store: Store<Tournament>, tournament: Tournament) => {
-	const before = store.load() ?? createTournament();
-	const restarted = restartTvCycleIfDue({ before, after: tournament, now: Date.now() });
-	act(() => store.save(restarted));
-};
 
 // Saves the Tournament a command made, as saveTournament does.
 const saveOutcome = (store: Store<Tournament>, outcome: Result<Tournament>) => {
@@ -775,10 +747,3 @@ const findLatestHouseRule = () =>
 		.find((item) => item.getAttribute('aria-current') === 'true');
 
 const readHeading = () => screen.getByRole('heading', { level: 1 }).textContent;
-
-// Moves the fake clock on, as the TV waits between screens.
-const waitSeconds = (seconds: number) => {
-	act(() => {
-		vi.advanceTimersByTime(seconds * 1000);
-	});
-};

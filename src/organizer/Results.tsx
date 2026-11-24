@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import {
 	getMatchKey,
 	getUndoableResults,
@@ -8,16 +8,18 @@ import {
 	type Tournament,
 } from '../tournament';
 import { describeBracketRound } from '../wording';
-import { button, panel, windowFilling } from './classes';
+import { button, panel } from './classes';
 import { Refusal, type Apply } from './controls';
 
 /*
  * The results that can still be undone, latest first, each with its own Undo. Each names its bracket and
- * Round, so the Organizer undoes the Match they mean. None until a result is recorded.
+ * Round, so the Organizer undoes the Match they mean. None until a result is recorded. The panel keeps its
+ * whole height, its list scrolling with the side column rather than on its own. Named by its heading.
  */
 export const Results = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const results = getUndoableResults(tournament);
 	const [refusal, setRefusal] = useState('');
+	const headingId = useId();
 	const undoResultOf = (match: MatchPlace) => {
 		const reason = apply(undoResult(tournament, match));
 		setRefusal(reason);
@@ -26,10 +28,12 @@ export const Results = ({ tournament, apply }: { tournament: Tournament; apply: 
 		return null;
 	}
 	return (
-		<section className={`${panel} ${windowFilling.column}`}>
-			<h2 className="text-xl font-bold">Results</h2>
+		<section aria-labelledby={headingId} className={panel}>
+			<h2 id={headingId} className="text-xl font-bold">
+				Results
+			</h2>
 			<p className="text-muted mt-1">Undo a result to correct it.</p>
-			<ul aria-label="Results" className={`${windowFilling.scrollingArea} mt-2`}>
+			<ul aria-label="Results" className="mt-2">
 				{results.map((result) => (
 					<li
 						key={getMatchKey(result.match)}

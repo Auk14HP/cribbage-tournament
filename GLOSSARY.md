@@ -92,6 +92,10 @@ _Avoid_: Skin, colour scheme, mode
 The choice of **Theme** that follows the laptop's own light or dark setting. It is the choice until the **Organizer** picks another.
 _Avoid_: System, Auto (the TV's cycling choice), Match laptop (a **Match** is a game)
 
+**TV Display**:
+The panel on the **Organizer screen** that shows what the TV is showing: a small picture of the **TV screen** on show, and how long until it changes. Once the TV has screens to cycle, it holds the choice of **Auto** or a **Held screen**, and the seconds per TV screen.
+_Avoid_: TV panel, preview, monitor
+
 ### The TV
 
 **TV screen**:

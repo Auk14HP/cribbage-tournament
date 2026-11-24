@@ -106,15 +106,24 @@ test('screens', async ({ context, page: organizer }) => {
 	if (!process.env.RESULTS) {
 		return;
 	}
-	// Each screen for 1 second, so the TV soon cycles to each bracket once the Losers Bracket is drawn.
-	await organizer.getByLabel('Seconds per TV screen').fill('1');
 	// The first Match on the list that can be won goes to its first-named Player each time.
 	const results = process.env.RESULTS === 'all' ? Infinity : Number(process.env.RESULTS);
 	const nextWinnerButton = findMatchesOnBoards(organizer).getByRole('button').first();
+	const secondsInput = organizer.getByLabel('Seconds per TV screen');
+	let isOneSecondSet = false;
 	// Each Player losing their first Match stays, so the Losers Bracket is played too.
 	for (let recorded = 0; recorded < results && (await nextWinnerButton.count()) > 0; recorded++) {
 		await nextWinnerButton.click();
 		await answerIsLoserStayingDialogIfAsked(organizer, 'Staying');
+		/*
+		 * Each screen for 1 second, so the TV soon cycles to each bracket. The box is usable once the TV has a
+		 * second screen to cycle: the Losers Bracket drawn, or the Tournament finished.
+		 */
+		if (!isOneSecondSet && (await secondsInput.isEnabled())) {
+			await secondsInput.fill('1');
+			await secondsInput.press('Enter');
+			isOneSecondSet = true;
+		}
 	}
 	// The TV cycles each second, so wait for the screen to shoot: the bracket, then the champion once finished.
 	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();

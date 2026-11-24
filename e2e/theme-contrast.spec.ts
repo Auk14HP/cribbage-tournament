@@ -29,7 +29,14 @@ const chooseTheme = async (page: Page, themeName: 'Same as laptop' | 'Light' | '
  * it (3:1 for large text), as axe's color-contrast rule measures it.
  */
 const expectReadableText = async (page: Page, moment: string) => {
-	const results = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze();
+	/*
+	 * The TV Display panel's thumbnail is left out: it is a picture of the TV, drawn in the TV's own colours
+	 * rather than the theme's, and caught mid-fade it reads as low contrast.
+	 */
+	const results = await new AxeBuilder({ page })
+		.withRules(['color-contrast'])
+		.exclude('[data-testid="tv thumbnail"]')
+		.analyze();
 	const hardToRead = results.violations.flatMap((violation) =>
 		violation.nodes.map((node) => `${node.html}: ${node.failureSummary}`),
 	);

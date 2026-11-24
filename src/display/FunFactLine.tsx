@@ -40,7 +40,7 @@ export const FunFactLine = ({
 		<p
 			key={funFactToShow.turn}
 			style={{ '--fun-fact-duration': `${funFactSeconds}s` } as CSSProperties}
-			className="animate-fun-fact mt-[1.5vh] min-h-[8.4vh] text-[3.5vh] leading-[1.2] text-balance text-gray-200"
+			className="animate-fun-fact mt-[1.5cqh] min-h-[8.4cqh] text-[3.5cqh] leading-[1.2] text-balance text-gray-200"
 		>
 			{`Fun fact: ${fillFunFact(funFactToShow, players)}`}
 		</p>

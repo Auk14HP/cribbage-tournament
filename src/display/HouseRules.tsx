@@ -17,14 +17,14 @@ export const HouseRules = ({ tournament }: { tournament: Tournament }) => {
 	const latestIndex = shownRules.length - 1;
 	return (
 		<>
-			<h1 className="text-[7vh] leading-none font-bold">House Rules</h1>
-			<p className="mt-[2vh] mb-[4vh] text-[5vh] leading-none text-yellow-300">
+			<h1 className="text-[7cqh] leading-none font-bold">House Rules</h1>
+			<p className="mt-[2cqh] mb-[4cqh] text-[5cqh] leading-none text-yellow-300">
 				{describePlayersTonight(tournament.players.length)}
 			</p>
 			{/* A rule too long for one line has its lines balanced to about the same length. */}
 			<ol
 				aria-label="House Rules"
-				className="list-decimal space-y-[3vh] pl-[3vw] text-[5.5vh] leading-tight text-balance"
+				className="list-decimal space-y-[3cqh] pl-[3cqw] text-[5.5cqh] leading-tight text-balance"
 			>
 				{shownRules.map((rule, index) => (
 					<HouseRule key={rule} rule={rule} isLatest={index === latestIndex} />

@@ -35,12 +35,14 @@ export const dialogBox =
  * panel scrolls in an area of its own: the area shrinks to fit the space left, so it never pushes the controls
  * after it off screen, and its panel and column shrink with it. A short list keeps its own height. Two lists
  * one above the other share one area, so neither is squeezed to make room for the other. min-h-0 lets each
- * box between the row and the list shrink below the height of what it holds.
+ * box between the row and the list shrink below the height of what it holds. The side column's panels keep
+ * their whole height instead, Results included: in a window too short for them, such as the TV Display above
+ * the Boards, the side column scrolls as a whole, so the page itself still never scrolls.
  */
 export const windowFilling = {
 	row: 'mt-6 flex min-h-0 flex-1 gap-6',
 	mainColumn: 'flex min-h-0 flex-1 flex-col gap-4',
-	sideColumn: 'flex min-h-0 w-96 shrink-0 flex-col gap-4',
+	sideColumn: 'flex min-h-0 w-96 shrink-0 flex-col gap-4 overflow-y-auto',
 	// A panel holding a list that scrolls, its parts stacked so the list's area can shrink.
 	column: 'flex min-h-0 flex-col',
 	scrollingArea: 'min-h-0 overflow-y-auto',
