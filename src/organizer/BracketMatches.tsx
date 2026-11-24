@@ -118,7 +118,7 @@ const ForfeitButton = ({
 		<>
 			<button
 				type="button"
-				className="text-danger hover:bg-divider min-h-8 rounded-lg px-1.5 text-xs font-semibold tracking-wide uppercase"
+				className="text-danger hover:bg-divider -mr-1.5 min-h-8 rounded-lg px-1.5 text-xs font-bold tracking-widest uppercase"
 				onClick={() => dialog.current?.showModal()}
 			>
 				Forfeit
@@ -165,9 +165,11 @@ const playerSlots = {
 };
 
 /*
- * One Match's tile: its Board, large, and both Players one above the other, its Round above them when given.
- * Once Started, a Match with both Players known can be won by tapping either, or forfeited from beneath the
- * Board. The Forfeit comes after the Players in the tile's own order, so it is read and tabbed to last.
+ * One Match's tile. Its top line holds the Round, when given, and at its end the Forfeit, once the Match can be
+ * forfeited; the line keeps its height without them, so Start moves nothing. Beneath, the Players one above the
+ * other. Beside both lines, the Board, its label close above its large number, sits in the middle of the tile.
+ * Once Started, a Match with both Players known can be won by tapping either. The Forfeit comes after the
+ * Players in the tile's own order, so it is read and tabbed to last.
  */
 const MatchTile = ({
 	matchOnBoard: {
@@ -199,15 +201,21 @@ const MatchTile = ({
 		 * Relative, so the "vs" read out between the Players, drawn nowhere, stays inside the tile rather than
 		 * stretching the page below the list it scrolls in.
 		 */
-		<li className="border-divider bg-raised relative grid grid-cols-[3.25rem_minmax(0,1fr)] grid-rows-[auto_1fr] gap-x-3 gap-y-1 rounded-xl border p-3">
-			<span className="col-start-1 row-start-1 flex flex-col items-center">
+		<li className="border-divider bg-raised relative grid grid-cols-[3.25rem_minmax(0,1fr)_auto] grid-rows-[minmax(2rem,auto)_auto] gap-x-3 gap-y-1 rounded-xl border p-3">
+			<span className="col-start-1 row-span-2 row-start-1 flex flex-col items-center self-center">
 				<span className="text-muted text-xs font-bold tracking-widest uppercase">
 					Board
 				</span>{' '}
-				<span className="text-accent text-4xl leading-none font-extrabold">{board}</span>
+				<span className="text-board-number text-4xl leading-none font-extrabold">
+					{board}
+				</span>
 			</span>
-			<div className="col-start-2 row-span-2 row-start-1 flex flex-col gap-2">
-				{roundName && <span className="text-muted text-sm font-semibold">{roundName}</span>}
+			{roundName && (
+				<span className="text-muted col-start-2 row-start-1 self-center text-sm font-semibold">
+					{roundName}
+				</span>
+			)}
+			<div className="col-span-2 col-start-2 row-start-2 flex flex-col gap-2">
 				<MatchPlayer
 					player={playerA}
 					match={match}
@@ -225,7 +233,7 @@ const MatchTile = ({
 				/>
 			</div>
 			{canWin && (
-				<div className="col-start-1 row-start-2 self-end justify-self-center">
+				<div className="col-start-3 row-start-1 self-center">
 					<ForfeitButton
 						board={board}
 						players={[playerA, knownPlayerB]}
