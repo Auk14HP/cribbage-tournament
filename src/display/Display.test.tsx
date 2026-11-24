@@ -20,6 +20,7 @@ import {
 	recordWinner,
 	registerPlayer,
 	removePlayer,
+	restartTvCycleIfDue,
 	renamePlayer,
 	setBoardCount,
 	setScreenSeconds,
@@ -62,7 +63,7 @@ describe('the display route', () => {
 		if (!registered.ok) {
 			throw new Error(registered.reason);
 		}
-		act(() => store.save(registered.value));
+		saveTournament(store, registered.value);
 
 		expect(screen.getByText('1 Player registered')).toBeInTheDocument();
 		const playersList = within(screen.getByRole('list', { name: 'Players' }));
@@ -174,13 +175,13 @@ describe('the Fun Fact line', () => {
 		const namedPlayer = tournament.players.find((p) => p.name === names[0])!;
 
 		tournament = expectOk(renamePlayer(tournament, namedPlayer.id, 'Ronnie-Lou'));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		const renamed = parseFunFact(tournament.players);
 		expect(renamed.fact).toBe(fact);
 		expect(renamed.names).toContain('Ronnie-Lou');
 
 		tournament = expectOk(removePlayer(tournament, namedPlayer.id));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		const replaced = parseFunFact(tournament.players);
 		expect(replaced.fact).not.toBe(fact);
 		expect(replaced.names).not.toContain('Ronnie-Lou');
@@ -226,7 +227,7 @@ describe('the House Rules screen', () => {
 		tournament = expectOk(showNextHouseRule(tournament));
 		tournament = expectOk(showNextHouseRule(tournament));
 
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 
 		expect(listHouseRulesText()).toEqual([
 			'31 scores 2 points. No extra point for the go.',
@@ -252,15 +253,15 @@ describe('the House Rules screen', () => {
 		let tournament = expectOk(showHouseRules(withBoards));
 		tournament = expectOk(showNextHouseRule(tournament));
 		tournament = expectOk(showNextHouseRule(tournament));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		expect(readHeading()).toBe('House Rules');
 
 		tournament = expectOk(goBackToRegistration(tournament));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		expect(readHeading()).toBe(tournamentTitle);
 
 		tournament = expectOk(showHouseRules(tournament));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		expect(readHeading()).toBe('House Rules');
 		expect(listHouseRulesText()).toEqual([
 			'31 scores 2 points. No extra point for the go.',
@@ -279,7 +280,7 @@ describe('Tonight’s Draw screen', () => {
 		const store = showDisplay();
 		const tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 3 });
 
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 
 		/*
 		 * 5 Players: a first-Round Match on Board 1, and in Round 2 a Bye Player at Board 2 waiting for its
@@ -301,7 +302,7 @@ describe('Tonight’s Draw screen', () => {
 		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
 
 		const started = expectOk(start(tournament));
-		act(() => store.save(started));
+		saveTournament(store, started);
 
 		expect(readHeading()).toBe('Winners Bracket');
 	});
@@ -314,7 +315,7 @@ describe('Tonight’s Draw screen', () => {
 		const [onBoard1, onBoard2] = getMatchesOnBoards(tournament);
 		const [playerA] = onBoard1.players as [Player, Player];
 		const [playerB] = onBoard2.players as [Player, Player];
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 
 		saveOutcome(store, swapPlayers(tournament, playerA.id, playerB.id));
 
@@ -331,7 +332,7 @@ describe('Tonight’s Draw screen', () => {
 		 */
 		const tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 2 });
 
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 
 		const [waiting] = getWaitingForBoard(tournament);
 		const card = findCardOf('Round 2', waiting.players[0].name);
@@ -351,7 +352,7 @@ describe('the Winners Bracket screen', () => {
 		const [byePlayer] = seatedMatches.find((m) => m !== firstMatch)!.players;
 		const recordWinnerOf = (match: typeof firstMatch.match, winner: Player) => {
 			tournament = expectOk(recordWinner(tournament, match, winner.id, 'leaving'));
-			act(() => store.save(tournament));
+			saveTournament(store, tournament);
 		};
 		// What a Round's column shows, a Match per item.
 		const listRound = (name: string) =>
@@ -360,7 +361,7 @@ describe('the Winners Bracket screen', () => {
 				.flatMap((list) => within(list).queryAllByRole('listitem'))
 				.map((item) => item.textContent);
 
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 
 		// 3 Players in a 4-place bracket: one first-Round Match, and a Bye Player waiting in the final.
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Winners Bracket');
@@ -378,13 +379,13 @@ describe('the TV cycle', () => {
 		vi.useFakeTimers();
 		const store = showDisplay();
 		let tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 3 });
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 
 		waitSeconds(21);
 		expect(readHeading()).toBe('Tonight’s Draw');
 
 		tournament = expectOk(start(tournament));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		expect(readHeading()).toBe('Winners Bracket');
 		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
 		waitSeconds(21);
@@ -396,7 +397,7 @@ describe('the TV cycle', () => {
 		vi.useFakeTimers();
 		const store = showDisplay();
 		let tournament = playIntoLosersBracket();
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 
 		expect(readHeading()).toBe('Winners Bracket');
 		waitSeconds(19);
@@ -408,7 +409,7 @@ describe('the TV cycle', () => {
 
 		// A new time takes effect without a refresh, restarting the screen on show.
 		tournament = expectOk(setScreenSeconds(tournament, '5'));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		expect(readHeading()).toBe('Winners Bracket');
 		waitSeconds(4);
 		expect(readHeading()).toBe('Winners Bracket');
@@ -423,7 +424,7 @@ describe('the TV cycle', () => {
 		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
 
 		let tournament = playIntoLosersBracket();
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		const firstCountdownRing = screen.getByTestId('countdown ring');
 		expect(firstCountdownRing).toHaveAttribute('aria-hidden', 'true');
 		expect(firstCountdownRing).toHaveStyle({ '--countdown-duration': '20s' });
@@ -437,10 +438,31 @@ describe('the TV cycle', () => {
 		// A new time restarts the screen on show, and the ring with it.
 		waitSeconds(10);
 		tournament = expectOk(setScreenSeconds(tournament, '5'));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		const restartedCountdownRing = screen.getByTestId('countdown ring');
 		expect(restartedCountdownRing).not.toBe(secondCountdownRing);
 		expect(restartedCountdownRing).toHaveStyle({ '--countdown-duration': '5s' });
+	});
+	it('shows the same screen with the same time left when the TV is reloaded mid-cycle', () => {
+		vi.useFakeTimers();
+		const store = showDisplay();
+		saveTournament(store, playIntoLosersBracket());
+		waitSeconds(30);
+		expect(readHeading()).toBe('Losers Bracket');
+
+		cleanup();
+		showDisplay();
+
+		expect(readHeading()).toBe('Losers Bracket');
+		const countdownRing = screen.getByTestId('countdown ring');
+		expect(countdownRing).toHaveStyle({ '--countdown-duration': '20s' });
+		expect(countdownRing).toHaveStyle({ '--countdown-elapsed': '10s' });
+		waitSeconds(9);
+		expect(readHeading()).toBe('Losers Bracket');
+		expect(screen.getByTestId('countdown ring')).toBe(countdownRing);
+		waitSeconds(1);
+		expect(readHeading()).toBe('Winners Bracket');
+		expect(screen.getByTestId('countdown ring')).not.toBe(countdownRing);
 	});
 });
 
@@ -449,18 +471,18 @@ describe('a Held screen', () => {
 		vi.useFakeTimers();
 		const store = showDisplay();
 		let tournament = playIntoLosersBracket();
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		waitSeconds(10);
 
 		tournament = expectOk(chooseTvScreen(tournament, 'losersBracket'));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		expect(readHeading()).toBe('Losers Bracket');
 		expect(screen.queryByTestId('countdown ring')).not.toBeInTheDocument();
 		waitSeconds(21);
 		expect(readHeading()).toBe('Losers Bracket');
 
 		tournament = expectOk(chooseTvScreen(tournament, 'auto'));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		expect(readHeading()).toBe('Losers Bracket');
 		expect(screen.getByTestId('countdown ring')).toBeInTheDocument();
 		waitSeconds(19);
@@ -479,13 +501,13 @@ describe('a Held screen', () => {
 		const champion = final.players[0];
 
 		tournament = expectOk(recordWinner(tournament, final.match, champion.id, 'leaving'));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		expect(readHeading()).toBe('Winners Bracket');
 		waitSeconds(60);
 		expect(readHeading()).toBe('Winners Bracket');
 
 		tournament = expectOk(chooseTvScreen(tournament, 'auto'));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		waitSeconds(19);
 		expect(readHeading()).toBe('Winners Bracket');
 		waitSeconds(1);
@@ -496,7 +518,7 @@ describe('a Held screen', () => {
 		const store = showDisplay();
 		const playing = playIntoLosersBracket();
 		const holding = expectOk(chooseTvScreen(playing, 'losersBracket'));
-		act(() => store.save(holding));
+		saveTournament(store, holding);
 
 		cleanup();
 		showDisplay();
@@ -516,7 +538,7 @@ describe('the champion screen', () => {
 		const champion = final.players[0];
 
 		tournament = expectOk(recordWinner(tournament, final.match, champion.id, 'leaving'));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 
 		// With no Losers Bracket played, the night has one champion.
 		expect(readHeading()).toBe('Tonight’s Champion');
@@ -543,7 +565,7 @@ describe('the Losers Bracket', () => {
 		const store = showDisplay();
 		const tournament = playIntoLosersBracket();
 		const [waiting] = getWaitingForBoard(tournament);
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 
 		expect(readHeading()).toBe('Winners Bracket');
 		waitSeconds(20);
@@ -566,7 +588,7 @@ describe('the Losers Bracket', () => {
 		const heldPlace = setUpHeldPlace(['staying', 'staying']);
 		const { ann, cat } = heldPlace;
 		let tournament = expectOk(chooseTvScreen(heldPlace.tournament, 'losersBracket'));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		expect(readHeading()).toBe('Losers Bracket');
 
 		const heldName = screen.getByText(`${cat.name}?`);
@@ -580,7 +602,7 @@ describe('the Losers Bracket', () => {
 		// Cat loses to Ann and stays, so the Held Place is Cat's.
 		const annAndCat = findMatchOf(tournament, cat);
 		tournament = expectOk(recordWinner(tournament, annAndCat.match, ann.id, 'staying'));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 
 		const [leftRoundOne] = screen.getAllByRole('list', { name: 'Round 1' });
 		expect(leftRoundOne).toHaveTextContent(cat.name);
@@ -602,7 +624,7 @@ describe('the Losers Bracket', () => {
 		const [losersChampion] = losersFinal.players as [Player, Player];
 
 		tournament = expectOk(recordWinner(tournament, winnersFinal.match, winnersChampion.id));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		expect(readHeading()).toBe('Winners Bracket');
 		expect(screen.getByText(`Champion: ${winnersChampion.name}`)).toBeInTheDocument();
 		waitSeconds(20);
@@ -610,7 +632,7 @@ describe('the Losers Bracket', () => {
 		expect(screen.queryByText(/Champion/)).not.toBeInTheDocument();
 
 		tournament = expectOk(recordWinner(tournament, losersFinal.match, losersChampion.id));
-		act(() => store.save(tournament));
+		saveTournament(store, tournament);
 		expect(readHeading()).toBe('Tonight’s Champions');
 		const winnersLine = screen.getByText('Winners Bracket').parentElement;
 		const losersLine = screen.getByText('Losers Bracket').parentElement;
@@ -633,7 +655,8 @@ describe('the Losers Bracket', () => {
 const showDisplay = (saved?: Tournament): Store<Tournament> => {
 	const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
 	if (saved) {
-		store.save(saved);
+		const now = Date.now();
+		store.save(restartTvCycleIfDue({ before: createTournament(), after: saved, now }));
 	}
 	const random = createSeededRandom(1);
 	render(<Display store={store} random={random} />);
@@ -722,9 +745,19 @@ const findCardOnBoard = (roundName: string, board: number) => {
 const findCardOf = (roundName: string, playerName: string) =>
 	listRoundCards(roundName).find((card) => card.textContent!.includes(playerName));
 
-// Saves the Tournament a command made, as the Organizer's window does.
+/*
+ * Saves the Tournament as the Organizer's window does: Auto's cycle starts again now if the change from the
+ * Tournament saved before calls for it.
+ */
+const saveTournament = (store: Store<Tournament>, tournament: Tournament) => {
+	const before = store.load() ?? createTournament();
+	const restarted = restartTvCycleIfDue({ before, after: tournament, now: Date.now() });
+	act(() => store.save(restarted));
+};
+
+// Saves the Tournament a command made, as saveTournament does.
 const saveOutcome = (store: Store<Tournament>, outcome: Result<Tournament>) => {
-	act(() => store.save(expectOk(outcome)));
+	saveTournament(store, expectOk(outcome));
 };
 
 // The list of House Rules the TV shows, to look inside.

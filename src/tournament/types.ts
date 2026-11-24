@@ -93,6 +93,15 @@ export type TvScreen = 'winnersBracket' | 'losersBracket' | 'champion';
  */
 export type TvChoice = 'auto' | TvScreen;
 
+/*
+ * When Auto's current cycle started, in milliseconds since 1970 as Date.now() gives, and the screen it started
+ * from. Every window works out the screen on show from it and the clock, so they agree.
+ */
+export interface TvCycleStart {
+	readonly time: number;
+	readonly screen: TvScreen;
+}
+
 export interface Tournament {
 	readonly phase: Phase;
 	readonly players: readonly Player[];
@@ -132,10 +141,12 @@ export interface Tournament {
 	readonly screenSeconds: number;
 	// What the TV shows once Started: Auto, or the Held screen.
 	readonly tvChoice: TvChoice;
+	// Undefined until Start.
+	readonly tvCycleStart?: TvCycleStart;
 }
 
 // Bump whenever the Tournament's shape changes, so a Tournament saved in an older shape loads as blank.
-export const tournamentVersion = 12;
+export const tournamentVersion = 13;
 
 export const createTournament = (): Tournament => ({
 	phase: 'registration',
