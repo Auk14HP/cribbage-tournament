@@ -23,21 +23,21 @@ jobs:
                   name: playwright-traces
                   path: test-results/
 
-    # Publishes main to GitHub Pages once the checks above pass. Pull requests stop at the checks.
-    deploy:
+    # Builds main for GitHub Pages once the checks above pass. Pull requests stop at the checks: skipping this job
+    # skips the deploy after it too.
+    build-pages:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         needs: check
         runs-on: ubuntu-latest
         permissions:
             contents: read
-            pages: write
-            id-token: write
-        environment:
-            name: github-pages
-            url: ${{ steps.deployment.outputs.page_url }}
-        concurrency:
-            group: pages
-            cancel-in-progress: false
+            pages: read
+        # Named for the run attempt, so a re-run that builds again deploys its own artifact, not an earlier attempt's.
+        # Handed on as an output, so the deploy uses the name this job uploaded under.
+        env:
+            ARTIFACT_NAME: github-pages-${{ github.run_attempt }}
+        outputs:
+            artifact-name: ${{ env.ARTIFACT_NAME }}
         steps:
             - uses: actions/checkout@v7
             - uses: actions/setup-node@v7
@@ -47,12 +47,29 @@ jobs:
             - run: npm ci
             - run: npm run build
             - uses: actions/configure-pages@v6
-            # Named for the run attempt, so re-running a failed deploy finds only its own artifact, not the first try's too.
             - uses: actions/upload-pages-artifact@v5
               with:
                   path: dist
-                  name: github-pages-${{ github.run_attempt }}
+                  name: ${{ env.ARTIFACT_NAME }}
+
+    # Publishes the build in a job of its own: deploy-pages lists the run's artifacts as soon as it starts, and
+    # straight after the upload that list can still be empty. Starting a new job gives the upload time to appear in it.
+    deploy:
+        needs: build-pages
+        runs-on: ubuntu-latest
+        permissions:
+            pages: write
+            id-token: write
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        concurrency:
+            group: pages
+            cancel-in-progress: false
+        steps:
             - id: deployment
               uses: actions/deploy-pages@v5
               with:
-                  artifact_name: github-pages-${{ github.run_attempt }}
+                  # Read from build-pages, not worked out again: "Re-run failed jobs" re-runs only this job, under a new
+                  # attempt number, and it must still find the artifact build-pages uploaded.
+                  artifact_name: ${{ needs.build-pages.outputs.artifact-name }}
