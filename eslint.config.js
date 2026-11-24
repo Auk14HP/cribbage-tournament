@@ -92,6 +92,17 @@ export default defineConfig([
 						'VariableDeclarator[id.name=/^render[A-Z]/] > ArrowFunctionExpression',
 					message: 'Make this its own component instead of a renderX helper.',
 				},
+				/*
+				 * A list item looked up across a whole page or its main landmark, rather than inside its own list.
+				 * Every list on the page counts, so a list added anywhere, such as the step bar, changes what it
+				 * finds.
+				 */
+				{
+					selector:
+						"CallExpression[callee.property.name=/ByRole$/][arguments.0.value='listitem']:matches([callee.object.name=/^(page|organizer|tv|screen)$/], [callee.object.arguments.0.value='main'])",
+					message:
+						"Find list items inside their named list: `page.getByRole('list', { name }).getByRole('listitem')`.",
+				},
 				// A row that works anything out, such as its own callbacks, is a component, not a map body.
 				{
 					selector:

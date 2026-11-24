@@ -132,7 +132,10 @@ test.describe('Registering a long field', () => {
 		await playerName.fill('Zebedee Newcomer');
 		await playerName.press('Enter');
 
-		const newRow = page.getByRole('listitem').filter({ hasText: 'Zebedee Newcomer' });
+		const newRow = page
+			.getByRole('list', { name: 'Players' })
+			.getByRole('listitem')
+			.filter({ hasText: 'Zebedee Newcomer' });
 		await expectWhollyOnScreen([newRow]);
 		await expect(playerName).toBeFocused();
 		await expectPageDoesNotScroll(page);

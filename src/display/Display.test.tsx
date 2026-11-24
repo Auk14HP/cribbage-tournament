@@ -65,7 +65,8 @@ describe('the display route', () => {
 		act(() => store.save(registered.value));
 
 		expect(screen.getByText('1 Player registered')).toBeInTheDocument();
-		expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+		const players = within(screen.getByRole('list', { name: 'Players' }));
+		expect(players.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
 			'Big Dave',
 		]);
 	});
@@ -208,7 +209,8 @@ describe('the House Rules screen', () => {
 
 		expect(readHeading()).toBe('House Rules');
 		expect(screen.getByText('1 Player tonight')).toBeInTheDocument();
-		expect(screen.queryAllByRole('listitem')).toEqual([]);
+		expect(screen.queryByRole('list', { name: 'Players' })).not.toBeInTheDocument();
+		expect(listHouseRulesText()).toEqual([]);
 
 		const backAtRegistration = expectOk(goBackToRegistration(store.load()!));
 		const withLateArrival = expectOk(registerPlayer(backAtRegistration, 'Sue'));
@@ -726,11 +728,16 @@ const saveOutcome = (store: Store<Tournament>, outcome: Result<Tournament>) => {
 };
 
 // The House Rules the TV shows, in order.
-const listHouseRulesText = () => screen.queryAllByRole('listitem').map((item) => item.textContent);
+const listHouseRulesText = () =>
+	within(screen.getByRole('list', { name: 'House Rules' }))
+		.queryAllByRole('listitem')
+		.map((item) => item.textContent);
 
 // The House Rule shown last, which the TV emphasizes.
 const findLatestHouseRule = () =>
-	screen.getAllByRole('listitem').find((item) => item.getAttribute('aria-current') === 'true');
+	within(screen.getByRole('list', { name: 'House Rules' }))
+		.getAllByRole('listitem')
+		.find((item) => item.getAttribute('aria-current') === 'true');
 
 const readHeading = () => screen.getByRole('heading', { level: 1 }).textContent;
 
