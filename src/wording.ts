@@ -43,6 +43,16 @@ export const bracketTitles: Record<BracketName, string> = {
 export const describeRound = ({ round, roundCount }: ShownRound): string =>
 	round === roundCount ? 'Final' : `Round ${round}`;
 
+// A number of Boards, singular for one: "1 Board", "3 Boards".
+export const describeBoardCount = (count: number): string =>
+	`${count} ${count === 1 ? 'Board' : 'Boards'}`;
+
+// Names in a sentence: "Final", "Round 1 and Final", "Round 1, Round 2 and Final".
+export const joinNames = (names: readonly string[]): string =>
+	names.length <= 1
+		? names.join('')
+		: `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+
 // A Match's bracket and Round, for a list holding both brackets' Matches: "Losers Bracket · Round 1".
 export const describeBracketRound = (tournament: Tournament, match: MatchPlace): string => {
 	const roundName = describeRound(getShownRound(tournament, match));

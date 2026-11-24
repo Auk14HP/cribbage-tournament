@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
 	getMatchKey,
 	getMatchesOnBoards,
@@ -52,7 +52,7 @@ const StackedLabel = ({ label, isShown }: { label: string; isShown: boolean }) =
 const bracketOrder: readonly BracketName[] = ['winners', 'losers'];
 
 /*
- * The Matches holding a Board, under their bracket's heading: the ones the Draw seats while the TV holds
+ * The Matches holding a Board, in a panel for each bracket: the ones the Draw seats while the TV holds
  * Tonight’s Draw, then the ones being played. Before Start, Swap mode makes the Players' names tappable:
  * the first tap picks a Player and the second swaps them with the Player picked. Once Started, tapping a
  * Player's name records them as the winner, and a Forfeit records their opponent's. A Player losing their
@@ -75,7 +75,6 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 	const [pickedToSwap, setPickedToSwap] = useState<PickedToSwap>();
 	const [pendingResult, setPendingResult] = useState<ResultAwaitingStayingAnswer>();
 	const stayingDialog = useRef<HTMLDialogElement>(null);
-	const matchesHeadingId = useId();
 	// Records the result at once, or once the loser has said whether they are staying.
 	const recordOrAsk = (loser: Player, record: (answer?: StayingAnswer) => void) => {
 		if (!isLosersBracketOpenTo(tournament, loser.id)) {
@@ -133,58 +132,59 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 						)}
 					</section>
 				)}
-				{/* Gone once the Tournament is finished, when no Match is left to list. */}
+				{/*
+				 * Gone once the Tournament is finished, when no Match is left to list. Not a panel itself: each
+				 * bracket's Matches are a panel of their own.
+				 */}
 				{!finished && (
-					<section className={`${panel} ${windowFilling.column}`}>
+					<div className={windowFilling.column}>
 						{matches.length > 0 && (
-							<>
-								<div className="flex items-center justify-between gap-4">
-									<h2 id={matchesHeadingId} className="text-xl font-bold">
-										Matches
-									</h2>
-									{/* Swap mode's line sits beside Done, in the header, so it moves nothing below. */}
-									{drawShown && (
-										<div className="flex items-center gap-4">
-											{swapping && (
-												<p className="text-muted whitespace-nowrap">
-													Tap two Players to swap them.
-												</p>
-											)}
-											{/*
-											 * Its labels share one grid cell, so it is as wide as Swap Players whichever shows, and
-											 * neither wraps nor shrinks: the box under the pointer stays put when it becomes Done.
-											 */}
-											<button
-												type="button"
-												className={`${button} grid shrink-0 text-center whitespace-nowrap`}
-												onClick={() => {
-													setSwapModeOn(!swapping);
-													setPickedToSwap(undefined);
-													setSwapRefusal('');
-												}}
-											>
-												<StackedLabel
-													label="Swap Players"
-													isShown={!swapping}
-												/>
-												<StackedLabel label="Done" isShown={swapping} />
-											</button>
-										</div>
-									)}
-								</div>
-								{playing && (
-									<p className="text-muted mt-1">Tap a Match’s winner.</p>
+							/*
+							 * What a tap does, above the Matches: on Tonight’s Draw, Swap Players with Swap mode's line
+							 * beside it, so the line moves nothing below; once Started, the winner's tap.
+							 */
+							<div className="flex min-h-10 items-center justify-between gap-4">
+								{playing && <p className="text-muted">Tap a Match’s winner.</p>}
+								{drawShown && (
+									<div className="ml-auto flex items-center gap-4">
+										{swapping && (
+											<p className="text-muted whitespace-nowrap">
+												Tap two Players to swap them.
+											</p>
+										)}
+										{/*
+										 * Its labels share one grid cell, so it is as wide as Swap Players whichever shows, and
+										 * neither wraps nor shrinks: the box under the pointer stays put when it becomes Done.
+										 */}
+										<button
+											type="button"
+											className={`${button} grid shrink-0 text-center whitespace-nowrap`}
+											onClick={() => {
+												setSwapModeOn(!swapping);
+												setPickedToSwap(undefined);
+												setSwapRefusal('');
+											}}
+										>
+											<StackedLabel
+												label="Swap Players"
+												isShown={!swapping}
+											/>
+											<StackedLabel label="Done" isShown={swapping} />
+										</button>
+									</div>
 								)}
-							</>
+							</div>
 						)}
 						{/*
-						 * The Matches and those waiting for a Board scroll together, so neither list is squeezed to make room
-						 * for the other: a waiting Match is reached by scrolling past the Matches holding a Board. Hidden while
+						 * The brackets' panels and the Matches waiting for a Board scroll together, so neither is squeezed
+						 * to make room for the other: a waiting Match is reached by scrolling past the panels. Hidden while
 						 * both are empty, so it leaves no gap.
 						 */}
-						<div className={`${windowFilling.scrollingArea} mt-2 empty:hidden`}>
+						<div
+							className={`${windowFilling.scrollingArea} mt-2 flex flex-col gap-4 empty:hidden`}
+						>
 							{matches.length > 0 && (
-								<section aria-labelledby={matchesHeadingId}>
+								<section aria-label="Matches" className="flex flex-col gap-4">
 									{bracketOrder.map((bracketName) => (
 										<BracketMatches
 											key={bracketName}
@@ -206,7 +206,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 						{playing && <Refusal reason={refusal} />}
 						{/* Held open on Tonight’s Draw, so a refusal in Swap mode moves nothing above it. */}
 						{drawShown && <Refusal reason={swapRefusal} />}
-					</section>
+					</div>
 				)}
 				<StayingDialog
 					ref={stayingDialog}

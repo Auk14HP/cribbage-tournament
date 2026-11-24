@@ -189,14 +189,14 @@ test.describe('Registering a long field', () => {
 });
 
 test.describe('Playing a long field', () => {
-	test('keeps Start and the TV Display panel on screen on Tonight’s Draw while the Matches list scrolls', async ({
+	test('keeps Swap Players, Start and the TV Display panel on screen on Tonight’s Draw while the Matches scroll', async ({
 		page,
 	}) => {
 		await page.goto('/?players=32&boards=16');
 		await confirmDraw(page);
 		const matches = findMatchesOnBoards(page);
 		const controls = [
-			page.getByRole('heading', { name: 'Matches' }),
+			page.getByRole('button', { name: 'Swap Players' }),
 			page.getByRole('button', { name: 'Start', exact: true }),
 			page.getByRole('heading', { name: 'TV Display' }),
 		];
@@ -209,14 +209,19 @@ test.describe('Playing a long field', () => {
 		await expectWhollyOnScreen(controls);
 	});
 
-	test('keeps the Matches heading, its refusal line and the TV Display panel on screen once Started, as Results pile up', async ({
+	test('keeps the line above the Matches, its refusal line and the TV Display panel on screen once Started, as Results pile up', async ({
 		page,
 	}) => {
 		await startWithTwelveResults(page);
 
 		await expectPageDoesNotScroll(page);
+		/*
+		 * The refusal line beneath the Matches, found by its place: the main column comes first on the page. The
+		 * side column's own refusal lines scroll with it.
+		 */
+		const matchesRefusalLine = page.getByRole('alert').first();
 		await expectWhollyOnScreen([
-			page.getByRole('heading', { name: 'Matches' }),
+			matchesRefusalLine,
 			page.getByText('Tap a Match’s winner.'),
 			page.getByRole('heading', { name: 'TV Display' }),
 			page.getByRole('heading', { name: 'Results' }),
@@ -247,7 +252,7 @@ test.describe('Playing a long field', () => {
 		await expectReachableInSideColumn(page, findLastRow(results));
 	});
 
-	test('keeps the Matches and Waiting for a Board headings on screen when most Matches wait', async ({
+	test('keeps Swap Players and the Waiting for a Board heading on screen when most Matches wait', async ({
 		page,
 	}) => {
 		await page.goto('/?players=32&boards=2');
@@ -255,7 +260,7 @@ test.describe('Playing a long field', () => {
 
 		await expectPageDoesNotScroll(page);
 		await expectWhollyOnScreen([
-			page.getByRole('heading', { name: 'Matches' }),
+			page.getByRole('button', { name: 'Swap Players' }),
 			page.getByRole('heading', { name: 'Waiting for a Board' }),
 			page.getByRole('button', { name: 'Start', exact: true }),
 		]);
@@ -275,7 +280,7 @@ test.describe('Playing a long field', () => {
 			.getByRole('listitem');
 
 		await expectRowScrollsIntoView(page, waitingMatch);
-		await expectWhollyOnScreen([page.getByRole('heading', { name: 'Matches' })]);
+		await expectWhollyOnScreen([page.getByText('Tap a Match’s winner.')]);
 	});
 });
 
@@ -328,7 +333,7 @@ test.describe('Fields of several shapes', () => {
 			await expectEveryLastRowReachable(page);
 
 			await confirmDraw(page);
-			await expect(page.getByRole('heading', { name: 'Matches' })).toBeVisible();
+			await expect(page.getByRole('button', { name: 'Swap Players' })).toBeVisible();
 			await expectEveryLastRowReachable(page);
 
 			await page.getByRole('button', { name: 'Start', exact: true }).click();

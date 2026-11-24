@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Organizer } from './Organizer';
 import {
+	listWaitingBadges,
 	listWaitingText,
 	playIntoLosersBracket,
 	saveTournament,
@@ -174,6 +175,18 @@ const listBracketHeadings = () =>
 	within(screen.getByRole('region', { name: 'Matches' }))
 		.getAllByRole('heading')
 		.map((heading) => heading.textContent);
+
+/*
+ * What a bracket's panel of Matches on a Board says in its header: its badge's letter, and its Rounds and
+ * how many Boards it holds ("Round 2 · 3 Boards").
+ */
+const readBracketPanel = (bracketTitle: string) => {
+	const bracketPanel = within(screen.getByRole('region', { name: bracketTitle }));
+	return {
+		badge: bracketPanel.getByTestId('bracket badge').textContent,
+		summary: bracketPanel.getByText(/ Boards?$/).textContent,
+	};
+};
 
 // A Round's name as a Match row shows it, after its Board: "Round 2" or "Final".
 const roundName = /Round \d+|Final/.source;
@@ -586,6 +599,7 @@ describe('the organizer route', () => {
 		expect(listWaitingText()).toEqual([
 			expect.stringMatching(/^Winners Bracket · Final.+ vs Winner of .+ \/ .+$/),
 		]);
+		expect(listWaitingBadges()).toEqual(['W']);
 	});
 
 	it('makes the Draw from the House Rules step once confirmed, with no House Rule shown, closing registration and showing the Matches it seats, then Starts', async () => {
@@ -864,10 +878,44 @@ describe('the organizer route', () => {
 		}
 	});
 
+	it('heads each bracket’s panel with its badge, its Round and how many Boards it holds', async () => {
+		const user = showOrganizer();
+		await drawEightPlayersOnFourBoards(user);
+		await clickButton(user, 'Start');
+		// 8 Players on 4 Boards, the Draw played and its losers staying: 2 Boards in each bracket.
+		await playTheDrawWithLosersStaying(user);
+
+		expect(readBracketPanel('Winners Bracket')).toEqual({
+			badge: 'W',
+			summary: 'Round 2 · 2 Boards',
+		});
+		expect(readBracketPanel('Losers Bracket')).toEqual({
+			badge: 'L',
+			summary: 'Round 1 · 2 Boards',
+		});
+	});
+
+	it('names every Round a bracket’s panel holds, and each Match’s Round only then', async () => {
+		const user = showOrganizer();
+		// 3 Players on 2 Boards: a first-Round Match, and the Bye Player waiting at the Final for its winner.
+		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
+
+		expect(readBracketPanel('Winners Bracket').summary).toBe('Round 1 and Final · 2 Boards');
+		expect(listMatchRows().map(readRoundName)).toEqual(['Round 1', 'Final']);
+
+		await clickButton(user, 'Start');
+		const [winner] = listWinnerNames(findPlayingRow());
+		await recordWin(user, findPlayingRow(), winner);
+		await answerDialog(user, 'Leaving');
+
+		expect(readBracketPanel('Winners Bracket').summary).toBe('Final · 1 Board');
+		expect(listMatchRows().map(readRoundName)).toEqual([undefined]);
+	});
+
 	it('names each Match’s Round, calling each bracket’s last Round the Final', async () => {
 		const user = showOrganizer();
 		await drawEightPlayersOnFourBoards(user);
-		expect(listMatchRows().map(readRoundName)).toEqual(Array(4).fill('Round 1'));
+		expect(readBracketPanel('Winners Bracket').summary).toBe('Round 1 · 4 Boards');
 		await clickButton(user, 'Start');
 		await playTheDrawWithLosersStaying(user);
 
@@ -875,20 +923,14 @@ describe('the organizer route', () => {
 		 * 8 Players: the Winners Bracket's second of three Rounds. The 4 who stayed make a Losers Bracket of two
 		 * Rounds, its first being played.
 		 */
-		expect(listMatchRowsIn('Winners Bracket').map(readRoundName)).toEqual([
-			'Round 2',
-			'Round 2',
-		]);
-		expect(listMatchRowsIn('Losers Bracket').map(readRoundName)).toEqual([
-			'Round 1',
-			'Round 1',
-		]);
+		expect(readBracketPanel('Winners Bracket').summary).toBe('Round 2 · 2 Boards');
+		expect(readBracketPanel('Losers Bracket').summary).toBe('Round 1 · 2 Boards');
 
 		// The Losers Bracket's second Round is its last: the Final, though the Winners Bracket has one more.
 		await playEveryMatchIn(user, 'Losers Bracket');
-		expect(listMatchRowsIn('Losers Bracket').map(readRoundName)).toEqual(['Final']);
+		expect(readBracketPanel('Losers Bracket').summary).toBe('Final · 1 Board');
 		await playEveryMatchIn(user, 'Winners Bracket');
-		expect(listMatchRowsIn('Winners Bracket').map(readRoundName)).toEqual(['Final']);
+		expect(readBracketPanel('Winners Bracket').summary).toBe('Final · 1 Board');
 	});
 
 	it('lists the Matches waiting for a Board, in turn', async () => {
@@ -908,6 +950,7 @@ describe('the organizer route', () => {
 		expect(listWaitingText()).toEqual([
 			expect.stringMatching(/^Losers Bracket · Final.+ vs Winner of .+ \/ .+$/),
 		]);
+		expect(listWaitingBadges()).toEqual(['L']);
 	});
 
 	it('lists each bracket’s results apart, latest first, though their Rounds and places match', async () => {
