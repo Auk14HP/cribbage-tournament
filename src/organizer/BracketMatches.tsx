@@ -9,17 +9,23 @@ import {
 	type Player,
 	type Tournament,
 } from '../tournament';
-import { bracketTitles, describeBoardCount, describeRound, joinNames } from '../wording';
+import { bracketTitles, describeBoardCount, describeRound, joinInSentence } from '../wording';
 import { BracketBadge } from './BracketBadge';
 import { button, confirmButton, confirmColours, dialogBox } from './classes';
 import { PlayerName, type SwapPicking } from './PlayerName';
 
-// The Rounds a bracket's Matches on a Board are in, by name, earliest first: "Round 1", "Final".
-const listRoundNames = (tournament: Tournament, matches: readonly MatchOnBoard[]): string[] => {
-	const shownRounds = matches.map(({ match }) => getShownRound(tournament, match));
-	const sorted = [...shownRounds].sort((x, y) => x.round - y.round);
-	const names = sorted.map(describeRound);
-	return [...new Set(names)];
+/*
+ * Each of a bracket's Matches on a Board with the name of its Round, worked out once, and the names of the Rounds
+ * among them, earliest first: "Round 1", "Final".
+ */
+const nameRounds = (tournament: Tournament, matches: readonly MatchOnBoard[]) => {
+	const namedMatches = matches.map((matchOnBoard) => {
+		const shownRound = getShownRound(tournament, matchOnBoard.match);
+		return { matchOnBoard, round: shownRound.round, roundName: describeRound(shownRound) };
+	});
+	const earliestFirst = [...namedMatches].sort((x, y) => x.round - y.round);
+	const roundNames = [...new Set(earliestFirst.map((m) => m.roundName))];
+	return { namedMatches, roundNames };
 };
 
 /*
@@ -50,9 +56,9 @@ export const BracketMatches = ({
 	if (matches.length === 0) {
 		return null;
 	}
-	const roundNames = listRoundNames(tournament, matches);
+	const { namedMatches, roundNames } = nameRounds(tournament, matches);
 	const isOneRound = roundNames.length === 1;
-	const summary = `${joinNames(roundNames)} · ${describeBoardCount(matches.length)}`;
+	const summary = `${joinInSentence(roundNames)} · ${describeBoardCount(matches.length)}`;
 	return (
 		<section
 			aria-labelledby={headingId}
@@ -73,15 +79,11 @@ export const BracketMatches = ({
 				aria-labelledby={headingId}
 				className="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-3 p-3.5"
 			>
-				{matches.map((matchOnBoard) => (
+				{namedMatches.map(({ matchOnBoard, roundName }) => (
 					<MatchTile
 						key={matchOnBoard.board}
 						matchOnBoard={matchOnBoard}
-						roundName={
-							isOneRound
-								? undefined
-								: describeRound(getShownRound(tournament, matchOnBoard.match))
-						}
+						roundName={isOneRound ? undefined : roundName}
 						playing={playing}
 						swapPicking={swapPicking}
 						onWin={onWin}

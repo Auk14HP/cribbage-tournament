@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { expectNothingMoves } from './screenStill';
 import {
+	answerIsLoserStayingDialogIfAsked,
 	confirmDrawFromHouseRules,
 	findMatchesOnBoards,
 	openTv,
@@ -44,9 +45,23 @@ const expectReadableText = async (page: Page, moment: string) => {
 };
 
 /*
+ * Records results, each loser of a first Match staying, until the Losers Bracket has a Match on a Board, so its
+ * panel and its outlined L badge are on screen.
+ */
+const playUntilLosersBracketOpens = async (page: Page) => {
+	const losersPanel = page.getByRole('region', { name: 'Losers Bracket' });
+	const nextWinnerButton = findMatchesOnBoards(page).getByRole('button').first();
+	while (!(await losersPanel.isVisible())) {
+		await nextWinnerButton.click();
+		await answerIsLoserStayingDialogIfAsked(page, 'Staying');
+	}
+};
+
+/*
  * Walks a Tournament from registration to its champion, checking the text at each phase and at the moments
  * that add colours of their own: the theme menu open, a House Rule shown with the rest still to come, a
- * confirmation dialog, Swap mode with a Player picked, a refusal, and the question whether a loser is staying.
+ * confirmation dialog, Swap mode with a Player picked, a refusal, the question whether a loser is staying, and
+ * the Losers Bracket open.
  */
 const expectEveryPhaseReadable = async (page: Page) => {
 	await page.goto('/?players=9&boards=4');
@@ -78,6 +93,8 @@ const expectEveryPhaseReadable = async (page: Page) => {
 	await expectReadableText(page, 'Now playing, asking whether the loser is staying');
 	await page.getByRole('dialog').getByRole('button', { name: 'Leaving' }).click();
 	await expectReadableText(page, 'Now playing, a result recorded');
+	await playUntilLosersBracketOpens(page);
+	await expectReadableText(page, 'Now playing, the Losers Bracket open');
 
 	await playToFinal(page);
 	await expect(page.getByRole('heading', { name: 'Tournament finished' })).toBeVisible();

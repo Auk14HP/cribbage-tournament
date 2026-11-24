@@ -48,7 +48,7 @@ export const describeBoardCount = (count: number): string =>
 	`${count} ${count === 1 ? 'Board' : 'Boards'}`;
 
 // Names in a sentence: "Final", "Round 1 and Final", "Round 1, Round 2 and Final".
-export const joinNames = (names: readonly string[]): string =>
+export const joinInSentence = (names: readonly string[]): string =>
 	names.length <= 1
 		? names.join('')
 		: `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;

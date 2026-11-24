@@ -1,12 +1,12 @@
 import type { BracketName } from '../tournament';
 
 /*
- * The letter and look of each bracket's badge: the Winners Bracket's a W filled in the theme's yellow, the
+ * The letter and colours of each bracket's badge: the Winners Bracket's a W filled in the theme's yellow, the
  * Losers Bracket's an L outlined, so the two tell apart at a glance by more than their letter.
  */
-const badges: Record<BracketName, { letter: string; look: string }> = {
-	winners: { letter: 'W', look: 'border-fill bg-fill text-on-fill' },
-	losers: { letter: 'L', look: 'border-muted text-ink' },
+const badges: Record<BracketName, { letter: string; colours: string }> = {
+	winners: { letter: 'W', colours: 'border-fill bg-fill text-on-fill' },
+	losers: { letter: 'L', colours: 'border-muted text-ink' },
 };
 
 const badgeSizes = {
@@ -25,12 +25,12 @@ export const BracketBadge = ({
 	bracketName: BracketName;
 	size: keyof typeof badgeSizes;
 }) => {
-	const { letter, look } = badges[bracketName];
+	const { letter, colours } = badges[bracketName];
 	return (
 		<span
 			aria-hidden="true"
 			data-testid="bracket badge"
-			className={`grid shrink-0 place-items-center border-2 font-extrabold ${badgeSizes[size]} ${look}`}
+			className={`grid shrink-0 place-items-center border-2 font-extrabold ${badgeSizes[size]} ${colours}`}
 		>
 			{letter}
 		</span>
