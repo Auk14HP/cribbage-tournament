@@ -105,7 +105,7 @@ const countdownRing = { size: 'h-[3vh] w-[3vh]', clearance: 'pr-[4vh]' };
 const CountdownRing = ({ seconds, secondsLeft }: { seconds: number; secondsLeft: number }) => {
 	// Kept from when the ring appears: the animation counts on from there by itself.
 	const [elapsedSeconds] = useState(seconds - secondsLeft);
-	const times = {
+	const countdownTimes = {
 		'--countdown-duration': `${seconds}s`,
 		'--countdown-elapsed': `${elapsedSeconds}s`,
 	} as CSSProperties;
@@ -114,7 +114,7 @@ const CountdownRing = ({ seconds, secondsLeft }: { seconds: number; secondsLeft:
 			data-testid="countdown ring"
 			aria-hidden
 			viewBox="0 0 36 36"
-			style={times}
+			style={countdownTimes}
 			className={`fixed -rotate-90 ${tvSafeArea.bottomRightCorner} ${countdownRing.size}`}
 		>
 			<circle {...ringCircle} className="stroke-gray-700" />

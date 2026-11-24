@@ -80,7 +80,11 @@ export const findTvScreenOnShow = (
 	if (screens.length === 1) {
 		return { screen: screens[0] };
 	}
-	const cycleStart = tournament.tvCycleStart ?? { time: now, screen: screens[0] };
+	/*
+	 * A Tournament saved without a cycle start, which only a save that skips restartTvCycleIfDue makes, cycles
+	 * from a fixed start, so every window still agrees and the cycle still moves on.
+	 */
+	const cycleStart = tournament.tvCycleStart ?? { time: 0, screen: screens[0] };
 	const screenTime = tournament.screenSeconds * 1000;
 	// A cycle start later than the clock, from a window whose clock runs ahead, counts as just started.
 	const elapsed = Math.max(now - cycleStart.time, 0);
@@ -89,6 +93,16 @@ export const findTvScreenOnShow = (
 	const firstIndex = Math.max(screens.indexOf(cycleStart.screen), 0);
 	const screen = screens[(firstIndex + screensShown) % screens.length];
 	return { screen, secondsLeft: (screenTime - (elapsed % screenTime)) / 1000 };
+};
+
+// Whether the screens the TV cycles, or their order, differ between the two Tournaments.
+const haveTvScreensChanged = (before: Tournament, after: Tournament): boolean => {
+	const screensBefore = listTvScreens(before);
+	const screensAfter = listTvScreens(after);
+	return (
+		screensBefore.length !== screensAfter.length ||
+		screensBefore.some((screen, i) => screen !== screensAfter[i])
+	);
 };
 
 /*
@@ -111,7 +125,8 @@ export const restartTvCycleIfDue = ({
 		...after,
 		tvCycleStart: { time: now, screen } satisfies TvCycleStart,
 	});
-	if (screens.join() !== listTvScreens(before).join()) {
+	// Every new phase changes the screens, so a new phase starts the cycle again here too.
+	if (haveTvScreensChanged(before, after)) {
 		return screens.length === 0
 			? { ...after, tvCycleStart: undefined }
 			: restartFrom(screens[0]);

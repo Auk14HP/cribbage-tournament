@@ -655,8 +655,7 @@ describe('the Losers Bracket', () => {
 const showDisplay = (saved?: Tournament): Store<Tournament> => {
 	const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
 	if (saved) {
-		const now = Date.now();
-		store.save(restartTvCycleIfDue({ before: createTournament(), after: saved, now }));
+		saveTournament(store, saved);
 	}
 	const random = createSeededRandom(1);
 	render(<Display store={store} random={random} />);
