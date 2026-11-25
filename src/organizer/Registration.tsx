@@ -7,14 +7,14 @@ import {
 	renamePlayer,
 	setBoardCount,
 	showHouseRules,
-	type Player,
 	type PlayerId,
 	type Tournament,
 } from '../tournament';
 import { describePlayersRegistered } from '../wording';
-import { button, dangerButton, panel, primaryButton, textInput, windowFilling } from './classes';
+import { panel, primaryButton, textInput, windowFilling } from './classes';
 import { NumberBox, Refusal, type Apply } from './controls';
 import { HomeBoardPicker } from './HomeBoardPicker';
+import { PlayerCell } from './PlayerCell';
 import { TvDisplay } from './TvDisplay';
 
 export const Registration = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
@@ -83,8 +83,8 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 		<div className={windowFilling.row}>
 			<div className={windowFilling.mainColumn}>
 				<section aria-label="Players" className={`${panel} ${windowFilling.column}`}>
-					<form onSubmit={register} className="flex items-center gap-2">
-						<label className="flex items-center gap-2">
+					<form onSubmit={register} className="flex items-end gap-2.5">
+						<label className="text-muted flex flex-1 flex-col gap-1.5 text-sm">
 							Player name
 							<input
 								ref={nameInput}
@@ -94,60 +94,48 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 								autoFocus
 								value={name}
 								onChange={(event) => setName(event.target.value)}
-								className={`${textInput} w-80`}
+								className={`${textInput} min-h-13 text-xl`}
 							/>
 						</label>
-						<button type="submit" className={button}>
+						<button type="submit" className={`${primaryButton} min-h-13 px-6`}>
 							Register
 						</button>
 					</form>
 					<Refusal reason={playersRefusal} />
-					<p className="mt-2">{describePlayersRegistered(tournament.players.length)}</p>
+					<div className="flex items-baseline justify-between">
+						<h2 className="text-muted text-sm font-bold tracking-widest uppercase">
+							Players
+						</h2>
+						<p className="font-bold">
+							{describePlayersRegistered(tournament.players.length)}
+						</p>
+					</div>
 					<ul
 						ref={playersList}
 						aria-label="Players"
-						className={`${windowFilling.scrollingArea} mt-2`}
+						className={`${windowFilling.scrollingArea} mt-2 grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] content-start gap-x-4 gap-y-1`}
 					>
-						{tournament.players.map((player) =>
-							player.id === renaming ? (
-								<RenameRow
-									key={player.id}
-									player={player}
-									onSave={(newName) => {
-										const refusal = apply(
-											renamePlayer(tournament, player.id, newName),
-										);
-										if (refusal) {
-											setPlayersRefusal(refusal);
-										} else {
-											stopRenaming();
-										}
-									}}
-									onCancel={stopRenaming}
-								/>
-							) : (
-								<li
-									key={player.id}
-									className="border-divider flex items-center gap-2 border-b py-1.5"
-								>
-									<span className="flex-1 text-lg">{player.name}</span>
-									<button
-										type="button"
-										className={button}
-										onClick={() => startRenaming(player.id)}
-									>
-										Rename
-									</button>
-									<button
-										type="button"
-										className={dangerButton}
-										onClick={() => remove(player.id)}
-									>
-										Remove
-									</button>
-								</li>
-							),
-						)}
+						{tournament.players.map((player) => (
+							<PlayerCell
+								key={player.id}
+								player={player}
+								homeBoard={findHomeBoard(tournament, player.id)}
+								isRenaming={player.id === renaming}
+								onRename={() => startRenaming(player.id)}
+								onRemove={() => remove(player.id)}
+								onSave={(newName) => {
+									const refusal = apply(
+										renamePlayer(tournament, player.id, newName),
+									);
+									if (refusal) {
+										setPlayersRefusal(refusal);
+									} else {
+										stopRenaming();
+									}
+								}}
+								onCancel={stopRenaming}
+							/>
+						))}
 					</ul>
 				</section>
 			</div>
@@ -185,46 +173,6 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 	);
 };
 
-const RenameRow = ({
-	player,
-	onSave,
-	onCancel,
-}: {
-	player: Player;
-	onSave: (name: string) => void;
-	onCancel: () => void;
-}) => {
-	const [name, setName] = useState(player.name);
-	const row = useRef<HTMLLIElement>(null);
-	// Brings the whole row into view in the Players list, its Save and Cancel too, however far down it is.
-	useEffect(() => {
-		row.current?.scrollIntoView({ block: 'nearest' });
-	}, []);
-	return (
-		<li ref={row} className="border-divider border-b py-1.5">
-			<form
-				onSubmit={(event) => {
-					event.preventDefault();
-					onSave(name);
-				}}
-				className="flex items-center gap-2"
-			>
-				<input
-					type="text"
-					aria-label={`New name for ${player.name}`}
-					autoComplete="off"
-					autoFocus
-					value={name}
-					onChange={(event) => setName(event.target.value)}
-					className={`${textInput} flex-1 text-lg`}
-				/>
-				<button type="submit" className={button}>
-					Save
-				</button>
-				<button type="button" className={button} onClick={onCancel}>
-					Cancel
-				</button>
-			</form>
-		</li>
-	);
-};
+// The Board a Player has as their Home Board, if they have one.
+const findHomeBoard = (tournament: Tournament, playerId: PlayerId) =>
+	tournament.homeBoards.find((homeBoard) => homeBoard.player === playerId)?.board;

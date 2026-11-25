@@ -40,12 +40,12 @@ test('the TV shows each change the Organizer makes, live, and both windows resum
 	await expect(tv.getByText('3 Players registered')).toBeVisible();
 	await expect(tvNames).toHaveText(['Dave K', 'Big Dave', 'Sue']);
 
-	await playerRows.filter({ hasText: 'Dave K' }).getByRole('button', { name: 'Rename' }).click();
-	await organizer.getByLabel('New name for Dave K').fill('Dave K.');
-	await organizer.getByLabel('New name for Dave K').press('Enter');
+	await organizer.getByRole('button', { name: 'Rename Dave K' }).click();
+	await organizer.getByLabel('New name for Dave K', { exact: true }).fill('Dave K.');
+	await organizer.getByLabel('New name for Dave K', { exact: true }).press('Enter');
 	await expect(tvNames).toHaveText(['Dave K.', 'Big Dave', 'Sue']);
 
-	await playerRows.filter({ hasText: 'Sue' }).getByRole('button', { name: 'Remove' }).click();
+	await organizer.getByRole('button', { name: 'Remove Sue' }).click();
 	await expect(tvNames).toHaveText(['Dave K.', 'Big Dave']);
 
 	await organizer.reload();

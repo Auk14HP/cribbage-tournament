@@ -311,6 +311,17 @@ const listPlayerNames = () =>
 		.queryAllByRole('listitem')
 		.map((item) => item.querySelector('span')?.textContent);
 
+// A Player's cell in the Players grid, found by the Rename button that names them.
+const findPlayerCell = (name: string) =>
+	screen.getByRole('button', { name: `Rename ${name}` }).closest('li')!;
+
+// Replaces what the renaming Player's name box holds with the keys typed.
+const typeNewName = async (user: User, name: string, keys: string) => {
+	const box = screen.getByLabelText(`New name for ${name}`);
+	await user.clear(box);
+	await user.type(box, keys);
+};
+
 // The theme the Organizer screen is drawn in, set on the page's root: Light or Dark.
 const readScreenTheme = () => document.documentElement.dataset.theme;
 
@@ -388,28 +399,84 @@ describe('the organizer route', () => {
 		expect(listPlayerNames()).toEqual(['Big Dave']);
 	});
 
-	it('renames a Player', async () => {
+	it('renames a Player in their own cell, saving on Enter', async () => {
+		const user = showOrganizer();
+		await register(user, 'Dave K');
+		await register(user, 'Sue');
+
+		await clickButton(user, 'Rename Dave K');
+		await typeNewName(user, 'Dave K', 'Dave K.{Enter}');
+
+		expect(listPlayerNames()).toEqual(['Dave K.', 'Sue']);
+		expect(screen.queryByLabelText(/^New name for /)).not.toBeInTheDocument();
+	});
+
+	it('saves a new name with the Player’s Save button', async () => {
 		const user = showOrganizer();
 		await register(user, 'Dave K');
 
-		await clickButton(user, 'Rename');
-		await user.clear(screen.getByLabelText('New name for Dave K'));
-		await user.type(screen.getByLabelText('New name for Dave K'), 'Dave K.{Enter}');
+		await clickButton(user, 'Rename Dave K');
+		await typeNewName(user, 'Dave K', 'Dave K.');
+		await clickButton(user, 'Save new name for Dave K');
 
 		expect(listPlayerNames()).toEqual(['Dave K.']);
 	});
 
-	it('removes a Player', async () => {
+	it('cancels a rename on Escape or the Player’s Cancel button, keeping the name', async () => {
+		const user = showOrganizer();
+		await register(user, 'Dave K');
+
+		await clickButton(user, 'Rename Dave K');
+		await typeNewName(user, 'Dave K', 'Davey{Escape}');
+		expect(screen.queryByLabelText('New name for Dave K')).not.toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Rename Dave K' })).toHaveFocus();
+
+		await clickButton(user, 'Rename Dave K');
+		await typeNewName(user, 'Dave K', 'Davey');
+		await clickButton(user, 'Cancel renaming Dave K');
+
+		expect(listPlayerNames()).toEqual(['Dave K']);
+		expect(screen.queryByLabelText('New name for Dave K')).not.toBeInTheDocument();
+	});
+
+	it('shows why a rename is refused, keeping the new name to fix', async () => {
+		const user = showOrganizer();
+		await register(user, 'Dave K');
+		await register(user, 'Sue');
+
+		await clickButton(user, 'Rename Dave K');
+		await typeNewName(user, 'Dave K', 'Sue{Enter}');
+
+		expect(getRefusalIn('Players')).toHaveTextContent(
+			'There is already a Player called "Sue".',
+		);
+		expect(screen.getByLabelText('New name for Dave K')).toHaveValue('Sue');
+		await user.keyboard('{Escape}');
+		expect(getRefusalIn('Players')).toBeEmptyDOMElement();
+	});
+
+	it('removes a Player with their own Remove button', async () => {
 		const user = showOrganizer();
 		await register(user, 'Dave K.');
 		await register(user, 'Big Dave');
 
-		const players = within(screen.getByRole('list', { name: 'Players' }));
-		const daveK = players.getByText('Dave K.').closest('li')!;
-		await user.click(within(daveK).getByRole('button', { name: 'Remove' }));
+		await clickButton(user, 'Remove Dave K.');
 
 		expect(listPlayerNames()).toEqual(['Big Dave']);
 		expect(readPlayerCount()).toBe('1 Player registered');
+	});
+
+	it('tags the Player with a Home Board with its number', async () => {
+		const user = showOrganizer();
+		await register(user, 'Dave K.');
+		await register(user, 'Big Dave');
+		await setBoardCount(user, '4');
+
+		await user.selectOptions(screen.getByLabelText('Board'), '3');
+		await user.selectOptions(screen.getByLabelText('Home Board for'), 'Big Dave');
+
+		expect(findPlayerCell('Big Dave')).toHaveTextContent('Home Board 3');
+		expect(findPlayerCell('Dave K.')).not.toHaveTextContent('Home Board');
 	});
 
 	it('starts a new Tournament only once the Organizer confirms', async () => {
