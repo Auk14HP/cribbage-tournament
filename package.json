@@ -13,7 +13,8 @@
 		"lint": "eslint .",
 		"format": "prettier --write .",
 		"format:check": "prettier --check --log-level warn .",
-		"check": "npm run typecheck && npm run lint && npm run format:check && npm test",
+		"check": "npm run typecheck && npm run lint && npm run format:check && npm run pointers && npm test",
+		"pointers": "node scripts/checkStandardsPointers.ts",
 		"prepare": "husky",
 		"e2e": "playwright test",
 		"screens": "playwright test -c playwright.screens.config.ts"

@@ -15,3 +15,6 @@ yarn-error.log*
 
 /test-results
 /playwright-report
+
+# TypeScript build info, left by tsc -b
+*.tsbuildinfo

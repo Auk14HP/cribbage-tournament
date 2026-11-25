@@ -6,6 +6,7 @@ import {
 	showHouseRules,
 	test,
 } from '../e2e/setUpTournament';
+import { findLongestNamedButton } from '../e2e/textFits';
 
 // Whether the element shows within the time, rather than failing the run when it doesn't.
 const isShownWithin = async (element: Locator, timeout: number) => {
@@ -24,8 +25,8 @@ const isShownWithin = async (element: Locator, timeout: number) => {
  *   PLAYERS=29 BOARDS=16 npm run screens    registration
  *   ... HOME_BOARD=3                        with the first Player registered given Home Board 3
  *   ... DRAW=1                              and the House Rules, every one shown, then Tonight's Draw
- *   ... DRAW=1 SWAP=1                       and Swap mode, the first Player picked, then after swapping them
- *                                           with the last Player listed
+ *   ... DRAW=1 SWAP=1                       and Swap mode, the Player with the longest name in a Match tile
+ *                                           picked, then after swapping them with the last Player listed
  *   ... DRAW=1 START=1                      and after Start
  *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
  *   ... DRAW=1 START=1 RESULTS=12 PEEK=1    and the brackets looked at on the laptop: the bracket on show,
@@ -92,10 +93,13 @@ test('screens', async ({ context, page: organizer }) => {
 	await shoot('draw');
 	if (process.env.SWAP) {
 		await organizer.getByRole('button', { name: 'Swap Players' }).click();
-		const playerButtons = findMatchesOnBoards(organizer).getByRole('button');
-		await playerButtons.first().click();
+		// The longest name, so the shot shows the PICKED tag beside the widest name a seat holds.
+		const matchesOnBoards = findMatchesOnBoards(organizer);
+		const longestNamedSeat = await findLongestNamedButton(matchesOnBoards);
+		await longestNamedSeat.click();
 		await shoot('swap-picked');
-		await playerButtons.last().click();
+		// The last seat not picked, so the tap swaps rather than clearing the pick.
+		await matchesOnBoards.getByRole('button', { pressed: false }).last().click();
 		await shoot('swapped');
 		await organizer.getByRole('button', { name: 'Done' }).click();
 	}

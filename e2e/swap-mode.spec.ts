@@ -1,6 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 import { expectNothingMoves } from './screenStill';
 import { confirmDraw, findMatchesOnBoards, test } from './setUpTournament';
+import { expectTextFits, findLongestNamedButton } from './textFits';
 
 /*
  * Swap mode on Tonight's Draw moves nothing on the organizer route: the row above the Matches becomes its banner,
@@ -12,11 +13,12 @@ import { confirmDraw, findMatchesOnBoards, test } from './setUpTournament';
 test.use({ viewport: { width: 1280, height: 720 } });
 
 /*
- * The parts of Tonight's Draw: the button that turns Swap mode on and off, every Match row, on a Board or
- * waiting for one, the "vs" between each waiting row's Players, which moves if the first Player's name widens,
- * Start, and the TV Display heading.
+ * The parts of Tonight's Draw: the row above the Matches, which holds the change, the button in it that turns
+ * Swap mode on and off, every Match row, on a Board or waiting for one, the "vs" between each waiting row's
+ * Players, which moves if the first Player's name widens, Start, and the TV Display heading.
  */
 const listDrawScreenParts = (page: Page) => [
+	page.getByTestId('row above the Matches'),
 	page.getByRole('button', { name: /^(Swap Players|Done)$/ }),
 	findMatchesOnBoards(page).getByRole('listitem'),
 	page.getByRole('list', { name: 'Waiting for a Board' }).getByRole('listitem'),
@@ -62,4 +64,24 @@ test('moves nothing on Tonight’s Draw when Swap mode starts, when a Player is 
 		await page.getByRole('button', { name: 'Done' }).click();
 		await expect(swapBanner).toBeHidden();
 	});
+});
+
+test('fits the longest names inside their seats when picked, in a Match tile and in a waiting row', async ({
+	page,
+}) => {
+	// 21 Players on 8 Boards: Players in Match tiles and more waiting for a Board.
+	await page.goto('/?players=21&boards=8');
+	await confirmDraw(page);
+	await page.getByRole('button', { name: 'Swap Players' }).click();
+	const matches = findMatchesOnBoards(page);
+	const waitingList = page.getByRole('list', { name: 'Waiting for a Board' });
+
+	for (const area of [matches, waitingList]) {
+		const longestNamedSeat = await findLongestNamedButton(area);
+		await longestNamedSeat.click();
+		await expect(longestNamedSeat).toHaveAttribute('aria-pressed', 'true');
+		await expectTextFits(area.getByRole('button'));
+		// Tapped again to clear the pick, swapping no one.
+		await longestNamedSeat.click();
+	}
 });
