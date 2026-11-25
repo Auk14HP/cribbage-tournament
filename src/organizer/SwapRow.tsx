@@ -1,5 +1,5 @@
 import type { Player } from '../tournament';
-import { confirmColours, rowAboveMatches } from './classes';
+import { rowAboveMatches, swapToggle } from './classes';
 
 /*
  * One of a button's labels, put in the first cell of the button's grid, where its other labels sit too. A label
@@ -13,12 +13,6 @@ const StackedLabel = ({ label, isShown }: { label: string; isShown: boolean }) =
 		{label}
 	</span>
 );
-
-// Swap Players' colours, then Done's: filled in the theme's yellow. The border and weight never change.
-const swapToggle = {
-	off: 'border-line bg-raised hover:bg-divider',
-	on: `border-fill ${confirmColours.safe}`,
-};
 
 /*
  * The row above the Matches on Tonight’s Draw: Swap Players at its right end, which turns on Swap mode and
@@ -57,7 +51,7 @@ export const SwapRow = ({
 		 */}
 		<button
 			type="button"
-			className={`ml-auto grid shrink-0 rounded border px-3 py-1.5 text-center font-semibold whitespace-nowrap ${swapping ? swapToggle.on : swapToggle.off}`}
+			className={`ml-auto ${swapToggle.shape} ${swapping ? swapToggle.on : swapToggle.off}`}
 			onClick={onToggle}
 		>
 			<StackedLabel label="Swap Players" isShown={!swapping} />

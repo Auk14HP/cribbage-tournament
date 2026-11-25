@@ -6,8 +6,9 @@ import { tvFrame } from '../display/tvScreenOnShow';
  * Every colour below is a theme colour (`src/style.css`), so each class reads well in Light and in Dark. A button
  * the Organizer can't use right now is faded, and doesn't light up under the pointer.
  */
-export const button =
-	'rounded border border-line bg-raised px-3 py-1.5 hover:bg-divider disabled:opacity-50 disabled:hover:bg-raised';
+// A button's own colours, apart from its shape, for a button that changes colour in place, such as Swap Players.
+const buttonColours = 'border-line bg-raised hover:bg-divider';
+export const button = `rounded border ${buttonColours} px-3 py-1.5 disabled:opacity-50 disabled:hover:bg-raised`;
 export const dangerButton = `${button} text-danger`;
 /*
  * The header's buttons: an outline on the canvas, with no fill until the pointer is over them, so they stay
@@ -51,15 +52,26 @@ export const windowFilling = {
 };
 
 /*
- * The row above the Matches, on Tonight’s Draw and once Started: a fixed height that holds a button with room to
- * spare at any text size, so Start, which swaps Swap Players for a line of text, moves no Match below it. Its
- * border is always there, so it keeps its size: clear while the row is bare, and with the background, the theme's
- * yellow while it is Swap mode's banner.
+ * The row above the Matches, on Tonight’s Draw and once Started: at least tall enough for a button with room to
+ * spare at any text size, so Start, which swaps Swap Players for a line of text, moves no Match below it. Only
+ * Swap mode's line, wrapping in a narrow window, makes it taller. Its border is always there, so it keeps its
+ * size: clear while the row is bare, and with the highlight's background, the theme's fill while it is Swap
+ * mode's banner.
  */
 export const rowAboveMatches = {
 	frame: 'flex min-h-14 items-center justify-between gap-4 rounded-xl border px-4',
 	bare: 'border-transparent',
 	banner: 'border-fill bg-highlight',
+};
+
+/*
+ * The button in the row above the Matches: Swap Players, in a plain button's colours, then Done, filled in the
+ * theme's fill. Its shape, border and weight never change, so its box stays put as its label changes.
+ */
+export const swapToggle = {
+	shape: 'grid shrink-0 rounded border px-3 py-1.5 text-center font-semibold whitespace-nowrap',
+	off: buttonColours,
+	on: `border-fill ${confirmColours.safe}`,
 };
 
 // A box on the screen's canvas holding one part of a phase, such as the Players or the Boards.
