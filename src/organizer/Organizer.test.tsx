@@ -313,7 +313,8 @@ const listPlayerNames = () =>
 
 // A Player's cell in the Players grid, the one holding the Rename button that names them.
 const findPlayerCell = (name: string) => {
-	const cells = within(screen.getByRole('list', { name: 'Players' })).getAllByRole('listitem');
+	const playersGrid = within(screen.getByRole('list', { name: 'Players' }));
+	const cells = playersGrid.getAllByRole('listitem');
 	return cells.find((cell) => within(cell).queryByRole('button', { name: `Rename ${name}` }))!;
 };
 

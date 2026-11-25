@@ -68,15 +68,14 @@ test('moves no cell in the grid as a Player is renamed, cancelled, refused or sa
 		await newNameBox.press('Escape');
 		await expect(newNameBox).toBeHidden();
 	});
+	const firstRefusalLine = page.getByRole('alert').first();
 	await page.getByRole('button', { name: 'Rename Sue' }).click();
 	const sueNameBox = page.getByLabel('New name for Sue', { exact: true });
 	// A name already taken is refused, its reason shown on the line kept for it above the grid.
 	await expectNothingMoves(parts, async () => {
 		await sueNameBox.fill('Joe');
 		await sueNameBox.press('Enter');
-		await expect(page.getByRole('alert').first()).toHaveText(
-			'There is already a Player called "Joe".',
-		);
+		await expect(firstRefusalLine).toHaveText('There is already a Player called "Joe".');
 	});
 	await expectNothingMoves(parts, async () => {
 		await sueNameBox.fill('Susan');
@@ -89,8 +88,8 @@ test('moves no cell in the grid as a Player is renamed, cancelled, refused or sa
  * Where a piece of text starts on screen and how it is drawn: its left edge, its middle top to bottom, and its
  * font. A text box's text starts inside its border and padding.
  */
-const measureText = (text: Locator) =>
-	text.evaluate((element) => {
+const measureText = (textElement: Locator) =>
+	textElement.evaluate((element) => {
 		const box = element.getBoundingClientRect();
 		const style = getComputedStyle(element);
 		const inset =
@@ -104,13 +103,27 @@ const measureText = (text: Locator) =>
 		};
 	});
 
+// Checks the Player's name, once Rename is clicked, shows in the name box where and as it was drawn.
+const expectNameStaysOnRename = async (page: Page, name: string) => {
+	const nameBefore = await measureText(findPlayersGrid(page).getByText(name, { exact: true }));
+
+	await page.getByRole('button', { name: `Rename ${name}` }).click();
+
+	const newNameBox = page.getByLabel(`New name for ${name}`, { exact: true });
+	expect(await measureText(newNameBox), name).toEqual(nameBefore);
+};
+
 test('keeps a Player’s name in place as it becomes the name box', async ({ page }) => {
-	const nameBefore = await measureText(findPlayersGrid(page).getByText('Sue', { exact: true }));
+	await expectNameStaysOnRename(page, 'Sue');
+});
 
-	await page.getByRole('button', { name: 'Rename Sue' }).click();
+test('keeps a name in place as it becomes the name box, its Home Board tag on the line below', async ({
+	page,
+}) => {
+	// The longest name leaves no room beside it for its tag, which drops to a second line.
+	await giveHomeBoard(page, { name: longestName, board: '3' });
 
-	const newNameBox = page.getByLabel('New name for Sue', { exact: true });
-	expect(await measureText(newNameBox)).toEqual(nameBefore);
+	await expectNameStaysOnRename(page, longestName);
 });
 
 test('fits the Home Board tag beside the longest name', async ({ page }) => {

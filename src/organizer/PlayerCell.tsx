@@ -40,11 +40,13 @@ export const PlayerCell = ({
 			className={`${playerCell.shape} ${isRenaming ? playerCell.renaming : playerCell.plain}`}
 		>
 			<div
-				className={`col-start-1 row-start-1 flex items-center gap-1 pl-3 ${isRenaming ? 'invisible' : ''}`}
+				className={`col-start-1 row-start-1 flex items-start gap-1 ${nameText.row} ${isRenaming ? 'invisible' : ''}`}
 			>
 				{/* A long name pushes its Home Board tag onto a line below it rather than breaking the name. */}
-				<div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2">
-					<span className="min-w-0 text-lg font-semibold wrap-break-word">
+				<div
+					className={`flex min-w-0 flex-1 flex-wrap items-center gap-x-2 ${nameText.lines}`}
+				>
+					<span className={`min-w-0 wrap-break-word ${nameText.name}`}>
 						{player.name}
 					</span>
 					{homeBoard !== undefined && (
@@ -120,11 +122,20 @@ const IconButton = ({
 );
 
 /*
- * The name box's text, drawn where and as the Player's name was: its padding, with its 1px border, starts the
- * text as far in as the name's (`pl-3`), and it is as large and as bold, so the name doesn't shift as it
- * becomes editable.
+ * A Player's name and the name box that takes its place on Rename, drawn in the same place and the same way, so
+ * the name doesn't shift as it becomes editable. Both rows sit at the top of the cell. The plain row starts the
+ * name 0.75rem in from the cell's edge (`row`), and its lines are padded (`lines`) so the name's first line is
+ * as tall as the name box, its middle where the box's text is. The name box spans the cell from its edge, its
+ * 1px border and its left padding starting its text as far in. Its padding overrides the text box's own
+ * (`textInput`), marked important so it wins whatever order the two are written in. Both are as large and as
+ * bold.
  */
-const nameBoxText = 'pl-[calc(0.75rem-1px)] text-lg font-semibold';
+const nameText = {
+	row: 'pl-3',
+	lines: 'py-1',
+	name: 'text-lg font-semibold',
+	nameBox: 'h-9 pl-[calc(0.75rem-1px)]! text-lg font-semibold',
+};
 
 /*
  * The name box laid over a Player's cell while they are renamed: Enter or Save saves the new name, and Escape
@@ -152,7 +163,7 @@ const RenameForm = ({
 				event.preventDefault();
 				onSave(name);
 			}}
-			className="col-start-1 row-start-1 flex items-center gap-1"
+			className="col-start-1 row-start-1 flex items-start gap-1"
 		>
 			<input
 				type="text"
@@ -166,7 +177,7 @@ const RenameForm = ({
 						onCancel();
 					}
 				}}
-				className={`${textInput} ${nameBoxText} h-9 min-w-0 flex-1`}
+				className={`${textInput} ${nameText.nameBox} min-w-0 flex-1`}
 			/>
 			<IconButton
 				label={`Save new name for ${player.name}`}
