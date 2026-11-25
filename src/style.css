@@ -20,6 +20,7 @@
 	--color-on-fill: var(--theme-on-fill);
 	--color-accent: var(--theme-accent);
 	--color-board-number: var(--theme-board-number);
+	--color-highlight: var(--theme-highlight);
 	--color-danger: var(--theme-danger);
 	--color-on-danger: var(--theme-on-danger);
 	--color-scrim: var(--theme-scrim);
@@ -31,7 +32,8 @@
  * standing out from its box (raised), a quiet rule between rows (divider), a control's outline (line), text
  * (ink), secondary text (muted), text for what hasn't happened yet (faint), the yellow of a main button (fill)
  * and the text on it (on-fill), text in the theme's accent, such as a link (accent), a Match tile's large Board
- * number (board-number), a warning or destructive action (danger) and the text on it (on-danger), and the shade
+ * number (board-number), the yellow-tinted ground of Swap mode's banner and the Player picked in it
+ * (highlight), a warning or destructive action (danger) and the text on it (on-danger), and the shade
  * behind an open dialog (scrim). Every text colour reads at 4.5:1 or more on the backgrounds it is used on
  * (e2e/theme-contrast.spec.ts). color-scheme tells the browser which way to draw its own controls, such as a
  * number box's arrows.
@@ -56,6 +58,7 @@
 		--theme-on-fill: #161a22;
 		--theme-accent: #8a6500;
 		--theme-board-number: #161a22;
+		--theme-highlight: #fff4c7;
 		--theme-danger: #b42318;
 		--theme-on-danger: #ffffff;
 		--theme-scrim: rgb(16 24 40 / 0.45);
@@ -75,6 +78,7 @@
 		--theme-on-fill: #0d1015;
 		--theme-accent: #ffd23f;
 		--theme-board-number: #ffd23f;
+		--theme-highlight: #2a2410;
 		--theme-danger: #ff9b8f;
 		--theme-on-danger: #0d1015;
 		--theme-scrim: rgb(0 0 0 / 0.62);

@@ -1,4 +1,4 @@
-import { useId, useRef } from 'react';
+import { useId, useRef, type ReactNode } from 'react';
 import {
 	getShownRound,
 	type BoardNumber,
@@ -11,8 +11,8 @@ import {
 } from '../tournament';
 import { bracketTitles, describeBoardCount, describeRound, joinInSentence } from '../wording';
 import { BracketBadge } from './BracketBadge';
-import { button, confirmButton, confirmColours, dialogBox } from './classes';
-import { PlayerName, type SwapPicking } from './PlayerName';
+import { button, confirmButton, confirmColours, dialogBox, seatShapes } from './classes';
+import { PlayerName, SwapButton, type SwapPicking } from './PlayerName';
 
 /*
  * Each of a bracket's Matches on a Board with the name of its Round, worked out once, and the names of the Rounds
@@ -32,7 +32,8 @@ const nameRounds = (tournament: Tournament, matches: readonly MatchOnBoard[]) =>
  * One bracket's Matches holding a Board, in a panel of its own. Its header has the bracket's badge and name,
  * the Rounds its Matches are in and how many Boards they hold. Each Match is a tile naming its Board and both
  * Players, and once Started records a winner or a Forfeit. A tile names its Round only when the panel holds
- * more than one. Hidden while the bracket has none. Named by its heading.
+ * more than one. Hidden while the bracket has none. Named by its heading. A control given for the header, such
+ * as Swap Players, sits at its right end, after the Rounds and Boards.
  */
 export const BracketMatches = ({
 	tournament,
@@ -40,6 +41,7 @@ export const BracketMatches = ({
 	matches,
 	playing,
 	swapPicking,
+	headerControl,
 	onWin,
 	onForfeit,
 }: {
@@ -49,6 +51,7 @@ export const BracketMatches = ({
 	playing: boolean;
 	// Set only in Swap mode.
 	swapPicking?: SwapPicking;
+	headerControl?: ReactNode;
 	onWin: (match: MatchPlace, winner: Player, loser: Player) => void;
 	onForfeit: (match: MatchPlace, player: Player) => void;
 }) => {
@@ -73,7 +76,14 @@ export const BracketMatches = ({
 						{bracketTitles[bracketName]}
 					</h2>
 				</div>
-				<p className="text-muted text-sm font-semibold">{summary}</p>
+				{/*
+				 * As tall as a button (its line, its padding and its border) whether a control is given or not, so
+				 * Swap Players going at Start moves no tile below.
+				 */}
+				<div className="flex min-h-[calc(2.25rem+2px)] items-center gap-4">
+					<p className="text-muted text-sm font-semibold">{summary}</p>
+					{headerControl}
+				</div>
 			</div>
 			<ul
 				aria-labelledby={headingId}
@@ -164,6 +174,7 @@ const playerSlot = 'flex min-h-11.5 w-full items-center rounded-lg border text-l
 const playerSlots = {
 	winnerButton: `${playerSlot} border-line bg-panel px-3.5 text-left hover:bg-divider`,
 	name: `${playerSlot} border-transparent px-0.5`,
+	seat: `${playerSlot} px-3.5 text-left`,
 };
 
 /*
@@ -251,8 +262,8 @@ const MatchTile = ({
 };
 
 /*
- * One Player in a Match tile: a button to tap once the Match can be won, otherwise their name, which is a
- * button of its own in Swap mode.
+ * One Player in a Match tile: a button to tap once the Match can be won, a seat to tap in Swap mode, otherwise
+ * their name. The seat fills the Player's slot, its name where the plain name and the winner's button put it.
  */
 const MatchPlayer = ({
 	player,
@@ -271,8 +282,16 @@ const MatchPlayer = ({
 		<button type="button" className={playerSlots.winnerButton} onClick={onWin}>
 			{player.name}
 		</button>
+	) : swapPicking && 'name' in player ? (
+		<SwapButton
+			player={player}
+			match={match}
+			swapPicking={swapPicking}
+			seatShape={seatShapes.inTile}
+			className={playerSlots.seat}
+		/>
 	) : (
 		<span className={playerSlots.name}>
-			<PlayerName player={player} match={match} swapPicking={swapPicking} />
+			<PlayerName player={player} match={match} />
 		</span>
 	);

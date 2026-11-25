@@ -90,7 +90,8 @@ const expectEveryPhaseReadable = async (page: Page) => {
 	await confirmDrawFromHouseRules(page);
 	await expectReadableText(page, 'Tonight’s Draw');
 	await page.getByRole('button', { name: 'Swap Players' }).click();
-	await findMatchesOnBoards(page).getByRole('button').first().click();
+	// A Player's seat, in a Match tile: Swap Players, in the Winners Bracket's header, is among the Matches too.
+	await findMatchesOnBoards(page).getByRole('listitem').getByRole('button').first().click();
 	await expectReadableText(page, 'Tonight’s Draw, Swap mode, a Player picked');
 	await page.getByRole('button', { name: 'Done' }).click();
 

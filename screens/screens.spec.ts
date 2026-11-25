@@ -92,7 +92,10 @@ test('screens', async ({ context, page: organizer }) => {
 	await shoot('draw');
 	if (process.env.SWAP) {
 		await organizer.getByRole('button', { name: 'Swap Players' }).click();
-		const playerButtons = findMatchesOnBoards(organizer).getByRole('button');
+		// The Players' seats, in the Match tiles: Swap Players, in the Winners Bracket's header, is a button too.
+		const playerButtons = findMatchesOnBoards(organizer)
+			.getByRole('listitem')
+			.getByRole('button');
 		await playerButtons.first().click();
 		await shoot('swap-picked');
 		await playerButtons.last().click();
