@@ -12,18 +12,19 @@ import { BracketBadge } from './BracketBadge';
  * edged in the theme's yellow, as its W badge is filled, on the champion's own ground, with their name in the
  * champion's colour. The Losers Bracket's card keeps a panel's own colours.
  */
-const cardLooks: Record<BracketName, { title: string; colours: string; nameColour: string }> = {
-	winners: {
-		title: 'Champion',
-		colours: 'border-fill bg-champion-ground',
-		nameColour: 'text-champion',
-	},
-	losers: {
-		title: 'Losers Bracket champion',
-		colours: 'border-divider bg-panel',
-		nameColour: 'text-ink',
-	},
-};
+const cardLooks: Record<BracketName, { title: string; edgeAndGround: string; nameColour: string }> =
+	{
+		winners: {
+			title: 'Champion',
+			edgeAndGround: 'border-fill bg-champion-ground',
+			nameColour: 'text-champion',
+		},
+		losers: {
+			title: 'Losers Bracket champion',
+			edgeAndGround: 'border-divider bg-panel',
+			nameColour: 'text-ink',
+		},
+	};
 
 /*
  * A large card for each bracket that has a champion, side by side, the Winners Bracket's first: the bracket's
@@ -46,13 +47,13 @@ export const ChampionCards = ({ tournament }: { tournament: Tournament }) => {
 
 // One bracket's champion card, named for its bracket's champion: "Winners Bracket champion".
 const ChampionCard = ({ champion }: { champion: ChampionOfBracket }) => {
-	const { title, colours, nameColour } = cardLooks[champion.bracketName];
+	const { title, edgeAndGround, nameColour } = cardLooks[champion.bracketName];
 	const bracketTitle = bracketTitles[champion.bracketName];
 	// A panel's shape, with more room inside it for the large name.
 	return (
 		<section
 			aria-label={`${bracketTitle} champion`}
-			className={`flex flex-col gap-2 rounded-xl border p-6 ${colours}`}
+			className={`flex flex-col gap-2 rounded-xl border p-6 ${edgeAndGround}`}
 		>
 			<p className="text-muted flex items-center gap-2.5 text-sm font-bold">
 				<BracketBadge bracketName={champion.bracketName} size="large" />

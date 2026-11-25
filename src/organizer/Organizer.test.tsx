@@ -1518,7 +1518,7 @@ const readPeekedBracketHeading = () => {
 };
 
 // How playMatches plays: when it stops, which Matches it plays and how it records each.
-interface PlayingOptions {
+interface PlayMatchesOptions {
 	// Whether to stop: by default once the Tournament is finished.
 	readonly isDone?: (tournament: Tournament) => boolean;
 	// Whether a Match on a Board is one to play: by default any with both its Players known.
@@ -1535,7 +1535,7 @@ const playMatches = (
 		isToPlay = hasBothPlayersKnown,
 		recordResult = (tournament, matchOnBoard) =>
 			recordWinOn(tournament, matchOnBoard, 'leaving'),
-	}: PlayingOptions = {},
+	}: PlayMatchesOptions = {},
 ): Tournament => {
 	let tournament = playing;
 	while (!isDone(tournament)) {
