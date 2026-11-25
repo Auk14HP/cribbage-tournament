@@ -41,8 +41,9 @@ test('the TV shows each change the Organizer makes, live, and both windows resum
 	await expect(tvNames).toHaveText(['Dave K', 'Big Dave', 'Sue']);
 
 	await organizer.getByRole('button', { name: 'Rename Dave K' }).click();
-	await organizer.getByLabel('New name for Dave K', { exact: true }).fill('Dave K.');
-	await organizer.getByLabel('New name for Dave K', { exact: true }).press('Enter');
+	const daveKNameBox = organizer.getByLabel('New name for Dave K', { exact: true });
+	await daveKNameBox.fill('Dave K.');
+	await daveKNameBox.press('Enter');
 	await expect(tvNames).toHaveText(['Dave K.', 'Big Dave', 'Sue']);
 
 	await organizer.getByRole('button', { name: 'Remove Sue' }).click();

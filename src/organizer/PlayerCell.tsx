@@ -40,7 +40,7 @@ export const PlayerCell = ({
 			className={`${playerCell.shape} ${isRenaming ? playerCell.renaming : playerCell.plain}`}
 		>
 			<div
-				className={`col-start-1 row-start-1 flex items-center gap-1 ${isRenaming ? 'invisible' : ''}`}
+				className={`col-start-1 row-start-1 flex items-center gap-1 pl-3 ${isRenaming ? 'invisible' : ''}`}
 			>
 				{/* A long name pushes its Home Board tag onto a line below it rather than breaking the name. */}
 				<div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2">
@@ -75,12 +75,12 @@ export const PlayerCell = ({
 };
 
 /*
- * A Player's cell, plain or renaming. Its border is there in both, clear but for the rule beneath a plain cell,
- * and the theme's yellow round a cell being renamed, so the cell keeps its size either way.
+ * A Player's cell, plain or renaming. Its border is there in both, clear but for the line beneath a plain cell,
+ * and in the theme's fill colour round a cell being renamed, so the cell keeps its size either way.
  */
 const playerCell = {
 	// One column the cell's width, so the name box laid over the name never widens the cell.
-	shape: 'grid grid-cols-1 rounded-lg border py-0.5 pr-0.5 pl-3',
+	shape: 'grid grid-cols-1 rounded-lg border py-0.5 pr-0.5',
 	plain: 'border-transparent border-b-divider',
 	renaming: 'border-fill bg-raised',
 };
@@ -118,6 +118,13 @@ const IconButton = ({
 		{children}
 	</button>
 );
+
+/*
+ * The name box's text, drawn where and as the Player's name was: its padding, with its 1px border, starts the
+ * text as far in as the name's (`pl-3`), and it is as large and as bold, so the name doesn't shift as it
+ * becomes editable.
+ */
+const nameBoxText = 'pl-[calc(0.75rem-1px)] text-lg font-semibold';
 
 /*
  * The name box laid over a Player's cell while they are renamed: Enter or Save saves the new name, and Escape
@@ -159,7 +166,7 @@ const RenameForm = ({
 						onCancel();
 					}
 				}}
-				className={`${textInput} h-9 min-w-0 flex-1 text-lg`}
+				className={`${textInput} ${nameBoxText} h-9 min-w-0 flex-1`}
 			/>
 			<IconButton
 				label={`Save new name for ${player.name}`}
@@ -182,8 +189,8 @@ const RenameForm = ({
 // The icons drawn in the Players' buttons, in the text's colour, hidden from screen readers.
 const iconProps = {
 	'aria-hidden': true,
-	width: 17,
-	height: 17,
+	// In rem, so the icons grow with the Organizer's text size, as their buttons do.
+	className: 'size-4.5',
 	viewBox: '0 0 24 24',
 	fill: 'none',
 	stroke: 'currentColor',

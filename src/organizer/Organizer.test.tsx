@@ -311,15 +311,17 @@ const listPlayerNames = () =>
 		.queryAllByRole('listitem')
 		.map((item) => item.querySelector('span')?.textContent);
 
-// A Player's cell in the Players grid, found by the Rename button that names them.
-const findPlayerCell = (name: string) =>
-	screen.getByRole('button', { name: `Rename ${name}` }).closest('li')!;
+// A Player's cell in the Players grid, the one holding the Rename button that names them.
+const findPlayerCell = (name: string) => {
+	const cells = within(screen.getByRole('list', { name: 'Players' })).getAllByRole('listitem');
+	return cells.find((cell) => within(cell).queryByRole('button', { name: `Rename ${name}` }))!;
+};
 
 // Replaces what the renaming Player's name box holds with the keys typed.
 const typeNewName = async (user: User, name: string, keys: string) => {
-	const box = screen.getByLabelText(`New name for ${name}`);
-	await user.clear(box);
-	await user.type(box, keys);
+	const newNameBox = screen.getByLabelText(`New name for ${name}`);
+	await user.clear(newNameBox);
+	await user.type(newNameBox, keys);
 };
 
 // The theme the Organizer screen is drawn in, set on the page's root: Light or Dark.

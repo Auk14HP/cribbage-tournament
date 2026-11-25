@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { expectNothingMoves } from './screenStill';
 import { test } from './setUpTournament';
 import { expectTextFits } from './textFits';
@@ -16,17 +16,18 @@ const longestName = 'Frank the Tank';
 
 const findPlayersGrid = (page: Page) => page.getByRole('list', { name: 'Players' });
 
-// Gives the Player named a Home Board, picked from the Boards panel.
-const giveHomeBoard = async (page: Page, name: string) => {
-	await page.getByRole('combobox', { name: 'Board', exact: true }).selectOption('3');
+// Gives the Player named a Home Board on the Board given, picked from the Boards panel.
+const giveHomeBoard = async (page: Page, { name, board }: { name: string; board: string }) => {
+	await page.getByRole('combobox', { name: 'Board', exact: true }).selectOption(board);
 	await page.getByLabel('Home Board for').selectOption(name);
 };
 
 /*
- * The parts of the registration screen around the grid: the name box, Register, the running count, and every
- * Player's cell.
+ * The parts of the registration screen around the grid: the Players' refusal line, found by its place as the
+ * first on the page, the name box, Register, the running count, and every Player's cell.
  */
 const listRegistrationParts = (page: Page) => [
+	page.getByRole('alert').first(),
 	page.getByLabel('Player name'),
 	page.getByRole('button', { name: 'Register' }),
 	page.getByText('30 Players registered'),
@@ -52,8 +53,10 @@ test.describe('in a common laptop window', () => {
 	});
 });
 
-test('moves no cell in the grid as a Player is renamed, saved or cancelled', async ({ page }) => {
-	await giveHomeBoard(page, longestName);
+test('moves no cell in the grid as a Player is renamed, cancelled, refused or saved', async ({
+	page,
+}) => {
+	await giveHomeBoard(page, { name: longestName, board: '3' });
 	const parts = listRegistrationParts(page);
 	const newNameBox = page.getByLabel(`New name for ${longestName}`, { exact: true });
 
@@ -66,15 +69,52 @@ test('moves no cell in the grid as a Player is renamed, saved or cancelled', asy
 		await expect(newNameBox).toBeHidden();
 	});
 	await page.getByRole('button', { name: 'Rename Sue' }).click();
+	const sueNameBox = page.getByLabel('New name for Sue', { exact: true });
+	// A name already taken is refused, its reason shown on the line kept for it above the grid.
 	await expectNothingMoves(parts, async () => {
-		await page.getByLabel('New name for Sue', { exact: true }).fill('Susan');
+		await sueNameBox.fill('Joe');
+		await sueNameBox.press('Enter');
+		await expect(page.getByRole('alert').first()).toHaveText(
+			'There is already a Player called "Joe".',
+		);
+	});
+	await expectNothingMoves(parts, async () => {
+		await sueNameBox.fill('Susan');
 		await page.getByRole('button', { name: 'Save new name for Sue' }).click();
 		await expect(page.getByRole('button', { name: 'Rename Susan' })).toBeVisible();
 	});
 });
 
+/*
+ * Where a piece of text starts on screen and how it is drawn: its left edge, its middle top to bottom, and its
+ * font. A text box's text starts inside its border and padding.
+ */
+const measureText = (text: Locator) =>
+	text.evaluate((element) => {
+		const box = element.getBoundingClientRect();
+		const style = getComputedStyle(element);
+		const inset =
+			element instanceof HTMLInputElement
+				? parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft)
+				: 0;
+		return {
+			left: Math.round(box.left + inset),
+			middle: Math.round(box.top + box.height / 2),
+			font: `${style.fontWeight} ${style.fontSize}`,
+		};
+	});
+
+test('keeps a Player’s name in place as it becomes the name box', async ({ page }) => {
+	const nameBefore = await measureText(findPlayersGrid(page).getByText('Sue', { exact: true }));
+
+	await page.getByRole('button', { name: 'Rename Sue' }).click();
+
+	const newNameBox = page.getByLabel('New name for Sue', { exact: true });
+	expect(await measureText(newNameBox)).toEqual(nameBefore);
+});
+
 test('fits the Home Board tag beside the longest name', async ({ page }) => {
-	await giveHomeBoard(page, longestName);
+	await giveHomeBoard(page, { name: longestName, board: '3' });
 
 	await expect(page.getByText('Home Board 3')).toBeVisible();
 	await expectTextFits(findPlayersGrid(page).getByRole('listitem'));

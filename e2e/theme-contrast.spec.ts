@@ -66,7 +66,7 @@ const playUntilLosersBracketOpens = async (page: Page) => {
 
 /*
  * Walks a Tournament from registration to its champion, checking the text at each phase and at the moments
- * that add colours of their own: the theme menu open, a House Rule shown with the rest still to come, a
+ * that add colours of their own: the theme menu open, a Home Board tag and a Player renamed, a House Rule shown with the rest still to come, a
  * confirmation dialog, Swap mode with a Player picked, a refusal, the question whether a loser is staying, and
  * the Losers Bracket open.
  */
@@ -79,6 +79,12 @@ const expectEveryPhaseReadable = async (page: Page) => {
 	await page.getByLabel('Player name').press('Enter');
 	await expect(page.getByRole('alert').first()).not.toBeEmpty();
 	await expectReadableText(page, 'registration, a name refused');
+	// A Home Board tag on one Player while another is renamed, then both put back, so the Draw is unchanged.
+	await page.getByLabel('Home Board for').selectOption('Big Dave');
+	await page.getByRole('button', { name: 'Rename Sue' }).click();
+	await expectReadableText(page, 'registration, a Home Board tag and a Player renamed');
+	await page.keyboard.press('Escape');
+	await page.getByLabel('Home Board for').selectOption('Nobody');
 
 	await showHouseRules(page);
 	await page.getByRole('button', { name: 'Next' }).click();
