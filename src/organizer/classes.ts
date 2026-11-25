@@ -50,16 +50,28 @@ export const windowFilling = {
 	scrollingArea: 'min-h-0 overflow-y-auto',
 };
 
+/*
+ * The row above the Matches, on Tonight’s Draw and once Started: a fixed height that holds a button with room to
+ * spare at any text size, so Start, which swaps Swap Players for a line of text, moves no Match below it. Its
+ * border is always there, so it keeps its size: clear while the row is bare, and with the background, the theme's
+ * yellow while it is Swap mode's banner.
+ */
+export const rowAboveMatches = {
+	frame: 'flex min-h-14 items-center justify-between gap-4 rounded-xl border px-4',
+	bare: 'border-transparent',
+	banner: 'border-fill bg-highlight',
+};
+
 // A box on the screen's canvas holding one part of a phase, such as the Players or the Boards.
 export const panel = 'rounded-xl border border-divider bg-panel p-4';
 
 /*
  * The box round a Player's name in a listed Match. In Swap mode the name is a button to tap, a seat with a dashed
  * edge that lights up in the theme's accent under the pointer, so it never looks like the plain buttons that
- * record a winner once Started. The Player picked is outlined in the accent on the highlight's ground, with a
- * PICKED tag (`pickedTag`). Otherwise the name keeps the same box, its border clear. The box adds no height to
- * the name, and the picked outline's inner ring adds no size, so turning Swap mode on or off, or picking a
- * Player, moves nothing.
+ * record a winner once Started. The Player picked is outlined in the accent on the highlight's ground, and
+ * tagged PICKED on the seat's top edge (`pickedTag`), where the tag takes no room from the name. Otherwise the
+ * name keeps the same box, its border clear. The box adds no height to the name, and the picked outline's inner
+ * ring adds no size, so turning Swap mode on or off, or picking a Player, moves nothing.
  */
 export const playerNameBox = {
 	shape: 'inline-block rounded border px-3',
@@ -68,22 +80,12 @@ export const playerNameBox = {
 	picked: 'border-accent bg-highlight ring-1 ring-accent ring-inset',
 };
 
-// The PICKED tag on the Player picked in Swap mode, in the accent's small capitals.
-const pickedTag = 'text-accent text-xs font-extrabold tracking-widest';
-
 /*
- * Where a Swap mode seat sits, and so where its PICKED tag goes. In a Match tile the seat fills the Player's
- * slot, and the tag sits at its right end. In a row of Waiting for a Board the seat is only as wide as the name,
- * so the tag sits on the seat's top edge instead: beside the name it would widen the seat and push the rest of
- * the row along.
+ * The PICKED tag, centred on the top edge of the picked Player's seat at its right end: small enough to sit in
+ * the gap between two seats in a Match tile without touching the seat above.
  */
-export const seatShapes = {
-	inTile: { seat: 'justify-between gap-2', tag: pickedTag },
-	inRow: {
-		seat: `${playerNameBox.shape} relative`,
-		tag: `${pickedTag} bg-highlight absolute -top-2.5 right-2 rounded px-1 text-[0.625rem] leading-4`,
-	},
-};
+export const pickedTag =
+	'absolute -top-1.5 right-2 rounded bg-highlight px-1 text-[0.625rem] leading-3 font-extrabold tracking-widest text-accent';
 
 /*
  * A TV screen drawn on the laptop: a black 16:9 box in the TV's own colours rather than the theme's, and the

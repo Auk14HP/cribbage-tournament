@@ -1,4 +1,4 @@
-import { useId, useRef, type ReactNode } from 'react';
+import { useId, useRef } from 'react';
 import {
 	getShownRound,
 	type BoardNumber,
@@ -9,10 +9,16 @@ import {
 	type Player,
 	type Tournament,
 } from '../tournament';
-import { bracketTitles, describeBoardCount, describeRound, joinInSentence } from '../wording';
+import {
+	bracketTitles,
+	describeBoardCount,
+	describeRound,
+	getPlayerName,
+	joinInSentence,
+} from '../wording';
 import { BracketBadge } from './BracketBadge';
-import { button, confirmButton, confirmColours, dialogBox, seatShapes } from './classes';
-import { PlayerName, SwapButton, type SwapPicking } from './PlayerName';
+import { button, confirmButton, confirmColours, dialogBox } from './classes';
+import { SwapButton, type SwapPicking } from './PlayerName';
 
 /*
  * Each of a bracket's Matches on a Board with the name of its Round, worked out once, and the names of the Rounds
@@ -32,8 +38,7 @@ const nameRounds = (tournament: Tournament, matches: readonly MatchOnBoard[]) =>
  * One bracket's Matches holding a Board, in a panel of its own. Its header has the bracket's badge and name,
  * the Rounds its Matches are in and how many Boards they hold. Each Match is a tile naming its Board and both
  * Players, and once Started records a winner or a Forfeit. A tile names its Round only when the panel holds
- * more than one. Hidden while the bracket has none. Named by its heading. A control given for the header, such
- * as Swap Players, sits at its right end, after the Rounds and Boards.
+ * more than one. Hidden while the bracket has none. Named by its heading.
  */
 export const BracketMatches = ({
 	tournament,
@@ -41,7 +46,6 @@ export const BracketMatches = ({
 	matches,
 	playing,
 	swapPicking,
-	headerControl,
 	onWin,
 	onForfeit,
 }: {
@@ -51,7 +55,6 @@ export const BracketMatches = ({
 	playing: boolean;
 	// Set only in Swap mode.
 	swapPicking?: SwapPicking;
-	headerControl?: ReactNode;
 	onWin: (match: MatchPlace, winner: Player, loser: Player) => void;
 	onForfeit: (match: MatchPlace, player: Player) => void;
 }) => {
@@ -76,14 +79,7 @@ export const BracketMatches = ({
 						{bracketTitles[bracketName]}
 					</h2>
 				</div>
-				{/*
-				 * As tall as a button (its line, its padding and its border) whether a control is given or not, so
-				 * Swap Players going at Start moves no tile below.
-				 */}
-				<div className="flex min-h-[calc(2.25rem+2px)] items-center gap-4">
-					<p className="text-muted text-sm font-semibold">{summary}</p>
-					{headerControl}
-				</div>
+				<p className="text-muted text-sm font-semibold">{summary}</p>
 			</div>
 			<ul
 				aria-labelledby={headingId}
@@ -167,13 +163,15 @@ const ForfeitButton = ({
 };
 
 /*
- * The box each Player takes in a Match tile, whether a button to tap or their name: the same height either
- * way, so Start turns names into buttons without moving a tile.
+ * The box each Player takes in a Match tile, whether a button to record a winner, a seat to tap in Swap mode or
+ * their name: the same height, and the name in the same place, every way, so neither Swap mode nor Start moves a
+ * name or a tile. A name that can't be tapped is boxed too, filled but with no outline, so it reads as the
+ * Player's place in the Match without looking like a button.
  */
 const playerSlot = 'flex min-h-11.5 w-full items-center rounded-lg border text-lg font-semibold';
 const playerSlots = {
 	winnerButton: `${playerSlot} border-line bg-panel px-3.5 text-left hover:bg-divider`,
-	name: `${playerSlot} border-transparent px-0.5`,
+	name: `${playerSlot} border-transparent bg-panel px-3.5`,
 	seat: `${playerSlot} px-3.5 text-left`,
 };
 
@@ -287,11 +285,8 @@ const MatchPlayer = ({
 			player={player}
 			match={match}
 			swapPicking={swapPicking}
-			seatShape={seatShapes.inTile}
-			className={playerSlots.seat}
+			shape={playerSlots.seat}
 		/>
 	) : (
-		<span className={playerSlots.name}>
-			<PlayerName player={player} match={match} />
-		</span>
+		<span className={playerSlots.name}>{getPlayerName(player)}</span>
 	);

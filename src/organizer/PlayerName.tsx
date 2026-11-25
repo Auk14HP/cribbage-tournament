@@ -1,6 +1,6 @@
 import type { MatchPlace, Opponent, Player, PlayerId } from '../tournament';
 import { getPlayerName } from '../wording';
-import { playerNameBox, seatShapes } from './classes';
+import { pickedTag, playerNameBox } from './classes';
 
 // Swap mode, as each Match listed sees it: the Player tapped first, if any, and what tapping a Player does.
 export interface SwapPicking {
@@ -26,7 +26,7 @@ export const PlayerName = ({
 			player={player}
 			match={match}
 			swapPicking={swapPicking}
-			seatShape={seatShapes.inRow}
+			shape={playerNameBox.shape}
 		/>
 	) : (
 		<span className={`${playerNameBox.shape} ${playerNameBox.plain}`}>
@@ -43,27 +43,25 @@ export const SwapButton = ({
 	player,
 	match,
 	swapPicking: { picked, onTap },
-	seatShape,
-	className = '',
+	shape,
 }: {
 	player: Player;
 	match: MatchPlace;
 	swapPicking: SwapPicking;
-	seatShape: (typeof seatShapes)[keyof typeof seatShapes];
-	// The classes of the slot the seat fills, if any.
-	className?: string;
+	// The seat's size and padding, from the place it sits: a Match tile's slot, or a name in a row.
+	shape: string;
 }) => {
 	const isPicked = picked === player.id;
 	return (
 		<button
 			type="button"
 			aria-pressed={isPicked}
-			className={`${className} ${seatShape.seat} ${isPicked ? playerNameBox.picked : playerNameBox.swappable}`}
+			className={`relative ${shape} ${isPicked ? playerNameBox.picked : playerNameBox.swappable}`}
 			onClick={() => onTap(player, match)}
 		>
 			{player.name}
 			{isPicked && (
-				<span aria-hidden="true" className={seatShape.tag}>
+				<span aria-hidden="true" className={pickedTag}>
 					PICKED
 				</span>
 			)}

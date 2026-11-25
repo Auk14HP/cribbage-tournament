@@ -240,8 +240,11 @@ const listPickedButtons = () => screen.queryAllByRole('button', { pressed: true 
 // The button of a Player in Swap mode, found by their name.
 const findPlayerButton = (name: string) => screen.getByRole('button', { name });
 
-// The line in Swap mode's banner saying what the next tap does.
-const findSwapLine = () => within(screen.getByRole('region', { name: 'Swap mode' }));
+// Swap mode's banner above the Matches, which says what the next tap does and holds Done.
+const findSwapBanner = () => within(screen.getByRole('region', { name: 'Swap mode' }));
+
+// Swap mode's banner, if it is showing.
+const querySwapBanner = () => screen.queryByRole('region', { name: 'Swap mode' });
 
 const recordWin = (user: User, tile: HTMLElement, winner: string) =>
 	user.click(within(tile).getByRole('button', { name: winner }));
@@ -657,22 +660,20 @@ describe('the organizer route', () => {
 		expect(screen.queryByRole('button', { name: 'Swap Players' })).not.toBeInTheDocument();
 		await confirmDraw(user);
 
-		const winnersPanel = within(screen.getByRole('region', { name: 'Winners Bracket' }));
-		expect(winnersPanel.getByRole('button', { name: 'Swap Players' })).toBeEnabled();
-		expect(screen.queryByRole('region', { name: 'Swap mode' })).not.toBeInTheDocument();
+		expect(querySwapBanner()).not.toBeInTheDocument();
 
-		await user.click(winnersPanel.getByRole('button', { name: 'Swap Players' }));
+		await clickButton(user, 'Swap Players');
 
-		expect(findSwapLine().getByText('Tap two Players to swap them.')).toBeInTheDocument();
+		expect(findSwapBanner().getByText('Tap two Players to swap them.')).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
 		expect(screen.getByRole('button', { name: 'Start' })).toHaveAccessibleDescription(
 			'Press Done to finish swapping first.',
 		);
-		expect(winnersPanel.getByRole('button', { name: 'Swap Players' })).toBeDisabled();
-		await user.click(findSwapLine().getByRole('button', { name: 'Done' }));
+		expect(screen.queryByRole('button', { name: 'Swap Players' })).not.toBeInTheDocument();
+		await user.click(findSwapBanner().getByRole('button', { name: 'Done' }));
 		expect(screen.getByRole('button', { name: 'Start' })).toBeEnabled();
 		expect(screen.queryByText('Press Done to finish swapping first.')).not.toBeInTheDocument();
-		expect(screen.queryByRole('region', { name: 'Swap mode' })).not.toBeInTheDocument();
+		expect(querySwapBanner()).not.toBeInTheDocument();
 		await clickButton(user, 'Start');
 		expect(screen.queryByRole('button', { name: 'Swap Players' })).not.toBeInTheDocument();
 	});
@@ -692,7 +693,7 @@ describe('the organizer route', () => {
 		expect(listPickedButtons()).toEqual([findPlayerButton(ann)]);
 		expect(within(findPlayerButton(ann)).getByText('PICKED')).toBeInTheDocument();
 		expect(
-			findSwapLine().getByText(`${ann} is picked. Tap another Player to swap them.`),
+			findSwapBanner().getByText(`${ann} is picked. Tap another Player to swap them.`),
 		).toBeInTheDocument();
 		await tapPlayer(user, dan);
 
@@ -700,7 +701,7 @@ describe('the organizer route', () => {
 		expect(findTileOf(ann)).toHaveTextContent(`${cat} vs ${ann}`);
 		expect(listPickedButtons()).toEqual([]);
 		expect(screen.queryByText('PICKED')).not.toBeInTheDocument();
-		expect(findSwapLine().getByText('Tap two Players to swap them.')).toBeInTheDocument();
+		expect(findSwapBanner().getByText('Tap two Players to swap them.')).toBeInTheDocument();
 		await tapPlayer(user, dan);
 		await tapPlayer(user, ann);
 		expect(listMatchTileTexts()).toEqual(drawnTiles);
@@ -763,7 +764,7 @@ describe('the organizer route', () => {
 		showOrganizer();
 
 		expect(listMatchTileTexts()).toEqual(swappedTiles);
-		expect(screen.queryByRole('region', { name: 'Swap mode' })).not.toBeInTheDocument();
+		expect(querySwapBanner()).not.toBeInTheDocument();
 		expect(listPickedButtons()).toEqual([]);
 		expect(screen.getByRole('button', { name: 'Start' })).toBeEnabled();
 	});

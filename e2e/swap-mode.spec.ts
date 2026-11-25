@@ -3,21 +3,21 @@ import { expectNothingMoves } from './screenStill';
 import { confirmDraw, findMatchesOnBoards, test } from './setUpTournament';
 
 /*
- * Swap mode on Tonight's Draw moves nothing on the organizer route: its banner fills a row held for it above the
- * Matches, the Players' names become seats in place, the Player picked is tagged PICKED without widening their
- * seat, and the Organizer's eyes stay where they were when they tapped Swap Players. jsdom can't lay out a page, so
- * this runs in a real browser.
+ * Swap mode on Tonight's Draw moves nothing on the organizer route: the row above the Matches becomes its banner,
+ * Swap Players becomes Done in the same box, the Players' names become seats in place, the Player picked is
+ * tagged PICKED on their seat's edge without widening it, and the Organizer's eyes stay where they were when they
+ * tapped Swap Players. jsdom can't lay out a page, so this runs in a real browser.
  */
 
 test.use({ viewport: { width: 1280, height: 720 } });
 
 /*
- * The parts of Tonight's Draw: the button that turns Swap mode on, every Match row, on a Board or waiting for
- * one, the "vs" between each waiting row's Players, which moves if the first Player's name widens, Start, and
- * the TV Display heading.
+ * The parts of Tonight's Draw: the button that turns Swap mode on and off, every Match row, on a Board or
+ * waiting for one, the "vs" between each waiting row's Players, which moves if the first Player's name widens,
+ * Start, and the TV Display heading.
  */
 const listDrawScreenParts = (page: Page) => [
-	page.getByRole('button', { name: 'Swap Players' }),
+	page.getByRole('button', { name: /^(Swap Players|Done)$/ }),
 	findMatchesOnBoards(page).getByRole('listitem'),
 	page.getByRole('list', { name: 'Waiting for a Board' }).getByRole('listitem'),
 	page.getByRole('list', { name: 'Waiting for a Board' }).getByText('vs', { exact: true }),
@@ -33,8 +33,8 @@ test('moves nothing on Tonight’s Draw when Swap mode starts, when a Player is 
 	await confirmDraw(page);
 	const parts = listDrawScreenParts(page);
 	const swapBanner = page.getByRole('region', { name: 'Swap mode' });
-	const doneButton = swapBanner.getByRole('button', { name: 'Done' });
 
+	// The button keeps its box as it becomes Done, so a second click lands on it.
 	await expectNothingMoves(parts, async () => {
 		await page.getByRole('button', { name: 'Swap Players' }).click();
 		await expect(swapBanner).toBeVisible();
@@ -46,24 +46,20 @@ test('moves nothing on Tonight’s Draw when Swap mode starts, when a Player is 
 		.first();
 	// Scrolled to first, as the click would scroll it into view and move every part.
 	await waitingPlayerButton.scrollIntoViewIfNeeded();
-	await expectNothingMoves([...parts, doneButton], async () => {
+	await expectNothingMoves(parts, async () => {
 		await waitingPlayerButton.click();
 		await expect(swapBanner).toContainText('is picked.');
 	});
-	// A seat in a Match tile, not Swap Players, which sits in the Winners Bracket's header among the Matches.
-	const firstPlayerButton = findMatchesOnBoards(page)
-		.getByRole('listitem')
-		.getByRole('button')
-		.first();
+	const firstPlayerButton = findMatchesOnBoards(page).getByRole('button').first();
 	// Tapped again to clear the pick, then the Match tile's seat scrolled to, both before measuring.
 	await waitingPlayerButton.click();
 	await firstPlayerButton.scrollIntoViewIfNeeded();
-	await expectNothingMoves([...parts, doneButton], async () => {
+	await expectNothingMoves(parts, async () => {
 		await firstPlayerButton.click();
 		await expect(firstPlayerButton).toHaveAttribute('aria-pressed', 'true');
 	});
 	await expectNothingMoves(parts, async () => {
-		await doneButton.click();
+		await page.getByRole('button', { name: 'Done' }).click();
 		await expect(swapBanner).toBeHidden();
 	});
 });

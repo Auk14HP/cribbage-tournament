@@ -189,19 +189,14 @@ test.describe('Registering a long field', () => {
 });
 
 test.describe('Playing a long field', () => {
-	/*
-	 * Swap Players sits in the Winners Bracket's header, so it scrolls with the Matches; in Swap mode, Done stays
-	 * on screen in the banner above them.
-	 */
-	test('keeps Swap mode’s Done, Start and the TV Display panel on screen on Tonight’s Draw while the Matches scroll', async ({
+	test('keeps Swap Players, Start and the TV Display panel on screen on Tonight’s Draw while the Matches scroll', async ({
 		page,
 	}) => {
 		await page.goto('/?players=32&boards=16');
 		await confirmDraw(page);
-		await page.getByRole('button', { name: 'Swap Players' }).click();
 		const matches = findMatchesOnBoards(page);
 		const controls = [
-			page.getByRole('region', { name: 'Swap mode' }).getByRole('button', { name: 'Done' }),
+			page.getByRole('button', { name: 'Swap Players' }),
 			page.getByRole('button', { name: 'Start', exact: true }),
 			page.getByRole('heading', { name: 'TV Display' }),
 		];

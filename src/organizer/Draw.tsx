@@ -15,12 +15,13 @@ import {
 	type Tournament,
 } from '../tournament';
 import { BracketMatches } from './BracketMatches';
-import { button, panel, primaryButton, windowFilling } from './classes';
+import { panel, primaryButton, rowAboveMatches, windowFilling } from './classes';
 import { Refusal, type Apply } from './controls';
 import { Results } from './Results';
 import { TvDisplay } from './TvDisplay';
 import { StayingDialog } from './StayingDialog';
 import type { SwapPicking } from './PlayerName';
+import { SwapRow } from './SwapRow';
 import { WaitingForBoard } from './WaitingForBoard';
 
 // A result waiting on the loser's answer to whether they are staying for the Losers Bracket.
@@ -35,42 +36,15 @@ interface PickedToSwap {
 	readonly match: MatchPlace;
 }
 
-/*
- * Swap mode's banner, across the top of the Matches: what the next tap does, naming the Player picked once there
- * is one, and Done, which leaves Swap mode. Named, so it reads as a part of the screen of its own.
- */
-const SwapBanner = ({ picked, onDone }: { picked?: Player; onDone: () => void }) => (
-	<section
-		aria-label="Swap mode"
-		className="border-accent bg-highlight flex w-full items-center justify-between gap-4 rounded-xl border px-4 py-2"
-	>
-		<p className="font-semibold">
-			<span className="text-accent">Swapping · </span>
-			<span className="font-normal">
-				{picked
-					? `${picked.name} is picked. Tap another Player to swap them.`
-					: 'Tap two Players to swap them.'}
-			</span>
-		</p>
-		<button
-			type="button"
-			className="bg-fill text-on-fill min-h-10 shrink-0 rounded px-4 font-bold hover:brightness-95"
-			onClick={onDone}
-		>
-			Done
-		</button>
-	</section>
-);
-
 // The brackets in the order their Matches are listed: the main bracket first.
 const bracketOrder: readonly BracketName[] = ['winners', 'losers'];
 
 /*
  * The Matches holding a Board, in a panel for each bracket: the ones the Draw seats while the TV holds
- * Tonight’s Draw, then the ones being played. Before Start, Swap Players in the Winners Bracket's header turns
- * on Swap mode, which makes the Players' seats tappable under a banner saying what the next tap does: the first
- * tap picks a Player and the second swaps them with the Player picked. Done in the banner leaves it. Once Started, tapping a
- * Player's name records them as the winner, and a Forfeit records their opponent's. A Player losing their
+ * Tonight’s Draw, then the ones being played. Before Start, Swap Players above the Matches turns on Swap
+ * mode, which makes the Players' seats tappable under a banner saying what the next tap does: the first tap
+ * picks a Player and the second swaps them with the Player picked. Swap Players becomes Done, which leaves it.
+ * Once Started, tapping a Player's name records them as the winner, and a Forfeit records their opponent's. A Player losing their
  * first Match is asked first whether they are staying for the Losers Bracket. Matches waiting for a Board
  * are listed beneath. Results that can still be undone are listed, latest first, to correct a mistake.
  */
@@ -161,19 +135,20 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 				{!finished && (
 					<div className={windowFilling.column}>
 						{/*
-						 * What a tap does, above the Matches: on Tonight’s Draw, Swap mode's banner; once Started, a line
-						 * saying to tap the winner. The row is held at the banner's height whether Swap mode is on or off,
-						 * and keeps it through Start, so neither the banner nor Start moves the Matches below it.
+						 * What a tap does, above the Matches: on Tonight’s Draw, the row with Swap Players, which is Swap
+						 * mode's banner while it is on; once Started, a line saying to tap the winner, in a row of the same
+						 * height.
 						 */}
-						{(drawShown || (playing && matches.length > 0)) && (
-							<div className="flex min-h-14 items-center">
-								{swapping && (
-									<SwapBanner
-										picked={pickedToSwap?.player}
-										onDone={() => setSwapping(false)}
-									/>
-								)}
-								{playing && <p className="text-muted">Tap a Match’s winner.</p>}
+						{drawShown && (
+							<SwapRow
+								swapping={swapping}
+								picked={pickedToSwap?.player}
+								onToggle={() => setSwapping(!swapping)}
+							/>
+						)}
+						{playing && matches.length > 0 && (
+							<div className={`${rowAboveMatches.frame} ${rowAboveMatches.bare}`}>
+								<p className="text-muted">Tap a Match’s winner.</p>
 							</div>
 						)}
 						{/*
@@ -196,23 +171,6 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 											)}
 											playing={playing}
 											swapPicking={swapPicking}
-											headerControl={
-												/*
-												 * In the Winners Bracket's header on Tonight’s Draw, beside the Matches it changes.
-												 * Disabled in Swap mode rather than gone, so the header doesn't change.
-												 */
-												drawShown &&
-												bracketName === 'winners' && (
-													<button
-														type="button"
-														className={`${button} shrink-0 whitespace-nowrap`}
-														disabled={swapping}
-														onClick={() => setSwapping(true)}
-													>
-														Swap Players
-													</button>
-												)
-											}
 											onWin={recordWinnerOf}
 											onForfeit={recordForfeitBy}
 										/>
