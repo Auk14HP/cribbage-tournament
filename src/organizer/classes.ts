@@ -14,17 +14,15 @@ export const dangerButton = `${button} text-danger`;
  * The header's buttons: an outline on the canvas, with no fill until the pointer is over them, so they stay
  * quieter than the buttons in the panels below. One that clears the Tournament has the danger colour's text.
  */
-const quietButton = 'rounded border border-line px-3 py-1.5 hover:bg-raised';
+// A header button's shape, shared by every look it takes, so the header keeps its height as a button changes.
+const headerButtonShape = 'rounded border px-3 py-1.5';
+const quietButton = `${headerButtonShape} border-line hover:bg-raised`;
 export const quietButtons = {
 	plain: quietButton,
 	danger: `${quietButton} text-danger`,
 };
-/*
- * A header button made the screen's main button, filled in the theme's yellow like Start. Its border and padding
- * match a quiet button's, so the header keeps its height as the button changes.
- */
-export const mainHeaderButton =
-	'rounded border border-fill bg-fill px-3 py-1.5 font-semibold text-on-fill hover:brightness-95';
+// A header button made the screen's main button, filled in the theme's yellow like Start.
+export const mainHeaderButton = `${headerButtonShape} border-fill bg-fill font-semibold text-on-fill hover:brightness-95`;
 export const primaryButton =
 	'rounded bg-fill px-4 py-2 text-lg font-semibold text-on-fill hover:brightness-95 disabled:opacity-50 disabled:hover:brightness-100';
 export const confirmButton = 'rounded px-3 py-1.5 font-semibold';

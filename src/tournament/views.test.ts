@@ -89,7 +89,7 @@ describe('the champions', () => {
 		tournament = recordWin(tournament, bobAndCat, 'leaving', cat);
 
 		expect(getChampions(tournament)).toEqual([
-			{ bracketName: 'winners', champion: cat, finalOpponent: bob, isForfeit: false },
+			{ bracketName: 'winners', player: cat, finalOpponent: bob, isForfeit: false },
 		]);
 	});
 
@@ -105,7 +105,7 @@ describe('the champions', () => {
 		expect(getChampions(tournament)).toEqual([
 			{
 				bracketName: 'losers',
-				champion: losersPlayerB,
+				player: losersPlayerB,
 				finalOpponent: losersPlayerA,
 				isForfeit: true,
 			},
@@ -118,13 +118,13 @@ describe('the champions', () => {
 		expect(getChampions(tournament)).toEqual([
 			{
 				bracketName: 'winners',
-				champion: winnersChampion,
+				player: winnersChampion,
 				finalOpponent: runnerUp,
 				isForfeit: false,
 			},
 			{
 				bracketName: 'losers',
-				champion: losersPlayerB,
+				player: losersPlayerB,
 				finalOpponent: losersPlayerA,
 				isForfeit: true,
 			},

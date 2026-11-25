@@ -187,9 +187,9 @@ export const getShownRound = (
 };
 
 // A bracket's champion: the winner of its Final.
-export interface BracketChampion {
+export interface ChampionOfBracket {
 	readonly bracketName: BracketName;
-	readonly champion: Player;
+	readonly player: Player;
 	// The Player they beat in the Final.
 	readonly finalOpponent: Player;
 	// The Final's opponent forfeited it.
@@ -197,7 +197,7 @@ export interface BracketChampion {
 }
 
 // Each bracket that has a champion, the Winners Bracket first, with whom its champion beat in the Final.
-export const getChampions = (tournament: Tournament): readonly BracketChampion[] =>
+export const getChampions = (tournament: Tournament): readonly ChampionOfBracket[] =>
 	(['winners', 'losers'] as const)
 		.filter((bracketName) => hasChampion(tournament, bracketName))
 		.map((bracketName) => {
@@ -210,7 +210,7 @@ export const getChampions = (tournament: Tournament): readonly BracketChampion[]
 			const finalOpponent = findOpponent(tournament, final, result.winner);
 			return {
 				bracketName,
-				champion: findPlayer(tournament, result.winner),
+				player: findPlayer(tournament, result.winner),
 				finalOpponent: findPlayer(tournament, finalOpponent),
 				isForfeit: result.isForfeit,
 			};

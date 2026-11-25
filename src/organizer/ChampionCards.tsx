@@ -1,6 +1,6 @@
 import {
 	getChampions,
-	type BracketChampion,
+	type ChampionOfBracket,
 	type BracketName,
 	type Tournament,
 } from '../tournament';
@@ -12,9 +12,9 @@ import { BracketBadge } from './BracketBadge';
  * edged in the theme's yellow, as its W badge is filled, and their name is in the theme's accent. The Losers
  * Bracket's card keeps a panel's own edge and text.
  */
-const cardLooks: Record<BracketName, { title: string; edge: string; name: string }> = {
-	winners: { title: 'Champion', edge: 'border-fill', name: 'text-accent' },
-	losers: { title: 'Losers Bracket champion', edge: 'border-divider', name: 'text-ink' },
+const cardLooks: Record<BracketName, { title: string; edge: string; nameColour: string }> = {
+	winners: { title: 'Champion', edge: 'border-fill', nameColour: 'text-accent' },
+	losers: { title: 'Losers Bracket champion', edge: 'border-divider', nameColour: 'text-ink' },
 };
 
 /*
@@ -37,8 +37,8 @@ export const ChampionCards = ({ tournament }: { tournament: Tournament }) => {
 };
 
 // One bracket's champion card, named for its bracket's champion: "Winners Bracket champion".
-const ChampionCard = ({ champion }: { champion: BracketChampion }) => {
-	const { title, edge, name } = cardLooks[champion.bracketName];
+const ChampionCard = ({ champion }: { champion: ChampionOfBracket }) => {
+	const { title, edge, nameColour } = cardLooks[champion.bracketName];
 	const bracketTitle = bracketTitles[champion.bracketName];
 	// A panel's shape and ground, with more room inside it for the large name.
 	return (
@@ -50,8 +50,8 @@ const ChampionCard = ({ champion }: { champion: BracketChampion }) => {
 				<BracketBadge bracketName={champion.bracketName} size="large" />
 				{title}
 			</p>
-			<p className={`text-5xl leading-tight font-extrabold break-words ${name}`}>
-				{champion.champion.name}
+			<p className={`text-5xl leading-tight font-extrabold break-words ${nameColour}`}>
+				{champion.player.name}
 			</p>
 			<p className="text-muted">{describeFinal(champion)}</p>
 		</section>
@@ -59,7 +59,7 @@ const ChampionCard = ({ champion }: { champion: BracketChampion }) => {
 };
 
 // How the champion won the Final: "beat Sue in the Final", or "won the Final when Sue forfeited".
-const describeFinal = ({ finalOpponent, isForfeit }: BracketChampion): string =>
+const describeFinal = ({ finalOpponent, isForfeit }: ChampionOfBracket): string =>
 	isForfeit
 		? `won the Final when ${finalOpponent.name} forfeited`
 		: `beat ${finalOpponent.name} in the Final`;
