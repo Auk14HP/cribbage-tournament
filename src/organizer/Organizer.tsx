@@ -7,7 +7,7 @@ import { makeDisplayPath } from '../routes';
 import type { Store } from '../storage';
 import { createTournament, restartTvCycleIfDue, type Phase, type Tournament } from '../tournament';
 import { useTournament } from '../useTournament';
-import { quietButtons } from './classes';
+import { mainHeaderButton, quietButtons } from './classes';
 import { ConfirmDialog, type Apply } from './controls';
 import { Draw } from './Draw';
 import { HouseRules } from './HouseRules';
@@ -82,11 +82,14 @@ export const Organizer = ({
 				<nav className="flex items-stretch gap-2">
 					{/*
 					 * Outlined on the canvas, not filled like the buttons the night runs on, so it doesn't draw the
-					 * Organizer's eye. Its dialog still asks before anything is cleared.
+					 * Organizer's eye mid-Tournament. Once the Tournament is finished it is what comes next, so it
+					 * becomes the main button. Its dialog still asks before anything is cleared.
 					 */}
 					<button
 						type="button"
-						className={quietButtons.danger}
+						className={
+							tournament.phase === 'finished' ? mainHeaderButton : quietButtons.danger
+						}
 						onClick={() => newTournamentDialog.current?.showModal()}
 					>
 						Start a new Tournament

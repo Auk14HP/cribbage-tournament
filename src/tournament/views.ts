@@ -12,7 +12,9 @@ import {
 	findSettledEntry,
 	findWinner,
 	getDraw,
+	hasChampion,
 	isBye,
+	isSameMatch,
 	listIndexes,
 	type Seat,
 } from './bracket';
@@ -183,6 +185,36 @@ export const getShownRound = (
 	const roundCount = countRounds(tournament, bracket);
 	return { round: round - leftOut, roundCount: roundCount - leftOut };
 };
+
+// A bracket's champion: the winner of its Final.
+export interface ChampionOfBracket {
+	readonly bracketName: BracketName;
+	readonly player: Player;
+	// The Player they beat in the Final.
+	readonly finalOpponent: Player;
+	// The Final's opponent forfeited it.
+	readonly isForfeit: boolean;
+}
+
+// Each bracket that has a champion, the Winners Bracket first, with whom its champion beat in the Final.
+export const getChampions = (tournament: Tournament): readonly ChampionOfBracket[] =>
+	(['winners', 'losers'] as const)
+		.filter((bracketName) => hasChampion(tournament, bracketName))
+		.map((bracketName) => {
+			const final: MatchPlace = {
+				bracket: bracketName,
+				round: countRounds(tournament, bracketName),
+				place: 0,
+			};
+			const result = tournament.results.find((r) => isSameMatch(r.match, final))!;
+			const finalOpponent = findOpponent(tournament, final, result.winner);
+			return {
+				bracketName,
+				player: findPlayer(tournament, result.winner),
+				finalOpponent: findPlayer(tournament, finalOpponent),
+				isForfeit: result.isForfeit,
+			};
+		});
 
 export interface RecordedResult {
 	readonly match: MatchPlace;
