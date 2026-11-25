@@ -93,7 +93,7 @@ The choice of **Theme** that follows the laptop's own light or dark setting. It 
 _Avoid_: System, Auto (the TV's cycling choice), Match laptop (a **Match** is a game)
 
 **TV Display**:
-The panel on the **Organizer screen** that shows what the TV is showing: a small picture of the **TV screen** on show, and how long until it changes. Once the TV has screens to cycle, it holds the choice of **Auto** or a **Held screen**, and the seconds per TV screen.
+The panel on the **Organizer screen** that shows what the TV is showing: a small picture of the **TV screen** on show, and how long until it changes. Once the TV has screens to cycle, it holds the choice of **Auto** or a **Held screen**, and the seconds per TV screen. From the Draw on, pressing the picture, or "Look at the brackets here" beneath it, opens the brackets full size on the laptop, drawn as the TV draws them; looking never changes what the TV shows.
 _Avoid_: TV panel, preview, monitor
 
 ### The TV

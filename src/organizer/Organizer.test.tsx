@@ -1285,6 +1285,66 @@ describe('the TV Display panel', () => {
 	});
 });
 
+describe('looking at the brackets on the laptop', () => {
+	it('opens on the bracket the TV shows, from the link', async () => {
+		const user = showOrganizerCyclingScreens();
+
+		await clickButton(user, 'Look at the brackets here');
+
+		expect(readSelectedBracketTab()).toBe('Winners Bracket');
+		expect(readPeekedBracketHeading()).toBe('Winners Bracket');
+	});
+
+	it('opens on the Losers Bracket from the thumbnail while the TV holds it, and switches with the tabs', async () => {
+		showOrganizerWithStore(heldOnLosersBracket());
+		const user = userEvent.setup();
+
+		await clickButton(user, 'Look at the Losers Bracket full size');
+		expect(readSelectedBracketTab()).toBe('Losers Bracket');
+		expect(readPeekedBracketHeading()).toBe('Losers Bracket');
+
+		await chooseBracketTab(user, 'Winners Bracket');
+		expect(readSelectedBracketTab()).toBe('Winners Bracket');
+		expect(readPeekedBracketHeading()).toBe('Winners Bracket');
+	});
+
+	it('opens on the Winners Bracket while the TV shows the Draw, with no Losers Bracket tab yet', async () => {
+		const user = showOrganizer();
+		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue', 'Ann'], '2');
+
+		await clickButton(user, 'Look at the Winners Bracket full size');
+
+		const peek = within(getBracketPeek());
+		const tabNames = peek.getAllByRole('tab').map((tab) => tab.textContent);
+		expect(tabNames).toEqual(['Winners Bracket']);
+		expect(readPeekedBracketHeading()).toBe('Winners Bracket');
+	});
+
+	it('offers nothing to look at before the Draw', () => {
+		showOrganizerWithStore(registerPlayers('Dave K.', 'Big Dave'));
+
+		expect(
+			screen.queryByRole('button', { name: 'Look at the brackets here' }),
+		).not.toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: /full size$/ })).not.toBeInTheDocument();
+	});
+
+	it('closes with its close button, leaving the TV’s choice as it was', async () => {
+		const store = showOrganizerWithStore(heldOnLosersBracket());
+		const user = userEvent.setup();
+
+		await clickButton(user, 'Look at the brackets here');
+		await chooseBracketTab(user, 'Winners Bracket');
+		const peek = within(getBracketPeek());
+		await user.click(peek.getByRole('button', { name: 'Close the brackets' }));
+
+		expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+		expect(store.load()?.tvChoice).toBe('losersBracket');
+		expect(screen.getByRole('radio', { name: 'Losers Bracket' })).toBeChecked();
+		expect(readThumbnailName()).toBe('The TV showing Losers Bracket');
+	});
+});
+
 /*
  * The organizer route, opened on the Tournament given, if any, and the store it saves to, which a test saves
  * to as well, as the Organizer's own steps would.
@@ -1337,6 +1397,33 @@ const listThumbnailPlayers = () => {
 	const thumbnail = within(getThumbnail());
 	const playerList = within(thumbnail.getByRole('list', { name: 'Players', hidden: true }));
 	return playerList.getAllByRole('listitem', { hidden: true }).map((item) => item.textContent);
+};
+
+// The Tournament with its Losers Bracket drawn, and the TV held on it.
+const heldOnLosersBracket = () => {
+	const intoLosersBracket = playIntoLosersBracket();
+	return expectOk(chooseTvScreen(intoLosersBracket, 'losersBracket'));
+};
+
+// The dialog showing the TV's brackets on the laptop.
+const getBracketPeek = () => screen.getByRole('dialog', { name: 'The brackets' });
+
+// The name of the bracket tab chosen in the open dialog.
+const readSelectedBracketTab = () => {
+	const peek = within(getBracketPeek());
+	return peek.getByRole('tab', { selected: true }).textContent;
+};
+
+const chooseBracketTab = async (user: User, bracketTitle: string) => {
+	const peek = within(getBracketPeek());
+	await user.click(peek.getByRole('tab', { name: bracketTitle }));
+};
+
+// The heading of the bracket the open dialog shows, drawn as the TV draws it.
+const readPeekedBracketHeading = () => {
+	const peek = within(getBracketPeek());
+	const bracketPanel = within(peek.getByRole('tabpanel'));
+	return bracketPanel.getByRole('heading', { level: 1 }).textContent;
 };
 
 /*
