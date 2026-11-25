@@ -17,10 +17,13 @@ import {
 	chooseTvScreen,
 	getMatchesOnBoards,
 	makeDraw,
+	recordForfeit,
 	setBoardCount as setBoardCountOn,
 	showHouseRules as showHouseRulesOn,
 	start,
 	tournamentVersion,
+	type BracketName,
+	type Player,
 	type Tournament,
 } from '../tournament';
 import {
@@ -282,6 +285,10 @@ const listResults = () =>
 	within(screen.getByRole('list', { name: 'Results' }))
 		.getAllByRole('listitem')
 		.map((item) => item.textContent);
+
+// What each champion's card reads, in the order shown: its bracket's badge, its title, the name and the Final.
+const listChampionCards = () =>
+	screen.queryAllByRole('region', { name: /champion$/ }).map((card) => card.textContent);
 
 // The choices of what the TV shows, by their labels.
 const listTvChoices = () => {
@@ -798,7 +805,48 @@ describe('the organizer route', () => {
 		await recordWin(user, final, byePlayerName);
 
 		expect(screen.queryByRole('region', { name: 'Matches' })).not.toBeInTheDocument();
-		expect(screen.getByText(`Champion: ${byePlayerName}`)).toBeInTheDocument();
+		expect(listChampionCards()).toEqual([
+			`WChampion${byePlayerName}beat ${winner} in the Final`,
+		]);
+	});
+
+	it('shows the champion on a card naming whom they beat in the Final, gone again once the Final is undone', async () => {
+		const user = showOrganizer();
+		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
+		await clickButton(user, 'Start');
+		// 3 Players: two play on Board 1, and the Bye Player waits at Board 2 in the Final for its winner.
+		const byePlayerName = readByePlayerName();
+		const [winner] = listWinnerNames(findPlayingTile());
+		await recordWin(user, findPlayingTile(), winner);
+		await answerDialog(user, 'Leaving');
+		expect(listChampionCards()).toEqual([]);
+
+		// The first loser left, so no Losers Bracket can open: the Bye Player isn't asked whether they are staying.
+		const [final] = listMatchTiles();
+		await recordWin(user, final, winner);
+
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tournament finished');
+		expect(listChampionCards()).toEqual([
+			`WChampion${winner}beat ${byePlayerName} in the Final`,
+		]);
+
+		await clickButton(user, 'Undo');
+
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Now playing');
+		expect(listChampionCards()).toEqual([]);
+		expect(listWinnerNames(findPlayingTile()).sort()).toEqual([winner, byePlayerName].sort());
+	});
+
+	it('shows each bracket’s champion on a card, the Winners Bracket’s first, saying when the Final was a Forfeit', () => {
+		const { tournament, finals } = playToTheEndForfeitingLosersBracket(playIntoLosersBracket());
+		showOrganizerWithStore(tournament);
+
+		const [winnersChampion, runnerUp] = finals.winners;
+		const [losersChampion, leaver] = finals.losers;
+		expect(listChampionCards()).toEqual([
+			`WChampion${winnersChampion}beat ${runnerUp} in the Final`,
+			`LLosers Bracket champion${losersChampion}won the Final when ${leaver} forfeited`,
+		]);
 	});
 
 	it('records a Forfeit once the Organizer says who is forfeiting, and their opponent wins', async () => {
@@ -864,7 +912,9 @@ describe('the organizer route', () => {
 			`Is ${bye} staying for the Losers Bracket?`,
 		);
 		await answerDialog(user, 'Leaving');
-		expect(screen.getByText(`Champion: ${winner}`)).toBeInTheDocument();
+		expect(listChampionCards()).toEqual([
+			`WChampion${winner}won the Final when ${bye} forfeited`,
+		]);
 	});
 
 	it('groups the Matches on a Board by bracket, Winners Bracket first, each in Board order', async () => {
@@ -1449,6 +1499,27 @@ const readPeekedBracketHeading = () => {
 	const peek = within(getBracketPeek());
 	const bracketPanel = within(peek.getByRole('tabpanel'));
 	return bracketPanel.getByRole('heading', { level: 1 }).textContent;
+};
+
+/*
+ * Plays every Match left, as playToTheEnd does, except that each Losers Bracket Match is won by Forfeit: its
+ * second-named Player leaves. Returns the finished Tournament and each bracket's Final, its winner's name first.
+ */
+const playToTheEndForfeitingLosersBracket = (playing: Tournament) => {
+	let tournament = playing;
+	const finals: Partial<Record<BracketName, [string, string]>> = {};
+	while (tournament.phase !== 'finished') {
+		const nextMatch = getMatchesOnBoards(tournament).find(hasBothPlayersKnown)!;
+		const [winner, loser] = nextMatch.players as [Player, Player];
+		const bracketName = nextMatch.match.bracket;
+		tournament =
+			bracketName === 'losers'
+				? expectOk(recordForfeit(tournament, nextMatch.match, loser.id))
+				: recordWinOn(tournament, nextMatch, 'leaving');
+		// Each bracket's last Match recorded is its Final.
+		finals[bracketName] = [winner.name, loser.name];
+	}
+	return { tournament, finals: finals as Record<BracketName, [string, string]> };
 };
 
 /*

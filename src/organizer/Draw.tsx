@@ -2,7 +2,6 @@ import { useId, useRef, useState } from 'react';
 import {
 	getMatchKey,
 	getMatchesOnBoards,
-	getBracketPicture,
 	isLosersBracketOpenTo,
 	recordForfeit,
 	recordWinner,
@@ -15,6 +14,7 @@ import {
 	type Tournament,
 } from '../tournament';
 import { BracketMatches } from './BracketMatches';
+import { ChampionCards } from './ChampionCards';
 import { panel, primaryButton, rowAboveMatches, windowFilling } from './classes';
 import { Refusal, type Apply } from './controls';
 import { Results } from './Results';
@@ -47,11 +47,10 @@ const bracketOrder: readonly BracketName[] = ['winners', 'losers'];
  * Once Started, tapping a Player's name records them as the winner, and a Forfeit records their opponent's. A
  * Player losing their first Match is asked first whether they are staying for the Losers Bracket. Matches
  * waiting for a Board are listed beneath. Results that can still be undone are listed, latest first, to correct a mistake.
+ * Once the Tournament is finished, each bracket's champion has a card, and the Results move beneath them.
  */
 export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const matches = getMatchesOnBoards(tournament);
-	const { champion } = getBracketPicture(tournament, 'winners')!;
-	const losersChampion = getBracketPicture(tournament, 'losers')?.champion;
 	const playing = tournament.phase === 'inProgress';
 	const [refusal, setRefusal] = useState('');
 	// Why a Swap was refused, shown beside the Matches the Organizer is tapping.
@@ -118,16 +117,12 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 	return (
 		<div className={windowFilling.row}>
 			<div className={windowFilling.mainColumn}>
-				{champion && (
-					<section aria-label="Champions" className={panel}>
-						<p className="text-accent text-2xl font-bold">Champion: {champion.name}</p>
-						{losersChampion && (
-							<p className="text-accent text-2xl font-bold">
-								Losers Bracket champion: {losersChampion.name}
-							</p>
-						)}
-					</section>
-				)}
+				<ChampionCards tournament={tournament} />
+				{/*
+				 * Once finished, the Results take the Matches' place under the champions, where the Organizer is
+				 * looking, so the Final can be undone without scrolling the side column.
+				 */}
+				{finished && <Results tournament={tournament} apply={apply} />}
 				{/*
 				 * Gone once the Tournament is finished, when no Match is left to list. Not a panel itself: each
 				 * bracket's Matches are a panel of their own.
@@ -219,7 +214,7 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 						)}
 					</section>
 				)}
-				<Results tournament={tournament} apply={apply} />
+				{!finished && <Results tournament={tournament} apply={apply} />}
 			</div>
 		</div>
 	);

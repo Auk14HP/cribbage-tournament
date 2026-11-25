@@ -61,9 +61,11 @@ export { isLosersBracketOpenTo, recordForfeit, recordWinner, undoResult } from '
 export {
 	getShownRound,
 	getBracketPicture,
+	getChampions,
 	getMatchesOnBoards,
 	getUndoableResults,
 	getWaitingForBoard,
+	type BracketChampion,
 	type BracketMatch,
 	type BracketPlayer,
 	type BracketPicture,
