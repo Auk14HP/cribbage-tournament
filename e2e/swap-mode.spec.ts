@@ -69,7 +69,7 @@ test('moves nothing on Tonight’s Draw when Swap mode starts, when a Player is 
 test('fits the longest names inside their seats when picked, in a Match tile and in a waiting row', async ({
 	page,
 }) => {
-	// 21 Players on 8 Boards: Bartholomew in a Match tile, Frank the Tank waiting for a Board.
+	// 21 Players on 8 Boards: Players in Match tiles and more waiting for a Board.
 	await page.goto('/?players=21&boards=8');
 	await confirmDraw(page);
 	await page.getByRole('button', { name: 'Swap Players' }).click();

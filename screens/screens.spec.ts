@@ -94,11 +94,12 @@ test('screens', async ({ context, page: organizer }) => {
 	if (process.env.SWAP) {
 		await organizer.getByRole('button', { name: 'Swap Players' }).click();
 		// The longest name, so the shot shows the PICKED tag beside the widest name a seat holds.
-		const playerButtons = findMatchesOnBoards(organizer).getByRole('button');
-		const longestNamedSeat = await findLongestNamedButton(findMatchesOnBoards(organizer));
+		const matchesOnBoards = findMatchesOnBoards(organizer);
+		const longestNamedSeat = await findLongestNamedButton(matchesOnBoards);
 		await longestNamedSeat.click();
 		await shoot('swap-picked');
-		await playerButtons.last().click();
+		// The last seat not picked, so the tap swaps rather than clearing the pick.
+		await matchesOnBoards.getByRole('button', { pressed: false }).last().click();
 		await shoot('swapped');
 		await organizer.getByRole('button', { name: 'Done' }).click();
 	}

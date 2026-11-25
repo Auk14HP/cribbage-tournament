@@ -31,7 +31,7 @@ export const SwapRow = ({
 }) => (
 	<section
 		aria-label={swapping ? 'Swap mode' : undefined}
-		// Found by tests that measure the row itself, which has no name while Swap mode is off.
+		// Names the row, which has no accessible name while Swap mode is off.
 		data-testid="row above the Matches"
 		className={`${rowAboveMatches.frame} ${swapping ? rowAboveMatches.banner : rowAboveMatches.bare}`}
 	>

@@ -21,6 +21,7 @@ export const expectTextFits = async (boxes: Locator) => {
 export const findLongestNamedButton = async (area: Locator) => {
 	const buttons = area.getByRole('button');
 	const names = await buttons.allTextContents();
+	expect(names, 'buttons to choose from').not.toEqual([]);
 	const longestName = names.reduce((longest, name) =>
 		name.length > longest.length ? name : longest,
 	);
