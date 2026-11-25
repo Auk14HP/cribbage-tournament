@@ -28,12 +28,14 @@ const isShownWithin = async (element: Locator, timeout: number) => {
  *                                           with the last Player listed
  *   ... DRAW=1 START=1                      and after Start
  *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
+ *   ... DRAW=1 START=1 RESULTS=12 PEEK=1    and the brackets looked at on the laptop: the bracket on show,
+ *                                           then the Losers Bracket's tab once it has one
  *   ... DRAW=1 START=1 RESULTS=3 FORFEIT=1  and the Forfeit dialog, then after that Forfeit
  *   ... SCHEME=dark                         with the laptop set dark (or light), which the Organizer screen's
  *                                           Same as laptop Theme follows
  *   ... THEME_MENU=1                        and the Theme menu open at registration
  * Writes test-results/screens/{organizer,tv}-{registration,theme-menu,house-rules,draw,swap-picked,swapped,started,results,losers-bracket,champion,
- * forfeit-dialog,forfeit}.png: the organizer at
+ * peek,peek-losers,forfeit-dialog,forfeit}.png: the organizer at
  * 1280×720, the TV at 1920×1080.
  */
 const players = process.env.PLAYERS ?? '26';
@@ -137,6 +139,19 @@ test('screens', async ({ context, page: organizer }) => {
 	if ((await nextWinnerButton.count()) === 0) {
 		await tv.getByRole('heading', { name: /^Tonight’s Champions?$/ }).waitFor();
 		await shoot('champion');
+	}
+	if (process.env.PEEK) {
+		await organizer.getByRole('button', { name: 'Look at the brackets here' }).click();
+		const peek = organizer.getByRole('dialog', { name: 'The brackets' });
+		await shoot('peek');
+		const losersTab = peek.getByRole('tab', { name: 'Losers Bracket' });
+		if ((await losersTab.count()) > 0) {
+			await losersTab.click();
+			await shoot('peek-losers');
+		}
+		await organizer.keyboard.press('Escape');
+		// Closed before going on, so no later shot shows the brackets.
+		await expect(peek).toBeHidden();
 	}
 	if (!process.env.FORFEIT || (await nextWinnerButton.count()) === 0) {
 		return;

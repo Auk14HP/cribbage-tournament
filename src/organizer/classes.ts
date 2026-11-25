@@ -1,5 +1,7 @@
 // The organizer route's shared Tailwind classes: buttons, text boxes and dialogs.
 
+import { tvFrame } from '../display/tvScreenOnShow';
+
 /*
  * Every colour below is a theme colour (`src/style.css`), so each class reads well in Light and in Dark. A button
  * the Organizer can't use right now is faded, and doesn't light up under the pointer.
@@ -62,4 +64,12 @@ export const playerNameBox = {
 	plain: 'border-transparent',
 	swappable: 'border-dashed border-accent text-accent hover:bg-raised',
 	picked: 'border-fill bg-fill text-on-fill',
+};
+
+/*
+ * A TV screen drawn on the laptop: a black 16:9 box in the TV's own colours rather than the theme's, and the
+ * TV screen's frame, so every size on the screen scales with the box.
+ */
+export const tvPicture = {
+	frame: `aspect-video overflow-hidden bg-black font-sans text-white ${tvFrame}`,
 };
