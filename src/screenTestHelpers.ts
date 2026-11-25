@@ -18,11 +18,24 @@ import {
 	registerPlayers,
 } from './tournament/testSetup';
 
-// Each Match in the Waiting for a Board list, as the screen reads.
-export const listWaitingText = () => {
-	const list = within(screen.getByRole('list', { name: 'Waiting for a Board' }));
-	return list.getAllByRole('listitem').map((item) => item.textContent);
+// An element's text as a screen reader reads it: without the parts hidden from it, such as a bracket's badge.
+const readTextAloud = (element: HTMLElement) => {
+	const copy = element.cloneNode(true) as HTMLElement;
+	copy.querySelectorAll('[aria-hidden="true"]').forEach((hidden) => hidden.remove());
+	return copy.textContent;
 };
+
+const listWaitingRows = () => {
+	const list = within(screen.getByRole('list', { name: 'Waiting for a Board' }));
+	return list.getAllByRole('listitem');
+};
+
+// Each Match in the Waiting for a Board list, as a screen reader reads it.
+export const listWaitingText = () => listWaitingRows().map(readTextAloud);
+
+// The letter on each Waiting for a Board row's bracket badge, in turn.
+export const listWaitingBadges = () =>
+	listWaitingRows().map((row) => within(row).getByTestId('bracket badge').textContent);
 
 /*
  * A Tournament with the named Players registered, that many Boards set out, and the Draw made, shuffled by

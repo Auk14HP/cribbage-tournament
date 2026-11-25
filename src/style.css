@@ -19,6 +19,7 @@
 	--color-fill: var(--theme-fill);
 	--color-on-fill: var(--theme-on-fill);
 	--color-accent: var(--theme-accent);
+	--color-board-number: var(--theme-board-number);
 	--color-danger: var(--theme-danger);
 	--color-on-danger: var(--theme-on-danger);
 	--color-scrim: var(--theme-scrim);
@@ -29,10 +30,11 @@
  * What each theme colour is for: the page behind everything (canvas), a box on it (panel), a button or a row
  * standing out from its box (raised), a quiet rule between rows (divider), a control's outline (line), text
  * (ink), secondary text (muted), text for what hasn't happened yet (faint), the yellow of a main button (fill)
- * and the text on it (on-fill), text in the theme's accent, such as a link (accent), a warning or destructive
- * action (danger) and the text on it (on-danger), and the shade behind an open dialog (scrim). Every text
- * colour reads at 4.5:1 or more on the backgrounds it is used on (e2e/theme-contrast.spec.ts). color-scheme
- * tells the browser which way to draw its own controls, such as a number box's arrows.
+ * and the text on it (on-fill), text in the theme's accent, such as a link (accent), a Match tile's large Board
+ * number (board-number), a warning or destructive action (danger) and the text on it (on-danger), and the shade
+ * behind an open dialog (scrim). Every text colour reads at 4.5:1 or more on the backgrounds it is used on
+ * (e2e/theme-contrast.spec.ts). color-scheme tells the browser which way to draw its own controls, such as a
+ * number box's arrows.
  */
 @layer base {
 	/* The page behind the screen, seen at the window's edges, is the theme's too. */
@@ -53,6 +55,7 @@
 		--theme-fill: #ffd23f;
 		--theme-on-fill: #161a22;
 		--theme-accent: #8a6500;
+		--theme-board-number: #161a22;
 		--theme-danger: #b42318;
 		--theme-on-danger: #ffffff;
 		--theme-scrim: rgb(16 24 40 / 0.45);
@@ -71,6 +74,7 @@
 		--theme-fill: #ffd23f;
 		--theme-on-fill: #0d1015;
 		--theme-accent: #ffd23f;
+		--theme-board-number: #ffd23f;
 		--theme-danger: #ff9b8f;
 		--theme-on-danger: #0d1015;
 		--theme-scrim: rgb(0 0 0 / 0.62);
