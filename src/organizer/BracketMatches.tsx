@@ -9,10 +9,16 @@ import {
 	type Player,
 	type Tournament,
 } from '../tournament';
-import { bracketTitles, describeBoardCount, describeRound, joinInSentence } from '../wording';
+import {
+	bracketTitles,
+	describeBoardCount,
+	describeRound,
+	getPlayerName,
+	joinInSentence,
+} from '../wording';
 import { BracketBadge } from './BracketBadge';
 import { button, confirmButton, confirmColours, dialogBox } from './classes';
-import { PlayerName, type SwapPicking } from './PlayerName';
+import { SwapButton, type SwapPicking } from './PlayerName';
 
 /*
  * Each of a bracket's Matches on a Board with the name of its Round, worked out once, and the names of the Rounds
@@ -157,13 +163,16 @@ const ForfeitButton = ({
 };
 
 /*
- * The box each Player takes in a Match tile, whether a button to tap or their name: the same height either
- * way, so Start turns names into buttons without moving a tile.
+ * The box each Player takes in a Match tile, whether a button to record a winner, a seat to tap in Swap mode or
+ * their name: the same height, and the name in the same place, every way, so neither Swap mode nor Start moves a
+ * name or a tile. A name that can't be tapped is boxed too, filled but with no outline, so it reads as the
+ * Player's place in the Match without looking like a button.
  */
 const playerSlot = 'flex min-h-11.5 w-full items-center rounded-lg border text-lg font-semibold';
 const playerSlots = {
 	winnerButton: `${playerSlot} border-line bg-panel px-3.5 text-left hover:bg-divider`,
-	name: `${playerSlot} border-transparent px-0.5`,
+	name: `${playerSlot} border-transparent bg-panel px-3.5`,
+	seat: `${playerSlot} px-3.5 text-left`,
 };
 
 /*
@@ -251,8 +260,8 @@ const MatchTile = ({
 };
 
 /*
- * One Player in a Match tile: a button to tap once the Match can be won, otherwise their name, which is a
- * button of its own in Swap mode.
+ * One Player in a Match tile: a button to tap once the Match can be won, a seat to tap in Swap mode, otherwise
+ * their name. The seat fills the Player's slot, its name where the plain name and the winner's button put it.
  */
 const MatchPlayer = ({
 	player,
@@ -271,8 +280,13 @@ const MatchPlayer = ({
 		<button type="button" className={playerSlots.winnerButton} onClick={onWin}>
 			{player.name}
 		</button>
+	) : swapPicking && 'name' in player ? (
+		<SwapButton
+			player={player}
+			match={match}
+			swapPicking={swapPicking}
+			shape={playerSlots.seat}
+		/>
 	) : (
-		<span className={playerSlots.name}>
-			<PlayerName player={player} match={match} swapPicking={swapPicking} />
-		</span>
+		<span className={playerSlots.name}>{getPlayerName(player)}</span>
 	);
