@@ -20,6 +20,7 @@ import {
 	type TvScreenOnShow,
 } from '../tournament';
 import { BracketPeek } from './BracketPeek';
+import { bracketTitles } from '../wording';
 import { panel, tvPicture } from './classes';
 import { NumberBox, Refusal, type Apply } from './controls';
 
@@ -52,7 +53,7 @@ export const TvDisplay = ({ tournament, apply }: { tournament: Tournament; apply
 	// From the Draw on there is a Winners Bracket to look at.
 	const hasBrackets = getBracketPicture(tournament, 'winners') !== undefined;
 	const lookAtBrackets = () => {
-		setPeekedBracket(onShow?.screen === 'losersBracket' ? 'losers' : 'winners');
+		setPeekedBracket(findBracketOnShow(onShow));
 		bracketPeek.current?.showModal();
 	};
 	return (
@@ -141,6 +142,13 @@ export const TvDisplay = ({ tournament, apply }: { tournament: Tournament; apply
 	);
 };
 
+/*
+ * Returns the bracket to look at first: the Losers Bracket while the TV shows it, the Winners Bracket
+ * otherwise, whether the TV shows that or another screen.
+ */
+const findBracketOnShow = (onShow: TvScreenOnShow | undefined): BracketName =>
+	onShow?.screen === 'losersBracket' ? 'losers' : 'winners';
+
 // The names the Organizer knows the TV's screens before Start by, each the only screen of its phase.
 const phaseScreenNames: Partial<Record<Phase, string>> = {
 	registration: 'Tonight’s Players',
@@ -198,9 +206,13 @@ const TvThumbnail = ({
 			<button
 				type="button"
 				onClick={onLook}
-				aria-label={`Look at the ${onShow?.screen === 'losersBracket' ? 'Losers' : 'Winners'} Bracket full size`}
+				aria-label={`Look at the ${bracketTitles[findBracketOnShow(onShow)]} full size`}
 				className="group absolute inset-0 cursor-zoom-in rounded-lg"
 			>
+				{/*
+				 * The hint darkens the TV picture beneath it and is written in white on it, as the TV's own
+				 * colours are, the same in every theme.
+				 */}
 				<span
 					aria-hidden
 					className="grid h-full place-items-center rounded-lg bg-black/60 font-sans font-bold text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
@@ -216,8 +228,7 @@ const TvThumbnail = ({
 const MagnifierIcon = () => (
 	<svg
 		aria-hidden
-		width="16"
-		height="16"
+		className="size-4"
 		viewBox="0 0 24 24"
 		fill="none"
 		stroke="currentColor"

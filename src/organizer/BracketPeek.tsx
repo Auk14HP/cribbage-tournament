@@ -26,7 +26,7 @@ export const BracketPeek = ({
 	const idPrefix = useId();
 	const panelId = `${idPrefix}-panel`;
 	// Returns the id of a bracket's tab, which names the panel it shows.
-	const tabId = (name: BracketName) => `${idPrefix}-${name}`;
+	const makeTabId = (name: BracketName) => `${idPrefix}-${name}`;
 	const bracketNames = listBracketNames(tournament);
 	// The arrow keys move between the tabs, choosing each as they reach it, as between radio buttons.
 	const moveBetweenTabs = (event: KeyboardEvent, from: BracketName) => {
@@ -35,10 +35,11 @@ export const BracketPeek = ({
 			return;
 		}
 		event.preventDefault();
-		const at = bracketNames.indexOf(from);
-		const next = bracketNames[(at + step + bracketNames.length) % bracketNames.length];
-		onChooseBracket(next);
-		tabs.current.get(next)?.focus();
+		const fromIndex = bracketNames.indexOf(from);
+		const nextIndex = (fromIndex + step + bracketNames.length) % bracketNames.length;
+		const nextBracketName = bracketNames[nextIndex];
+		onChooseBracket(nextBracketName);
+		tabs.current.get(nextBracketName)?.focus();
 	};
 	return (
 		<dialog ref={ref} aria-label="The brackets" className={peekBox}>
@@ -53,7 +54,7 @@ export const BracketPeek = ({
 							key={name}
 							bracketName={name}
 							isChosen={name === bracketName}
-							tabId={tabId(name)}
+							tabId={makeTabId(name)}
 							panelId={panelId}
 							onMount={(tab) => tabs.current.set(name, tab)}
 							onChoose={onChooseBracket}
@@ -69,8 +70,7 @@ export const BracketPeek = ({
 				>
 					<svg
 						aria-hidden
-						width="18"
-						height="18"
+						className="size-[1.125rem]"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
@@ -85,7 +85,7 @@ export const BracketPeek = ({
 				<div
 					role="tabpanel"
 					id={panelId}
-					aria-labelledby={tabId(bracketName)}
+					aria-labelledby={makeTabId(bracketName)}
 					className={`mx-auto mt-4 w-full ${peekFrameWidth} ${tvPicture.frame}`}
 				>
 					<div className={`h-full ${tvSafeArea.page}`}>

@@ -42,7 +42,9 @@ test('Escape and the close button close the brackets, focus goes back to what op
 	const thumbnailButton = organizer.getByRole('button', {
 		name: 'Look at the Losers Bracket full size',
 	});
-	const link = organizer.getByRole('button', { name: 'Look at the brackets here' });
+	const lookAtBracketsButton = organizer.getByRole('button', {
+		name: 'Look at the brackets here',
+	});
 
 	await thumbnailButton.click();
 	await expect(peek.getByRole('tab', { name: 'Losers Bracket' })).toHaveAttribute(
@@ -54,7 +56,7 @@ test('Escape and the close button close the brackets, focus goes back to what op
 	await expect(thumbnailButton).toBeFocused();
 	await expectTvStillHoldingLosersBracket(organizer, tv);
 
-	await link.click();
+	await lookAtBracketsButton.click();
 	await peek.getByRole('tab', { name: 'Losers Bracket' }).focus();
 	await organizer.keyboard.press('ArrowLeft');
 	const winnersTab = peek.getByRole('tab', { name: 'Winners Bracket' });
@@ -63,7 +65,7 @@ test('Escape and the close button close the brackets, focus goes back to what op
 	await expect(peek.getByRole('heading', { level: 1 })).toHaveText('Winners Bracket');
 	await peek.getByRole('button', { name: 'Close the brackets' }).click();
 	await expect(peek).toBeHidden();
-	await expect(link).toBeFocused();
+	await expect(lookAtBracketsButton).toBeFocused();
 	await expectTvStillHoldingLosersBracket(organizer, tv);
 });
 

@@ -1286,18 +1286,20 @@ describe('the TV Display panel', () => {
 });
 
 describe('looking at the brackets on the laptop', () => {
-	it('opens on the bracket the TV shows, from the link', async () => {
-		const user = showOrganizerCyclingScreens();
+	it('opens on the bracket the TV shows, from the link, leaving the TV on Auto', async () => {
+		const store = showOrganizerWithStore(playIntoLosersBracket());
+		const user = userEvent.setup();
 
 		await clickButton(user, 'Look at the brackets here');
 
 		expect(readSelectedBracketTab()).toBe('Winners Bracket');
 		expect(readPeekedBracketHeading()).toBe('Winners Bracket');
+		expect(store.load()?.tvChoice).toBe('auto');
+		expect(screen.getByRole('radio', { name: 'Auto' })).toBeChecked();
 	});
 
 	it('opens on the Losers Bracket from the thumbnail while the TV holds it, and switches with the tabs', async () => {
-		showOrganizerWithStore(heldOnLosersBracket());
-		const user = userEvent.setup();
+		const { user } = showOrganizerHoldingLosersBracket();
 
 		await clickButton(user, 'Look at the Losers Bracket full size');
 		expect(readSelectedBracketTab()).toBe('Losers Bracket');
@@ -1330,8 +1332,7 @@ describe('looking at the brackets on the laptop', () => {
 	});
 
 	it('closes with its close button, leaving the TV’s choice as it was', async () => {
-		const store = showOrganizerWithStore(heldOnLosersBracket());
-		const user = userEvent.setup();
+		const { store, user } = showOrganizerHoldingLosersBracket();
 
 		await clickButton(user, 'Look at the brackets here');
 		await chooseBracketTab(user, 'Winners Bracket');
@@ -1399,10 +1400,15 @@ const listThumbnailPlayers = () => {
 	return playerList.getAllByRole('listitem', { hidden: true }).map((item) => item.textContent);
 };
 
-// The Tournament with its Losers Bracket drawn, and the TV held on it.
-const heldOnLosersBracket = () => {
+/*
+ * The organizer route once the Losers Bracket is drawn, with the TV held on it, and the store it saves to, so a
+ * test can check the TV's choice is still saved.
+ */
+const showOrganizerHoldingLosersBracket = () => {
 	const intoLosersBracket = playIntoLosersBracket();
-	return expectOk(chooseTvScreen(intoLosersBracket, 'losersBracket'));
+	const holdingLosersBracket = expectOk(chooseTvScreen(intoLosersBracket, 'losersBracket'));
+	const store = showOrganizerWithStore(holdingLosersBracket);
+	return { store, user: userEvent.setup() };
 };
 
 // The dialog showing the TV's brackets on the laptop.
