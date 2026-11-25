@@ -47,7 +47,8 @@ const bracketOrder: readonly BracketName[] = ['winners', 'losers'];
  * Once Started, tapping a Player's name records them as the winner, and a Forfeit records their opponent's. A
  * Player losing their first Match is asked first whether they are staying for the Losers Bracket. Matches
  * waiting for a Board are listed beneath. Results that can still be undone are listed, latest first, to correct a mistake.
- * Once the Tournament is finished, each bracket's champion has a card, and the Results move beneath them.
+ * Each bracket's champion has a card: below the Matches while the other bracket is still played, then at the top
+ * once the Tournament is finished, with the Results moved beneath them.
  */
 export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const matches = getMatchesOnBoards(tournament);
@@ -117,12 +118,16 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 	return (
 		<div className={windowFilling.row}>
 			<div className={windowFilling.mainColumn}>
-				<ChampionCards tournament={tournament} />
 				{/*
-				 * Once finished, the Results take the Matches' place under the champions, where the Organizer is
-				 * looking, so the Final can be undone without scrolling the side column.
+				 * Once finished, the champions head the screen, and the Results take the Matches' place under them,
+				 * where the Organizer is looking, so the Final can be undone without scrolling the side column.
 				 */}
-				{finished && <Results tournament={tournament} apply={apply} />}
+				{finished && (
+					<>
+						<ChampionCards tournament={tournament} />
+						<Results tournament={tournament} apply={apply} />
+					</>
+				)}
 				{/*
 				 * Gone once the Tournament is finished, when no Match is left to list. Not a panel itself: each
 				 * bracket's Matches are a panel of their own.
@@ -173,6 +178,11 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 								</section>
 							)}
 							<WaitingForBoard tournament={tournament} swapPicking={swapPicking} />
+							{/*
+							 * A bracket that finishes while the other is still played has its champion's card below the
+							 * Matches left, so it takes no room from them.
+							 */}
+							<ChampionCards tournament={tournament} />
 						</div>
 						{playing && <Refusal reason={refusal} />}
 						{/* Held open on Tonight’s Draw, so a refusal in Swap mode moves nothing above it. */}

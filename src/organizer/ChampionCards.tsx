@@ -9,12 +9,20 @@ import { BracketBadge } from './BracketBadge';
 
 /*
  * Each card's title and colours: the Winners Bracket's champion is the night's champion, so their card is
- * edged in the theme's yellow, as its W badge is filled, and their name is in the theme's accent. The Losers
- * Bracket's card keeps a panel's own edge and text.
+ * edged in the theme's yellow, as its W badge is filled, on the champion's own ground, with their name in the
+ * champion's colour. The Losers Bracket's card keeps a panel's own colours.
  */
-const cardLooks: Record<BracketName, { title: string; edge: string; nameColour: string }> = {
-	winners: { title: 'Champion', edge: 'border-fill', nameColour: 'text-accent' },
-	losers: { title: 'Losers Bracket champion', edge: 'border-divider', nameColour: 'text-ink' },
+const cardLooks: Record<BracketName, { title: string; colours: string; nameColour: string }> = {
+	winners: {
+		title: 'Champion',
+		colours: 'border-fill bg-champion-ground',
+		nameColour: 'text-champion',
+	},
+	losers: {
+		title: 'Losers Bracket champion',
+		colours: 'border-divider bg-panel',
+		nameColour: 'text-ink',
+	},
 };
 
 /*
@@ -38,13 +46,13 @@ export const ChampionCards = ({ tournament }: { tournament: Tournament }) => {
 
 // One bracket's champion card, named for its bracket's champion: "Winners Bracket champion".
 const ChampionCard = ({ champion }: { champion: ChampionOfBracket }) => {
-	const { title, edge, nameColour } = cardLooks[champion.bracketName];
+	const { title, colours, nameColour } = cardLooks[champion.bracketName];
 	const bracketTitle = bracketTitles[champion.bracketName];
-	// A panel's shape and ground, with more room inside it for the large name.
+	// A panel's shape, with more room inside it for the large name.
 	return (
 		<section
 			aria-label={`${bracketTitle} champion`}
-			className={`bg-panel flex flex-col gap-2 rounded-xl border p-6 ${edge}`}
+			className={`flex flex-col gap-2 rounded-xl border p-6 ${colours}`}
 		>
 			<p className="text-muted flex items-center gap-2.5 text-sm font-bold">
 				<BracketBadge bracketName={champion.bracketName} size="large" />

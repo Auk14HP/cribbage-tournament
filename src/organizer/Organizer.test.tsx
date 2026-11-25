@@ -15,6 +15,7 @@ import {
 import { createLocalStorageStore, type Store } from '../storage';
 import {
 	chooseTvScreen,
+	getChampions,
 	getMatchesOnBoards,
 	makeDraw,
 	recordForfeit,
@@ -23,6 +24,7 @@ import {
 	start,
 	tournamentVersion,
 	type BracketName,
+	type MatchOnBoard,
 	type Player,
 	type Tournament,
 } from '../tournament';
@@ -849,6 +851,20 @@ describe('the organizer route', () => {
 		]);
 	});
 
+	it('shows the Losers Bracket champion’s card below the Matches while the Winners Bracket is still played', () => {
+		const intoLosersBracket = playIntoLosersBracket();
+		showOrganizerWithStore(playLosersBracketToItsChampion(intoLosersBracket));
+
+		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Now playing');
+		expect(listChampionCards()).toEqual([
+			expect.stringMatching(/^LLosers Bracket champion.+ in the Final$/),
+		]);
+		const matches = screen.getByRole('region', { name: 'Matches' });
+		const losersCard = screen.getByRole('region', { name: 'Losers Bracket champion' });
+		expect(listBracketHeadings()).toEqual(['Winners Bracket']);
+		expect(isPlacedAfter(matches, losersCard)).toBe(true);
+	});
+
 	it('records a Forfeit once the Organizer says who is forfeiting, and their opponent wins', async () => {
 		const user = showOrganizer();
 		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
@@ -1501,24 +1517,51 @@ const readPeekedBracketHeading = () => {
 	return bracketPanel.getByRole('heading', { level: 1 }).textContent;
 };
 
+// How playMatches plays: when it stops, which Matches it plays and how it records each.
+interface PlayingOptions {
+	// Whether to stop: by default once the Tournament is finished.
+	readonly isDone?: (tournament: Tournament) => boolean;
+	// Whether a Match on a Board is one to play: by default any with both its Players known.
+	readonly isToPlay?: (matchOnBoard: MatchOnBoard) => boolean;
+	// Records a Match's result: by default its first-named Player wins and the loser leaves.
+	readonly recordResult?: (tournament: Tournament, matchOnBoard: MatchOnBoard) => Tournament;
+}
+
+// Plays the Matches on a Board one at a time, as the options say, until it is told to stop.
+const playMatches = (
+	playing: Tournament,
+	{
+		isDone = (tournament) => tournament.phase === 'finished',
+		isToPlay = hasBothPlayersKnown,
+		recordResult = (tournament, matchOnBoard) =>
+			recordWinOn(tournament, matchOnBoard, 'leaving'),
+	}: PlayingOptions = {},
+): Tournament => {
+	let tournament = playing;
+	while (!isDone(tournament)) {
+		const nextMatch = getMatchesOnBoards(tournament).find(isToPlay)!;
+		tournament = recordResult(tournament, nextMatch);
+	}
+	return tournament;
+};
+
 /*
  * Plays every Match left, as playToTheEnd does, except that each Losers Bracket Match is won by Forfeit: its
  * second-named Player leaves. Returns the finished Tournament and each bracket's Final, its winner's name first.
  */
 const playToTheEndForfeitingLosersBracket = (playing: Tournament) => {
-	let tournament = playing;
 	const finals: Partial<Record<BracketName, [string, string]>> = {};
-	while (tournament.phase !== 'finished') {
-		const nextMatch = getMatchesOnBoards(tournament).find(hasBothPlayersKnown)!;
-		const [winner, loser] = nextMatch.players as [Player, Player];
-		const bracketName = nextMatch.match.bracket;
-		tournament =
-			bracketName === 'losers'
-				? expectOk(recordForfeit(tournament, nextMatch.match, loser.id))
-				: recordWinOn(tournament, nextMatch, 'leaving');
-		// Each bracket's last Match recorded is its Final.
-		finals[bracketName] = [winner.name, loser.name];
-	}
+	const tournament = playMatches(playing, {
+		recordResult: (before, nextMatch) => {
+			const [winner, loser] = nextMatch.players as [Player, Player];
+			const bracketName = nextMatch.match.bracket;
+			// Each bracket's last Match recorded is its Final.
+			finals[bracketName] = [winner.name, loser.name];
+			return bracketName === 'losers'
+				? expectOk(recordForfeit(before, nextMatch.match, loser.id))
+				: recordWinOn(before, nextMatch, 'leaving');
+		},
+	});
 	return { tournament, finals: finals as Record<BracketName, [string, string]> };
 };
 
@@ -1526,11 +1569,15 @@ const playToTheEndForfeitingLosersBracket = (playing: Tournament) => {
  * Plays every Match left, the first-named Player winning each and every loser leaving, until both brackets
  * have their champion: the Tournament finished.
  */
-const playToTheEnd = (playing: Tournament): Tournament => {
-	let tournament = playing;
-	while (tournament.phase !== 'finished') {
-		const nextMatch = getMatchesOnBoards(tournament).find(hasBothPlayersKnown)!;
-		tournament = recordWinOn(tournament, nextMatch, 'leaving');
-	}
-	return tournament;
-};
+const playToTheEnd = (playing: Tournament): Tournament => playMatches(playing);
+
+// Plays only the Losers Bracket's Matches, as playToTheEnd does, until it has its champion.
+const playLosersBracketToItsChampion = (playing: Tournament): Tournament =>
+	playMatches(playing, {
+		isDone: (tournament) => getChampions(tournament).length > 0,
+		isToPlay: (m) => m.match.bracket === 'losers' && hasBothPlayersKnown(m),
+	});
+
+// Whether one element comes after another in the page, and so below it in a column.
+const isPlacedAfter = (earlier: HTMLElement, later: HTMLElement) =>
+	(earlier.compareDocumentPosition(later) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
