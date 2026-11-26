@@ -14,7 +14,7 @@ import {
 	type Tournament,
 } from '../tournament';
 import { button, panel, primaryButton, windowFilling } from './classes';
-import { ConfirmDialog, Refusal, StackedLabel, type Apply } from './controls';
+import { ConfirmDialog, Refusal, type Apply } from './controls';
 import { TvDisplay } from './TvDisplay';
 
 /*
@@ -111,8 +111,8 @@ export const HouseRules = ({ tournament, apply }: { tournament: Tournament; appl
 					</ol>
 					{/*
 					 * Showing the next House Rule is the main button, filling the row between Back and Show all, so its
-					 * label can change without moving them. Its two labels share one grid cell, so it keeps the height of
-					 * the taller even where a label wraps in a narrow window.
+					 * label can change without moving them. Its width comes from the row, not its label, so unlike Swap
+					 * Players it needs no stacked labels (`StackedLabel`) to keep its box.
 					 */}
 					{/* Names the row of buttons, which has no name of its own on screen. */}
 					<div data-testid="House Rules buttons" className="flex gap-2.5">
@@ -126,18 +126,13 @@ export const HouseRules = ({ tournament, apply }: { tournament: Tournament; appl
 						</button>
 						<button
 							type="button"
-							className={`${primaryButton} grid flex-1`}
+							className={`${primaryButton} flex-1`}
 							disabled={isEveryRuleShown}
 							onClick={() => applyHere(showNextHouseRule(tournament))}
 						>
-							<StackedLabel
-								label={`Show rule ${Math.min(shownRuleCount + 1, houseRules.length)} on the TV`}
-								isShown={!isEveryRuleShown}
-							/>
-							<StackedLabel
-								label="Every rule is on the TV"
-								isShown={isEveryRuleShown}
-							/>
+							{isEveryRuleShown
+								? 'Every rule is on the TV'
+								: `Show rule ${shownRuleCount + 1} on the TV`}
 						</button>
 						<button
 							type="button"

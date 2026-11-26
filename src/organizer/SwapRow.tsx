@@ -1,6 +1,18 @@
 import type { Player } from '../tournament';
 import { rowAboveMatches, swapToggle } from './classes';
-import { StackedLabel } from './controls';
+
+/*
+ * One of a button's labels, put in the first cell of the button's grid, where its other labels sit too. A label
+ * not shown is hidden but still takes up its space, and isn't read out.
+ */
+const StackedLabel = ({ label, isShown }: { label: string; isShown: boolean }) => (
+	<span
+		aria-hidden={isShown ? undefined : true}
+		className={`col-start-1 row-start-1 ${isShown ? '' : 'invisible'}`}
+	>
+		{label}
+	</span>
+);
 
 /*
  * The row above the Matches on Tonight’s Draw: Swap Players at its right end, which turns on Swap mode and
