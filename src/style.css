@@ -36,11 +36,12 @@
  * (ink), secondary text (muted), text for what hasn't happened yet (faint), the yellow of a main button (fill)
  * and the text on it (on-fill), text in the theme's accent, such as a link (accent), the large number on a tile
  * or card, a Match tile's Board or a House Rule's place (card-number), the Winners Bracket champion's name on the
- * organizer screen (champion) and the ground of their card (champion-ground), the yellow-tinted ground of Swap mode's banner and the Player picked in it
- * (highlight), the green tag on a House Rule the TV shows (on-tv), a warning or destructive action (danger) and
- * the text on it (on-danger), and the shade behind an open dialog (scrim). Every text colour reads at 4.5:1 or
- * more on the backgrounds it is used on (e2e/theme-contrast.spec.ts). color-scheme tells the browser which way to
- * draw its own controls, such as a number box's arrows.
+ * organizer screen (champion) and the ground of their card (champion-ground), the yellow-tinted ground of Swap
+ * mode's banner and the Player picked in it (highlight), the green tag on a House Rule the TV shows (on-tv), a
+ * warning or destructive action (danger) and the text on it (on-danger), and the shade behind an open dialog
+ * (scrim). Every text colour reads at 4.5:1 or more on the backgrounds it is used on
+ * (e2e/theme-contrast.spec.ts). color-scheme tells the browser which way to draw its own controls, such as a
+ * number box's arrows.
  */
 @layer base {
 	/* The page behind the screen, seen at the window's edges, is the theme's too. */
