@@ -220,7 +220,7 @@ const MatchTile = ({
 				<span className="text-muted text-xs font-bold tracking-widest uppercase">
 					Board
 				</span>{' '}
-				<span className="text-board-number text-4xl leading-none font-extrabold">
+				<span className="text-card-number text-4xl leading-none font-extrabold">
 					{board}
 				</span>
 				{roundName && (

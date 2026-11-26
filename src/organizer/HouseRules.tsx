@@ -19,13 +19,21 @@ import { TvDisplay } from './TvDisplay';
 
 /*
  * A House Rule's card, by where it stands: on the TV already, the next to show, or still to come. Those on the TV
- * and the next stand out from the panel, the next outlined in the theme's fill; those to come are faint. Every
- * card keeps the same 1px border, so a card changing look moves nothing.
+ * and the next stand out from the panel, the next outlined in the theme's fill with its tag on a pill of it; those
+ * to come are faint. Every card keeps the same 1px border, so a card changing look moves nothing.
  */
 const ruleCard = {
 	shape: 'grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-4 rounded-xl border p-4',
-	onTv: { card: 'border-divider bg-raised text-ink', number: 'text-accent', tag: 'text-on-tv' },
-	next: { card: 'border-fill bg-raised text-ink', number: 'text-ink', tag: 'text-accent' },
+	onTv: {
+		card: 'border-divider bg-raised text-ink',
+		number: 'text-card-number',
+		tag: 'text-on-tv',
+	},
+	next: {
+		card: 'border-fill bg-raised text-ink',
+		number: 'text-ink',
+		tag: 'rounded bg-fill px-2 py-0.5 text-on-fill',
+	},
 	toCome: { card: 'border-divider text-faint', number: 'text-faint', tag: '' },
 };
 
@@ -66,8 +74,8 @@ const HouseRuleCard = ({
 				{index + 1}
 			</span>
 			<span className="text-xl leading-snug font-semibold">{rule}</span>
-			<span className={`${ruleTag} ${look.tag}`}>
-				<span className="col-start-1 row-start-1">{tag}</span>
+			<span className={ruleTag}>
+				<span className={`col-start-1 row-start-1 ${look.tag}`}>{tag}</span>
 			</span>
 		</li>
 	);
