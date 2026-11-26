@@ -6,6 +6,7 @@ import { Display } from './Display';
 import { funFacts } from './funFacts';
 import type { Result } from '../result';
 import { createLocalStorageStore, type Store } from '../storage';
+import { tvHeartbeatVersion, type TvHeartbeat } from '../tvHeartbeat';
 import {
 	makeDraw,
 	getMatchesOnBoards,
@@ -47,6 +48,7 @@ import {
 } from '../tournament/testSetup';
 
 const key = 'display-test';
+const heartbeatKey = 'display-heartbeat-test';
 
 const tournamentTitle = 'Farmstrong Brewery Cribbage Tournament';
 
@@ -87,6 +89,26 @@ describe('the display route', () => {
 		expect(readHeading()).toBe(tournamentTitle);
 		expect(screen.getByText('Monday, November 9, 2026')).toBeInTheDocument();
 		expect(screen.getByText('1 Player registered')).toBeInTheDocument();
+	});
+});
+
+describe('the TV’s heartbeat', () => {
+	it('saves the time every few seconds while the TV is open, under its own key, and stops once it closes', () => {
+		vi.useFakeTimers({ now: monday });
+		const tournament = registerPlayers('Dave K.', 'Big Dave');
+		showDisplay(tournament);
+		const savedTournament = localStorage.getItem(key);
+		expect(readTvLastSeen()).toBe(monday.getTime());
+
+		waitSeconds(60);
+		const twoSecondsAgo = Date.now() - 2000;
+		expect(readTvLastSeen()).toBeGreaterThanOrEqual(twoSecondsAgo);
+		expect(localStorage.getItem(key)).toBe(savedTournament);
+
+		cleanup();
+		const closedAt = Date.now();
+		waitSeconds(60);
+		expect(readTvLastSeen()).toBeLessThanOrEqual(closedAt);
 	});
 });
 
@@ -663,9 +685,14 @@ const showDisplay = (saved?: Tournament): Store<Tournament> => {
 		saveTournament(store, saved);
 	}
 	const random = createSeededRandom(1);
-	render(<Display store={store} random={random} />);
+	const heartbeatStore = createLocalStorageStore<TvHeartbeat>(heartbeatKey, tvHeartbeatVersion);
+	render(<Display store={store} heartbeatStore={heartbeatStore} random={random} />);
 	return store;
 };
+
+// The time the TV last saved its heartbeat, as another window would read it.
+const readTvLastSeen = () =>
+	createLocalStorageStore<TvHeartbeat>(heartbeatKey, tvHeartbeatVersion).load();
 
 // The Fun Fact line's text, "Fun fact:" included.
 const readFunFact = () => screen.getByText(/^Fun fact: /).textContent;

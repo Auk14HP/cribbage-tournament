@@ -8,6 +8,7 @@ import {
 	listWaitingBadges,
 	listWaitingText,
 	playIntoLosersBracket,
+	readTextAloud,
 	saveTournament,
 	setUpDraw,
 	waitSeconds,
@@ -37,9 +38,11 @@ import {
 	registerPlayers,
 } from '../tournament/testSetup';
 import { themeChoiceVersion, type ThemeChoice } from './themes';
+import { tvHeartbeatVersion, type TvHeartbeat } from '../tvHeartbeat';
 
 const key = 'organizer-test';
 const themeKey = 'organizer-theme-test';
+const heartbeatKey = 'organizer-heartbeat-test';
 
 /*
  * jsdom has no media queries, so this stands in for the laptop's light or dark setting, which a test can
@@ -1476,6 +1479,47 @@ describe('the TV Display panel', () => {
 	});
 });
 
+describe('whether the TV is open', () => {
+	it('shows TV open while the TV’s heartbeat is recent, and TV closed a few seconds after it stops', () => {
+		vi.useFakeTimers();
+		showOrganizerWithStore();
+		expect(readTvBadge()).toBe('TV closed');
+
+		saveHeartbeatFromTv();
+		expect(readTvBadge()).toBe('TV open');
+		waitSeconds(4);
+		expect(readTvBadge()).toBe('TV open');
+		waitSeconds(1);
+		expect(readTvBadge()).toBe('TV closed');
+
+		saveHeartbeatFromTv();
+		expect(readTvBadge()).toBe('TV open');
+	});
+
+	it('shows TV open as soon as the screen opens, when the TV is already running', () => {
+		vi.useFakeTimers();
+		saveHeartbeatFromTv();
+
+		showOrganizerWithStore();
+
+		expect(readTvBadge()).toBe('TV open');
+	});
+
+	it('leaves the TV open when the Organizer starts a new Tournament', async () => {
+		const user = userEvent.setup();
+		showOrganizerWithStore(registerPlayers('Dave K.', 'Big Dave'));
+		saveHeartbeatFromTv();
+		const savedHeartbeat = localStorage.getItem(heartbeatKey);
+
+		await clickButton(user, 'Start a new Tournament');
+		await answerDialog(user, 'Start a new Tournament');
+
+		expect(listPlayerNames()).toEqual([]);
+		expect(localStorage.getItem(heartbeatKey)).toBe(savedHeartbeat);
+		expect(readTvBadge()).toBe('TV open');
+	});
+});
+
 describe('looking at the brackets on the laptop', () => {
 	it('opens on the bracket the TV shows, from the link, leaving the TV on Auto', async () => {
 		const store = showOrganizerWithStore(playIntoLosersBracket());
@@ -1550,10 +1594,26 @@ const showOrganizerWithStore = (saved?: Tournament): Store<Tournament> => {
 		<Organizer
 			store={store}
 			themeStore={createLocalStorageStore<ThemeChoice>(themeKey, themeChoiceVersion)}
+			heartbeatStore={createLocalStorageStore<TvHeartbeat>(heartbeatKey, tvHeartbeatVersion)}
 		/>,
 	);
 	return store;
 };
+
+/*
+ * Saves the TV's heartbeat as the TV's own window does: through a store of its own, which the browser then
+ * tells the Organizer's window about with a storage event.
+ */
+const saveHeartbeatFromTv = () => {
+	const tvHeartbeatStore = createLocalStorageStore<TvHeartbeat>(heartbeatKey, tvHeartbeatVersion);
+	act(() => {
+		tvHeartbeatStore.save(Date.now());
+		window.dispatchEvent(new StorageEvent('storage', { key: heartbeatKey }));
+	});
+};
+
+// What the badge beside the heading says about the TV, as a screen reader reads it.
+const readTvBadge = () => readTextAloud(screen.getByRole('status', { name: 'TV' }));
 
 // The organizer route once the Losers Bracket is drawn, when the TV has two screens to cycle.
 const showOrganizerCyclingScreens = () => {

@@ -6,6 +6,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { makeDisplayPath } from '../routes';
 import type { Store } from '../storage';
 import { createTournament, restartTvCycleIfDue, type Phase, type Tournament } from '../tournament';
+import { useIsTvOpen, type TvHeartbeat } from '../tvHeartbeat';
 import { useTournament } from '../useTournament';
 import { mainHeaderButton, quietButtons } from './classes';
 import { ConfirmDialog, type Apply } from './controls';
@@ -14,6 +15,7 @@ import { HouseRules } from './HouseRules';
 import { Registration } from './Registration';
 import { StepBar } from './StepBar';
 import { ThemeMenu } from './ThemeMenu';
+import { TvBadge } from './TvBadge';
 import { useTheme, type ThemeChoice } from './themes';
 
 const headings: Record<Phase, string> = {
@@ -27,11 +29,14 @@ const headings: Record<Phase, string> = {
 export const Organizer = ({
 	store,
 	themeStore,
+	heartbeatStore,
 }: {
 	store: Store<Tournament>;
 	themeStore: Store<ThemeChoice>;
+	heartbeatStore: Store<TvHeartbeat>;
 }) => {
 	const tournament = useTournament(store);
+	const isTvOpen = useIsTvOpen(heartbeatStore);
 	const { choice: themeChoice, theme } = useTheme(themeStore);
 
 	/*
@@ -74,7 +79,10 @@ export const Organizer = ({
 		 */
 		<main className="border-fill bg-canvas font-organizer text-ink flex h-dvh flex-col border-t-4 px-8 py-6">
 			<header className="flex items-center justify-between gap-4">
-				<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
+				<div className="flex items-center gap-3.5">
+					<TvBadge isTvOpen={isTvOpen} />
+					<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
+				</div>
 				{/*
 				 * Stretched to one height, so the palette button, holding an icon rather than a line of text, is as
 				 * tall as the buttons beside it.
@@ -94,12 +102,23 @@ export const Organizer = ({
 					>
 						Start a new Tournament
 					</button>
+					{/*
+					 * While the TV is closed, opening it is what the Organizer needs to do next, so it becomes the main
+					 * button. Its label keeps the main button's bolder width in either look, so the buttons beside it
+					 * stay put as the TV opens or closes.
+					 */}
 					<a
 						href={makeDisplayPath(import.meta.env.BASE_URL)}
 						target="cribbage-display"
-						className={quietButtons.plain}
+						className={`grid text-center ${isTvOpen ? quietButtons.plain : mainHeaderButton}`}
 					>
-						Open TV display
+						<span className="col-start-1 row-start-1">Open TV display</span>
+						<span
+							aria-hidden
+							className="invisible col-start-1 row-start-1 font-semibold"
+						>
+							Open TV display
+						</span>
 					</a>
 					<ThemeMenu choice={themeChoice} onChoose={themeStore.save} />
 				</nav>

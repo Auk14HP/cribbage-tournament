@@ -5,6 +5,7 @@
  */
 import type { Store } from '../storage';
 import type { Random, Tournament } from '../tournament';
+import { useTvHeartbeat, type TvHeartbeat } from '../tvHeartbeat';
 import { useTournament } from '../useTournament';
 import { tvSafeArea } from './tvSafeArea';
 import { TvScreenView } from './TvScreenView';
@@ -20,9 +21,19 @@ import {
 /*
  * Fun Facts are chosen with the random source given, so tests can repeat them. The window is the TV screen's
  * frame, so the screen fills it. The countdown ring shows over the screen's time on Auto; a Held screen, or a
- * phase's only screen, has none.
+ * phase's only screen, has none. While open, it saves the TV's heartbeat, so the Organizer screen knows the TV
+ * is running.
  */
-export const Display = ({ store, random }: { store: Store<Tournament>; random: Random }) => {
+export const Display = ({
+	store,
+	heartbeatStore,
+	random,
+}: {
+	store: Store<Tournament>;
+	heartbeatStore: Store<TvHeartbeat>;
+	random: Random;
+}) => {
+	useTvHeartbeat(heartbeatStore);
 	const tournament = useTournament(store);
 	const onShow = useTvScreenOnShow(tournament);
 	const countdown = describeCountdown(tournament, onShow);

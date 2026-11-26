@@ -96,6 +96,10 @@ _Avoid_: System, Auto (the TV's cycling choice), Match laptop (a **Match** is a 
 The panel on the **Organizer screen** that shows what the TV is showing: a small picture of the **TV screen** on show, and how long until it changes. Once the TV has screens to cycle, it holds the choice of **Auto** or a **Held screen**, and the seconds per TV screen. From the Draw on, pressing the picture, or "Look at the brackets here" beneath it, opens the **Bracket peek**.
 _Avoid_: TV panel, preview, monitor
 
+**TV open** / **TV closed**:
+The badge beside the **Organizer screen**'s heading saying whether the TV window is running. While it reads TV closed, Open TV display is the screen's main button. The TV's window tells the laptop it is open every few seconds; this is the laptop's, not the **Tournament**'s, so starting a new **Tournament** leaves it as it is.
+_Avoid_: TV connected, TV online, live
+
 **Bracket peek**:
 A dialog on the **Organizer screen** showing the brackets full size, drawn as the TV draws them and in the TV's colours, with a tab for the **Winners Bracket** and, once it is drawn, one for the **Losers Bracket**. It opens on the bracket the TV shows, or the Winners Bracket while the TV shows another screen. Looking never changes what the TV shows.
 _Avoid_: bracket preview, bracket view
