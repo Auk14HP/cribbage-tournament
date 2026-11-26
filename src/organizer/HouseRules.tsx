@@ -14,7 +14,7 @@ import {
 	type Tournament,
 } from '../tournament';
 import { button, panel, primaryButton, windowFilling } from './classes';
-import { ConfirmDialog, Refusal, type Apply } from './controls';
+import { ConfirmDialog, Refusal, StackedLabel, type Apply } from './controls';
 import { TvDisplay } from './TvDisplay';
 
 /*
@@ -31,7 +31,9 @@ const ruleCard = {
 
 /*
  * The tag at a card's right end. Its box is always as wide as ON THE TV, the longer tag, held open by an invisible
- * copy drawn before it, so the rule's text keeps its width, and its line breaks, whichever tag shows or none.
+ * copy drawn before it, so the rule's text keeps its width, and its line breaks, whichever tag shows or none. The
+ * copy is drawn by CSS, so it is neither read out nor part of the card's text. Tailwind can't build a class from a
+ * variable, so the copy repeats the tag in `findRuleStanding`: change both together.
  */
 const ruleTag =
 	"grid justify-items-end text-xs font-extrabold tracking-wider before:invisible before:col-start-1 before:row-start-1 before:content-['ON_THE_TV']";
@@ -109,9 +111,11 @@ export const HouseRules = ({ tournament, apply }: { tournament: Tournament; appl
 					</ol>
 					{/*
 					 * Showing the next House Rule is the main button, filling the row between Back and Show all, so its
-					 * label can change without moving them.
+					 * label can change without moving them. Its two labels share one grid cell, so it keeps the height of
+					 * the taller even where a label wraps in a narrow window.
 					 */}
-					<div className="flex gap-2.5">
+					{/* Names the row of buttons, which has no name of its own on screen. */}
+					<div data-testid="House Rules buttons" className="flex gap-2.5">
 						<button
 							type="button"
 							className={button}
@@ -122,13 +126,18 @@ export const HouseRules = ({ tournament, apply }: { tournament: Tournament; appl
 						</button>
 						<button
 							type="button"
-							className={`${primaryButton} flex-1`}
+							className={`${primaryButton} grid flex-1`}
 							disabled={isEveryRuleShown}
 							onClick={() => applyHere(showNextHouseRule(tournament))}
 						>
-							{isEveryRuleShown
-								? 'Every rule is on the TV'
-								: `Show rule ${shownRuleCount + 1} on the TV`}
+							<StackedLabel
+								label={`Show rule ${Math.min(shownRuleCount + 1, houseRules.length)} on the TV`}
+								isShown={!isEveryRuleShown}
+							/>
+							<StackedLabel
+								label="Every rule is on the TV"
+								isShown={isEveryRuleShown}
+							/>
 						</button>
 						<button
 							type="button"
@@ -166,7 +175,7 @@ export const HouseRules = ({ tournament, apply }: { tournament: Tournament; appl
 					<Refusal reason={refusal} />
 					<button
 						type="button"
-						className="text-accent mt-2 self-start font-semibold underline"
+						className="text-accent self-start font-semibold underline"
 						onClick={() => applyHere(goBackToRegistration(tournament))}
 					>
 						<span aria-hidden="true">← </span>Back to registration for a late arrival

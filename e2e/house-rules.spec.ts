@@ -1,5 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import { expectNothingMoves } from './screenStill';
+import { houseRules } from '../src/tournament/houseRules';
 import { showHouseRules, test } from './setUpTournament';
 
 /*
@@ -8,18 +9,27 @@ import { showHouseRules, test } from './setUpTournament';
  * a real browser, in a narrow window too, where the longest House Rule wraps.
  */
 
+// The line counting the House Rules on the TV: "2 of 4 on the TV".
+const findCountLine = (page: Page) => page.getByText(/^\d of 4 on the TV$/);
+
 /*
- * The parts of the House Rules step: the line counting the House Rules on the TV, every card, the text of each,
- * which would rewrap if its tag widened, the buttons below them, and Make the Draw beside them.
+ * The parts of the House Rules step: the line counting the House Rules on the TV, the list of cards, which holds
+ * the change, every card, the text of each House Rule, which would rewrap if its tag widened, the row of buttons
+ * below them and each button in it, and Make the Draw beside them.
  */
 const listHouseRulesParts = (page: Page) => {
-	const cards = page.getByRole('list', { name: 'House Rules' }).getByRole('listitem');
+	const cardList = page.getByRole('list', { name: 'House Rules' });
+	const showRuleButton = page.getByRole('button', {
+		name: /^Show rule \d on the TV$|^Every rule is on the TV$/,
+	});
 	return [
-		page.getByText(/^\d of 4 on the TV$/),
-		cards,
-		cards.getByText(/\.|\?/),
+		findCountLine(page),
+		cardList,
+		cardList.getByRole('listitem'),
+		...houseRules.map((rule) => cardList.getByText(rule, { exact: true })),
+		page.getByTestId('House Rules buttons'),
 		page.getByRole('button', { name: 'Back', exact: true }),
-		page.getByRole('button', { name: /^Show rule \d on the TV$|^Every rule is on the TV$/ }),
+		showRuleButton,
 		page.getByRole('button', { name: 'Show all' }),
 		page.getByRole('button', { name: 'Make the Draw' }),
 	];
@@ -36,7 +46,7 @@ for (const viewport of [
 		await page.goto('/?players=21&boards=8');
 		await showHouseRules(page);
 		const parts = listHouseRulesParts(page);
-		const countLine = page.getByText(/^\d of 4 on the TV$/);
+		const countLine = findCountLine(page);
 
 		// Each House Rule shown in turn: the first card goes from NEXT to ON THE TV, the second from none to NEXT.
 		for (const ruleNumber of [1, 2, 3]) {

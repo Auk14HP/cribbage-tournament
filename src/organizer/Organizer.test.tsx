@@ -165,10 +165,12 @@ const makeTheDraw = async (user: User, names: string[], boards: string) => {
 const readHouseRulesShown = () => screen.getByText(/^\d+ of \d+ on the TV$/).textContent;
 
 // Each House Rule card's tag, in order: "ON THE TV" for those shown, "NEXT" for the next, '' for the rest.
-const listHouseRuleTags = () =>
-	within(screen.getByRole('list', { name: 'House Rules' }))
+const listHouseRuleTags = () => {
+	const houseRulesList = within(screen.getByRole('list', { name: 'House Rules' }));
+	return houseRulesList
 		.getAllByRole('listitem')
 		.map((card) => /(ON THE TV|NEXT)$/.exec(card.textContent)?.[1] ?? '');
+};
 
 // The House Rules step's main button, which shows the next House Rule on the TV.
 const findShowRuleButton = () =>
