@@ -17,7 +17,7 @@ const beatMilliseconds = 2000;
  * How recent a heartbeat must be for the TV to count as open: more than two beats, so one beat saved late by a
  * busy window doesn't show the TV closed.
  */
-const openMilliseconds = 5000;
+const recentHeartbeatMilliseconds = 5000;
 // How often the Organizer screen looks again, so a heartbeat that has stopped shows the TV closed soon after.
 const checkMilliseconds = 1000;
 
@@ -33,7 +33,7 @@ export const useTvHeartbeat = (store: Store<TvHeartbeat>) => {
 
 // Whether the TV was last seen recently enough, at the time given, to count as open.
 const isTvSeenOpen = (lastSeen: TvHeartbeat | undefined, now: number) =>
-	lastSeen !== undefined && now - lastSeen < openMilliseconds;
+	lastSeen !== undefined && now - lastSeen < recentHeartbeatMilliseconds;
 
 /*
  * Whether the TV window is open, as the Organizer screen sees it: re-renders when a heartbeat arrives from the

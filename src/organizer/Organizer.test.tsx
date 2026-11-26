@@ -1594,18 +1594,22 @@ const showOrganizerWithStore = (saved?: Tournament): Store<Tournament> => {
 		<Organizer
 			store={store}
 			themeStore={createLocalStorageStore<ThemeChoice>(themeKey, themeChoiceVersion)}
-			heartbeatStore={createLocalStorageStore<TvHeartbeat>(heartbeatKey, tvHeartbeatVersion)}
+			heartbeatStore={createHeartbeatStore()}
 		/>,
 	);
 	return store;
 };
+
+// A store of the TV's heartbeat, reading and saving what every other such store in the test does.
+const createHeartbeatStore = () =>
+	createLocalStorageStore<TvHeartbeat>(heartbeatKey, tvHeartbeatVersion);
 
 /*
  * Saves the TV's heartbeat as the TV's own window does: through a store of its own, which the browser then
  * tells the Organizer's window about with a storage event.
  */
 const saveHeartbeatFromTv = () => {
-	const tvHeartbeatStore = createLocalStorageStore<TvHeartbeat>(heartbeatKey, tvHeartbeatVersion);
+	const tvHeartbeatStore = createHeartbeatStore();
 	act(() => {
 		tvHeartbeatStore.save(Date.now());
 		window.dispatchEvent(new StorageEvent('storage', { key: heartbeatKey }));

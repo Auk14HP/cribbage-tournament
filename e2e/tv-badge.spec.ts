@@ -24,8 +24,9 @@ const readMainButtonBackground = (organizer: Page) =>
 const readOpenTvLinkBackground = (organizer: Page) =>
 	findOpenTvLink(organizer).evaluate((element) => getComputedStyle(element).backgroundColor);
 
-// Every part of the header, and the box below it, which must stay put as the badge changes.
+// The header, every part of it, and the box below it, which must all stay put as the badge changes.
 const findHeaderParts = (organizer: Page) => [
+	organizer.getByTestId('organizer header'),
 	findTvBadge(organizer),
 	organizer.getByRole('heading', { level: 1 }),
 	organizer.getByRole('button', { name: 'Start a new Tournament' }),

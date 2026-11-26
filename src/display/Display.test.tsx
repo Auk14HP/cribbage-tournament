@@ -685,14 +685,16 @@ const showDisplay = (saved?: Tournament): Store<Tournament> => {
 		saveTournament(store, saved);
 	}
 	const random = createSeededRandom(1);
-	const heartbeatStore = createLocalStorageStore<TvHeartbeat>(heartbeatKey, tvHeartbeatVersion);
-	render(<Display store={store} heartbeatStore={heartbeatStore} random={random} />);
+	render(<Display store={store} heartbeatStore={createHeartbeatStore()} random={random} />);
 	return store;
 };
 
+// A store of the TV's heartbeat, reading and saving what every other such store in the test does.
+const createHeartbeatStore = () =>
+	createLocalStorageStore<TvHeartbeat>(heartbeatKey, tvHeartbeatVersion);
+
 // The time the TV last saved its heartbeat, as another window would read it.
-const readTvLastSeen = () =>
-	createLocalStorageStore<TvHeartbeat>(heartbeatKey, tvHeartbeatVersion).load();
+const readTvLastSeen = () => createHeartbeatStore().load();
 
 // The Fun Fact line's text, "Fun fact:" included.
 const readFunFact = () => screen.getByText(/^Fun fact: /).textContent;

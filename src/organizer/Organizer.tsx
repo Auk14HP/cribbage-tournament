@@ -8,7 +8,7 @@ import type { Store } from '../storage';
 import { createTournament, restartTvCycleIfDue, type Phase, type Tournament } from '../tournament';
 import { useIsTvOpen, type TvHeartbeat } from '../tvHeartbeat';
 import { useTournament } from '../useTournament';
-import { mainHeaderButton, quietButtons } from './classes';
+import { mainHeaderButton, mainHeaderButtonWeight, quietButtons } from './classes';
 import { ConfirmDialog, type Apply } from './controls';
 import { Draw } from './Draw';
 import { HouseRules } from './HouseRules';
@@ -78,7 +78,11 @@ export const Organizer = ({
 		 * around the list stay on screen. A band of the theme's yellow along its top edge matches the TV's.
 		 */
 		<main className="border-fill bg-canvas font-organizer text-ink flex h-dvh flex-col border-t-4 px-8 py-6">
-			<header className="flex items-center justify-between gap-4">
+			{/* Named for the browser tests, which check it keeps its size: it is no landmark of its own. */}
+			<header
+				data-testid="organizer header"
+				className="flex items-center justify-between gap-4"
+			>
 				<div className="flex items-center gap-3.5">
 					<TvBadge isTvOpen={isTvOpen} />
 					<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
@@ -115,7 +119,7 @@ export const Organizer = ({
 						<span className="col-start-1 row-start-1">Open TV display</span>
 						<span
 							aria-hidden
-							className="invisible col-start-1 row-start-1 font-semibold"
+							className={`invisible col-start-1 row-start-1 ${mainHeaderButtonWeight}`}
 						>
 							Open TV display
 						</span>
