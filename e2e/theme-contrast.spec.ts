@@ -87,8 +87,8 @@ const expectEveryPhaseReadable = async (page: Page) => {
 	await page.getByLabel('Home Board for').selectOption('Nobody');
 
 	await showHouseRules(page);
-	await page.getByRole('button', { name: 'Next' }).click();
-	await expectReadableText(page, 'House Rules, one shown');
+	await page.getByRole('button', { name: 'Show rule 1 on the TV' }).click();
+	await expectReadableText(page, 'House Rules, one on the TV, the next and the rest to come');
 	await page.getByRole('button', { name: 'Make the Draw' }).click();
 	await expectReadableText(page, 'House Rules, Make the Draw dialog');
 	await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
