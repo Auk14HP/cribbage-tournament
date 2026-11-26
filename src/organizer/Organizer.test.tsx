@@ -161,8 +161,20 @@ const makeTheDraw = async (user: User, names: string[], boards: string) => {
 	await confirmDraw(user);
 };
 
-// The line saying how many House Rules the TV shows: "2 of 4 shown on the TV".
-const readHouseRulesShown = () => screen.getByText(/of \d+ shown on the TV$/).textContent;
+// The line saying how many House Rules the TV shows: "2 of 4 on the TV".
+const readHouseRulesShown = () => screen.getByText(/^\d+ of \d+ on the TV$/).textContent;
+
+// Each House Rule card's tag, in order: "ON THE TV" for those shown, "NEXT" for the next, '' for the rest.
+const listHouseRuleTags = () => {
+	const houseRulesList = within(screen.getByRole('list', { name: 'House Rules' }));
+	return houseRulesList
+		.getAllByRole('listitem')
+		.map((card) => /(ON THE TV|NEXT)$/.exec(card.textContent)?.[1] ?? '');
+};
+
+// The House Rules step's main button, which shows the next House Rule on the TV.
+const findShowRuleButton = () =>
+	screen.getByRole('button', { name: /^Show rule \d on the TV$|^Every rule is on the TV$/ });
 
 /*
  * The tiles of every Match on a Board, bracket by bracket. Each recorded result re-renders them, so they are
@@ -605,49 +617,73 @@ describe('the organizer route', () => {
 		await showHouseRules(user);
 
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('House Rules');
-		expect(readHouseRulesShown()).toBe('0 of 4 shown on the TV');
+		expect(readHouseRulesShown()).toBe('0 of 4 on the TV');
 		expect(screen.queryByLabelText('Player name')).not.toBeInTheDocument();
 		expect(screen.getByRole('button', { name: 'Make the Draw' })).toBeInTheDocument();
 	});
 
-	it('shows the House Rules one at a time with Next, hides the latest with Back, and shows every one with Show all', async () => {
+	it('shows the House Rules one at a time with Show rule N, hides the latest with Back, and shows every one with Show all', async () => {
 		const user = showOrganizer();
 		await showHouseRules(user);
 		expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
 
-		await clickButton(user, 'Next');
-		await clickButton(user, 'Next');
-		expect(readHouseRulesShown()).toBe('2 of 4 shown on the TV');
+		await clickButton(user, 'Show rule 1 on the TV');
+		await clickButton(user, 'Show rule 2 on the TV');
+		expect(readHouseRulesShown()).toBe('2 of 4 on the TV');
 		await clickButton(user, 'Back');
-		expect(readHouseRulesShown()).toBe('1 of 4 shown on the TV');
+		expect(readHouseRulesShown()).toBe('1 of 4 on the TV');
 		await clickButton(user, 'Back');
-		expect(readHouseRulesShown()).toBe('0 of 4 shown on the TV');
+		expect(readHouseRulesShown()).toBe('0 of 4 on the TV');
 		expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
 
 		await clickButton(user, 'Show all');
-		expect(readHouseRulesShown()).toBe('4 of 4 shown on the TV');
-		expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+		expect(readHouseRulesShown()).toBe('4 of 4 on the TV');
+		expect(findShowRuleButton()).toHaveAccessibleName('Every rule is on the TV');
+		expect(findShowRuleButton()).toBeDisabled();
 		expect(screen.getByRole('button', { name: 'Show all' })).toBeDisabled();
 		expect(screen.getByRole('button', { name: 'Back' })).toBeEnabled();
 		await clickButton(user, 'Back');
-		expect(readHouseRulesShown()).toBe('3 of 4 shown on the TV');
-		expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled();
+		expect(readHouseRulesShown()).toBe('3 of 4 on the TV');
+		expect(findShowRuleButton()).toHaveAccessibleName('Show rule 4 on the TV');
+		expect(findShowRuleButton()).toBeEnabled();
+	});
+
+	it('tags the House Rules on the TV and the next one, and leaves the rest untagged', async () => {
+		const user = showOrganizer();
+		await showHouseRules(user);
+		expect(listHouseRuleTags()).toEqual(['NEXT', '', '', '']);
+
+		await clickButton(user, 'Show rule 1 on the TV');
+		await clickButton(user, 'Show rule 2 on the TV');
+		expect(listHouseRuleTags()).toEqual(['ON THE TV', 'ON THE TV', 'NEXT', '']);
+
+		await clickButton(user, 'Show all');
+		expect(listHouseRuleTags()).toEqual(['ON THE TV', 'ON THE TV', 'ON THE TV', 'ON THE TV']);
+	});
+
+	it('warns beside Make the Draw that registration closes once the Draw is made', async () => {
+		const user = showOrganizer();
+		await showHouseRules(user);
+
+		expect(screen.getByRole('region', { name: 'Make the Draw' })).toHaveTextContent(
+			'Registration closes: no Player can be added, renamed or removed afterwards.',
+		);
 	});
 
 	it('goes back to registration for a late arrival, then returns with the same House Rules shown', async () => {
 		const user = showOrganizer();
 		await register(user, 'Dave K.');
 		await showHouseRules(user);
-		await clickButton(user, 'Next');
-		await clickButton(user, 'Next');
+		await clickButton(user, 'Show rule 1 on the TV');
+		await clickButton(user, 'Show rule 2 on the TV');
 
-		await clickButton(user, 'Back to registration');
+		await clickButton(user, 'Back to registration for a late arrival');
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Register Players');
 		await register(user, 'Big Dave');
 		expect(listPlayerNames()).toEqual(['Dave K.', 'Big Dave']);
 
 		await showHouseRules(user);
-		expect(readHouseRulesShown()).toBe('2 of 4 shown on the TV');
+		expect(readHouseRulesShown()).toBe('2 of 4 on the TV');
 	});
 
 	it('makes the Draw from the House Rules step with every House Rule shown', async () => {
@@ -667,13 +703,13 @@ describe('the organizer route', () => {
 	it('resumes the House Rules step with the same House Rules shown when reopened', async () => {
 		const user = showOrganizer();
 		await showHouseRules(user);
-		await clickButton(user, 'Next');
+		await clickButton(user, 'Show rule 1 on the TV');
 		cleanup();
 
 		showOrganizer();
 
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('House Rules');
-		expect(readHouseRulesShown()).toBe('1 of 4 shown on the TV');
+		expect(readHouseRulesShown()).toBe('1 of 4 on the TV');
 	});
 
 	it('makes the Draw with fewer Boards than Matches, listing the rest as waiting for a Board', async () => {

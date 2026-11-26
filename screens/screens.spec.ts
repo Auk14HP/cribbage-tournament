@@ -24,7 +24,7 @@ const isShownWithin = async (element: Locator, timeout: number) => {
  * screenshots.
  *   PLAYERS=29 BOARDS=16 npm run screens    registration
  *   ... HOME_BOARD=3                        with the first Player registered given Home Board 3
- *   ... DRAW=1                              and the House Rules, every one shown, then Tonight's Draw
+ *   ... DRAW=1                              and the House Rules, two then every one shown, then Tonight's Draw
  *   ... DRAW=1 SWAP=1                       and Swap mode, the Player with the longest name in a Match tile
  *                                           picked, then after swapping them with the last Player listed
  *   ... DRAW=1 START=1                      and after Start
@@ -35,7 +35,7 @@ const isShownWithin = async (element: Locator, timeout: number) => {
  *   ... SCHEME=dark                         with the laptop set dark (or light), which the Organizer screen's
  *                                           Same as laptop Theme follows
  *   ... THEME_MENU=1                        and the Theme menu open at registration
- * Writes test-results/screens/{organizer,tv}-{registration,theme-menu,house-rules,draw,swap-picked,swapped,started,results,losers-bracket,champion,
+ * Writes test-results/screens/{organizer,tv}-{registration,theme-menu,house-rules-two-shown,house-rules,draw,swap-picked,swapped,started,results,losers-bracket,champion,
  * peek,peek-losers,forfeit-dialog,forfeit}.png: the organizer at
  * 1280×720, the TV at 1920×1080.
  */
@@ -85,6 +85,11 @@ test('screens', async ({ context, page: organizer }) => {
 		return;
 	}
 	await showHouseRules(organizer);
+	// Two shown, so the shot has House Rules on the TV, the next and one still to come.
+	await organizer.getByRole('button', { name: 'Show rule 1 on the TV' }).click();
+	await organizer.getByRole('button', { name: 'Show rule 2 on the TV' }).click();
+	await organizer.getByText('2 of 4 on the TV').waitFor();
+	await shoot('house-rules-two-shown');
 	await organizer.getByRole('button', { name: 'Show all' }).click();
 	await tv.getByRole('heading', { name: 'House Rules' }).waitFor();
 	await shoot('house-rules');

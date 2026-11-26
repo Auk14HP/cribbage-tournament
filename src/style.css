@@ -19,10 +19,11 @@
 	--color-fill: var(--theme-fill);
 	--color-on-fill: var(--theme-on-fill);
 	--color-accent: var(--theme-accent);
-	--color-board-number: var(--theme-board-number);
+	--color-card-number: var(--theme-card-number);
 	--color-champion: var(--theme-champion);
 	--color-champion-ground: var(--theme-champion-ground);
 	--color-highlight: var(--theme-highlight);
+	--color-on-tv: var(--theme-on-tv);
 	--color-danger: var(--theme-danger);
 	--color-on-danger: var(--theme-on-danger);
 	--color-scrim: var(--theme-scrim);
@@ -33,11 +34,12 @@
  * What each theme colour is for: the page behind everything (canvas), a box on it (panel), a button or a row
  * standing out from its box (raised), a quiet rule between rows (divider), a control's outline (line), text
  * (ink), secondary text (muted), text for what hasn't happened yet (faint), the yellow of a main button (fill)
- * and the text on it (on-fill), text in the theme's accent, such as a link (accent), a Match tile's large Board
- * number (board-number), the Winners Bracket champion's name on the organizer screen (champion) and the ground of
- * their card (champion-ground), the yellow-tinted ground of Swap mode's banner and the Player picked in it
- * (highlight), a warning or destructive action (danger) and the text on it (on-danger), and the shade
- * behind an open dialog (scrim). Every text colour reads at 4.5:1 or more on the backgrounds it is used on
+ * and the text on it (on-fill), text in the theme's accent, such as a link (accent), the large number on a tile
+ * or card, a Match tile's Board or a House Rule's place (card-number), the Winners Bracket champion's name on the
+ * organizer screen (champion) and the ground of their card (champion-ground), the yellow-tinted ground of Swap
+ * mode's banner and the Player picked in it (highlight), the green tag on a House Rule the TV shows (on-tv), a
+ * warning or destructive action (danger) and the text on it (on-danger), and the shade behind an open dialog
+ * (scrim). Every text colour reads at 4.5:1 or more on the backgrounds it is used on
  * (e2e/theme-contrast.spec.ts). color-scheme tells the browser which way to draw its own controls, such as a
  * number box's arrows.
  */
@@ -60,10 +62,11 @@
 		--theme-fill: #ffd23f;
 		--theme-on-fill: #161a22;
 		--theme-accent: #8a6500;
-		--theme-board-number: #161a22;
+		--theme-card-number: #161a22;
 		--theme-champion: #161a22;
 		--theme-champion-ground: #fff4c7;
 		--theme-highlight: #fff4c7;
+		--theme-on-tv: #15803d;
 		--theme-danger: #b42318;
 		--theme-on-danger: #ffffff;
 		--theme-scrim: rgb(16 24 40 / 0.45);
@@ -82,10 +85,11 @@
 		--theme-fill: #ffd23f;
 		--theme-on-fill: #0d1015;
 		--theme-accent: #ffd23f;
-		--theme-board-number: #ffd23f;
+		--theme-card-number: #ffd23f;
 		--theme-champion: #ffd23f;
 		--theme-champion-ground: #161b23;
 		--theme-highlight: #2a2410;
+		--theme-on-tv: #7ee2a1;
 		--theme-danger: #ff9b8f;
 		--theme-on-danger: #0d1015;
 		--theme-scrim: rgb(0 0 0 / 0.62);
