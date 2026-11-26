@@ -51,3 +51,39 @@ export const expectNothingMoves = async (
 	).toEqual(scrollingBefore);
 	expect(await measureParts(parts)).toEqual(before);
 };
+
+/*
+ * Where a piece of text starts on screen and how it is drawn: its left edge, its middle top to bottom, and its
+ * font. A text box's text starts inside its border and padding.
+ */
+const measureText = (textElement: Locator) =>
+	textElement.evaluate((element) => {
+		const box = element.getBoundingClientRect();
+		const style = getComputedStyle(element);
+		const isTextBox =
+			element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement;
+		const inset = isTextBox
+			? parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft)
+			: 0;
+		return {
+			left: Math.round(box.left + inset),
+			middle: Math.round(box.top + box.height / 2),
+			font: `${style.fontWeight} ${style.fontSize}`,
+		};
+	});
+
+/*
+ * Checks text that becomes another control in place, such as a Player's name becoming the name box on Rename,
+ * stays where it was and is drawn the same: the text before the change is measured, the change is made, and the
+ * text after it must start at the same left edge, sit at the same middle and have the same font. It expects the
+ * change it is given to wait until the new control shows. Measure a name on one line and the longest name with
+ * any tag beside it, since a tag that wraps makes the cell taller and can move the text.
+ */
+export const expectTextStays = async (
+	text: { before: Locator; after: Locator },
+	change: () => Promise<void>,
+) => {
+	const textBefore = await measureText(text.before);
+	await change();
+	expect(await measureText(text.after), 'the text where and as it was').toEqual(textBefore);
+};

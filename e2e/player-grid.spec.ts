@@ -1,5 +1,5 @@
-import { expect, type Locator, type Page } from '@playwright/test';
-import { expectNothingMoves } from './screenStill';
+import { expect, type Page } from '@playwright/test';
+import { expectNothingMoves, expectTextStays } from './screenStill';
 import { test } from './setUpTournament';
 import { expectTextFits } from './textFits';
 
@@ -84,33 +84,17 @@ test('moves no cell in the grid as a Player is renamed, cancelled, refused or sa
 	});
 });
 
-/*
- * Where a piece of text starts on screen and how it is drawn: its left edge, its middle top to bottom, and its
- * font. A text box's text starts inside its border and padding.
- */
-const measureText = (textElement: Locator) =>
-	textElement.evaluate((element) => {
-		const box = element.getBoundingClientRect();
-		const style = getComputedStyle(element);
-		const inset =
-			element instanceof HTMLInputElement
-				? parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft)
-				: 0;
-		return {
-			left: Math.round(box.left + inset),
-			middle: Math.round(box.top + box.height / 2),
-			font: `${style.fontWeight} ${style.fontSize}`,
-		};
-	});
-
 // Checks the Player's name, once Rename is clicked, shows in the name box where and as it was drawn.
 const expectNameStaysOnRename = async (page: Page, name: string) => {
-	const nameBefore = await measureText(findPlayersGrid(page).getByText(name, { exact: true }));
+	const text = {
+		before: findPlayersGrid(page).getByText(name, { exact: true }),
+		after: page.getByLabel(`New name for ${name}`, { exact: true }),
+	};
 
-	await page.getByRole('button', { name: `Rename ${name}` }).click();
-
-	const newNameBox = page.getByLabel(`New name for ${name}`, { exact: true });
-	expect(await measureText(newNameBox), name).toEqual(nameBefore);
+	await expectTextStays(text, async () => {
+		await page.getByRole('button', { name: `Rename ${name}` }).click();
+		await expect(text.after).toBeFocused();
+	});
 };
 
 test('keeps a Player’s name in place as it becomes the name box', async ({ page }) => {
