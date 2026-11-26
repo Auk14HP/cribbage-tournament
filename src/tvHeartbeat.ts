@@ -12,28 +12,28 @@ export type TvHeartbeat = number;
 export const tvHeartbeatVersion = 1;
 
 // How often the open TV saves its heartbeat.
-const beatMilliseconds = 2000;
+const beatMs = 2000;
 /*
  * How recent a heartbeat must be for the TV to count as open: more than two beats, so one beat saved late by a
  * busy window doesn't show the TV closed.
  */
-const recentHeartbeatMilliseconds = 5000;
+const recentHeartbeatMs = 5000;
 // How often the Organizer screen looks again, so a heartbeat that has stopped shows the TV closed soon after.
-const checkMilliseconds = 1000;
+const checkMs = 1000;
 
 // Saves the TV's heartbeat now, and every couple of seconds after, until the display route closes.
 export const useTvHeartbeat = (store: Store<TvHeartbeat>) => {
 	useEffect(() => {
 		const beat = () => store.save(Date.now());
 		beat();
-		const timer = setInterval(beat, beatMilliseconds);
+		const timer = setInterval(beat, beatMs);
 		return () => clearInterval(timer);
 	}, [store]);
 };
 
 // Whether the TV was last seen recently enough, at the time given, to count as open.
 const isTvSeenOpen = (lastSeen: TvHeartbeat | undefined, now: number) =>
-	lastSeen !== undefined && now - lastSeen < recentHeartbeatMilliseconds;
+	lastSeen !== undefined && now - lastSeen < recentHeartbeatMs;
 
 /*
  * Whether the TV window is open, as the Organizer screen sees it: re-renders when a heartbeat arrives from the
@@ -43,7 +43,7 @@ export const useIsTvOpen = (store: Store<TvHeartbeat>) => {
 	const subscribe = useCallback(
 		(listener: () => void) => {
 			const unsubscribe = store.subscribe(listener);
-			const timer = setInterval(listener, checkMilliseconds);
+			const timer = setInterval(listener, checkMs);
 			return () => {
 				unsubscribe();
 				clearInterval(timer);

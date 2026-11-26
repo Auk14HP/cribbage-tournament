@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import { expectNothingMoves } from './screenStill';
-import { test, tvClosingTimeout, tvSizes } from './setUpTournament';
+import { test, tvClosingTimeoutMs, tvSizes } from './setUpTournament';
 
 /*
  * The badge in the Organizer screen's header, beside Open TV display, says whether the TV window is running, from the heartbeat the
@@ -53,7 +53,7 @@ test('reads TV open while the TV window is open and TV closed once it closes, wi
 
 	await expectNothingMoves(findHeaderParts(organizer), async () => {
 		await tv!.close();
-		await expect(tvBadge.getByText('TV closed')).toBeVisible(tvClosingTimeout);
+		await expect(tvBadge.getByText('TV closed')).toBeVisible({ timeout: tvClosingTimeoutMs });
 	});
 	expect(await readOpenTvLinkBackground(organizer)).toBe(mainButtonBackground);
 });
