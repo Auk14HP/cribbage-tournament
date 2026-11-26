@@ -83,10 +83,7 @@ export const Organizer = ({
 				data-testid="organizer header"
 				className="flex items-center justify-between gap-4"
 			>
-				<div className="flex items-center gap-3.5">
-					<TvBadge isTvOpen={isTvOpen} />
-					<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
-				</div>
+				<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
 				{/*
 				 * Stretched to one height, so the palette button, holding an icon rather than a line of text, is as
 				 * tall as the buttons beside it.
@@ -106,6 +103,8 @@ export const Organizer = ({
 					>
 						Start a new Tournament
 					</button>
+					{/* Beside Open TV display, the button that brings a closed TV back. */}
+					<TvBadge isTvOpen={isTvOpen} />
 					{/*
 					 * While the TV is closed, opening it is what the Organizer needs to do next, so it becomes the main
 					 * button. Its label keeps the main button's bolder width in either look, so the buttons beside it

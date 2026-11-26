@@ -97,7 +97,7 @@ The panel on the **Organizer screen** that shows what the TV is showing: a small
 _Avoid_: TV panel, preview, monitor
 
 **TV open** / **TV closed**:
-The badge beside the **Organizer screen**'s heading saying whether the TV window is running. While it reads TV closed, Open TV display is the screen's main button. The TV's window tells the laptop it is open every few seconds; this is the laptop's, not the **Tournament**'s, so starting a new **Tournament** leaves it as it is.
+The badge in the **Organizer screen**'s header, beside Open TV display, saying whether the TV window is running. While it reads TV closed, Open TV display is the screen's main button. The TV's window tells the laptop it is open every few seconds; this is the laptop's, not the **Tournament**'s, so starting a new **Tournament** leaves it as it is.
 _Avoid_: TV connected, TV online, live
 
 **Bracket peek**:

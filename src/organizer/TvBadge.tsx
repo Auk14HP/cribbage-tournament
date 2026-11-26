@@ -1,16 +1,16 @@
 import { StackedLabel } from './controls';
 
 /*
- * The badge beside the Organizer screen's heading saying whether the TV window is running: TV open, with a
- * green dot, or TV closed, with a dot in the danger colour. A status, so a screen reader says when it changes.
- * Both labels share one grid cell, so the badge is always as wide as TV closed, the longer label, and the
- * heading beside it stays put as the TV opens or closes.
+ * The badge in the Organizer screen's header saying whether the TV window is running: TV open, with a green
+ * dot, or TV closed, with a red one. A status, so a screen reader says when it changes. Both labels share one
+ * grid cell, so the badge is always as wide as TV closed, the longer label, and the buttons beside it stay put
+ * as the TV opens or closes. Centred in the header's row, so it keeps its own height beside the taller buttons.
  */
 export const TvBadge = ({ isTvOpen }: { isTvOpen: boolean }) => (
 	<p
 		role="status"
 		aria-label="TV"
-		className="border-divider bg-raised inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold"
+		className="border-divider bg-raised inline-flex shrink-0 items-center gap-2 self-center rounded-full border px-3 py-1.5 text-sm font-semibold"
 	>
 		<span
 			aria-hidden
@@ -23,8 +23,8 @@ export const TvBadge = ({ isTvOpen }: { isTvOpen: boolean }) => (
 	</p>
 );
 
-// The badge's dot: green while the TV is open, the danger colour once it closes.
+// The badge's dot: green while the TV is open, red once it closes.
 const tvDotColours = {
 	open: 'bg-tv-open',
-	closed: 'bg-danger',
+	closed: 'bg-tv-closed',
 };
