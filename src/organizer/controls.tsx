@@ -1,4 +1,4 @@
-// Shared by the organizer route's screens: the confirm dialog, number box and refusals, and Apply.
+// Shared by the organizer route's screens: the confirm dialog, number box, refusals, stacked labels and Apply.
 import { useId, useState, type RefObject } from 'react';
 import type { Result } from '../result';
 import type { Tournament } from '../tournament';
@@ -102,3 +102,16 @@ export const NumberBox = ({
 		</label>
 	);
 };
+
+/*
+ * One of a box's labels, such as a button's, put in the first cell of the box's grid, where its other labels sit
+ * too. A label not shown is hidden but still takes up its space, and isn't read out.
+ */
+export const StackedLabel = ({ label, isShown }: { label: string; isShown: boolean }) => (
+	<span
+		aria-hidden={isShown ? undefined : true}
+		className={`col-start-1 row-start-1 ${isShown ? '' : 'invisible'}`}
+	>
+		{label}
+	</span>
+);

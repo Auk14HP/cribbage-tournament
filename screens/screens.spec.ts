@@ -5,6 +5,7 @@ import {
 	findMatchesOnBoards,
 	showHouseRules,
 	test,
+	tvClosingTimeoutMs,
 } from '../e2e/setUpTournament';
 import { findLongestNamedButton } from '../e2e/textFits';
 
@@ -35,8 +36,10 @@ const isShownWithin = async (element: Locator, timeout: number) => {
  *   ... SCHEME=dark                         with the laptop set dark (or light), which the Organizer screen's
  *                                           Same as laptop Theme follows
  *   ... THEME_MENU=1                        and the Theme menu open at registration
+ *   ... TV_CLOSED=1                         and, after registration, the TV window closed: the organizer
+ *                                           alone, its badge reading TV closed. Stops there.
  * Writes test-results/screens/{organizer,tv}-{registration,theme-menu,house-rules-two-shown,house-rules,draw,swap-picked,swapped,started,results,losers-bracket,champion,
- * peek,peek-losers,forfeit-dialog,forfeit}.png: the organizer at
+ * peek,peek-losers,forfeit-dialog,forfeit}.png and test-results/screens/organizer-tv-closed.png: the organizer at
  * 1280×720, the TV at 1920×1080.
  */
 const players = process.env.PLAYERS ?? '26';
@@ -74,6 +77,13 @@ test('screens', async ({ context, page: organizer }) => {
 	// The Fun Fact fades in at the start of its 12 seconds, so Tonight's Players is shot once it is fully shown.
 	await expect(tv.getByText(/^Fun fact: /)).toHaveCSS('opacity', '1');
 	await shoot('registration');
+	if (process.env.TV_CLOSED) {
+		await tv.close();
+		await expect(organizer.getByText('TV closed')).toBeVisible({ timeout: tvClosingTimeoutMs });
+		// The organizer alone, not shoot: the TV window is closed, so there is no TV to shoot.
+		await organizer.screenshot({ path: 'test-results/screens/organizer-tv-closed.png' });
+		return;
+	}
 	if (process.env.THEME_MENU) {
 		await organizer.getByRole('button', { name: 'Theme' }).click();
 		await shoot('theme-menu');

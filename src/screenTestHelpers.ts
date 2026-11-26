@@ -19,7 +19,7 @@ import {
 } from './tournament/testSetup';
 
 // An element's text as a screen reader reads it: without the parts hidden from it, such as a bracket's badge.
-const readTextAloud = (element: HTMLElement) => {
+export const readTextAloud = (element: HTMLElement) => {
 	const copy = element.cloneNode(true) as HTMLElement;
 	copy.querySelectorAll('[aria-hidden="true"]').forEach((hidden) => hidden.remove());
 	return copy.textContent;
