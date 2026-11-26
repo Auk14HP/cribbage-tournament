@@ -86,7 +86,7 @@ _Avoid_: Admin page, dashboard, control room
 
 **Theme**:
 The colours the **Organizer screen** is drawn in, such as Light or Dark. It is the laptop's setting, so it stays the same from one **Tournament** to the next.
-_Avoid_: Skin, colour scheme, mode
+_Avoid_: Skin, colour scheme, mode, TV Theme (the TV's)
 
 **Same as laptop**:
 The choice of **Theme** that follows the laptop's own light or dark setting. It is the choice until the **Organizer** picks another.
@@ -101,7 +101,7 @@ The badge in the **Organizer screen**'s header, beside Open TV display, saying w
 _Avoid_: TV connected, TV online, live
 
 **Bracket peek**:
-A dialog on the **Organizer screen** showing the brackets full size, drawn as the TV draws them and in the TV's colours, with a tab for the **Winners Bracket** and, once it is drawn, one for the **Losers Bracket**. It opens on the bracket the TV shows, or the Winners Bracket while the TV shows another screen. Looking never changes what the TV shows.
+A dialog on the **Organizer screen** showing the brackets full size, drawn as the TV draws them and in the TV's **TV Theme**, with a tab for the **Winners Bracket** and, once it is drawn, one for the **Losers Bracket**. It opens on the bracket the TV shows, or the Winners Bracket while the TV shows another screen. Looking never changes what the TV shows.
 _Avoid_: bracket preview, bracket view
 
 ### The TV
@@ -133,3 +133,7 @@ _Avoid_: Cycle mode, rotate
 **Held screen**:
 The screen the **Organizer** has chosen for the TV once Started, which the TV shows until they choose **Auto**. Choosing Auto cycles on from it. A Held screen the night's next phase doesn't have, such as **Champion** once an undo takes the **Tournament** back into play, falls back to Auto.
 _Avoid_: Pinned screen, locked screen
+
+**TV Theme**:
+The colours and artwork the TV is drawn in: one for each month, such as Christmas in December or Oktoberfest in September, or Classic, the TV's plain black look. Each **Tournament** starts on the TV Theme of its month, and the **Organizer** can pick another for that night.
+_Avoid_: TV Display Theme (the **TV Display** is the Organizer screen's panel), skin, seasonal theme
