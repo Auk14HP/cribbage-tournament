@@ -11,11 +11,12 @@ import {
 	test,
 	tvSizes,
 } from './setUpTournament';
+import { chooseTvTheme } from './tvTheme';
 
 /*
  * The Organizer screen's themes, in a real browser: every phase's text is readable in Light, Dark, and Same as
  * laptop with the laptop set light or dark; the screen draws in Inter served with the app; and the TV keeps
- * its own look whatever the Organizer's theme. The header holding the theme menu is checked here too: opening
+ * its TV Theme whatever the Organizer's theme. The header holding the theme menu is checked here too: opening
  * the menu moves nothing, and the palette button is as tall as the buttons beside it.
  */
 
@@ -166,9 +167,12 @@ test('draws the Organizer screen in Inter from the app itself, not from a font s
 	expect([...requestedOrigins]).toEqual([new URL(baseURL!).origin]);
 });
 
-test('keeps the TV’s look despite the Organizer screen’s current theme', async ({ page }) => {
+test('keeps the TV in Classic, its plain black look, despite the Organizer screen’s current theme', async ({
+	page,
+}) => {
 	await page.goto('/?players=9&boards=4');
 	await chooseTheme(page, 'Dark');
+	await chooseTvTheme(page, 'Classic');
 	const tv = await openTv(page, tvSizes[0]);
 	const tvScreen = tv.getByRole('main');
 

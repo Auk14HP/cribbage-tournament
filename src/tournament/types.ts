@@ -93,6 +93,9 @@ export type TvScreen = 'winnersBracket' | 'losersBracket' | 'champion';
  */
 export type TvChoice = 'auto' | TvScreen;
 
+// A TV Theme: Classic, the TV's plain black look, or one of the months'.
+export type TvTheme = 'classic' | 'christmas';
+
 /*
  * When Auto's current cycle started, in milliseconds since 1970 as Date.now() gives, and the screen it started
  * from. Every window works out the screen on show from it and the clock, so they agree.
@@ -143,6 +146,11 @@ export interface Tournament {
 	readonly tvChoice: TvChoice;
 	// Undefined until Start.
 	readonly tvCycleStart?: TvCycleStart;
+	/*
+	 * The TV Theme the Organizer picked for tonight, over the month's. Undefined until they pick one, so a
+	 * Tournament saved before TV Themes loads unchanged, in its month's.
+	 */
+	readonly tvTheme?: TvTheme;
 }
 
 // Bump whenever the Tournament's shape changes, so a Tournament saved in an older shape loads as blank.

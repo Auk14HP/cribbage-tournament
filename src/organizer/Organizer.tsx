@@ -5,7 +5,14 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { makeDisplayPath } from '../routes';
 import type { Store } from '../storage';
-import { createTournament, restartTvCycleIfDue, type Phase, type Tournament } from '../tournament';
+import { findTvThemeToday } from '../display/tvThemeContext';
+import {
+	createTournament,
+	pickTvTheme,
+	restartTvCycleIfDue,
+	type Phase,
+	type Tournament,
+} from '../tournament';
 import { useIsTvOpen, type TvHeartbeat } from '../tvHeartbeat';
 import { useTournament } from '../useTournament';
 import { mainHeaderButton, mainHeaderButtonWeight, quietButtons } from './classes';
@@ -37,7 +44,7 @@ export const Organizer = ({
 }) => {
 	const tournament = useTournament(store);
 	const isTvOpen = useIsTvOpen(heartbeatStore);
-	const { choice: themeChoice, theme } = useTheme(themeStore);
+	const { choice: themeChoice, theme, laptopTheme } = useTheme(themeStore);
 
 	/*
 	 * The theme goes on the page's root, not only this screen, so the window's own edges and scrollbar take its
@@ -123,7 +130,14 @@ export const Organizer = ({
 							Open TV display
 						</span>
 					</a>
-					<ThemeMenu choice={themeChoice} onChoose={themeStore.save} />
+					{/* The TV Theme is the Tournament's, so a pick is saved with it, and the TV changes at once. */}
+					<ThemeMenu
+						choice={themeChoice}
+						laptopTheme={laptopTheme}
+						onChoose={themeStore.save}
+						tvTheme={findTvThemeToday(tournament)}
+						onChooseTvTheme={(tvTheme) => apply(pickTvTheme(tournament, tvTheme))}
+					/>
 				</nav>
 			</header>
 			<StepBar phase={tournament.phase} />

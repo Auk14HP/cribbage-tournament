@@ -4,6 +4,7 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Display } from './Display';
 import { funFacts } from './funFacts';
+import { christmasFunFacts } from './tvThemeFunFacts';
 import type { Result } from '../result';
 import { createLocalStorageStore, type Store } from '../storage';
 import { tvHeartbeatVersion, type TvHeartbeat } from '../tvHeartbeat';
@@ -19,6 +20,7 @@ import {
 	showHouseRules,
 	showNextHouseRule,
 	recordWinner,
+	pickTvTheme,
 	registerPlayer,
 	removePlayer,
 	renamePlayer,
@@ -52,8 +54,11 @@ const heartbeatKey = 'display-heartbeat-test';
 
 const tournamentTitle = 'Farmstrong Brewery Cribbage Tournament';
 
-// The evening of the brewery's first Tournament.
+// The evening of the brewery's first Tournament, in November, which has no TV Theme of its own yet.
 const monday = new Date(2026, 10, 9, 19, 30);
+
+// An evening in December, whose TV Theme is Christmas.
+const decemberNight = new Date(2026, 11, 17, 19, 30);
 
 afterEach(() => {
 	vi.useRealTimers();
@@ -92,6 +97,30 @@ describe('the display route', () => {
 	});
 });
 
+describe('the TV Theme', () => {
+	it('draws the TV in the TV Theme of the Tournament’s month, or of today’s before anyone registers', () => {
+		vi.setSystemTime(decemberNight);
+		const store = showDisplay();
+		expect(readTvTheme()).toBe('christmas');
+
+		const blank = createTournament();
+		saveOutcome(store, registerPlayer(blank, 'Ron', monday));
+
+		expect(readTvTheme()).toBe('classic');
+	});
+
+	it('changes at once to the TV Theme the Organizer picks in another window', () => {
+		vi.setSystemTime(decemberNight);
+		const registered = registerPlayers('Ron', 'Sue');
+		const store = showDisplay(registered);
+		expect(readTvTheme()).toBe('christmas');
+
+		saveOutcome(store, pickTvTheme(registered, 'classic'));
+
+		expect(readTvTheme()).toBe('classic');
+	});
+});
+
 describe('the TV’s heartbeat', () => {
 	it('saves the time every few seconds while the TV is open, under its own key, and stops once it closes', () => {
 		vi.useFakeTimers({ now: monday });
@@ -114,7 +143,7 @@ describe('the TV’s heartbeat', () => {
 
 describe('the Fun Fact line', () => {
 	it('shows a Fun Fact on Tonight’s Players, changing every 12 seconds', () => {
-		vi.useFakeTimers();
+		vi.useFakeTimers({ now: monday });
 		showDisplay();
 		const firstFunFact = readFunFact();
 		expect(firstFunFact).toMatch(/^Fun fact: /);
@@ -126,7 +155,7 @@ describe('the Fun Fact line', () => {
 	});
 
 	it('names nobody while nobody is registered, and repeats none until every one that fits has been used', () => {
-		vi.useFakeTimers();
+		vi.useFakeTimers({ now: monday });
 		showDisplay();
 		const namelessCount = funFacts.filter((fact) => !fact.includes('{A}')).length;
 
@@ -142,7 +171,7 @@ describe('the Fun Fact line', () => {
 	});
 
 	it('names a lone Player only in one-name facts, never in two facts in a row', () => {
-		vi.useFakeTimers();
+		vi.useFakeTimers({ now: monday });
 		const registered = registerPlayers('Ron');
 		showDisplay(registered);
 
@@ -159,7 +188,7 @@ describe('the Fun Fact line', () => {
 	 * each fact naming two.
 	 */
 	it('with two Players, shows every Fun Fact with at most one stand-in for each naming two, each naming nobody, never naming anyone twice in a row', () => {
-		vi.useFakeTimers();
+		vi.useFakeTimers({ now: monday });
 		const registered = registerPlayers('Ron', 'Sue');
 		showDisplay(registered);
 		const twoNameCount = funFacts.filter((fact) => fact.includes('{B}')).length;
@@ -179,7 +208,7 @@ describe('the Fun Fact line', () => {
 	});
 
 	it('picks the names fresh each time, reaching every Player, never the same Player in two facts in a row', () => {
-		vi.useFakeTimers();
+		vi.useFakeTimers({ now: monday });
 		const registered = registerPlayers('Ron', 'Sue', 'Joe', 'Bev');
 		showDisplay(registered);
 
@@ -192,7 +221,7 @@ describe('the Fun Fact line', () => {
 	});
 
 	it('shows a named Player’s new name at once, and replaces a fact naming a removed Player at once', () => {
-		vi.useFakeTimers();
+		vi.useFakeTimers({ now: monday });
 		let tournament = registerPlayers('Ron', 'Sue', 'Joe', 'Bev');
 		const store = showDisplay(tournament);
 		while (parseFunFact(tournament.players).names.length === 0) {
@@ -214,8 +243,30 @@ describe('the Fun Fact line', () => {
 		expect(replaced.names).not.toContain('Ronnie-Lou');
 	});
 
+	it('mixes in Christmas’s own Fun Facts while Christmas is the TV Theme, and only then', () => {
+		vi.useFakeTimers({ now: decemberNight });
+		const store = showDisplay();
+		const isNameless = (fact: string) => !fact.includes('{A}');
+		const christmasNamelessCount = christmasFunFacts.filter(isNameless).length;
+		const namelessCount = funFacts.filter(isNameless).length;
+
+		const christmasPass = collectFunFacts(namelessCount + christmasNamelessCount, []);
+
+		const christmasShown = christmasPass.filter(({ fact }) => christmasFunFacts.includes(fact));
+		expect(new Set(christmasShown.map(({ fact }) => fact)).size).toBe(christmasNamelessCount);
+
+		const blank = createTournament();
+		saveOutcome(store, pickTvTheme(blank, 'classic'));
+		const classicFacts = collectFunFacts(namelessCount, []);
+
+		const christmasAfterPick = classicFacts
+			.slice(1)
+			.filter(({ fact }) => christmasFunFacts.includes(fact));
+		expect(christmasAfterPick).toEqual([]);
+	});
+
 	it('is gone once the Organizer moves on from registration', () => {
-		vi.useFakeTimers();
+		vi.useFakeTimers({ now: monday });
 		const registered = registerPlayers('Ron', 'Sue');
 		const store = showDisplay(registered);
 		expect(readFunFact()).toMatch(/^Fun fact: /);
@@ -709,7 +760,7 @@ type ShownFunFact = { fact: string; names: string[] };
 const parseFunFact = (players: readonly Player[]): ShownFunFact => {
 	const shown = readFunFact()!.replace(/^Fun fact: /, '');
 	const names = players.map((p) => escapeRegExp(p.name)).join('|');
-	for (const fact of funFacts) {
+	for (const fact of [...funFacts, ...christmasFunFacts]) {
 		const slots = fact.match(/\{[AB]\}/g) ?? [];
 		const pattern = escapeRegExp(fact).replace(/\\\{[AB]\\\}/g, `(${names})`);
 		const match = new RegExp(`^${pattern}$`).exec(shown);
@@ -774,5 +825,8 @@ const findLatestHouseRule = () =>
 	findHouseRulesList()
 		.getAllByRole('listitem')
 		.find((item) => item.getAttribute('aria-current') === 'true');
+
+// The TV Theme the TV is drawn in, set on the TV screen.
+const readTvTheme = () => screen.getByRole('main').dataset.tvTheme;
 
 const readHeading = () => screen.getByRole('heading', { level: 1 }).textContent;

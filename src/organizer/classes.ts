@@ -113,5 +113,5 @@ export const pickedTag =
  * TV screen's frame, so every size on the screen scales with the box.
  */
 export const tvPicture = {
-	frame: `aspect-video overflow-hidden bg-black font-sans text-white ${tvFrame}`,
+	frame: `aspect-video overflow-hidden bg-tv-ground font-sans text-tv-ink ${tvFrame}`,
 };

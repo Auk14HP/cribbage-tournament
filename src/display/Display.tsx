@@ -8,6 +8,8 @@ import type { Random, Tournament } from '../tournament';
 import { useTvHeartbeat, type TvHeartbeat } from '../tvHeartbeat';
 import { useTournament } from '../useTournament';
 import { tvSafeArea } from './tvSafeArea';
+import { TvThemeBorder, TvThemeRingMotif } from './TvThemeArt';
+import { findTvThemeToday, TvThemeContext } from './tvThemeContext';
 import { TvScreenView } from './TvScreenView';
 import {
 	countdownRing,
@@ -20,7 +22,7 @@ import {
 
 /*
  * Fun Facts are chosen with the random source given, so tests can repeat them. The window is the TV screen's
- * frame, so the screen fills it. The countdown ring shows over the screen's time on Auto; a Held screen, or a
+ * frame, so the screen fills it, drawn in the TV Theme, whose artwork moves here alone. The countdown ring shows over the screen's time on Auto; a Held screen, or a
  * phase's only screen, has none. While open, it saves the TV's heartbeat, so the Organizer screen knows the TV
  * is running.
  */
@@ -37,11 +39,18 @@ export const Display = ({
 	const tournament = useTournament(store);
 	const onShow = useTvScreenOnShow(tournament);
 	const countdown = describeCountdown(tournament, onShow);
+	const tvTheme = findTvThemeToday(tournament);
 	return (
 		<div className={`h-screen w-screen ${tvFrame}`}>
-			<main className={`min-h-full bg-black text-white ${tvSafeArea.page}`}>
-				<TvScreenView tournament={tournament} onShow={onShow} random={random} />
-				{countdown && <CountdownRing key={countdown.key} countdown={countdown} />}
+			<main
+				data-tv-theme={tvTheme}
+				className={`bg-tv-ground text-tv-ink relative min-h-full ${tvSafeArea.page}`}
+			>
+				<TvThemeContext value={{ tvTheme, isMoving: true }}>
+					<TvThemeBorder />
+					<TvScreenView tournament={tournament} onShow={onShow} random={random} />
+					{countdown && <CountdownRing key={countdown.key} countdown={countdown} />}
+				</TvThemeContext>
 			</main>
 		</div>
 	);
@@ -50,7 +59,7 @@ export const Display = ({
 /*
  * A ring in the safe area's bottom-right corner that fills over the screen's time, so the room sees a change
  * coming. It sits in the strip the screen keeps clear for it, clear of every Match card. It starts filled as
- * far as the time already gone when it appears, and fills on from there.
+ * far as the time already gone when it appears, and fills on from there. The TV Theme's motif sits in its hole.
  * Decorative, so hidden from assistive technology. The times reach the animation through inherited CSS
  * variables.
  */
@@ -64,13 +73,14 @@ const CountdownRing = ({ countdown }: { countdown: Countdown }) => {
 			style={countdownTimes}
 			className={`fixed -rotate-90 ${tvSafeArea.bottomRightCorner} ${countdownRing.size}`}
 		>
-			<circle {...ringCircle} className="stroke-gray-700" />
+			<circle {...ringCircle} className="stroke-tv-ring-track" />
 			<circle
 				{...ringCircle}
 				pathLength={1}
 				strokeDasharray={1}
-				className="animate-countdown stroke-white"
+				className="animate-countdown stroke-tv-ring"
 			/>
+			<TvThemeRingMotif />
 		</svg>
 	);
 };

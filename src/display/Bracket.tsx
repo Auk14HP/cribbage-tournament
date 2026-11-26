@@ -10,16 +10,28 @@ import {
 } from '../tournament';
 import { bracketTitles, describeRound } from '../wording';
 import { tvSafeArea } from './tvSafeArea';
+import { TvThemeTitleMotifs } from './TvThemeArt';
 import { describeFinal, describeHalf, getPathShade, type BracketSlot } from './bracketLines';
 
-// Text shrinks as the bracket grows, so a 32-place bracket's nine columns fit across the TV.
-const bracketText = ['text-[5cqh]', 'text-[5cqh]', 'text-[4cqh]', 'text-[3.2cqh]', 'text-[2.5cqh]'];
+/*
+ * Text shrinks as the bracket grows, so a 32-place bracket's nine columns fit across the TV. A TV Theme with a
+ * border scales it down a little (--tv-bracket-text-scale in src/style.css), so the bracket fits below the
+ * border's band.
+ */
+const bracketText = [
+	'text-[calc(5cqh*var(--tv-bracket-text-scale,1))]',
+	'text-[calc(5cqh*var(--tv-bracket-text-scale,1))]',
+	'text-[calc(4cqh*var(--tv-bracket-text-scale,1))]',
+	'text-[calc(3.2cqh*var(--tv-bracket-text-scale,1))]',
+	'text-[calc(2.5cqh*var(--tv-bracket-text-scale,1))]',
+];
 
 /*
  * A whole bracket: its two halves run in from either side to the final in the middle. Each Round's Matches
  * share their column's height equally and sit in the middle of their share, so every Match is centred
  * between the two that feed it, and bracket lines join them. Headed with the bracket's title, or the
- * heading given.
+ * heading given, and the TV Theme's motifs beside it: the bracket fills the rest, so the artwork keeps to the
+ * heading's line.
  */
 export const Bracket = ({
 	tournament,
@@ -37,10 +49,13 @@ export const Bracket = ({
 		describeRound({ round: round + 1, roundCount: rounds.length });
 	return (
 		<div className={`flex flex-col ${tvSafeArea.fullHeight}`}>
-			<div className="flex items-baseline justify-between">
-				<h1 className="text-[6cqh] leading-none font-bold">{heading}</h1>
+			<div className="flex items-baseline justify-between pt-[var(--tv-heading-clearance,0px)]">
+				<div className="flex items-end gap-[1.5cqw]">
+					<h1 className="text-[6cqh] leading-none font-bold">{heading}</h1>
+					<TvThemeTitleMotifs className="h-[6cqh]" />
+				</div>
 				{champion && (
-					<p className="text-[6cqh] leading-none font-bold text-yellow-300">
+					<p className="text-tv-highlight text-[6cqh] leading-none font-bold">
 						Champion: {champion.name}
 					</p>
 				)}
@@ -88,7 +103,7 @@ const BracketColumn = ({
 	champion?: Player;
 }) => (
 	<section className="flex min-w-min flex-auto flex-col">
-		<h2 className="text-center text-[2.5cqh] font-bold whitespace-nowrap text-gray-300">
+		<h2 className="text-tv-muted text-center text-[2.5cqh] font-bold whitespace-nowrap">
 			{name}
 		</h2>
 		<ul aria-label={name} className="flex flex-1 flex-col">
@@ -114,14 +129,14 @@ const getPlayerShade = (match: BracketMatch, player: BracketPlayer, champion?: P
 	if (player && 'id' in player && player.id === match.winner.id) {
 		return 'font-bold';
 	}
-	return champion ? 'text-gray-700' : 'text-gray-500';
+	return champion ? 'text-tv-lost-final' : 'text-tv-lost';
 };
 
 /*
  * A Match's two Players: the winner bright, the loser faded, a Player still to come as a dash, and a place
  * held for a Bye Player as their name with a question mark. A Match holding a Board names it. A Match on
- * the path of a Player still in the bracket has a green border. The final turns yellow once it has a
- * champion.
+ * the path of a Player still in the bracket has a border in the TV Theme's path colour (green in Classic). The
+ * final fills with the highlight colour (yellow in Classic) once it has a champion.
  */
 const MatchBox = ({
 	match,
@@ -134,10 +149,10 @@ const MatchBox = ({
 }) => (
 	<div
 		data-testid="match card"
-		className={`w-full rounded-[1cqh] border-[0.3cqh] px-[0.6cqw] py-[0.3cqh] font-semibold ${champion ? 'border-yellow-300 bg-yellow-300 text-black' : getPathShade('card', isOnPath)}`}
+		className={`w-full rounded-[1cqh] border-[0.3cqh] px-[0.6cqw] py-[0.3cqh] font-semibold ${champion ? 'border-tv-highlight bg-tv-highlight text-tv-on-champion' : getPathShade('card', isOnPath)}`}
 	>
 		{match.board !== undefined && (
-			<span className="block whitespace-nowrap text-yellow-300">Board {match.board}</span>
+			<span className="text-tv-highlight block whitespace-nowrap">Board {match.board}</span>
 		)}
 		<MatchPlayer
 			player={match.players[0]}
@@ -160,7 +175,7 @@ const MatchBox = ({
 const MatchPlayer = ({ player, shade }: { player: BracketPlayer; shade: string }) => {
 	if (player && 'placeHeldFor' in player) {
 		return (
-			<span className="line-clamp-1 break-all text-gray-400 italic">
+			<span className="text-tv-held line-clamp-1 break-all italic">
 				{player.placeHeldFor.name}?
 			</span>
 		);

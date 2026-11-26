@@ -103,6 +103,108 @@
 }
 
 /*
+ * The TV's colours, picked by the `data-tv-theme` attribute of the TV screen's frame: the TV itself, the TV
+ * Display's thumbnail and the Bracket peek. Like the Organizer screen's theme colours, a class names what a
+ * colour is for (`text-tv-muted` reads --tv-muted) and the TV Theme picks the colour. The Organizer screen's
+ * `data-theme` is a separate attribute, so a thumbnail inside the Organizer screen draws in the TV Theme.
+ */
+@theme inline {
+	--color-tv-ground: var(--tv-ground);
+	--color-tv-ink: var(--tv-ink);
+	--color-tv-highlight: var(--tv-highlight);
+	--color-tv-on-champion: var(--tv-on-champion);
+	--color-tv-muted: var(--tv-muted);
+	--color-tv-fun-fact: var(--tv-fun-fact);
+	--color-tv-held: var(--tv-held);
+	--color-tv-lost: var(--tv-lost);
+	--color-tv-lost-final: var(--tv-lost-final);
+	--color-tv-line: var(--tv-line);
+	--color-tv-path: var(--tv-path);
+	--color-tv-ring: var(--tv-ring);
+	--color-tv-ring-track: var(--tv-ring-track);
+}
+
+/*
+ * What each TV colour is for: the screen behind everything (ground), names, headings and bracket text (ink),
+ * the bright text the room looks for, such as the count of Players, a Board or a champion, and the ground of
+ * the final's card once it has a champion (highlight), the text on that card (on-champion), secondary text such
+ * as the date, a Round's name or an earlier House Rule (muted), the Fun Fact (fun-fact), a place held for a Bye
+ * Player (held), a Match's loser (lost) and, once the final has a champion, fainter still (lost-final), a Match
+ * card's border and a bracket line (line), the path of a Player still in the bracket (path), and the countdown
+ * ring's filling (ring) and track (ring-track). Names, headings and bracket text read at 7:1 or more on the
+ * ground, secondary text at 4.5:1 (e2e/tv-theme.spec.ts); a loser is faded on purpose.
+ *
+ * Every TV Theme but Classic draws a border along the top of the safe area, in a band --tv-border-band tall that
+ * the screens start below. A heading set solid, with no line spacing (the House Rules' and the brackets'), has
+ * glyph space above its letters that would reach into the band, so it starts --tv-heading-clearance lower. The
+ * 32-place bracket fills its column with no room to spare, so where the band and clearance take room from it,
+ * its text is drawn smaller by --tv-bracket-text-scale, enough for it to fit. Classic has no border, so its
+ * screens are laid out as they always were.
+ */
+@layer base {
+	[data-tv-theme] {
+		--tv-border-band: 3cqh;
+		--tv-heading-clearance: 1cqh;
+		--tv-bracket-text-scale: 0.93;
+	}
+
+	/* Classic: the TV's plain black look. */
+	[data-tv-theme='classic'] {
+		--tv-ground: var(--color-black);
+		--tv-ink: var(--color-white);
+		--tv-highlight: var(--color-yellow-300);
+		--tv-on-champion: var(--color-black);
+		--tv-muted: var(--color-gray-300);
+		--tv-fun-fact: var(--color-gray-200);
+		--tv-held: var(--color-gray-400);
+		--tv-lost: var(--color-gray-500);
+		--tv-lost-final: var(--color-gray-700);
+		--tv-line: var(--color-gray-500);
+		--tv-path: var(--color-green-400);
+		--tv-ring: var(--color-white);
+		--tv-ring-track: var(--color-gray-700);
+		--tv-border-band: 0px;
+		--tv-heading-clearance: 0px;
+		--tv-bracket-text-scale: 1;
+	}
+
+	/* Christmas: a deep pine green, gold for what the room looks for, and a string of lights along the top. */
+	[data-tv-theme='christmas'] {
+		--tv-ground: #0c2418;
+		--tv-ink: #ffffff;
+		--tv-highlight: #ffd23f;
+		--tv-on-champion: #0c2418;
+		--tv-muted: #d5e6db;
+		--tv-fun-fact: #e3efe7;
+		--tv-held: #b9cdbf;
+		--tv-lost: #9fb8a7;
+		--tv-lost-final: #5d7a66;
+		--tv-line: #6f8f78;
+		--tv-path: #ff8f8f;
+		--tv-ring: #ff7b7b;
+		--tv-ring-track: #2c4434;
+	}
+}
+
+/*
+ * A TV Theme's lights and sparkles twinkle: slowly from bright to dim and back, so nothing flashes. Each piece
+ * sets its own delay, so neighbours don't dim together. Only on the TV itself, and only while it allows motion.
+ */
+@theme {
+	--animate-twinkle: twinkle 3.2s ease-in-out infinite;
+
+	@keyframes twinkle {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.55;
+		}
+	}
+}
+
+/*
  * The TV's countdown ring fills over each screen's time. Inline, so the utility reads --countdown-duration
  * where it is used, set from the Tournament's screenSeconds, and --countdown-elapsed, the part of that time
  * already gone when the ring appears: a TV window reloaded mid-screen starts the ring part filled.

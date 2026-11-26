@@ -40,7 +40,7 @@ const isOffered = (saved: ThemeChoice | undefined): saved is ThemeChoice =>
 
 /*
  * The Organizer's saved theme choice, Same as laptop until they pick another or if the saved one is no longer
- * offered, and the theme it draws the screen in: re-renders when the choice changes, or when the laptop turns
+ * offered, the theme it draws the screen in, and the theme the laptop is on now: re-renders when the choice changes, or when the laptop turns
  * light or dark while the screen is open.
  */
 export const useTheme = (store: Store<ThemeChoice>) => {
@@ -50,5 +50,5 @@ export const useTheme = (store: Store<ThemeChoice>) => {
 	});
 	const laptopTheme = useSyncExternalStore(subscribeToLaptopScheme, findLaptopTheme);
 	const theme: Theme = choice === 'laptop' ? laptopTheme : choice;
-	return { choice, theme };
+	return { choice, theme, laptopTheme };
 };

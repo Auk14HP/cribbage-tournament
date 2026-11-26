@@ -20,7 +20,7 @@ export const TournamentTitle = ({
 		<Title className="text-[5cqh] leading-tight font-bold text-balance">
 			{tournamentTitle}
 		</Title>
-		<p className="mt-[1cqh] min-h-[4cqh] text-[4cqh] leading-none text-gray-300">
+		<p className="text-tv-muted mt-[1cqh] min-h-[4cqh] text-[4cqh] leading-none">
 			{tournament.date && describeDate(tournament.date)}
 		</p>
 	</header>

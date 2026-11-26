@@ -2,6 +2,8 @@ import { useId, useRef, type KeyboardEvent, type RefObject } from 'react';
 import { Bracket } from '../display/Bracket';
 import { tvSafeArea } from '../display/tvSafeArea';
 import { countdownRing } from '../display/tvScreenOnShow';
+import { TvThemeBorder } from '../display/TvThemeArt';
+import { findTvThemeToday, TvThemeContext } from '../display/tvThemeContext';
 import { getBracketPicture, type BracketName, type Tournament } from '../tournament';
 import { bracketTitles } from '../wording';
 import { tvPicture } from './classes';
@@ -9,7 +11,8 @@ import { tvPicture } from './classes';
 /*
  * The brackets drawn as the TV draws them, full size on the laptop, in a dialog. Tabs switch between the
  * Winners Bracket and, once there is one, the Losers Bracket. The bracket on show is the one given; the close
- * button closes the dialog. Looking changes nothing the TV shows.
+ * button closes the dialog. Looking changes nothing the TV shows. The brackets are drawn in the TV Theme, its
+ * artwork still.
  */
 export const BracketPeek = ({
 	ref,
@@ -28,6 +31,7 @@ export const BracketPeek = ({
 	// Returns the id of a bracket's tab, which names the panel it shows.
 	const makeTabId = (name: BracketName) => `${idPrefix}-${name}`;
 	const bracketNames = listBracketNames(tournament);
+	const tvTheme = findTvThemeToday(tournament);
 	// The arrow keys move between the tabs, choosing each as they reach it, as between radio buttons.
 	const moveBetweenTabs = (event: KeyboardEvent, from: BracketName) => {
 		const step = tabSteps[event.key];
@@ -86,13 +90,17 @@ export const BracketPeek = ({
 					role="tabpanel"
 					id={panelId}
 					aria-labelledby={makeTabId(bracketName)}
+					data-tv-theme={tvTheme}
 					className={`mx-auto mt-4 w-full ${peekFrameWidth} ${tvPicture.frame}`}
 				>
-					<div className={`h-full ${tvSafeArea.page}`}>
-						{/* The same clearance as the TV's, so the bracket is laid out just as the TV lays it out. */}
-						<div className={countdownRing.clearance}>
-							<Bracket tournament={tournament} bracketName={bracketName} />
-						</div>
+					<div className={`relative h-full ${tvSafeArea.page}`}>
+						<TvThemeContext value={{ tvTheme, isMoving: false }}>
+							<TvThemeBorder />
+							{/* The same clearance as the TV's, so the bracket is laid out just as the TV lays it out. */}
+							<div className={countdownRing.clearance}>
+								<Bracket tournament={tournament} bracketName={bracketName} />
+							</div>
+						</TvThemeContext>
 					</div>
 				</div>
 			)}
