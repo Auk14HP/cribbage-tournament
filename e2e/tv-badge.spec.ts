@@ -1,14 +1,11 @@
 import { expect, type Page } from '@playwright/test';
 import { expectNothingMoves } from './screenStill';
-import { test, tvSizes } from './setUpTournament';
+import { test, tvClosingTimeout, tvSizes } from './setUpTournament';
 
 /*
- * The badge beside the Organizer screen's heading says whether the TV window is running, from the heartbeat the
+ * The badge in the Organizer screen's header, beside Open TV display, says whether the TV window is running, from the heartbeat the
  * TV's window saves while it is open. While the TV is closed, Open TV display is the screen's main button.
  */
-
-// The TV shows closed within a few seconds of its last heartbeat: more than Playwright's usual wait.
-const tvClosingTimeout = { timeout: 10_000 };
 
 const findTvBadge = (organizer: Page) => organizer.getByRole('status', { name: 'TV' });
 

@@ -5,6 +5,7 @@ import {
 	findMatchesOnBoards,
 	showHouseRules,
 	test,
+	tvClosingTimeout,
 } from '../e2e/setUpTournament';
 import { findLongestNamedButton } from '../e2e/textFits';
 
@@ -78,8 +79,8 @@ test('screens', async ({ context, page: organizer }) => {
 	await shoot('registration');
 	if (process.env.TV_CLOSED) {
 		await tv.close();
-		// The badge shows TV closed a few seconds after the TV's last heartbeat.
-		await expect(organizer.getByText('TV closed')).toBeVisible({ timeout: 10_000 });
+		await expect(organizer.getByText('TV closed')).toBeVisible(tvClosingTimeout);
+		// The organizer alone, not shoot: the TV window is closed, so there is no TV to shoot.
 		await organizer.screenshot({ path: 'test-results/screens/organizer-tv-closed.png' });
 		return;
 	}

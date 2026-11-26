@@ -32,6 +32,12 @@ export const test = base.extend<{ drawSeed: number }>({
 	},
 });
 
+/*
+ * How long to wait for the Organizer screen to show TV closed: it does so within a few seconds of the TV's last
+ * heartbeat, more than Playwright's usual wait.
+ */
+export const tvClosingTimeout = { timeout: 10_000 };
+
 // The TVs the browser tests draw on: a 16:9 TV and a narrower one.
 export const tvSizes = [
 	{ width: 1920, height: 1080 },
