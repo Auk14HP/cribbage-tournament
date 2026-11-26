@@ -174,15 +174,17 @@ test.describe('Registering a long field', () => {
 		await expectPageDoesNotScroll(page);
 	});
 
-	test('keeps the last Player’s rename row on screen', async ({ page }) => {
+	test('keeps the last Player’s cell on screen as they are renamed', async ({ page }) => {
 		const players = page.getByRole('list', { name: 'Players' });
 
-		await findLastRow(players).getByRole('button', { name: 'Rename' }).click();
+		await findLastRow(players)
+			.getByRole('button', { name: /^Rename / })
+			.click();
 
 		await expectWhollyOnScreen([
 			page.getByRole('textbox', { name: /^New name for / }),
-			page.getByRole('button', { name: 'Save' }),
-			page.getByRole('button', { name: 'Cancel' }),
+			page.getByRole('button', { name: /^Save new name for / }),
+			page.getByRole('button', { name: /^Cancel renaming / }),
 		]);
 		await expectPageDoesNotScroll(page);
 	});
