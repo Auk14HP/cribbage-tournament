@@ -34,9 +34,12 @@ const findChangingParts = (tv: Page) => [
 	tv.getByTestId('countdown ring'),
 ];
 
-// Compares the TV with its saved picture of the screen named, the changing parts covered.
+/*
+ * Compares the TV with its saved picture of the screen named, the changing parts covered. A soft check,
+ * so one run compares every screen and saves a picture of each that differs.
+ */
 const expectScreenUnchanged = async (tv: Page, screenName: string) => {
-	await expect(tv).toHaveScreenshot(`${screenName}.png`, {
+	await expect.soft(tv).toHaveScreenshot(`${screenName}.png`, {
 		mask: findChangingParts(tv),
 		/*
 		 * Any shade of difference counts, so a grey a step lighter fails, with a few pixels' leeway for the edges

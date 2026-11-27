@@ -40,8 +40,9 @@ Open each, then a full-size crop of each piece of artwork: at half size a glint 
 
 ## Classic
 
-Classic is the TV as it always looked. `e2e/tv-classic.spec.ts` compares every TV screen in Classic with a saved picture, pixel by pixel, and fails when more than 20 pixels differ in any shade. The pictures differ by system, since the TV draws in the system's font: `-dev-darwin.png` from a Mac, `-dev-linux.png` from CI. To save them for the first time, or when Classic is meant to change:
+Classic is the TV as it always looked. `e2e/tv-classic.spec.ts` compares every TV screen in Classic with a saved picture, pixel by pixel, and fails when more than 20 pixels differ in any shade. The pictures differ by system, since the TV draws in the system's font: `-dev-darwin.png` from a Mac, `-dev-linux.png` from CI. CI never saves a picture (`updateSnapshots` in `playwright.config.ts`), and Playwright keeps what CI took only for a screen that already has a picture to compare with. To save the pictures for a new screen, or when Classic is meant to change:
 
 1. Save the Mac pictures: `npx playwright test tv-classic --update-snapshots`, and look at each.
-2. Push. CI never saves a picture (`updateSnapshots` in `playwright.config.ts`), so `tv-classic` fails there and the run uploads what CI took in its `playwright-traces` artifact: `gh run download <run id> -n playwright-traces -D <scratchpad>/traces`.
-3. Copy each `*-actual.png` from there to its `-dev-linux.png` in `e2e/tv-classic.spec.ts-snapshots/`, look at it, commit, and push again.
+2. For a screen with no Linux picture yet, copy its Mac picture to its `-dev-linux.png` as a stand-in, so CI has one to compare with.
+3. Push. `tv-classic` fails on CI, and the run uploads what CI took in its `playwright-traces` artifact: `gh run download <run id> -n playwright-traces -D <scratchpad>/traces`.
+4. Copy each `*-actual.png` from there over its `-dev-linux.png` in `e2e/tv-classic.spec.ts-snapshots/`, look at it, commit, and push again.
