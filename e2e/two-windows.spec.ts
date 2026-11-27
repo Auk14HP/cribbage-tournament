@@ -2,8 +2,9 @@ import { expect, type Page } from '@playwright/test';
 import { confirmDraw, findMatchesOnBoards, test } from './setUpTournament';
 
 /*
- * The Organizer's window and the TV's window share one browser session (and so one local storage),
- * as they do on the laptop. Every change on the organizer route must reach the TV without a refresh.
+ * The Organizer's window and the TV's window share one browser
+ * session (and so one local storage), as they do on the laptop. Every
+ * change on the organizer route must reach the TV without a refresh.
  */
 
 // Collects console errors (failed requests, React warnings) so the test fails on them.
@@ -83,8 +84,8 @@ test('the TV holds Tonight’s Draw from the moment the Draw is made until the O
 	await confirmDraw(organizer);
 
 	/*
-	 * 6 Players, Tonight's Draw shown as the Winners Bracket: two first-Round Matches, and in Round 2 a
-	 * Match between the two Bye Players, on Boards 1 to 3.
+	 * 6 Players, Tonight's Draw shown as the Winners Bracket: two first-Round
+	 * Matches, and in Round 2 a Match between the two Bye Players, on Boards 1 to 3.
 	 */
 	await expect(tv.getByRole('heading', { name: 'Tonight’s Draw' })).toBeVisible();
 	const roundOneCards = tv.getByRole('list', { name: 'Round 1' }).getByTestId('match card');

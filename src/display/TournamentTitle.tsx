@@ -1,6 +1,7 @@
 /*
- * The Tournament's title and the night's date, written out so nobody misreads 11/09 as September 11. The
- * date's line keeps its height before the first Player registers and sets it, so the lines below don't move.
+ * The Tournament's title and the night's date, written out so nobody
+ * misreads 11/09 as September 11. The date's line keeps its height before
+ * the first Player registers and sets it, so the lines below don't move.
  */
 import type { Tournament } from '../tournament';
 

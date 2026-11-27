@@ -3,10 +3,11 @@ import { rowAboveMatches, swapToggle } from './classes';
 import { StackedLabel } from './controls';
 
 /*
- * The row above the Matches on Tonight’s Draw: Swap Players at its right end, which turns on Swap mode and
- * becomes Done, which leaves it. In Swap mode the row is a banner saying what the next tap does, naming the
- * Player picked once there is one, and is named Swap mode, so it reads as a part of the screen of its own. The
- * banner's line takes the space left of the button, so it moves nothing.
+ * The row above the Matches on Tonight’s Draw: Swap Players at its right end,
+ * which turns on Swap mode and becomes Done, which leaves it. In Swap mode the row
+ * is a banner saying what the next tap does, naming the Player picked once there
+ * is one, and is named Swap mode, so it reads as a part of the screen of its own.
+ * The banner's line takes the space left of the button, so it moves nothing.
  */
 export const SwapRow = ({
 	swapping,
@@ -36,8 +37,8 @@ export const SwapRow = ({
 			</p>
 		)}
 		{/*
-		 * Its labels share one grid cell, so it is as wide as Swap Players whichever shows, and neither wraps nor
-		 * shrinks: the box under the pointer stays put when it becomes Done.
+		 * Its labels share one grid cell, so it is as wide as Swap Players whichever shows, and
+		 * neither wraps nor shrinks: the box under the pointer stays put when it becomes Done.
 		 */}
 		<button
 			type="button"

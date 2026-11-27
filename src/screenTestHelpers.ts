@@ -18,7 +18,10 @@ import {
 	registerPlayers,
 } from './tournament/testSetup';
 
-// An element's text as a screen reader reads it: without the parts hidden from it, such as a bracket's badge.
+/*
+ * An element's text as a screen reader reads it: without
+ * the parts hidden from it, such as a bracket's badge.
+ */
 export const readTextAloud = (element: HTMLElement) => {
 	const copy = element.cloneNode(true) as HTMLElement;
 	copy.querySelectorAll('[aria-hidden="true"]').forEach((hidden) => hidden.remove());
@@ -38,8 +41,8 @@ export const listWaitingBadges = () =>
 	listWaitingRows().map((row) => within(row).getByTestId('bracket badge').textContent);
 
 /*
- * A Tournament with the named Players registered, that many Boards set out, and the Draw made, shuffled by
- * a seeded random source.
+ * A Tournament with the named Players registered, that many Boards
+ * set out, and the Draw made, shuffled by a seeded random source.
  */
 export const setUpDraw = (names: readonly string[], { boards }: { boards: number }): Tournament => {
 	const registered = registerPlayers(...names);
@@ -51,8 +54,8 @@ export const setUpDraw = (names: readonly string[], { boards }: { boards: number
 };
 
 /*
- * 6 Players on 3 Boards, Started, the Draw's three Matches played and their losers staying: the Losers
- * Bracket is one Match on a Board and a Bye Player waiting for one.
+ * 6 Players on 3 Boards, Started, the Draw's three Matches played and their losers
+ * staying: the Losers Bracket is one Match on a Board and a Bye Player waiting for one.
  */
 export const playIntoLosersBracket = (): Tournament => {
 	const drawn = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev'], { boards: 3 });
@@ -61,8 +64,8 @@ export const playIntoLosersBracket = (): Tournament => {
 };
 
 /*
- * Saves the Tournament as the Organizer's window does: Auto's cycle starts again now if the change from the
- * Tournament saved before calls for it.
+ * Saves the Tournament as the Organizer's window does: Auto's cycle starts
+ * again now if the change from the Tournament saved before calls for it.
  */
 export const saveTournament = (store: Store<Tournament>, tournament: Tournament) => {
 	const before = store.load() ?? createTournament();

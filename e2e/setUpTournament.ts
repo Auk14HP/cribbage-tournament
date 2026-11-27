@@ -3,9 +3,9 @@ import { test as base, expect, type BrowserContext, type Page } from '@playwrigh
 // Set-up shared by the browser tests and the screenshot script.
 
 /*
- * Makes the same Draw every run: the Organizer's Draw shuffles with Math.random, replaced here by a seeded
- * stand-in (mulberry32), so a layout that once squeezed a column, or a pair of names that once overflowed a
- * card, comes back each time.
+ * Makes the same Draw every run: the Organizer's Draw shuffles with Math.random,
+ * replaced here by a seeded stand-in (mulberry32), so a layout that once squeezed
+ * a column, or a pair of names that once overflowed a card, comes back each time.
  */
 const seedDraw = async (context: BrowserContext, seed: number) => {
 	await context.addInitScript((initialSeed) => {
@@ -20,10 +20,11 @@ const seedDraw = async (context: BrowserContext, seed: number) => {
 };
 
 /*
- * Moves every window's calendar to the same day of the month in November, or its last, the 30th, from the 31st:
- * November has no TV Theme of its own, so the TV draws in Classic unless a test picks another TV Theme, in
- * whatever month the tests run. Every window moves back by the same whole number of days, worked out from
- * today's date, so the Organizer's and the TV's windows still agree on the time, and the clock still runs.
+ * Moves every window's calendar to the same day of the month in November, or its last,
+ * the 30th, from the 31st: November has no TV Theme of its own, so the TV draws in
+ * Classic unless a test picks another TV Theme, in whatever month the tests run. Every
+ * window moves back by the same whole number of days, worked out from today's date, so
+ * the Organizer's and the TV's windows still agree on the time, and the clock still runs.
  */
 const setCalendarToNovember = async (context: BrowserContext) => {
 	await context.addInitScript(() => {
@@ -36,7 +37,10 @@ const setCalendarToNovember = async (context: BrowserContext) => {
 		const novemberDay = Math.min(today.getDate(), novemberDayCount);
 		const novemberMidnight = new RealDate(today.getFullYear(), novemberIndex, novemberDay);
 		const shiftMs = todayMidnight.getTime() - novemberMidnight.getTime();
-		// A Date made with no arguments, and Date.now(), give the moved time; a Date made from a time is as given.
+		/*
+		 * A Date made with no arguments, and Date.now(), give
+		 * the moved time; a Date made from a time is as given.
+		 */
 		class NovemberDate extends RealDate {
 			constructor(...dateParts: unknown[]) {
 				if (dateParts.length === 0) {
@@ -55,9 +59,9 @@ const setCalendarToNovember = async (context: BrowserContext) => {
 };
 
 /*
- * Playwright's test, with every browser context's Draw seeded, so no test depends on a random Draw, and its
- * calendar in November, so no test depends on the month's TV Theme. A test that wants another Draw sets its own
- * seed: `test.use({ drawSeed: 7 })`.
+ * Playwright's test, with every browser context's Draw seeded, so no test depends on a
+ * random Draw, and its calendar in November, so no test depends on the month's TV
+ * Theme. A test that wants another Draw sets its own seed: `test.use({ drawSeed: 7 })`.
  */
 export const test = base.extend<{ drawSeed: number }>({
 	drawSeed: [1, { option: true }],
@@ -70,8 +74,8 @@ export const test = base.extend<{ drawSeed: number }>({
 });
 
 /*
- * How long to wait for the Organizer screen to show TV closed: it does so within a few seconds of the TV's last
- * heartbeat, more than Playwright's usual wait.
+ * How long to wait for the Organizer screen to show TV closed: it does so within
+ * a few seconds of the TV's last heartbeat, more than Playwright's usual wait.
  */
 export const tvClosingTimeoutMs = 10_000;
 
@@ -113,7 +117,10 @@ export const confirmDrawFromHouseRules = async (organizer: Page) => {
 	await organizer.getByRole('dialog').getByRole('button', { name: 'Make the Draw' }).click();
 };
 
-// Goes on from registration through the House Rules step, none shown, and makes the Draw, confirming it.
+/*
+ * Goes on from registration through the House Rules
+ * step, none shown, and makes the Draw, confirming it.
+ */
 export const confirmDraw = async (organizer: Page) => {
 	await showHouseRules(organizer);
 	await confirmDrawFromHouseRules(organizer);
@@ -130,19 +137,20 @@ export const findMatchesOnBoards = (organizer: Page) =>
 	organizer.getByRole('region', { name: 'Matches' });
 
 /*
- * Every Match goes to its first-named Player, the first on the list each time, its loser leaving rather than
- * staying for a Losers Bracket, until the Matches list is down
- * to the given number: 0 plays to the champion, 1 stops at the final, both its Players known. Found by its
- * place in the list, not its Players, since any Match will do. A locator is looked up afresh each time it is
- * used, so the one button it names is the next to click.
+ * Every Match goes to its first-named Player, the first on the list each time, its loser
+ * leaving rather than staying for a Losers Bracket, until the Matches list is down to the
+ * given number: 0 plays to the champion, 1 stops at the final, both its Players known.
+ * Found by its place in the list, not its Players, since any Match will do. A locator is
+ * looked up afresh each time it is used, so the one button it names is the next to click.
  */
 const playUntilMatchesLeft = async (page: Page, matchesLeft: number) => {
 	const matches = findMatchesOnBoards(page);
 	const matchesOnBoards = matches.getByRole('listitem');
 	const nextWinnerButton = matches.getByRole('button').first();
 	/*
-	 * Counts Matches, not buttons: the final still has its buttons when it is the only Match left. While
-	 * more than one Match holds a Board, at least one has both Players known, so there is a button to click.
+	 * Counts Matches, not buttons: the final still has its buttons when
+	 * it is the only Match left. While more than one Match holds a Board,
+	 * at least one has both Players known, so there is a button to click.
 	 */
 	while ((await matchesOnBoards.count()) > matchesLeft) {
 		await nextWinnerButton.click();
@@ -151,8 +159,8 @@ const playUntilMatchesLeft = async (page: Page, matchesLeft: number) => {
 };
 
 /*
- * Answers whether the loser is staying for the Losers Bracket, if they were asked: only a Player losing their
- * first Match is. Returns whether they were asked.
+ * Answers whether the loser is staying for the Losers Bracket, if they were asked:
+ * only a Player losing their first Match is. Returns whether they were asked.
  */
 export const answerIsLoserStayingDialogIfAsked = async (
 	page: Page,
@@ -167,9 +175,9 @@ export const answerIsLoserStayingDialogIfAsked = async (
 };
 
 /*
- * Records results, each loser of a first Match staying for the Losers Bracket, until every first Match has
- * one, which draws the Losers Bracket. Counts the losers asked rather than clicks, since a click may record a
- * later Match whose loser isn't asked.
+ * Records results, each loser of a first Match staying for the Losers Bracket, until
+ * every first Match has one, which draws the Losers Bracket. Counts the losers asked
+ * rather than clicks, since a click may record a later Match whose loser isn't asked.
  */
 export const playFirstMatchesWithLosersStaying = async (
 	organizer: Page,
@@ -206,17 +214,18 @@ export const playToFinal = (page: Page) => playUntilMatchesLeft(page, 0);
 export const playUntilTheFinal = (page: Page) => playUntilMatchesLeft(page, 1);
 
 /*
- * How long parkCycleOn waits before checking the screen is still shown. Longer than one 1-second screen, so if
- * the long time was saved too late and the TV had already moved on, the wrong screen is showing by then.
+ * How long parkCycleOn waits before checking the screen is still shown.
+ * Longer than one 1-second screen, so if the long time was saved too late
+ * and the TV had already moved on, the wrong screen is showing by then.
  */
 const msBeforeCheckingParked = 1500;
 
 /*
- * Moves Auto's cycle on to the named screen and parks it there, still on Auto, so the countdown ring stays
- * (a Held screen has none): a second per screen moves it on, and a 600-second screen then keeps it, since a
- * new time starts the cycle again from the screen on show. The long time can land after the second is up,
- * parking the wrong screen, so the screen is checked once after saving and a miss goes round again.
- * Each time is saved with Enter, as an Organizer would.
+ * Moves Auto's cycle on to the named screen and parks it there, still on Auto, so the countdown
+ * ring stays (a Held screen has none): a second per screen moves it on, and a 600-second screen
+ * then keeps it, since a new time starts the cycle again from the screen on show. The long time
+ * can land after the second is up, parking the wrong screen, so the screen is checked once after
+ * saving and a miss goes round again. Each time is saved with Enter, as an Organizer would.
  */
 export const parkCycleOn = async (organizer: Page, tv: Page, screenHeading: string) => {
 	const secondsInput = organizer.getByLabel('Seconds per TV screen');

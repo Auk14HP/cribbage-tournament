@@ -4,18 +4,19 @@ import { houseRules } from '../src/tournament/houseRules';
 import { showHouseRules, test } from './setUpTournament';
 
 /*
- * Showing a House Rule on the TV, or hiding one, moves nothing on the House Rules step: the cards change tag and
- * look in place, and the main button's label changes in its own box. jsdom can't lay out a page, so this runs in
- * a real browser, in a narrow window too, where the longest House Rule wraps.
+ * Showing a House Rule on the TV, or hiding one, moves nothing on the House
+ * Rules step: the cards change tag and look in place, and the main button's
+ * label changes in its own box. jsdom can't lay out a page, so this runs in a
+ * real browser, in a narrow window too, where the longest House Rule wraps.
  */
 
 // The line counting the House Rules on the TV: "2 of 4 on the TV".
 const findCountLine = (page: Page) => page.getByText(/^\d of 4 on the TV$/);
 
 /*
- * The parts of the House Rules step: the line counting the House Rules on the TV, the list of cards, which holds
- * the change, every card, the text of each House Rule, which would rewrap if its tag widened, the row of buttons
- * below them and each button in it, and Make the Draw beside them.
+ * The parts of the House Rules step: the line counting the House Rules on the TV, the list of
+ * cards, which holds the change, every card, the text of each House Rule, which would rewrap if its
+ * tag widened, the row of buttons below them and each button in it, and Make the Draw beside them.
  */
 const listHouseRulesParts = (page: Page) => {
 	const cardList = page.getByRole('list', { name: 'House Rules' });
@@ -48,7 +49,10 @@ for (const viewport of [
 		const parts = listHouseRulesParts(page);
 		const countLine = findCountLine(page);
 
-		// Each House Rule shown in turn: the first card goes from NEXT to ON THE TV, the second from none to NEXT.
+		/*
+		 * Each House Rule shown in turn: the first card goes
+		 * from NEXT to ON THE TV, the second from none to NEXT.
+		 */
 		for (const ruleNumber of [1, 2, 3]) {
 			await expectNothingMoves(parts, async () => {
 				await page

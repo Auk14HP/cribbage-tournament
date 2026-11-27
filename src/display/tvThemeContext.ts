@@ -3,8 +3,9 @@ import { createContext, use } from 'react';
 import { findTvTheme, type Tournament, type TvTheme } from '../tournament';
 
 /*
- * Set by each frame a TV screen is drawn in: the TV itself, the TV Display's thumbnail and the Bracket peek.
- * Whether the frame's artwork may move goes with it: only the TV's own window animates it.
+ * Set by each frame a TV screen is drawn in: the TV itself, the TV
+ * Display's thumbnail and the Bracket peek. Whether the frame's
+ * artwork may move goes with it: only the TV's own window animates it.
  */
 export const TvThemeContext = createContext<{ tvTheme: TvTheme; isMoving: boolean }>({
 	tvTheme: 'classic',

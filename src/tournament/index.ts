@@ -1,11 +1,11 @@
 /*
- * The Tournament core: owns every rule, knows nothing about the UI or the browser.
- * A Tournament is plain, JSON-serialisable data; commands return a new Tournament or a reason for refusing.
- * How callers read it: CODING_STANDARDS.md, "The Tournament core".
+ * The Tournament core: owns every rule, knows nothing about the UI or the browser. A
+ * Tournament is plain, JSON-serialisable data; commands return a new Tournament or a
+ * reason for refusing. How callers read it: CODING_STANDARDS.md, "The Tournament core".
  *
- * Callers import the core from here. Its files, each holding one concept, import only from the files above
- * them in this list, so they never import in a cycle: types, tvTheme, tvScreen, bracket, registration, houseRules,
- * seating, draw, results, views.
+ * Callers import the core from here. Its files, each holding one concept, import only
+ * from the files above them in this list, so they never import in a cycle: types,
+ * tvTheme, tvScreen, bracket, registration, houseRules, seating, draw, results, views.
  */
 export {
 	createTournament,

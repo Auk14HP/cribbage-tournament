@@ -8,9 +8,9 @@ import { bracketTitles } from '../wording';
 import { BracketBadge } from './BracketBadge';
 
 /*
- * Each card's title and colours: the Winners Bracket's champion is the night's champion, so their card is
- * edged in the theme's yellow, as its W badge is filled, on the champion's own ground, with their name in the
- * champion's colour. The Losers Bracket's card keeps a panel's own colours.
+ * Each card's title and colours: the Winners Bracket's champion is the night's champion, so their
+ * card is edged in the theme's yellow, as its W badge is filled, on the champion's own ground,
+ * with their name in the champion's colour. The Losers Bracket's card keeps a panel's own colours.
  */
 const cardLooks: Record<BracketName, { title: string; edgeAndGround: string; nameColour: string }> =
 	{
@@ -27,9 +27,9 @@ const cardLooks: Record<BracketName, { title: string; edgeAndGround: string; nam
 	};
 
 /*
- * A large card for each bracket that has a champion, side by side, the Winners Bracket's first: the bracket's
- * badge and title, the champion's name, and whom they beat in the Final, or that their opponent forfeited it.
- * Nothing while no bracket has a champion.
+ * A large card for each bracket that has a champion, side by side, the Winners Bracket's
+ * first: the bracket's badge and title, the champion's name, and whom they beat in the
+ * Final, or that their opponent forfeited it. Nothing while no bracket has a champion.
  */
 export const ChampionCards = ({ tournament }: { tournament: Tournament }) => {
 	const champions = getChampions(tournament);

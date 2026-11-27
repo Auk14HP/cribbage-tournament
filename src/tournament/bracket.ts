@@ -1,6 +1,7 @@
 /*
- * Lookups on the brackets as they stand: a Match's Players, winner and Board, the Matches still to finish,
- * and the Match a winner goes on to. Every other part of the core reads the brackets through these.
+ * Lookups on the brackets as they stand: a Match's Players, winner and
+ * Board, the Matches still to finish, and the Match a winner goes on
+ * to. Every other part of the core reads the brackets through these.
  */
 import type {
 	BracketName,
@@ -29,13 +30,16 @@ export const listIndexes = (count: number): number[] => Array.from({ length: cou
 export const findPlayer = (tournament: Tournament, id: PlayerId): Player =>
 	tournament.players.find((p) => p.id === id)!;
 
-// A bracket's Draw once made, or undefined: the Losers Bracket before its Draw, or with none played.
+/*
+ * A bracket's Draw once made, or undefined: the Losers
+ * Bracket before its Draw, or with none played.
+ */
 export const getDraw = (tournament: Tournament, bracket: BracketName): Draw | undefined =>
 	bracket === 'winners' ? tournament.winnersDraw : (tournament.losersDraw ?? undefined);
 
 /*
- * Counts a bracket's Rounds: twice as many Players as its Draw has places, halving each Round to the final,
- * so 0 before its Draw is made or when no Losers Bracket is played.
+ * Counts a bracket's Rounds: twice as many Players as its Draw has places, halving each
+ * Round to the final, so 0 before its Draw is made or when no Losers Bracket is played.
  */
 export const countRounds = (tournament: Tournament, bracket: BracketName): number => {
 	const draw = getDraw(tournament, bracket);
@@ -62,8 +66,8 @@ export const findFollowing = (tournament: Tournament, match: MatchPlace): MatchP
 		: { bracket: match.bracket, round: match.round + 1, place: Math.floor(match.place / 2) };
 
 /*
- * A Match's two Players, each known or still to come from the earlier Match that sends them. A Bye Player
- * comes into Round 2 straight from the first Round.
+ * A Match's two Players, each known or still to come from the earlier Match that
+ * sends them. A Bye Player comes into Round 2 straight from the first Round.
  */
 export const findPlayers = (tournament: Tournament, match: MatchPlace): readonly [Seat, Seat] => {
 	const { bracket, round, place } = match;
@@ -84,8 +88,8 @@ export const findPlayers = (tournament: Tournament, match: MatchPlace): readonly
 };
 
 /*
- * A first-Round entry as it stands. A Held Place is settled once its Player's first Match has a result:
- * to them if they lost it and stayed, and otherwise their opponent has a Bye.
+ * A first-Round entry as it stands. A Held Place is settled once its Player's first Match
+ * has a result: to them if they lost it and stayed, and otherwise their opponent has a Bye.
  */
 export const findSettledEntry = (
 	tournament: Tournament,
@@ -116,9 +120,10 @@ const settleEntrant = (tournament: Tournament, entrant: Entrant): Entrant | 'bye
 };
 
 /*
- * Every result of a Match a Player played in a bracket, in the order recorded. Results are filtered by
- * bracket before their Players are read. Working out who takes a Losers Bracket Held Place reads this list
- * for the Winners Bracket, so reading a Losers Match's Players here would call back into it without end.
+ * Every result of a Match a Player played in a bracket, in the order recorded.
+ * Results are filtered by bracket before their Players are read. Working out who
+ * takes a Losers Bracket Held Place reads this list for the Winners Bracket, so
+ * reading a Losers Match's Players here would call back into it without end.
  */
 export const listResultsOf = (
 	tournament: Tournament,
@@ -129,7 +134,10 @@ export const listResultsOf = (
 		(r) => r.match.bracket === bracket && findPlayers(tournament, r.match).includes(player),
 	);
 
-// A Match's two Players once both are known, ready to play, or undefined while one is still to come.
+/*
+ * A Match's two Players once both are known, ready
+ * to play, or undefined while one is still to come.
+ */
 export const findBothPlayers = (
 	tournament: Tournament,
 	match: MatchPlace,
@@ -154,8 +162,8 @@ export const findOpponent = (
 };
 
 /*
- * Every Match with a Player known and no winner yet, in bracket order: the Winners Bracket, then the Losers
- * Bracket, each from the first Round on and down each Round.
+ * Every Match with a Player known and no winner yet, in bracket order: the Winners
+ * Bracket, then the Losers Bracket, each from the first Round on and down each Round.
  */
 export const listLiveMatches = (tournament: Tournament): MatchPlace[] =>
 	(['winners', 'losers'] as const).flatMap((name) => {
@@ -185,8 +193,8 @@ export const hasChampion = (tournament: Tournament, bracket: BracketName): boole
 };
 
 /*
- * Whether a Player has lost a Match in a bracket, and so left it. A Bye is not a loss, and a Player who has
- * lost in the Winners Bracket may still be playing in the Losers Bracket.
+ * Whether a Player has lost a Match in a bracket, and so left it. A Bye is not a loss, and
+ * a Player who has lost in the Winners Bracket may still be playing in the Losers Bracket.
  */
 export const hasLostIn = (
 	tournament: Tournament,

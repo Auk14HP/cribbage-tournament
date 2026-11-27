@@ -25,9 +25,10 @@ import { getPlayerName } from '../wording';
 
 describe('making the Draw', () => {
 	/*
-	 * The bracket is the next power of two at or above the field, so 20 Players make 4 first-Round
-	 * Matches and 12 Byes. The Bye Players meet each other in Round 2, so all 20 play from the Start; with
-	 * an odd field one Player sits at a Board of their own, waiting for a first-Round Match's winner.
+	 * The bracket is the next power of two at or above the field, so 20 Players
+	 * make 4 first-Round Matches and 12 Byes. The Bye Players meet each other
+	 * in Round 2, so all 20 play from the Start; with an odd field one Player
+	 * sits at a Board of their own, waiting for a first-Round Match's winner.
 	 */
 	it.each([
 		{ field: 2, boards: 1, waiting: 0 },
@@ -114,8 +115,8 @@ describe('making the Draw', () => {
 		});
 
 		/*
-		 * 25 Players: 9 first-Round Matches and 3 between Bye Players fill the 12 Boards, ahead of the Bye
-		 * Player waiting for the last first-Round Match's winner.
+		 * 25 Players: 9 first-Round Matches and 3 between Bye Players fill the 12 Boards,
+		 * ahead of the Bye Player waiting for the last first-Round Match's winner.
 		 */
 		const drawOf25 = expectOk(makeSeededDraw({ players: 25, boards: 12 }));
 

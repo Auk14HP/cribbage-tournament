@@ -58,6 +58,15 @@ export default defineConfig([
 			'func-style': ['error', 'expression'],
 			'prefer-arrow-callback': 'error',
 			'@stylistic/multiline-comment-style': ['error', 'starred-block'],
+			/*
+			 * Comments wrap at Prettier's print width, which Prettier leaves comments to: a comment line runs no
+			 * longer than 100 columns, a tab counted as 4, as Prettier counts. Code is Prettier's to wrap, so its
+			 * limit here is out of reach. A line holding a URL may run on, since a URL can't be broken.
+			 */
+			'@stylistic/max-len': [
+				'error',
+				{ code: 1000, comments: 100, tabWidth: 4, ignoreUrls: true },
+			],
 			'@typescript-eslint/no-deprecated': 'error',
 			'@typescript-eslint/no-floating-promises': 'error',
 			'no-restricted-syntax': [

@@ -3,8 +3,9 @@ import { expectNothingMoves } from './screenStill';
 import { test, tvClosingTimeoutMs, tvSizes } from './setUpTournament';
 
 /*
- * The badge in the Organizer screen's header, beside Open TV display, says whether the TV window is running, from the heartbeat the
- * TV's window saves while it is open. While the TV is closed, Open TV display is the screen's main button.
+ * The badge in the Organizer screen's header, beside Open TV display, says whether
+ * the TV window is running, from the heartbeat the TV's window saves while it is
+ * open. While the TV is closed, Open TV display is the screen's main button.
  */
 
 const findTvBadge = (organizer: Page) => organizer.getByRole('status', { name: 'TV' });

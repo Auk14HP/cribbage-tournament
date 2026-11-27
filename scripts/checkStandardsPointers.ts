@@ -1,23 +1,24 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 
 /*
- * Checks the pointers in the files that steer agents and reviewers: every path they name in backticks, such as
- * `e2e/screenStill.ts` or `GLOSSARY.md`, exists, and every name they place in a file, such as `windowFilling` in
- * `src/organizer/classes.ts`, is still in that file. A rename, move or deletion that leaves a pointer behind
- * fails `npm run check`, naming the pointer, so the standards never send a reader to code that isn't there.
+ * Checks the pointers in the files that steer agents and reviewers: every path they name
+ * in backticks, such as `e2e/screenStill.ts` or `GLOSSARY.md`, exists, and every name they
+ * place in a file, such as `windowFilling` in `src/organizer/classes.ts`, is still in that
+ * file. A rename, move or deletion that leaves a pointer behind fails `npm run check`,
+ * naming the pointer, so the standards never send a reader to code that isn't there.
  */
 
 const steeringFiles = ['CODING_STANDARDS.md', 'CLAUDE.md'];
 
 /*
- * A path in backticks: a folder and what follows, such as `src/routes.ts` or `docs/adr/`, or a file at the
- * repo's root, such as `GLOSSARY.md`.
+ * A path in backticks: a folder and what follows, such as `src/routes.ts`
+ * or `docs/adr/`, or a file at the repo's root, such as `GLOSSARY.md`.
  */
 const pathPattern = /`([\w.-]+\/[\w./-]*|[\w-]+\.(?:md|ts|tsx|js|json|css|sh|yml))`/g;
 
 /*
- * A name placed in a file: `name` in `path`, or `name` (`path`). A type's parameters after the name, as in
- * `Result<T>`, are left off, and the bare name is looked for.
+ * A name placed in a file: `name` in `path`, or `name` (`path`). A type's parameters
+ * after the name, as in `Result<T>`, are left off, and the bare name is looked for.
  */
 const namedPointerPattern = /`([A-Za-z_]\w*)(?:<[^`]*>)?`,? (?:in |\()`([\w.-]+\/[\w./-]*)`/g;
 

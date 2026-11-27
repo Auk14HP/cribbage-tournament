@@ -1,20 +1,23 @@
 /*
- * The palette button in the Organizer screen's header and the menu it opens, in two sections, each ticking its
- * choice: This screen, the Organizer screen's Theme (Same as laptop, Light and Dark), and TV, the Tournament's
- * TV Theme (Classic, then the months' in calendar order). Every choice shows a swatch of its colours.
- * It works by keyboard as a menu button does: Enter, Space or the down arrow opens it on the chosen Theme, the
- * arrow keys, Home and End move through both sections as one list, Enter or Space picks one, and Escape closes
- * it, focus back on the button. Tab, a click elsewhere or a pick closes it too. Pointing at a choice moves focus
- * to it, so only one choice is ever highlighted, and it is the one Enter would pick.
+ * The palette button in the Organizer screen's header and the menu it opens, in two sections,
+ * each ticking its choice: This screen, the Organizer screen's Theme (Same as laptop, Light and
+ * Dark), and TV, the Tournament's TV Theme (Classic, then the months' in calendar order). Every
+ * choice shows a swatch of its colours. It works by keyboard as a menu button does: Enter,
+ * Space or the down arrow opens it on the chosen Theme, the arrow keys, Home and End move
+ * through both sections as one list, Enter or Space picks one, and Escape closes it, focus back
+ * on the button. Tab, a click elsewhere or a pick closes it too. Pointing at a choice moves
+ * focus to it, so only one choice is ever highlighted, and it is the one Enter would pick.
  */
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { listTvThemes, tvThemeMonths, tvThemeNames, type TvTheme } from '../tournament';
 import { quietButtons } from './classes';
+import { CheckIcon, PaletteIcon } from './ThemeMenuIcons';
 import { themeChoices, type Theme, type ThemeChoice } from './themes';
 
 /*
- * The menu floats below the button, over the screen, so opening it moves nothing. The focused theme is highlighted and
- * outlined, the outline drawn inside its own box so the theme below it can't cover its edge.
+ * The menu floats below the button, over the screen, so opening it moves
+ * nothing. The focused theme is highlighted and outlined, the outline
+ * drawn inside its own box so the theme below it can't cover its edge.
  */
 const menuClasses = {
 	menu: 'absolute top-full right-0 z-10 mt-2 flex min-w-48 flex-col rounded-lg border border-divider bg-panel p-1 shadow-xl',
@@ -25,9 +28,9 @@ const menuClasses = {
 };
 
 /*
- * A swatch: a circle split corner to corner between a choice's ground and its bright colour. Each swatch takes
- * its colours from its own theme attribute, so it shows the Theme or TV Theme it stands for whatever the
- * screen is drawn in.
+ * A swatch: a circle split corner to corner between a choice's ground and its
+ * bright colour. Each swatch takes its colours from its own theme attribute, so
+ * it shows the Theme or TV Theme it stands for whatever the screen is drawn in.
  */
 const swatchShape = 'size-4 shrink-0 rounded-full border border-line bg-linear-135 from-50% to-50%';
 
@@ -58,7 +61,10 @@ interface MenuChoice {
 	readonly pick: () => void;
 }
 
-// Where each arrow key, Home and End moves focus in a list of the given length, wrapping round at the ends.
+/*
+ * Where each arrow key, Home and End moves focus in a
+ * list of the given length, wrapping round at the ends.
+ */
 const findNextIndex = (key: string, index: number, count: number) => {
 	switch (key) {
 		case 'ArrowDown':
@@ -74,42 +80,9 @@ const findNextIndex = (key: string, index: number, count: number) => {
 	}
 };
 
-const PaletteIcon = () => (
-	<svg
-		aria-hidden="true"
-		className="size-5"
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		strokeWidth="2"
-		strokeLinecap="round"
-		strokeLinejoin="round"
-	>
-		<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.9 1.8-1.9 0-.5-.2-.9-.5-1.3-.3-.3-.5-.8-.5-1.3 0-1 .8-1.8 1.9-1.8H17a4 4 0 0 0 4-4C21 6.4 17 3 12 3Z" />
-		<circle cx="7.5" cy="11" r="1" />
-		<circle cx="10" cy="7" r="1" />
-		<circle cx="14.5" cy="7" r="1" />
-	</svg>
-);
-
-const CheckIcon = ({ isShown }: { isShown: boolean }) => (
-	<svg
-		aria-hidden="true"
-		className={`size-4 ${isShown ? '' : 'invisible'}`}
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		strokeWidth="2.5"
-		strokeLinecap="round"
-		strokeLinejoin="round"
-	>
-		<path d="M5 12l5 5L20 7" />
-	</svg>
-);
-
 /*
- * One choice in the menu: ticked if chosen, its swatch, its name and, for a month's TV Theme, the month. Reached
- * by the arrow keys rather than Tab; pointing at it moves focus to it.
+ * One choice in the menu: ticked if chosen, its swatch, its name and, for a month's TV Theme,
+ * the month. Reached by the arrow keys rather than Tab; pointing at it moves focus to it.
  */
 const MenuItem = ({
 	choice,
@@ -147,8 +120,8 @@ const MenuItem = ({
 );
 
 /*
- * Same as laptop's swatch is the Theme the laptop is on now. The Tournament's TV Theme is the one ticked in the
- * TV section.
+ * Same as laptop's swatch is the Theme the laptop is on now. The
+ * Tournament's TV Theme is the one ticked in the TV section.
  */
 export const ThemeMenu = ({
 	choice,
@@ -235,8 +208,9 @@ export const ThemeMenu = ({
 
 	return (
 		/*
-		 * Closes the menu when focus leaves it and its button, as a click elsewhere on the screen moves it. A
-		 * click on the button itself keeps focus inside, so the button's own toggle decides.
+		 * Closes the menu when focus leaves it and its button, as a
+		 * click elsewhere on the screen moves it. A click on the button
+		 * itself keeps focus inside, so the button's own toggle decides.
 		 */
 		<div
 			// A flex box, so the button stretches to whatever height its container gives the menu.
@@ -264,8 +238,9 @@ export const ThemeMenu = ({
 				<div id={menuId} role="menu" aria-label="Theme" className={menuClasses.menu}>
 					{sections.map((section, sectionIndex) => (
 						/*
-						 * Each section a group of its own, named by its heading. The heading is drawn for the eye and
-						 * the group's name says it to a screen reader, as a menu holds only groups and choices.
+						 * Each section a group of its own, named by its heading. The
+						 * heading is drawn for the eye and the group's name says it to
+						 * a screen reader, as a menu holds only groups and choices.
 						 */
 						<div key={section.name} className="contents">
 							{sectionIndex > 0 && (

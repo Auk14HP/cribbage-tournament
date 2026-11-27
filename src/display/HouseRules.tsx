@@ -1,7 +1,7 @@
 /*
- * The House Rules step: the House Rules the Organizer has shown so far, as they announce them, under the
- * number of Players tonight. The latest stands out, so the room knows which one is being talked about, and
- * the earlier ones fade slightly. The TV Theme's motifs stand beside the heading.
+ * The House Rules step: the House Rules the Organizer has shown so far, as they announce them,
+ * under the number of Players tonight. The latest stands out, so the room knows which one is being
+ * talked about, and the earlier ones fade slightly. The TV Theme's motifs stand beside the heading.
  */
 import { houseRules, type Tournament } from '../tournament';
 import { describePlayersTonight } from '../wording';

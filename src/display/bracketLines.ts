@@ -3,16 +3,19 @@ import type { BracketMatch, PlayerId } from '../tournament';
 
 type Side = 'left' | 'right';
 type LineShape = 'straight' | 'down' | 'up';
-// One Round's Matches, or half of them, in bracket order. A Bye's place in the first Round is undefined.
+/*
+ * One Round's Matches, or half of them, in bracket
+ * order. A Bye's place in the first Round is undefined.
+ */
 type RoundMatches = readonly (BracketMatch | undefined)[];
 // Whether a Player is still in the bracket: they haven't lost a Match in it.
 export type IsStillInBracket = (player: PlayerId) => boolean;
 
 /*
- * The colours of a winner's path, kept in one place: a Match card's border, and a bracket line on a
- * slot's ::after or ::before. The TV Theme's path colour (green in Classic) is the path a Player still in the
- * bracket took, from each Match they won to the Match they're in now; everything else is its line colour. Each class is written out whole
- * so Tailwind finds it.
+ * The colours of a winner's path, kept in one place: a Match card's border, and a bracket line
+ * on a slot's ::after or ::before. The TV Theme's path colour (green in Classic) is the path a
+ * Player still in the bracket took, from each Match they won to the Match they're in now;
+ * everything else is its line colour. Each class is written out whole so Tailwind finds it.
  */
 const pathShade = {
 	card: { plain: 'border-tv-line', path: 'border-tv-path' },
@@ -24,12 +27,13 @@ export const getPathShade = (element: keyof typeof pathShade, isPath: boolean) =
 	pathShade[element][isPath ? 'path' : 'plain'];
 
 /*
- * Bracket lines, drawn with CSS on each slot and sized to half the gap between Round columns. They are in
- * cqw, not cqh, because that gap is 1cqw wide: a line sized in cqh would fall short of the next column, or
- * run into it, on a TV that isn't 16:9. A Match draws its line out on ::after: across to the gap's middle,
- * then down or up to meet its pair halfway, which is level with the Match they feed. That Match draws the
- * rest on ::before: across from the gap's middle to its own box. The final, fed from both sides, draws its
- * right one on ::after. Both rely on every slot in a column taking an equal share of its height.
+ * Bracket lines, drawn with CSS on each slot and sized to half the gap between Round columns.
+ * They are in cqw, not cqh, because that gap is 1cqw wide: a line sized in cqh would fall
+ * short of the next column, or run into it, on a TV that isn't 16:9. A Match draws its line
+ * out on ::after: across to the gap's middle, then down or up to meet its pair halfway, which
+ * is level with the Match they feed. That Match draws the rest on ::before: across from the
+ * gap's middle to its own box. The final, fed from both sides, draws its right one on
+ * ::after. Both rely on every slot in a column taking an equal share of its height.
  *
  * The pieces each line is built from, written out whole so Tailwind finds every class.
  */
@@ -83,7 +87,10 @@ const isWonByPlayerStillInBracket = (
 const isFedByPlayerStillInBracket = (isStillInBracket: IsStillInBracket, feeders: RoundMatches) =>
 	feeders.some((match) => isWonByPlayerStillInBracket(isStillInBracket, match));
 
-// The line into a Match from the places that feed it on one side. A Match fed only by Byes has none.
+/*
+ * The line into a Match from the places that feed it
+ * on one side. A Match fed only by Byes has none.
+ */
 const drawLineIn = (
 	isStillInBracket: IsStillInBracket,
 	feeders: RoundMatches,
@@ -105,9 +112,9 @@ export interface BracketSlot {
 }
 
 /*
- * One half of a Round: each Match with its line out towards the final, and its line in from the two
- * places in the Round before that feed it. A first-Round Match has none feeding it. A Bye's place stays
- * undefined.
+ * One half of a Round: each Match with its line out towards the final,
+ * and its line in from the two places in the Round before that feed it. A
+ * first-Round Match has none feeding it. A Bye's place stays undefined.
  */
 export const describeHalf = (
 	isStillInBracket: IsStillInBracket,

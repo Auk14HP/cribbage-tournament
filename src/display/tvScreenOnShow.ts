@@ -3,14 +3,15 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { findTvScreenOnShow, type Tournament, type TvScreenOnShow } from '../tournament';
 
 /*
- * Makes a box the TV screen's frame: the screen's sizes are hundredths of its width and height. The box needs
- * a height of its own, since what it holds can't set it.
+ * Makes a box the TV screen's frame: the screen's sizes are hundredths of its width
+ * and height. The box needs a height of its own, since what it holds can't set it.
  */
 export const tvFrame = '[container-type:size]';
 
 /*
- * Returns the screen the TV has on show, worked out from the Tournament and the clock, or undefined before
- * Start. On Auto it looks at the clock again the moment the screen's time is up, so the next screen shows.
+ * Returns the screen the TV has on show, worked out from the Tournament
+ * and the clock, or undefined before Start. On Auto it looks at the clock
+ * again the moment the screen's time is up, so the next screen shows.
  */
 export const useTvScreenOnShow = (tournament: Tournament): TvScreenOnShow | undefined => {
 	// The time the screen on show was last worked out at.
@@ -29,9 +30,9 @@ export const useTvScreenOnShow = (tournament: Tournament): TvScreenOnShow | unde
 };
 
 /*
- * The countdown over the screen on show holds how long the screen shows, the seconds left of it, and the key
- * that tells one screen's countdown from the next: the cycle's start and the screen. A countdown keyed by it
- * starts again exactly when the screen changes or the cycle starts again.
+ * The countdown over the screen on show holds how long the screen shows, the seconds left of it,
+ * and the key that tells one screen's countdown from the next: the cycle's start and the screen.
+ * A countdown keyed by it starts again exactly when the screen changes or the cycle starts again.
  */
 export interface Countdown {
 	readonly key: string;
@@ -40,8 +41,8 @@ export interface Countdown {
 }
 
 /*
- * Returns the countdown over the screen on show, or undefined when there is nothing to count down to: before
- * Start, on a Held screen, or on a phase's only screen.
+ * Returns the countdown over the screen on show, or undefined when there is nothing
+ * to count down to: before Start, on a Held screen, or on a phase's only screen.
  */
 export const describeCountdown = (
 	tournament: Tournament,
@@ -56,8 +57,9 @@ export const describeCountdown = (
 			};
 
 /*
- * Returns the CSS variables a countdown's animation reads: the screen's whole time, and the part of it already
- * gone when the countdown appears. The time gone is kept from then: the animation counts on by itself.
+ * Returns the CSS variables a countdown's animation reads: the screen's
+ * whole time, and the part of it already gone when the countdown appears.
+ * The time gone is kept from then: the animation counts on by itself.
  */
 export const useCountdownTimes = ({ seconds, secondsLeft }: Countdown): CSSProperties => {
 	const [elapsedSeconds] = useState(seconds - secondsLeft);
@@ -68,8 +70,8 @@ export const useCountdownTimes = ({ seconds, secondsLeft }: Countdown): CSSPrope
 };
 
 /*
- * The TV's countdown ring's size, and the strip down the safe area's right edge the screen keeps clear for it,
- * from Tonight's Draw on: the ring's width and a gap. Both in cqh, so the ring stays round and its strip fits
- * it on any TV.
+ * The TV's countdown ring's size, and the strip down the safe area's right edge
+ * the screen keeps clear for it, from Tonight's Draw on: the ring's width and a
+ * gap. Both in cqh, so the ring stays round and its strip fits it on any TV.
  */
 export const countdownRing = { size: 'h-[3cqh] w-[3cqh]', clearance: 'pr-[4cqh]' };

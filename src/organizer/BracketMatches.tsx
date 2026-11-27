@@ -21,8 +21,8 @@ import { button, confirmButton, confirmColours, dialogBox } from './classes';
 import { SwapButton, type SwapPicking } from './PlayerName';
 
 /*
- * Each of a bracket's Matches on a Board with the name of its Round, worked out once, and the names of the Rounds
- * among them, earliest first: "Round 1", "Final".
+ * Each of a bracket's Matches on a Board with the name of its Round, worked out
+ * once, and the names of the Rounds among them, earliest first: "Round 1", "Final".
  */
 const nameRounds = (tournament: Tournament, matches: readonly MatchOnBoard[]) => {
 	const namedMatches = matches.map((matchOnBoard) => {
@@ -35,9 +35,10 @@ const nameRounds = (tournament: Tournament, matches: readonly MatchOnBoard[]) =>
 };
 
 /*
- * One bracket's Matches holding a Board, in a panel of its own. Its header has the bracket's badge and name,
- * the Rounds its Matches are in and how many Boards they hold. Each Match is a tile naming its Board and both
- * Players, and once Started records a winner or a Forfeit. A tile names its Round only when the panel holds
+ * One bracket's Matches holding a Board, in a panel of its own. Its header has the
+ * bracket's badge and name, the Rounds its Matches are in and how many Boards they
+ * hold. Each Match is a tile naming its Board and both Players, and once Started
+ * records a winner or a Forfeit. A tile names its Round only when the panel holds
  * more than one. Hidden while the bracket has none. Named by its heading.
  */
 export const BracketMatches = ({
@@ -101,15 +102,19 @@ export const BracketMatches = ({
 	);
 };
 
-// A panel header's background: raised for the Winners Bracket, the main one, and the panel's own for the Losers.
+/*
+ * A panel header's background: raised for the Winners
+ * Bracket, the main one, and the panel's own for the Losers.
+ */
 const panelHeads: Record<BracketName, string> = {
 	winners: 'bg-raised',
 	losers: '',
 };
 
 /*
- * Asks which Player is forfeiting a Match before recording the Forfeit, since the Players' buttons record a
- * winner: the one picked here loses. Quieter than those buttons, as a Forfeit is the rarer result.
+ * Asks which Player is forfeiting a Match before recording the Forfeit,
+ * since the Players' buttons record a winner: the one picked here
+ * loses. Quieter than those buttons, as a Forfeit is the rarer result.
  */
 const ForfeitButton = ({
 	board,
@@ -163,10 +168,10 @@ const ForfeitButton = ({
 };
 
 /*
- * The box each Player takes in a Match tile, whether a button to record a winner, a seat to tap in Swap mode or
- * their name: the same height, and the name in the same place, every way, so neither Swap mode nor Start moves a
- * name or a tile. A name that can't be tapped is boxed too, filled but with no outline, so it reads as the
- * Player's place in the Match without looking like a button.
+ * The box each Player takes in a Match tile, whether a button to record a winner, a seat to tap in
+ * Swap mode or their name: the same height, and the name in the same place, every way, so neither
+ * Swap mode nor Start moves a name or a tile. A name that can't be tapped is boxed too, filled but
+ * with no outline, so it reads as the Player's place in the Match without looking like a button.
  */
 const playerSlot = 'flex min-h-11.5 w-full items-center rounded-lg border text-lg font-semibold';
 const playerSlots = {
@@ -176,10 +181,11 @@ const playerSlots = {
 };
 
 /*
- * One Match's tile: a narrow column with its Board, a label above its large number, then its Round, in smaller
- * type, when given, and at the foot the Forfeit, once the Match can be forfeited; beside it, the Players one
- * above the other. Once Started, a Match with both Players known can be won by tapping either. The Forfeit
- * comes after the Players in the tile's own order, so it is read and tabbed to last.
+ * One Match's tile: a narrow column with its Board, a label above its large number,
+ * then its Round, in smaller type, when given, and at the foot the Forfeit, once the
+ * Match can be forfeited; beside it, the Players one above the other. Once Started,
+ * a Match with both Players known can be won by tapping either. The Forfeit comes
+ * after the Players in the tile's own order, so it is read and tabbed to last.
  */
 const MatchTile = ({
 	matchOnBoard: {
@@ -208,12 +214,13 @@ const MatchTile = ({
 	const forfeitMatch = (player: Player) => onForfeit(match, player);
 	return (
 		/*
-		 * The Board's column has two rows beside the Players: the Board and its Round at the top, the Forfeit at
-		 * the foot, level with the foot of the second Player, so the Board stays put when Start brings the Forfeit.
-		 * A tile stretches to the tallest in its line, such as one whose Player waits on a winner named over two
-		 * lines; its rows keep their own height at the top, so the Forfeit stays beside the second Player and the
-		 * space left is below. Relative, so the "vs" read out between the Players, drawn nowhere, stays inside the
-		 * tile rather than stretching the page below the list it scrolls in.
+		 * The Board's column has two rows beside the Players: the Board and its Round at the
+		 * top, the Forfeit at the foot, level with the foot of the second Player, so the Board
+		 * stays put when Start brings the Forfeit. A tile stretches to the tallest in its line,
+		 * such as one whose Player waits on a winner named over two lines; its rows keep their
+		 * own height at the top, so the Forfeit stays beside the second Player and the space
+		 * left is below. Relative, so the "vs" read out between the Players, drawn nowhere,
+		 * stays inside the tile rather than stretching the page below the list it scrolls in.
 		 */
 		<li className="border-divider bg-raised relative grid grid-cols-[3.5rem_minmax(0,1fr)] grid-rows-[auto_auto] content-start gap-x-3 rounded-xl border p-3">
 			<span className="col-start-1 row-start-1 flex flex-col items-center">
@@ -260,8 +267,9 @@ const MatchTile = ({
 };
 
 /*
- * One Player in a Match tile: a button to tap once the Match can be won, a seat to tap in Swap mode, otherwise
- * their name. The seat fills the Player's slot, its name where the plain name and the winner's button put it.
+ * One Player in a Match tile: a button to tap once the Match can be won, a
+ * seat to tap in Swap mode, otherwise their name. The seat fills the Player's
+ * slot, its name where the plain name and the winner's button put it.
  */
 const MatchPlayer = ({
 	player,

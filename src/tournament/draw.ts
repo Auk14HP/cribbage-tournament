@@ -1,6 +1,6 @@
 /*
- * Making the Draw for each bracket, from the House Rules step, Swapping Players in the Winners Bracket's Draw
- * while Tonight’s Draw is shown, and Starting the Tournament.
+ * Making the Draw for each bracket, from the House Rules step, Swapping Players in the
+ * Winners Bracket's Draw while Tonight’s Draw is shown, and Starting the Tournament.
  */
 import type { Result } from '../result';
 import { findOpponent, findWinner, isBye, listIndexes, type Entrant } from './bracket';
@@ -35,16 +35,20 @@ export const makeDraw = (tournament: Tournament, random: Random): Result<Tournam
 		winnersDraw,
 		losersDrawOrder,
 	};
-	// Every Board is free at the Draw, so Matches take them lowest-numbered first; the rest wait for one.
+	/*
+	 * Every Board is free at the Draw, so Matches take
+	 * them lowest-numbered first; the rest wait for one.
+	 */
 	return { ok: true, value: reseat(drawnTournament) };
 };
 
 /*
- * Pairs Players, already in a random order, into a bracket's first-Round places. The bracket's size is the
- * next power of two at or above the field, and Byes fill the gap. Each Bye takes a whole first-Round place,
- * so no place is a Bye against a Bye. The first-Round Matches take neighbouring places at the top of the
- * bracket, so Bye Players meet each other in Round 2 and play from the Start too. Only with an odd number
- * of first-Round Matches does one Bye Player wait, for the last first-Round Match's winner.
+ * Pairs Players, already in a random order, into a bracket's first-Round places. The
+ * bracket's size is the next power of two at or above the field, and Byes fill the gap.
+ * Each Bye takes a whole first-Round place, so no place is a Bye against a Bye. The
+ * first-Round Matches take neighbouring places at the top of the bracket, so Bye Players
+ * meet each other in Round 2 and play from the Start too. Only with an odd number of
+ * first-Round Matches does one Bye Player wait, for the last first-Round Match's winner.
  */
 const createDraw = (shuffled: readonly Entrant[]): Draw => {
 	let bracketSize = 2;
@@ -64,8 +68,8 @@ const createDraw = (shuffled: readonly Entrant[]): Draw => {
 
 /*
  * Trades two Players' places in the Winners Draw, a Bye place included, before Start.
- * Which places hold Matches and which hold Byes stays as drawn, so each Match keeps its Board; seating then
- * brings a Match with a Home Board Player in it to their Home Board.
+ * Which places hold Matches and which hold Byes stays as drawn, so each Match keeps its
+ * Board; seating then brings a Match with a Home Board Player in it to their Home Board.
  */
 export const swapPlayers = (
 	tournament: Tournament,
@@ -127,10 +131,11 @@ export const start = (tournament: Tournament): Result<Tournament> => {
 };
 
 /*
- * Makes the Losers Draw once every Match the Winners Draw started has a result, from the Players staying
- * for it: with fewer than two there is no Losers Bracket. It has its own random Byes, by the same rules.
- * The Bye Player whose first Match is still to come gets a place held open, in a first-Round Match, at the
- * top of the bracket. With one Player staying, the Draw waits for that Match: there may yet be two.
+ * Makes the Losers Draw once every Match the Winners Draw started has a result, from
+ * the Players staying for it: with fewer than two there is no Losers Bracket. It has
+ * its own random Byes, by the same rules. The Bye Player whose first Match is still
+ * to come gets a place held open, in a first-Round Match, at the top of the bracket.
+ * With one Player staying, the Draw waits for that Match: there may yet be two.
  */
 export const makeLosersDrawIfDue = (tournament: Tournament): Tournament => {
 	if (tournament.losersDraw !== undefined) {
@@ -160,8 +165,8 @@ export const makeLosersDrawIfDue = (tournament: Tournament): Tournament => {
 };
 
 /*
- * The Bye Player waiting for a first-Round Match's winner, while their own first Match has no result:
- * only with an odd number of first-Round Matches.
+ * The Bye Player waiting for a first-Round Match's winner, while their own
+ * first Match has no result: only with an odd number of first-Round Matches.
  */
 const findByePlayerStillToPlay = (tournament: Tournament): PlayerId | undefined => {
 	const draw = tournament.winnersDraw!;
@@ -179,8 +184,8 @@ const findByePlayerStillToPlay = (tournament: Tournament): PlayerId | undefined 
 };
 
 /*
- * The Matches the Winners Draw started: every first-Round Match, and every Round 2 Match between two Bye
- * Players.
+ * The Matches the Winners Draw started: every first-Round
+ * Match, and every Round 2 Match between two Bye Players.
  */
 const listStartedMatches = (tournament: Tournament): MatchPlace[] => {
 	const draw = tournament.winnersDraw!;

@@ -40,15 +40,16 @@ interface PickedToSwap {
 const bracketOrder: readonly BracketName[] = ['winners', 'losers'];
 
 /*
- * The Matches holding a Board, in a panel for each bracket: the ones the Draw seats while the TV holds
- * Tonight’s Draw, then the ones being played. Before Start, Swap Players above the Matches turns on Swap
- * mode, which makes the Players' seats tappable under a banner saying what the next tap does: the first tap
- * picks a Player and the second swaps them with the Player picked. Swap Players becomes Done, which leaves it.
- * Once Started, tapping a Player's name records them as the winner, and a Forfeit records their opponent's. A
- * Player losing their first Match is asked first whether they are staying for the Losers Bracket. Matches
- * waiting for a Board are listed beneath. Results that can still be undone are listed, latest first, to correct a mistake.
- * Each bracket's champion has a card: below the Matches while the other bracket is still played, then at the top
- * once the Tournament is finished, with the Results moved beneath them.
+ * The Matches holding a Board, in a panel for each bracket: the ones the Draw seats while the TV
+ * holds Tonight’s Draw, then the ones being played. Before Start, Swap Players above the Matches
+ * turns on Swap mode, which makes the Players' seats tappable under a banner saying what the next
+ * tap does: the first tap picks a Player and the second swaps them with the Player picked. Swap
+ * Players becomes Done, which leaves it. Once Started, tapping a Player's name records them as
+ * the winner, and a Forfeit records their opponent's. A Player losing their first Match is asked
+ * first whether they are staying for the Losers Bracket. Matches waiting for a Board are listed
+ * beneath. Results that can still be undone are listed, latest first, to correct a mistake. Each
+ * bracket's champion has a card: below the Matches while the other bracket is still played, then
+ * at the top once the Tournament is finished, with the Results moved beneath them.
  */
 export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const matches = getMatchesOnBoards(tournament);
@@ -87,8 +88,9 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 		});
 	};
 	/*
-	 * Picks the Player tapped first, then swaps them with the second. Tapping the picked Player again, or
-	 * their opponent in the same Match, only clears the pick: that Swap would change nothing.
+	 * Picks the Player tapped first, then swaps them with the second.
+	 * Tapping the picked Player again, or their opponent in the same
+	 * Match, only clears the pick: that Swap would change nothing.
 	 */
 	const tapToSwap = (player: Player, match: MatchPlace) => {
 		if (!pickedToSwap) {
@@ -119,8 +121,9 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 		<div className={windowFilling.row}>
 			<div className={windowFilling.mainColumn}>
 				{/*
-				 * Once finished, the champions head the screen, and the Results take the Matches' place under them,
-				 * where the Organizer is looking, so the Final can be undone without scrolling the side column.
+				 * Once finished, the champions head the screen, and the Results take
+				 * the Matches' place under them, where the Organizer is looking, so
+				 * the Final can be undone without scrolling the side column.
 				 */}
 				{finished && (
 					<>
@@ -129,15 +132,15 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 					</>
 				)}
 				{/*
-				 * Gone once the Tournament is finished, when no Match is left to list. Not a panel itself: each
-				 * bracket's Matches are a panel of their own.
+				 * Gone once the Tournament is finished, when no Match is left to list.
+				 * Not a panel itself: each bracket's Matches are a panel of their own.
 				 */}
 				{!finished && (
 					<div className={windowFilling.column}>
 						{/*
-						 * What a tap does, above the Matches: on Tonight’s Draw, the row with Swap Players, which is Swap
-						 * mode's banner while it is on; once Started, a line saying to tap the winner, in a row of the same
-						 * height.
+						 * What a tap does, above the Matches: on Tonight’s Draw, the row with
+						 * Swap Players, which is Swap mode's banner while it is on; once
+						 * Started, a line saying to tap the winner, in a row of the same height.
 						 */}
 						{drawShown && (
 							<SwapRow
@@ -152,9 +155,10 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 							</div>
 						)}
 						{/*
-						 * The brackets' panels and the Matches waiting for a Board scroll together, so neither is squeezed
-						 * to make room for the other: a waiting Match is reached by scrolling past the panels. Hidden while
-						 * both are empty, so it leaves no gap.
+						 * The brackets' panels and the Matches waiting for a Board
+						 * scroll together, so neither is squeezed to make room for
+						 * the other: a waiting Match is reached by scrolling past the
+						 * panels. Hidden while both are empty, so it leaves no gap.
 						 */}
 						<div
 							className={`${windowFilling.scrollingArea} mt-2 flex flex-col gap-4 empty:hidden`}
@@ -179,13 +183,17 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 							)}
 							<WaitingForBoard tournament={tournament} swapPicking={swapPicking} />
 							{/*
-							 * A bracket that finishes while the other is still played has its champion's card below the
+							 * A bracket that finishes while the other is
+							 * still played has its champion's card below the
 							 * Matches left, so it takes no room from them.
 							 */}
 							<ChampionCards tournament={tournament} />
 						</div>
 						{playing && <Refusal reason={refusal} />}
-						{/* Held open on Tonight’s Draw, so a refusal in Swap mode moves nothing above it. */}
+						{/*
+						 * Held open on Tonight’s Draw, so a refusal
+						 * in Swap mode moves nothing above it.
+						 */}
 						{drawShown && <Refusal reason={swapRefusal} />}
 					</div>
 				)}
@@ -207,14 +215,20 @@ export const Draw = ({ tournament, apply }: { tournament: Tournament; apply: App
 						<button
 							type="button"
 							className={`${primaryButton} mt-2 w-full`}
-							/* Disabled in Swap mode, so the Tournament can’t Start halfway through a Swap. */
+							/*
+							 * Disabled in Swap mode, so the Tournament
+							 * can’t Start halfway through a Swap.
+							 */
 							disabled={swapping}
 							aria-describedby={swapping ? startReasonId : undefined}
 							onClick={pressStart}
 						>
 							Start
 						</button>
-						{/* Why Start is disabled, in the refusal's place: in Swap mode Start can't be refused. */}
+						{/*
+						 * Why Start is disabled, in the refusal's
+						 * place: in Swap mode Start can't be refused.
+						 */}
 						{swapping ? (
 							<p id={startReasonId} className="text-muted mt-2 min-h-6">
 								Press Done to finish swapping first.

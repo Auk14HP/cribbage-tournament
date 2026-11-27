@@ -1,9 +1,9 @@
 /*
  * The storage adapter: the single seam between the routes and saved state (ADR-0001).
- * Saves state as JSON in local storage and tells subscribers when it changes, including
- * changes saved by another window (via the browser's storage events). A hosted version
- * would replace only this module.
- * Saved state is labelled with the version of its shape; state saved with any other version loads as nothing.
+ * Saves state as JSON in local storage and tells subscribers when it changes,
+ * including changes saved by another window (via the browser's storage events). A
+ * hosted version would replace only this module. Saved state is labelled with the
+ * version of its shape; state saved with any other version loads as nothing.
  */
 
 export interface Store<T> {

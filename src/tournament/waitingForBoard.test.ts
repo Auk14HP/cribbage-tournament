@@ -21,7 +21,10 @@ import {
 
 describe('a Player waiting alone when Boards run short', () => {
 	it('gives up their Board to a re-opened Match, so the night never stalls', () => {
-		// 3 Players on 1 Board: undoing the first Match leaves the Bye Player alone on the only Board.
+		/*
+		 * 3 Players on 1 Board: undoing the first Match
+		 * leaves the Bye Player alone on the only Board.
+		 */
 		let tournament = startTournament({ players: 3, boards: 1 });
 		const [winner, loser] = listPlayersInRound(tournament, 1);
 		const firstMatch = findMatchOf(tournament, winner);
@@ -29,7 +32,10 @@ describe('a Player waiting alone when Boards run short', () => {
 
 		tournament = expectOk(undoResult(tournament, firstMatch.match));
 
-		// The re-opened Match can be played, so it takes the Board and the Bye Player waits for one.
+		/*
+		 * The re-opened Match can be played, so it takes
+		 * the Board and the Bye Player waits for one.
+		 */
 		expect(listSeats(tournament)).toEqual([[1, winner.name, loser.name]]);
 		expect(listWaiting(tournament)).toHaveLength(1);
 		tournament = expectOk(recordWinner(tournament, firstMatch.match, loser.id, 'leaving'));
@@ -39,9 +45,9 @@ describe('a Player waiting alone when Boards run short', () => {
 
 	it('moves the Player seated latest when a Match ready to play needs a Board', () => {
 		/*
-		 * 10 Players on 4 Boards. The Bye pairs play first, so a Round 3 winner sits alone in the final,
-		 * after another Player sat alone in Round 3. The first Round's results then make the Losers Draw,
-		 * and its two Matches ready to play need more Boards than are free.
+		 * 10 Players on 4 Boards. The Bye pairs play first, so a Round 3 winner sits alone in the
+		 * final, after another Player sat alone in Round 3. The first Round's results then make
+		 * the Losers Draw, and its two Matches ready to play need more Boards than are free.
 		 */
 		let tournament = startTournament({ players: 10, boards: 4 });
 		const findReadyInRound = (round: number) =>

@@ -22,10 +22,10 @@ import { NumberBox, Refusal, type Apply } from './controls';
 import { TvThumbnail } from './TvThumbnail';
 
 /*
- * The TV Display panel: a thumbnail of the screen the TV has on show and a strip filling over its time. Once
- * the TV has screens to cycle, the choice of Auto or a screen to hold, and how long the TV shows each screen.
- * Like the Boards, the seconds are saved when the Organizer leaves the box or presses Enter, not as they type;
- * a choice of screen is saved as soon as it is picked.
+ * The TV Display panel: a thumbnail of the screen the TV has on show and a strip filling over its
+ * time. Once the TV has screens to cycle, the choice of Auto or a screen to hold, and how long
+ * the TV shows each screen. Like the Boards, the seconds are saved when the Organizer leaves the
+ * box or presses Enter, not as they type; a choice of screen is saved as soon as it is picked.
  */
 export const TvDisplay = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const [refusal, setRefusal] = useState('');
@@ -39,13 +39,22 @@ export const TvDisplay = ({ tournament, apply }: { tournament: Tournament; apply
 		setRefusal(reason);
 	};
 	const screens = listTvScreens(tournament);
-	// Before Start the TV shows each phase's one screen on its own: it has no screens to choose between.
+	/*
+	 * Before Start the TV shows each phase's one screen
+	 * on its own: it has no screens to choose between.
+	 */
 	const isStarted = screens.length > 0;
-	// With only the Winners Bracket to show, there is nothing to cycle yet: no Auto, and no time to set.
+	/*
+	 * With only the Winners Bracket to show, there is
+	 * nothing to cycle yet: no Auto, and no time to set.
+	 */
 	const hasScreensToCycle = screens.length > 1;
 	const countdown = describeCountdown(tournament, onShow);
 	const bracketPeek = useRef<HTMLDialogElement>(null);
-	// The bracket the dialog shows: the one on show when it opens, then whichever tab the Organizer picks.
+	/*
+	 * The bracket the dialog shows: the one on show when
+	 * it opens, then whichever tab the Organizer picks.
+	 */
 	const [peekedBracket, setPeekedBracket] = useState<BracketName>();
 	// From the Draw on there is a Winners Bracket to look at.
 	const hasBrackets = getBracketPicture(tournament, 'winners') !== undefined;
@@ -55,12 +64,16 @@ export const TvDisplay = ({ tournament, apply }: { tournament: Tournament; apply
 	};
 	return (
 		/*
-		 * Relative, so the pills' hidden radio buttons are placed within the panel, and the side column's
-		 * scrolling holds them, rather than below the window, where they would make the page scroll.
+		 * Relative, so the pills' hidden radio buttons are placed within
+		 * the panel, and the side column's scrolling holds them, rather
+		 * than below the window, where they would make the page scroll.
 		 */
 		<section aria-label="TV Display" className={`${panel} relative flex flex-col gap-3`}>
 			<h2 className="text-xl font-bold">TV Display</h2>
-			{/* The picture of the TV and what goes with it, closer together than the panel's other parts. */}
+			{/*
+			 * The picture of the TV and what goes with it,
+			 * closer together than the panel's other parts.
+			 */}
 			<div className="flex flex-col gap-2">
 				<TvThumbnail
 					tournament={tournament}
@@ -69,8 +82,9 @@ export const TvDisplay = ({ tournament, apply }: { tournament: Tournament; apply
 					onLook={hasBrackets ? lookAtBrackets : undefined}
 				/>
 				{/*
-				 * The strip's place is kept while there is nothing to count down to, so the choices below don't
-				 * move under the Organizer's click when they hold a screen or choose Auto.
+				 * The strip's place is kept while there is nothing to count
+				 * down to, so the choices below don't move under the
+				 * Organizer's click when they hold a screen or choose Auto.
 				 */}
 				<div className="h-1">
 					{countdown && <CountdownStrip key={countdown.key} countdown={countdown} />}
@@ -87,9 +101,9 @@ export const TvDisplay = ({ tournament, apply }: { tournament: Tournament; apply
 				)}
 			</div>
 			{/*
-			 * From Start on, the choice and the seconds stay in place all night, disabled until the Losers
-			 * Bracket gives the TV a second screen, so nothing moves when they come into use. Until then the
-			 * only pill is the Winners Bracket, the screen the TV shows.
+			 * From Start on, the choice and the seconds stay in place all night, disabled until
+			 * the Losers Bracket gives the TV a second screen, so nothing moves when they come
+			 * into use. Until then the only pill is the Winners Bracket, the screen the TV shows.
 			 */}
 			{isStarted && (
 				<div className="flex flex-col gap-1">
@@ -109,7 +123,10 @@ export const TvDisplay = ({ tournament, apply }: { tournament: Tournament; apply
 									key={tvScreen}
 									choice={tvScreen}
 									label={tvScreenNames[tvScreen]}
-									// The lone pill, the Winners Bracket, is the screen on show, whatever choice is saved.
+									/*
+									 * The lone pill, the Winners Bracket, is the
+									 * screen on show, whatever choice is saved.
+									 */
 									isChosen={
 										!hasScreensToCycle || tournament.tvChoice === tvScreen
 									}
@@ -141,8 +158,8 @@ export const TvDisplay = ({ tournament, apply }: { tournament: Tournament; apply
 };
 
 /*
- * Returns the bracket to look at first: the Losers Bracket while the TV shows it, the Winners Bracket
- * otherwise, whether the TV shows that or another screen.
+ * Returns the bracket to look at first: the Losers Bracket while the TV shows it,
+ * the Winners Bracket otherwise, whether the TV shows that or another screen.
  */
 const findBracketOnShow = (onShow: TvScreenOnShow | undefined): BracketName =>
 	onShow?.screen === 'losersBracket' ? 'losers' : 'winners';
@@ -164,9 +181,9 @@ const MagnifierIcon = () => (
 );
 
 /*
- * A strip that fills over the screen's time, in step with the TV's countdown ring. It starts filled as far as
- * the time already gone when it appears, and fills on from there. Decorative, so hidden from assistive
- * technology. The times reach the animation through CSS variables.
+ * A strip that fills over the screen's time, in step with the TV's countdown ring. It starts
+ * filled as far as the time already gone when it appears, and fills on from there. Decorative,
+ * so hidden from assistive technology. The times reach the animation through CSS variables.
  */
 const CountdownStrip = ({ countdown }: { countdown: Countdown }) => {
 	const countdownTimes = useCountdownTimes(countdown);
@@ -183,10 +200,10 @@ const CountdownStrip = ({ countdown }: { countdown: Countdown }) => {
 };
 
 /*
- * One choice of what the TV shows, as a pill: a radio button, hidden, inside a label drawn as the button. The
- * chosen pill is filled with the theme's fill, and a pill shows a ring while its radio button has the
- * keyboard's focus. The arrow keys move the choice between pills, as between radio buttons. A pill in a
- * disabled fieldset is faded and can't be picked.
+ * One choice of what the TV shows, as a pill: a radio button, hidden, inside a label drawn as
+ * the button. The chosen pill is filled with the theme's fill, and a pill shows a ring while
+ * its radio button has the keyboard's focus. The arrow keys move the choice between pills, as
+ * between radio buttons. A pill in a disabled fieldset is faded and can't be picked.
  */
 const TvChoicePill = ({
 	choice,
@@ -214,7 +231,10 @@ const TvChoicePill = ({
 	</label>
 );
 
-// A pill's colours: filled when chosen, outlined otherwise. The same weight of text either way, so no pill moves.
+/*
+ * A pill's colours: filled when chosen, outlined otherwise.
+ * The same weight of text either way, so no pill moves.
+ */
 const pillColours = {
 	chosen: 'border-fill bg-fill text-on-fill',
 	plain: 'border-line hover:bg-raised has-disabled:hover:bg-transparent',

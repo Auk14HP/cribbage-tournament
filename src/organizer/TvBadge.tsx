@@ -1,11 +1,11 @@
 import { StackedLabel } from './controls';
 
 /*
- * The badge in the Organizer screen's header saying whether the TV window is running: TV open or TV closed,
- * each with a dot in its own theme colour. A status, so a screen reader says when it changes. Both labels share
- * one grid cell, so the badge is always as wide as TV closed, the longer label, and the buttons beside it stay
- * put as the TV opens or closes. Centred in the header's row, so it keeps its own height beside the taller
- * buttons.
+ * The badge in the Organizer screen's header saying whether the TV window is running: TV
+ * open or TV closed, each with a dot in its own theme colour. A status, so a screen reader
+ * says when it changes. Both labels share one grid cell, so the badge is always as wide as
+ * TV closed, the longer label, and the buttons beside it stay put as the TV opens or closes.
+ * Centred in the header's row, so it keeps its own height beside the taller buttons.
  */
 export const TvBadge = ({ isTvOpen }: { isTvOpen: boolean }) => (
 	<p
