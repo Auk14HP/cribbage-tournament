@@ -26,7 +26,7 @@ const firstMatchCount = playerCount / 2;
  * field that fills the most of each screen, on a 16:9 TV and on a narrower one, in every TV Theme.
  */
 
-// Checks the TV screen sits inside the safe area, and that the TV Theme's artwork, if it has any, covers nothing.
+// Checks the TV screen sits inside the safe area, and its TV Theme's artwork covers nothing.
 const expectScreenFits = async (tv: Page, tvThemeName: string) => {
 	await expectInsideTvSafeArea(tv);
 	if (tvThemeName !== 'Classic') {

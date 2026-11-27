@@ -1,5 +1,5 @@
 import type { MovingProps } from '../artwork';
-import { outline, twinkle } from './drawing';
+import { describeTwinkle, outlineColour } from './drawing';
 
 // The colours of the lights in turn, each with the darker shade of its far side.
 const lightColours = [
@@ -15,10 +15,10 @@ const lightCount = 28;
 // The bulb's glass, round at the bottom and narrowing to its socket.
 const glassShape = 'M10 6 C 17 10, 17 22, 10 28 C 3 22, 3 10, 10 6 Z';
 
-// One bulb, the one at the place given along the string, hanging from its socket with a soft glow round it.
+// The bulb at the place given along the string, hanging from its socket in a soft glow.
 const Bulb = ({ place, isMoving }: { place: number; isMoving: boolean }) => {
 	const { glass, shade } = lightColours[place % lightColours.length];
-	const { className, style } = twinkle(isMoving, place);
+	const { className, style } = describeTwinkle(isMoving, place);
 	return (
 		<svg
 			viewBox="0 0 20 30"
@@ -28,7 +28,7 @@ const Bulb = ({ place, isMoving }: { place: number; isMoving: boolean }) => {
 				<circle cx="10" cy="18" r="10" fill={glass} opacity="0.16" />
 				<path d={glassShape} fill={glass} />
 				<path d="M10 6 C 17 10, 17 22, 10 28 C 13 22, 14 12, 10 6 Z" fill={shade} />
-				<path d={glassShape} fill="none" stroke={outline} strokeWidth="0.9" />
+				<path d={glassShape} fill="none" stroke={outlineColour} strokeWidth="0.9" />
 				<ellipse cx="7.3" cy="14" rx="1.4" ry="3.4" fill="#ffffff" opacity="0.7" />
 				<circle cx="7.6" cy="19.6" r="0.7" fill="#ffffff" opacity="0.5" />
 			</g>
@@ -39,7 +39,7 @@ const Bulb = ({ place, isMoving }: { place: number; isMoving: boolean }) => {
 				height="7"
 				rx="1.5"
 				fill="#8c9a90"
-				stroke={outline}
+				stroke={outlineColour}
 				strokeWidth="0.9"
 			/>
 			<path d="M6.5 2.5 H13.5 M6.5 4.6 H13.5" stroke="#5f6d63" strokeWidth="0.8" />

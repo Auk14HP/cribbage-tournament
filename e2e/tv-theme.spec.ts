@@ -28,7 +28,7 @@ import {
 const playerCount = 8;
 const firstMatchCount = playerCount / 2;
 
-// The TV Theme the TV is drawn in, set on its screen.
+// The TV's screen, which carries the TV Theme it is drawn in.
 const findTvScreen = (tv: Page) => tv.getByRole('main');
 
 test('changes the TV at once when the Organizer picks a TV Theme', async ({ page: organizer }) => {

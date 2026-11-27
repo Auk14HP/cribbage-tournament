@@ -9,5 +9,7 @@
 export const tvSafeArea = {
 	page: 'px-[5cqw] pt-[calc(5cqh+var(--tv-border-band,0px))] pb-[5cqh]',
 	fullHeight: 'h-[calc(90cqh-var(--tv-border-band,0px))]',
+	// The gap a heading set solid keeps below a TV Theme's border (--tv-heading-clearance in src/style.css).
+	headingClearance: 'pt-[var(--tv-heading-clearance,0px)]',
 	bottomRightCorner: 'right-[5cqw] bottom-[5cqh]',
 };

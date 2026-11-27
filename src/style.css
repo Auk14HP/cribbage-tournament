@@ -117,7 +117,7 @@
 	--color-tv-fun-fact: var(--tv-fun-fact);
 	--color-tv-held: var(--tv-held);
 	--color-tv-lost: var(--tv-lost);
-	--color-tv-lost-final: var(--tv-lost-final);
+	--color-tv-on-champion-lost: var(--tv-on-champion-lost);
 	--color-tv-line: var(--tv-line);
 	--color-tv-path: var(--tv-path);
 	--color-tv-ring: var(--tv-ring);
@@ -127,25 +127,27 @@
 /*
  * What each TV colour is for: the screen behind everything (ground), names, headings and bracket text (ink),
  * the bright text the room looks for, such as the count of Players, a Board or a champion, and the ground of
- * the final's card once it has a champion (highlight), the text on that card (on-champion), secondary text such
- * as the date, a Round's name or an earlier House Rule (muted), the Fun Fact (fun-fact), a place held for a Bye
- * Player (held), a Match's loser (lost) and, once the final has a champion, fainter still (lost-final), a Match
- * card's border and a bracket line (line), the path of a Player still in the bracket (path), and the countdown
- * ring's filling (ring) and track (ring-track). Names, headings and bracket text read at 7:1 or more on the
- * ground, secondary text at 4.5:1 (e2e/tv-theme.spec.ts); a loser is faded on purpose.
+ * the final's card once it has a champion (highlight), the champion's name on that card (on-champion) and the
+ * loser's beside it (on-champion-lost), secondary text such as the date, a Round's name or an earlier House Rule
+ * (muted), the Fun Fact (fun-fact), a place held for a Bye Player (held), a Match's loser, faded below the names
+ * (lost), a Match card's border and a bracket line (line), the path of a Player still in the bracket (path), and
+ * the countdown ring's filling (ring) and track (ring-track). Names, headings and bracket text read at 7:1 or
+ * more on what is behind them, secondary text and a loser at 4.5:1 (e2e/tv-theme.spec.ts).
  *
  * Every TV Theme but Classic draws a border along the top of the safe area, in a band --tv-border-band tall that
  * the screens start below. A heading set solid, with no line spacing (the House Rules' and the brackets'), has
  * glyph space above its letters that would reach into the band, so it starts --tv-heading-clearance lower. The
  * 32-place bracket fills its column with no room to spare, so where the band and clearance take room from it,
- * its text is drawn smaller by --tv-bracket-text-scale, enough for it to fit. Classic has no border, so its
- * screens are laid out as they always were.
+ * its lines and its Match cards' padding are set a little closer (--tv-largest-bracket-leading and
+ * --tv-largest-bracket-card-padding), its letters kept their full size. Classic has no border, so its screens
+ * are laid out as they always were.
  */
 @layer base {
 	[data-tv-theme] {
 		--tv-border-band: 3cqh;
 		--tv-heading-clearance: 1cqh;
-		--tv-bracket-text-scale: 0.93;
+		--tv-largest-bracket-leading: 1.1;
+		--tv-largest-bracket-card-padding: 0.15cqh;
 	}
 
 	/* Classic: the TV's plain black look. */
@@ -157,15 +159,16 @@
 		--tv-muted: var(--color-gray-300);
 		--tv-fun-fact: var(--color-gray-200);
 		--tv-held: var(--color-gray-400);
-		--tv-lost: var(--color-gray-500);
-		--tv-lost-final: var(--color-gray-700);
+		--tv-lost: #7c8494;
+		--tv-on-champion-lost: var(--color-gray-700);
 		--tv-line: var(--color-gray-500);
 		--tv-path: var(--color-green-400);
 		--tv-ring: var(--color-white);
 		--tv-ring-track: var(--color-gray-700);
 		--tv-border-band: 0px;
 		--tv-heading-clearance: 0px;
-		--tv-bracket-text-scale: 1;
+		--tv-largest-bracket-leading: 1.15;
+		--tv-largest-bracket-card-padding: 0.3cqh;
 	}
 
 	/* Christmas: a deep pine green, gold for what the room looks for, and a string of lights along the top. */
@@ -178,9 +181,9 @@
 		--tv-fun-fact: #e3efe7;
 		--tv-held: #b9cdbf;
 		--tv-lost: #9fb8a7;
-		--tv-lost-final: #5d7a66;
+		--tv-on-champion-lost: #2f4a37;
 		--tv-line: #6f8f78;
-		--tv-path: #ff8f8f;
+		--tv-path: #8ef0b0;
 		--tv-ring: #ff7b7b;
 		--tv-ring-track: #2c4434;
 	}

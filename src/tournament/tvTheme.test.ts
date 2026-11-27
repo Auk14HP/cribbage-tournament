@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createTournament, findTvTheme, pickTvTheme, registerPlayer } from './index';
+import {
+	createTournament,
+	findTvTheme,
+	pickTvTheme,
+	registerPlayer,
+	type Tournament,
+} from './index';
 import { expectOk } from './testSetup';
 
 const novemberNight = new Date(2026, 10, 9, 19, 30);
@@ -37,6 +43,13 @@ describe('the TV Theme', () => {
 
 		const newTournament = createTournament();
 		expect(findTvTheme(newTournament, decemberNight)).toBe('christmas');
+	});
+
+	it('is the month’s when the saved pick names a TV Theme this version doesn’t have', () => {
+		const december = registerOn(decemberNight);
+		const savedByLaterVersion = { ...december, tvTheme: 'easter' } as unknown as Tournament;
+
+		expect(findTvTheme(savedByLaterVersion, decemberNight)).toBe('christmas');
 	});
 
 	it('refuses a pick naming no TV Theme', () => {

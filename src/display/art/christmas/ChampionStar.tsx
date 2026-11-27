@@ -1,5 +1,5 @@
 import type { MovingProps } from '../artwork';
-import { outline, twinkle } from './drawing';
+import { describeTwinkle, outlineColour } from './drawing';
 
 // The champion's star: a point of light and a point of shade on each of its five arms.
 const championStar = {
@@ -8,7 +8,7 @@ const championStar = {
 	shade: 'M50 52 L50 8 L60.6 37.4 Z M50 52 L91.8 38.4 L67.1 57.6 Z M50 52 L75.9 87.6 L50 70 Z M50 52 L24.1 87.6 L32.9 57.6 Z M50 52 L8.2 38.4 L39.4 37.4 Z',
 };
 
-// Where the four-pointed sparkles round the champion's star sit, and how far each reaches from its middle.
+// Where each four-pointed sparkle round the champion's star sits, and how far it reaches.
 const sparkles = [
 	{ x: 10, y: 12, reach: 7 },
 	{ x: 90, y: 16, reach: 5 },
@@ -19,7 +19,7 @@ const sparkles = [
 // One sparkle, the one at the place given, twinkling when allowed to move.
 const Sparkle = ({ place, isMoving }: { place: number; isMoving: boolean }) => {
 	const { x, y, reach } = sparkles[place];
-	const { className, style } = twinkle(isMoving, place);
+	const { className, style } = describeTwinkle(isMoving, place);
 	const waist = reach / 4;
 	const points = [
 		[x, y - reach],
@@ -49,7 +49,7 @@ export const ChampionStar = ({ isMoving }: MovingProps) => (
 		<polygon
 			points={championStar.outline}
 			fill="none"
-			stroke={outline}
+			stroke={outlineColour}
 			strokeWidth="2.4"
 			strokeLinejoin="round"
 		/>

@@ -10,9 +10,11 @@ import tseslint from 'typescript-eslint';
 // The Tournament core's files in src/tournament/, in the order they may import from each other.
 const coreFiles = [
 	'types',
+	'tvTheme',
 	'tvScreen',
 	'bracket',
 	'registration',
+	'houseRules',
 	'seating',
 	'draw',
 	'results',

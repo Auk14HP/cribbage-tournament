@@ -13,18 +13,20 @@ import { tvSafeArea } from './tvSafeArea';
 import { TvThemeTitleMotifs } from './TvThemeArt';
 import { describeFinal, describeHalf, getPathShade, type BracketSlot } from './bracketLines';
 
+// Text shrinks as the bracket grows, so a 32-place bracket's nine columns fit across the TV.
+const bracketText = ['text-[5cqh]', 'text-[5cqh]', 'text-[4cqh]', 'text-[3.2cqh]', 'text-[2.5cqh]'];
+
 /*
- * Text shrinks as the bracket grows, so a 32-place bracket's nine columns fit across the TV. A TV Theme with a
- * border scales it down a little (--tv-bracket-text-scale in src/style.css), so the bracket fits below the
- * border's band.
+ * The bracket's line spacing and its Match cards' padding, which the cards read from --card-padding. The
+ * 32-place bracket's cards fill their column with none to spare, so a TV Theme whose border takes room from the
+ * screen sets them a little closer (--tv-largest-bracket-leading and --tv-largest-bracket-card-padding in
+ * src/style.css), keeping the letters their full size. Each class is written out whole so Tailwind finds it.
  */
-const bracketText = [
-	'text-[calc(5cqh*var(--tv-bracket-text-scale,1))]',
-	'text-[calc(5cqh*var(--tv-bracket-text-scale,1))]',
-	'text-[calc(4cqh*var(--tv-bracket-text-scale,1))]',
-	'text-[calc(3.2cqh*var(--tv-bracket-text-scale,1))]',
-	'text-[calc(2.5cqh*var(--tv-bracket-text-scale,1))]',
-];
+const bracketSpacing = {
+	usual: 'leading-[1.15] [--card-padding:0.3cqh]',
+	largest:
+		'leading-[var(--tv-largest-bracket-leading,1.15)] [--card-padding:var(--tv-largest-bracket-card-padding,0.3cqh)]',
+};
 
 /*
  * A whole bracket: its two halves run in from either side to the final in the middle. Each Round's Matches
@@ -49,19 +51,29 @@ export const Bracket = ({
 		describeRound({ round: round + 1, roundCount: rounds.length });
 	return (
 		<div className={`flex flex-col ${tvSafeArea.fullHeight}`}>
-			<div className="flex items-baseline justify-between pt-[var(--tv-heading-clearance,0px)]">
-				<div className="flex items-end gap-[1.5cqw]">
-					<h1 className="text-[6cqh] leading-none font-bold">{heading}</h1>
+			{/*
+			 * The heading and its motifs never wrap, so the motifs stay beside it. A champion's line takes the
+			 * width left on one line, cut short with an ellipsis when the name is too long for it: the final's
+			 * card names the champion too. The line is padded below and pulled back by the same amount, so the
+			 * cut doesn't clip the tails of letters such as g and y, and the row keeps its height.
+			 */}
+			<div
+				className={`flex items-baseline justify-between gap-[2cqw] ${tvSafeArea.headingClearance}`}
+			>
+				<div className="flex shrink-0 items-end gap-[1.5cqw]">
+					<h1 className="text-[6cqh] leading-none font-bold whitespace-nowrap">
+						{heading}
+					</h1>
 					<TvThemeTitleMotifs className="h-[6cqh]" />
 				</div>
 				{champion && (
-					<p className="text-tv-highlight text-[6cqh] leading-none font-bold">
+					<p className="text-tv-highlight -mb-[0.15em] min-w-0 truncate pb-[0.15em] text-[6cqh] leading-none font-bold">
 						Champion: {champion.name}
 					</p>
 				)}
 			</div>
 			<div
-				className={`mt-[2cqh] flex flex-1 gap-[1cqw] leading-[1.15] ${bracketText[rounds.length - 1]}`}
+				className={`mt-[2cqh] flex flex-1 gap-[1cqw] ${rounds.length === bracketText.length ? bracketSpacing.largest : bracketSpacing.usual} ${bracketText[rounds.length - 1]}`}
 			>
 				{earlier.map((round) => (
 					<BracketColumn
@@ -121,7 +133,10 @@ const BracketColumn = ({
 	</section>
 );
 
-// The winner bright, the loser faded, and faded further once the final has a champion.
+/*
+ * The winner bright and the loser faded. On the final once it has a champion, the loser takes the champion
+ * card's own faded shade, since the card is drawn in the highlight colour.
+ */
 const getPlayerShade = (match: BracketMatch, player: BracketPlayer, champion?: Player) => {
 	if (match.winner === undefined) {
 		return '';
@@ -129,7 +144,7 @@ const getPlayerShade = (match: BracketMatch, player: BracketPlayer, champion?: P
 	if (player && 'id' in player && player.id === match.winner.id) {
 		return 'font-bold';
 	}
-	return champion ? 'text-tv-lost-final' : 'text-tv-lost';
+	return champion ? 'text-tv-on-champion-lost' : 'text-tv-lost';
 };
 
 /*
@@ -149,7 +164,7 @@ const MatchBox = ({
 }) => (
 	<div
 		data-testid="match card"
-		className={`w-full rounded-[1cqh] border-[0.3cqh] px-[0.6cqw] py-[0.3cqh] font-semibold ${champion ? 'border-tv-highlight bg-tv-highlight text-tv-on-champion' : getPathShade('card', isOnPath)}`}
+		className={`w-full rounded-[1cqh] border-[0.3cqh] px-[0.6cqw] py-(--card-padding) font-semibold ${champion ? 'border-tv-highlight bg-tv-highlight text-tv-on-champion' : getPathShade('card', isOnPath)}`}
 	>
 		{match.board !== undefined && (
 			<span className="text-tv-highlight block whitespace-nowrap">Board {match.board}</span>

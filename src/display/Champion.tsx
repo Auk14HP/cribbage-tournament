@@ -24,10 +24,8 @@ export const Champion = ({ tournament }: { tournament: Tournament }) => {
 						<BracketChampion bracketName="losers" champion={losersChampion} />
 					</>
 				) : (
-					<p className="text-tv-highlight mt-[6cqh] flex items-center gap-[3cqw] text-[14cqh] leading-none font-bold">
-						<TvThemeChampionMotif className="h-[14cqh]" />
-						<span>{winnersChampion.name}</span>
-						<TvThemeChampionMotif className="h-[14cqh]" />
+					<p className="mt-[6cqh]">
+						<ChampionName name={winnersChampion.name} size={championNameSizes.alone} />
 					</p>
 				)}
 			</div>
@@ -47,10 +45,32 @@ const BracketChampion = ({
 		<span className="text-tv-muted block text-[5cqh] font-bold">
 			{bracketTitles[bracketName]}
 		</span>
-		<span className="text-tv-highlight flex items-center justify-center gap-[3cqw] text-[11cqh] leading-none font-bold">
-			<TvThemeChampionMotif className="h-[11cqh]" />
-			<span>{champion.name}</span>
-			<TvThemeChampionMotif className="h-[11cqh]" />
-		</span>
+		<ChampionName name={champion.name} size={championNameSizes.besideAnother} />
 	</p>
+);
+
+/*
+ * The size of a champion's name and of the motifs beside it, which stand as tall as the name's line: larger
+ * for the night's only champion than for one of two. Each class is written out whole so Tailwind finds it.
+ */
+const championNameSizes = {
+	alone: { text: 'text-[14cqh]', motif: 'h-[14cqh]' },
+	besideAnother: { text: 'text-[11cqh]', motif: 'h-[11cqh]' },
+};
+
+// A champion's name, in the highlight colour, with the TV Theme's champion motif either side.
+const ChampionName = ({
+	name,
+	size,
+}: {
+	name: string;
+	size: (typeof championNameSizes)[keyof typeof championNameSizes];
+}) => (
+	<span
+		className={`text-tv-highlight flex items-center justify-center gap-[3cqw] leading-none font-bold ${size.text}`}
+	>
+		<TvThemeChampionMotif className={size.motif} />
+		<span>{name}</span>
+		<TvThemeChampionMotif className={size.motif} />
+	</span>
 );

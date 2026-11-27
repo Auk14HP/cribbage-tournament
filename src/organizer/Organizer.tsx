@@ -130,7 +130,7 @@ export const Organizer = ({
 							Open TV display
 						</span>
 					</a>
-					{/* The TV Theme is the Tournament's, so a pick is saved with it, and the TV changes at once. */}
+					{/* The TV Theme is the Tournament's, so a pick is saved with the Tournament. */}
 					<ThemeMenu
 						choice={themeChoice}
 						laptopTheme={laptopTheme}

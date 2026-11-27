@@ -8,6 +8,7 @@ import {
 	tvClosingTimeoutMs,
 } from '../e2e/setUpTournament';
 import { findLongestNamedButton } from '../e2e/textFits';
+import { chooseTvTheme } from '../e2e/tvTheme';
 
 // Whether the element shows within the time, rather than failing the run when it doesn't.
 const isShownWithin = async (element: Locator, timeout: number) => {
@@ -36,7 +37,8 @@ const isShownWithin = async (element: Locator, timeout: number) => {
  *   ... SCHEME=dark                         with the laptop set dark (or light), which the Organizer screen's
  *                                           Same as laptop Theme follows
  *   ... THEME_MENU=1                        and the Theme menu open at registration
- *   ... TV_THEME=Christmas                  with the TV drawn in that TV Theme, picked from the Theme menu
+ *   ... TV_THEME=Christmas                  with the TV drawn in that TV Theme, picked from the Theme menu;
+ *                                           otherwise Classic, as the calendar is moved to November
  *   ... TV_CLOSED=1                         and, after registration, the TV window closed: the organizer
  *                                           alone, its badge reading TV closed. Stops there.
  * Writes test-results/screens/{organizer,tv}-{registration,theme-menu,house-rules-two-shown,house-rules,draw,swap-picked,swapped,started,results,losers-bracket,champion,
@@ -63,9 +65,7 @@ test('screens', async ({ context, page: organizer }) => {
 	await tv.goto('/display');
 	const tvTheme = process.env.TV_THEME;
 	if (tvTheme) {
-		await organizer.getByRole('button', { name: 'Theme' }).click();
-		const tvSection = organizer.getByRole('group', { name: 'TV' });
-		await tvSection.getByRole('menuitemradio', { name: tvTheme }).click();
+		await chooseTvTheme(organizer, tvTheme);
 	}
 
 	const shoot = async (moment: string) => {

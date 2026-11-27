@@ -351,7 +351,7 @@ const chooseTheme = async (user: User, themeName: string) => {
 	await user.click(screen.getByRole('menuitemradio', { name: themeName }));
 };
 
-// The choices in one section of the theme menu, This screen or TV, by name, and which one is chosen.
+// The choices in one section of the theme menu, This screen or TV, by name, and which is chosen.
 const listThemeChoices = (sectionName: 'This screen' | 'TV') => {
 	const section = within(screen.getByRole('group', { name: sectionName }));
 	return section.getAllByRole('menuitemradio').map((item) => ({

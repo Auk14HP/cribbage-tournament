@@ -1,7 +1,5 @@
 import { TvScreenView } from '../display/TvScreenView';
-import { tvSafeArea } from '../display/tvSafeArea';
-import { TvThemeBorder } from '../display/TvThemeArt';
-import { findTvThemeToday, TvThemeContext } from '../display/tvThemeContext';
+import { TvThemePage } from '../display/TvThemePage';
 import {
 	tvScreenNames,
 	type BracketName,
@@ -12,14 +10,14 @@ import {
 import { bracketTitles } from '../wording';
 import { tvPicture } from './classes';
 
-// The names the Organizer knows the TV's screens before Start by, each the only screen of its phase.
+// The names the Organizer knows the TV's screens by before Start, each its phase's only screen.
 const phaseScreenNames: Partial<Record<Phase, string>> = {
 	registration: 'Tonight’s Players',
 	houseRules: 'House Rules',
 	drawShown: 'Tonight’s Draw',
 };
 
-// Returns the name of the screen the TV shows: the phase's own before Start, the one on show from Start.
+// Returns the name of the TV's screen: the phase's own before Start, the one on show from Start.
 const nameTvScreen = (tournament: Tournament, onShow: TvScreenOnShow | undefined) =>
 	onShow ? tvScreenNames[onShow.screen] : phaseScreenNames[tournament.phase];
 
@@ -53,46 +51,39 @@ export const TvThumbnail = ({
 	onShow: TvScreenOnShow | undefined;
 	bracketOnShow: BracketName;
 	onLook: (() => void) | undefined;
-}) => {
-	const tvTheme = findTvThemeToday(tournament);
-	return (
-		<div data-testid="tv thumbnail" className="relative">
-			<div
-				role="img"
-				aria-label={`The TV showing ${nameTvScreen(tournament, onShow)}`}
-				data-tv-theme={tvTheme}
-				className={`border-line w-full rounded-lg border ${tvPicture.frame}`}
-			>
-				<div aria-hidden className={`relative h-full ${tvSafeArea.page}`}>
-					<TvThemeContext value={{ tvTheme, isMoving: false }}>
-						<TvThemeBorder />
-						<TvScreenView
-							tournament={tournament}
-							onShow={onShow}
-							random={pickRandomApartFromMathRandom}
-						/>
-					</TvThemeContext>
-				</div>
-			</div>
-			{onLook && (
-				<button
-					type="button"
-					onClick={onLook}
-					aria-label={`Look at the ${bracketTitles[bracketOnShow]} full size`}
-					className="group absolute inset-0 cursor-zoom-in rounded-lg"
-				>
-					{/*
-					 * The hint darkens the TV picture beneath it and is written in white on it, as the TV's own
-					 * colours are, the same in every theme.
-					 */}
-					<span
-						aria-hidden
-						className="grid h-full place-items-center rounded-lg bg-black/60 font-sans font-bold text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
-					>
-						Look at it full size
-					</span>
-				</button>
-			)}
+}) => (
+	<div data-testid="tv thumbnail" className="relative">
+		<div
+			role="img"
+			aria-label={`The TV showing ${nameTvScreen(tournament, onShow)}`}
+			className={`border-line w-full rounded-lg border ${tvPicture.frame}`}
+		>
+			<TvThemePage tournament={tournament} isMoving={false} className="h-full" isHidden>
+				<TvScreenView
+					tournament={tournament}
+					onShow={onShow}
+					random={pickRandomApartFromMathRandom}
+				/>
+			</TvThemePage>
 		</div>
-	);
-};
+		{onLook && (
+			<button
+				type="button"
+				onClick={onLook}
+				aria-label={`Look at the ${bracketTitles[bracketOnShow]} full size`}
+				className="group absolute inset-0 cursor-zoom-in rounded-lg"
+			>
+				{/*
+				 * The hint darkens the TV picture beneath it and is written in white on it, as the TV's own
+				 * colours are, the same in every theme.
+				 */}
+				<span
+					aria-hidden
+					className="grid h-full place-items-center rounded-lg bg-black/60 font-sans font-bold text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+				>
+					Look at it full size
+				</span>
+			</button>
+		)}
+	</div>
+);

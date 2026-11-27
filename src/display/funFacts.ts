@@ -200,7 +200,7 @@ export interface FunFactRotation {
 	readonly turn: number;
 }
 
-// Returns the Fun Facts the TV draws from in the TV Theme given: the general ones and the TV Theme's own.
+// Returns the Fun Facts the TV draws from in the TV Theme given: the general ones and its own.
 export const listFunFacts = (tvTheme: TvTheme): readonly string[] => [
 	...funFacts,
 	...tvThemeFunFacts[tvTheme],

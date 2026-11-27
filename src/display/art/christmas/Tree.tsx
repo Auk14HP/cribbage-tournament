@@ -1,5 +1,5 @@
 import type { MovingProps } from '../artwork';
-import { outline, twinkle } from './drawing';
+import { describeTwinkle, outlineColour } from './drawing';
 
 /*
  * The tree's three tiers, top first: each a triangle with a scalloped hem, and its right half, in shade, as the
@@ -41,17 +41,23 @@ const TreeTier = ({ shape, shade }: { shape: string; shade: string }) => (
 	<g>
 		<path d={shape} fill="#3aa05a" />
 		<path d={shade} fill="#26803f" />
-		<path d={shape} fill="none" stroke={outline} strokeWidth="1.6" strokeLinejoin="round" />
+		<path
+			d={shape}
+			fill="none"
+			stroke={outlineColour}
+			strokeWidth="1.6"
+			strokeLinejoin="round"
+		/>
 	</g>
 );
 
 // One bauble, the one at the place given on the tree, with a glint, twinkling when allowed to move.
 const Bauble = ({ place, isMoving }: { place: number; isMoving: boolean }) => {
 	const { cx, cy, fill } = baubles[place];
-	const { className, style } = twinkle(isMoving, place);
+	const { className, style } = describeTwinkle(isMoving, place);
 	return (
 		<g className={className} style={style}>
-			<circle cx={cx} cy={cy} r="3.6" fill={fill} stroke={outline} strokeWidth="1" />
+			<circle cx={cx} cy={cy} r="3.6" fill={fill} stroke={outlineColour} strokeWidth="1" />
 			<circle cx={cx - 1.2} cy={cy - 1.2} r="1" fill="#ffffff" opacity="0.8" />
 		</g>
 	);
@@ -63,7 +69,15 @@ export const Tree = ({ isMoving }: MovingProps) => (
 		<ellipse cx="50" cy="119" rx="30" ry="3.5" fill="#000000" opacity="0.3" />
 		<rect x="43" y="98" width="14" height="18" fill="#7a4a24" />
 		<rect x="50" y="98" width="7" height="18" fill="#5e3719" />
-		<rect x="43" y="98" width="14" height="18" fill="none" stroke={outline} strokeWidth="1.6" />
+		<rect
+			x="43"
+			y="98"
+			width="14"
+			height="18"
+			fill="none"
+			stroke={outlineColour}
+			strokeWidth="1.6"
+		/>
 		{/* The lowest tier first, so each tier above overlaps the one below. */}
 		{[...treeTiers].reverse().map((tier) => (
 			<TreeTier key={tier.shape} shape={tier.shape} shade={tier.shade} />
@@ -90,7 +104,7 @@ export const Tree = ({ isMoving }: MovingProps) => (
 		<polygon
 			points={treeStar.outline}
 			fill="none"
-			stroke={outline}
+			stroke={outlineColour}
 			strokeWidth="1.2"
 			strokeLinejoin="round"
 		/>

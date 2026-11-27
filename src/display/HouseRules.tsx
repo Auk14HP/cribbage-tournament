@@ -5,6 +5,7 @@
  */
 import { houseRules, type Tournament } from '../tournament';
 import { describePlayersTonight } from '../wording';
+import { tvSafeArea } from './tvSafeArea';
 import { TvThemeTitleMotifs } from './TvThemeArt';
 
 // The latest House Rule stands out in bold ink; the earlier ones fade slightly to the muted colour.
@@ -18,7 +19,7 @@ export const HouseRules = ({ tournament }: { tournament: Tournament }) => {
 	const latestIndex = shownRules.length - 1;
 	return (
 		<>
-			<div className="flex items-end gap-[2cqw] pt-[var(--tv-heading-clearance,0px)]">
+			<div className={`flex items-end gap-[2cqw] ${tvSafeArea.headingClearance}`}>
 				<h1 className="text-[7cqh] leading-none font-bold">House Rules</h1>
 				<TvThemeTitleMotifs className="h-[7cqh]" />
 			</div>

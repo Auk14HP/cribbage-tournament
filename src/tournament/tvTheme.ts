@@ -35,10 +35,11 @@ const findMonthsTvTheme = (month: number): TvTheme =>
 /*
  * Returns the TV Theme the TV is drawn in: the Organizer's pick if there is one, else the TV Theme of the
  * Tournament's month, from its date, else, before the first Player registers and sets the date, of today's
- * month.
+ * month. A pick naming a TV Theme this version doesn't have, such as one saved by a later version, counts as
+ * no pick.
  */
 export const findTvTheme = (tournament: Tournament, today: Date): TvTheme => {
-	if (tournament.tvTheme) {
+	if (tournament.tvTheme && isTvTheme(tournament.tvTheme)) {
 		return tournament.tvTheme;
 	}
 	const month = tournament.date ? Number(tournament.date.split('-')[1]) : today.getMonth() + 1;

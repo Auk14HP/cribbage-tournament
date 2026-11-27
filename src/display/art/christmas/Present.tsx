@@ -1,4 +1,4 @@
-import { outline } from './drawing';
+import { outlineColour } from './drawing';
 
 // The present's polka dots: those left of the ribbon on the lit front, those right of it in shade.
 const presentDots = [
@@ -29,7 +29,7 @@ const Outline = ({
 		height={height}
 		rx="2"
 		fill="none"
-		stroke={outline}
+		stroke={outlineColour}
 		strokeWidth="1.8"
 	/>
 );
@@ -51,19 +51,27 @@ export const Present = () => (
 		<Outline x={8} y={24} width={84} height={14} />
 		<rect x="44" y="24" width="12" height="60" fill="#ffd23f" />
 		<rect x="51" y="24" width="5" height="60" fill="#e0b21f" />
-		<rect x="44" y="24" width="12" height="60" fill="none" stroke={outline} strokeWidth="1.4" />
+		<rect
+			x="44"
+			y="24"
+			width="12"
+			height="60"
+			fill="none"
+			stroke={outlineColour}
+			strokeWidth="1.4"
+		/>
 		{/* The bow: a loop either side of a knot, each loop shaded inside. */}
 		<path
 			d="M50 24 C 38 6, 20 10, 28 21 C 32 26, 44 26, 50 24 Z"
 			fill="#ffd23f"
-			stroke={outline}
+			stroke={outlineColour}
 			strokeWidth="1.4"
 		/>
 		<path d="M50 24 C 42 15, 31 14, 32 19 C 37 22, 45 23, 50 24 Z" fill="#c99a12" />
 		<path
 			d="M50 24 C 62 6, 80 10, 72 21 C 68 26, 56 26, 50 24 Z"
 			fill="#ffd23f"
-			stroke={outline}
+			stroke={outlineColour}
 			strokeWidth="1.4"
 		/>
 		<path d="M50 24 C 58 15, 69 14, 68 19 C 63 22, 55 23, 50 24 Z" fill="#c99a12" />
@@ -73,7 +81,7 @@ export const Present = () => (
 			rx="5.5"
 			ry="4.5"
 			fill="#e0b21f"
-			stroke={outline}
+			stroke={outlineColour}
 			strokeWidth="1.4"
 		/>
 		<ellipse cx="48.5" cy="22.5" rx="1.6" ry="1.1" fill="#ffffff" opacity="0.7" />

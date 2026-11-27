@@ -1,7 +1,7 @@
 // What artwork a TV Theme draws, and where: every TV Theme but Classic has each piece.
 import type { FC } from 'react';
 
-// Whether the artwork may move: only on the TV itself, and only while the TV doesn't ask for reduced motion.
+// Whether the artwork may move: only on the TV itself, and only while it allows motion.
 export interface MovingProps {
 	readonly isMoving: boolean;
 }

@@ -20,14 +20,48 @@ const seedDraw = async (context: BrowserContext, seed: number) => {
 };
 
 /*
- * Playwright's test, with every browser context's Draw seeded, so no test depends on a random Draw. A test
- * that wants another Draw sets its own seed: `test.use({ drawSeed: 7 })`.
+ * Moves every window's calendar to the same day of the month in November, or the 28th if the month is longer:
+ * November has no TV Theme of its own, so the TV draws in Classic unless a test picks another TV Theme, in
+ * whatever month the tests run. Every window moves back by the same whole number of days, worked out from
+ * today's date, so the Organizer's and the TV's windows still agree on the time, and the clock still runs.
+ */
+const setCalendarToNovember = async (context: BrowserContext) => {
+	await context.addInitScript(() => {
+		const RealDate = Date;
+		const today = new RealDate();
+		const todayMidnight = new RealDate(today.getFullYear(), today.getMonth(), today.getDate());
+		const novemberDay = Math.min(today.getDate(), 28);
+		const novemberMidnight = new RealDate(today.getFullYear(), 10, novemberDay);
+		const shift = todayMidnight.getTime() - novemberMidnight.getTime();
+		// A Date made with no arguments, and Date.now(), give the moved time; a Date made from a time is as given.
+		class NovemberDate extends RealDate {
+			constructor(...dateParts: unknown[]) {
+				if (dateParts.length === 0) {
+					super(RealDate.now() - shift);
+				} else {
+					super(...(dateParts as [number, number]));
+				}
+			}
+
+			static now() {
+				return RealDate.now() - shift;
+			}
+		}
+		globalThis.Date = NovemberDate as DateConstructor;
+	});
+};
+
+/*
+ * Playwright's test, with every browser context's Draw seeded, so no test depends on a random Draw, and its
+ * calendar in November, so no test depends on the month's TV Theme. A test that wants another Draw sets its own
+ * seed: `test.use({ drawSeed: 7 })`.
  */
 export const test = base.extend<{ drawSeed: number }>({
 	drawSeed: [1, { option: true }],
 	// runTest is Playwright's `use`: it runs the test with this context.
 	context: async ({ context, drawSeed }, runTest) => {
 		await seedDraw(context, drawSeed);
+		await setCalendarToNovember(context);
 		await runTest(context);
 	},
 });

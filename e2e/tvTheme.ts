@@ -10,7 +10,7 @@ export const chooseTvTheme = async (organizer: Page, tvThemeName: string) => {
 	await tvSection.getByRole('menuitemradio', { name: tvThemeName }).click();
 };
 
-// The pieces of the TV Theme's artwork inside the frame given: the TV's window, the thumbnail or the peek.
+// The TV Theme's artwork inside the frame given: the TV's window, the thumbnail or the peek.
 export const findArtwork = (frame: Page | Locator) => frame.getByTestId('tv theme art');
 
 // How many of the artwork's animations are running inside the frame given.
@@ -24,8 +24,8 @@ export const countMovingArtwork = (frame: Page | Locator) =>
 
 /*
  * Fails, naming each piece of text, if any text on the TV reads below its contrast with what is behind it:
- * 7:1 for names, headings and bracket text, and 4.5:1 for secondary text (the TV Theme's muted, Fun Fact and
- * held-place colours). A Match's loser is faded on purpose, so the TV Theme's loser colours aren't measured.
+ * 7:1 for names, headings and bracket text, and 4.5:1 for secondary text: the TV Theme's muted, Fun Fact and
+ * held-place colours, and a Match's loser, faded below the names.
  * Each colour is read as the browser draws it, through a one-pixel canvas, so any colour format compares.
  */
 export const expectTvTextReadable = async (tv: Page, moment: string) => {
@@ -66,8 +66,9 @@ export const expectTvTextReadable = async (tv: Page, moment: string) => {
 			probe.style.color = `var(--tv-${role})`;
 			return getComputedStyle(probe).color;
 		};
-		const secondaryColours = ['muted', 'fun-fact', 'held'].map(readTvColour);
-		const loserColours = ['lost', 'lost-final'].map(readTvColour);
+		const secondaryColours = ['muted', 'fun-fact', 'held', 'lost', 'on-champion-lost'].map(
+			readTvColour,
+		);
 		probe.remove();
 		const failures: string[] = [];
 		const walker = document.createTreeWalker(tvScreen, NodeFilter.SHOW_TEXT);
@@ -75,7 +76,7 @@ export const expectTvTextReadable = async (tv: Page, moment: string) => {
 			const text = node.textContent!.trim();
 			const element = node.parentElement!;
 			const colour = getComputedStyle(element).color;
-			if (text === '' || loserColours.includes(colour)) {
+			if (text === '') {
 				continue;
 			}
 			const needed = secondaryColours.includes(colour) ? 4.5 : 7;
@@ -106,8 +107,11 @@ export const expectArtworkClearOfText = async (tv: Page) => {
 		const artwork = [...tvScreen.querySelectorAll('[data-testid="tv theme art"]')].map(
 			(piece) => piece.getBoundingClientRect(),
 		);
-		const isOverlapping = (a: DOMRect, b: DOMRect) =>
-			a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+		const isOverlapping = (box: DOMRect, other: DOMRect) =>
+			box.left < other.right &&
+			other.left < box.right &&
+			box.top < other.bottom &&
+			other.top < box.bottom;
 		const found: string[] = [];
 		const ring = tvScreen.querySelector('[data-testid="countdown ring"]');
 		if (ring && artwork.some((piece) => isOverlapping(piece, ring.getBoundingClientRect()))) {

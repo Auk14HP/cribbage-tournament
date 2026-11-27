@@ -47,7 +47,7 @@ const TvThemeSwatch = ({ tvTheme }: { tvTheme: TvTheme }) => (
 const nameMonthShort = (month: number) =>
 	new Date(2000, month - 1, 1).toLocaleDateString('en-US', { month: 'short' });
 
-// One choice in the menu: what it is called, its swatch, whether it is the one chosen, and what picking it does.
+// One choice in the menu: its name, its swatch, whether it is chosen, and what picking it does.
 interface MenuChoice {
 	readonly key: string;
 	readonly label: string;
@@ -112,12 +112,12 @@ const CheckIcon = ({ isShown }: { isShown: boolean }) => (
  * by the arrow keys rather than Tab; pointing at it moves focus to it.
  */
 const MenuItem = ({
-	option,
+	choice,
 	onMount,
 	onPick,
 	onKeyDown,
 }: {
-	option: MenuChoice;
+	choice: MenuChoice;
 	onMount: (item: HTMLButtonElement | null) => void;
 	onPick: () => void;
 	onKeyDown: (event: KeyboardEvent) => void;
@@ -126,21 +126,21 @@ const MenuItem = ({
 		ref={onMount}
 		type="button"
 		role="menuitemradio"
-		aria-checked={option.isChosen}
+		aria-checked={choice.isChosen}
 		tabIndex={-1}
 		className={menuClasses.item}
 		onClick={onPick}
 		onPointerMove={(event) => event.currentTarget.focus()}
 		onKeyDown={onKeyDown}
 	>
-		<CheckIcon isShown={option.isChosen} />
-		{option.swatch}
-		{option.label}
+		<CheckIcon isShown={choice.isChosen} />
+		{choice.swatch}
+		{choice.label}
 		{/* A space between the name and the month, so a screen reader says them apart. */}
-		{option.month && (
+		{choice.month && (
 			<>
 				{' '}
-				<span className={menuClasses.month}>{option.month}</span>
+				<span className={menuClasses.month}>{choice.month}</span>
 			</>
 		)}
 	</button>
@@ -166,7 +166,7 @@ export const ThemeMenu = ({
 	const [isOpen, setIsOpen] = useState(false);
 	const menuId = useId();
 	const menuButton = useRef<HTMLButtonElement>(null);
-	const themeItems = useRef<(HTMLButtonElement | null)[]>([]);
+	const menuItems = useRef<(HTMLButtonElement | null)[]>([]);
 
 	const closeAndFocusButton = () => {
 		setIsOpen(false);
@@ -180,13 +180,14 @@ export const ThemeMenu = ({
 		isChosen: option.choice === choice,
 		pick: () => onChoose(option.choice),
 	}));
-	const tvChoices: MenuChoice[] = listTvThemes().map((option) => ({
-		key: option,
-		label: tvThemeNames[option],
-		month: option === 'classic' ? undefined : nameMonthShort(tvThemeMonths[option]),
-		swatch: <TvThemeSwatch tvTheme={option} />,
-		isChosen: option === tvTheme,
-		pick: () => onChooseTvTheme(option),
+	const tvChoices: MenuChoice[] = listTvThemes().map((tvThemeOption) => ({
+		key: tvThemeOption,
+		label: tvThemeNames[tvThemeOption],
+		month:
+			tvThemeOption === 'classic' ? undefined : nameMonthShort(tvThemeMonths[tvThemeOption]),
+		swatch: <TvThemeSwatch tvTheme={tvThemeOption} />,
+		isChosen: tvThemeOption === tvTheme,
+		pick: () => onChooseTvTheme(tvThemeOption),
 	}));
 	const sections = [
 		{ name: 'This screen', choices: screenChoices },
@@ -199,7 +200,7 @@ export const ThemeMenu = ({
 	// Opening the menu puts focus on the chosen Theme, so the arrow keys start from it.
 	useEffect(() => {
 		if (isOpen) {
-			themeItems.current[chosenIndex]?.focus();
+			menuItems.current[chosenIndex]?.focus();
 		}
 	}, [isOpen, chosenIndex]);
 
@@ -221,7 +222,7 @@ export const ThemeMenu = ({
 		const nextIndex = findNextIndex(event.key, index, allChoices.length);
 		if (nextIndex !== undefined) {
 			event.preventDefault();
-			themeItems.current[nextIndex]?.focus();
+			menuItems.current[nextIndex]?.focus();
 		}
 	};
 
@@ -274,16 +275,17 @@ export const ThemeMenu = ({
 								<div aria-hidden className={menuClasses.heading}>
 									{section.name}
 								</div>
-								{section.choices.map((option) => (
+								{section.choices.map((menuChoice) => (
 									<MenuItem
-										key={option.key}
-										option={option}
+										key={menuChoice.key}
+										choice={menuChoice}
 										onMount={(item) => {
-											themeItems.current[allChoices.indexOf(option)] = item;
+											menuItems.current[allChoices.indexOf(menuChoice)] =
+												item;
 										}}
-										onPick={() => choose(option)}
+										onPick={() => choose(menuChoice)}
 										onKeyDown={(event) =>
-											answerItemKey(event, allChoices.indexOf(option))
+											answerItemKey(event, allChoices.indexOf(menuChoice))
 										}
 									/>
 								))}
