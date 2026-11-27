@@ -65,7 +65,7 @@ const Bauble = ({ place, isMoving }: { place: number; isMoving: boolean }) => {
 
 // A Christmas tree on a trunk, with a garland, baubles that twinkle and a star on top.
 export const Tree = ({ isMoving }: MovingProps) => (
-	<svg viewBox="0 0 100 124" className="h-full">
+	<svg viewBox="0 0 100 124" className="h-full overflow-visible">
 		<ellipse cx="50" cy="119" rx="30" ry="3.5" fill="#000000" opacity="0.3" />
 		<rect x="43" y="98" width="14" height="18" fill="#7a4a24" />
 		<rect x="50" y="98" width="7" height="18" fill="#5e3719" />

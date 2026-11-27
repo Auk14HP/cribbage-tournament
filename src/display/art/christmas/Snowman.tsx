@@ -78,7 +78,7 @@ const Snowflake = ({ place, isMoving }: { place: number; isMoving: boolean }) =>
  * nose, coal eyes, smile and buttons, and stick arms, snowflakes twinkling round him.
  */
 export const Snowman = ({ isMoving }: MovingProps) => (
-	<svg viewBox="0 0 100 116" className="h-full">
+	<svg viewBox="0 0 100 116" className="h-full overflow-visible">
 		<ellipse cx="50" cy="111" rx="30" ry="3.5" fill="#000000" opacity="0.3" />
 		<path
 			d="M35 56 L17 44 M23 48 L19 40 M65 56 L83 45 M77 49 L82 41"

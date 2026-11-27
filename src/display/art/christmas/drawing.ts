@@ -9,8 +9,8 @@ const twinkleSeconds = 3.2;
 
 /*
  * Returns the class that makes a light twinkle, when the artwork may move, and its style: where in the twinkle
- * the light given by its place starts, so neighbouring lights don't peak together, and the colour it glows in
- * at its peak, its own.
+ * the light given by its place is from the start, so neighbouring lights don't peak together and none waits,
+ * unmoving, before it begins, and the colour of its glow at the peak, the light's own colour.
  */
 export const describeTwinkle = ({
 	isMoving,
@@ -23,7 +23,7 @@ export const describeTwinkle = ({
 }) => ({
 	className: isMoving ? 'motion-safe:animate-twinkle' : '',
 	style: {
-		animationDelay: `${((place * 0.77) % twinkleSeconds).toFixed(2)}s`,
-		color: glowColour,
+		animationDelay: `-${((place * 0.77) % twinkleSeconds).toFixed(2)}s`,
+		'--twinkle-glow': glowColour,
 	} as CSSProperties,
 });

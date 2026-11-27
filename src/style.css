@@ -195,9 +195,9 @@
 
 /*
  * A TV Theme's lights and sparkles twinkle: slowly from a gentle dim up to a bright peak and back, so nothing
- * flashes. At the peak each one shines brighter than its own colour and glows in it: the glow takes the piece's
- * `color`, which it sets to its own. Each piece sets its own delay, so neighbours don't peak together. Only on
- * the TV itself, and only while it allows motion; still, a piece shows its own colour.
+ * flashes. At the peak a piece shines brighter than its colour and glows in --twinkle-glow, which each piece
+ * sets. Each piece sets its own place in the twinkle too, so neighbours don't peak together. Only on the TV
+ * itself, and only while it allows motion; a piece that isn't moving shows its colour as drawn.
  */
 @theme {
 	--animate-twinkle: twinkle 3.2s ease-in-out infinite;
@@ -210,7 +210,7 @@
 		}
 		50% {
 			opacity: 1;
-			filter: brightness(1.35) drop-shadow(0 0 0.5cqh currentColor);
+			filter: brightness(1.35) drop-shadow(0 0 0.5cqh var(--twinkle-glow));
 		}
 	}
 }
