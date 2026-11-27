@@ -159,6 +159,7 @@
 		--tv-muted: var(--color-gray-300);
 		--tv-fun-fact: var(--color-gray-200);
 		--tv-held: var(--color-gray-400);
+		/* Lighter than gray-500 (4.3:1) to read at 4.5:1; no Tailwind grey falls between it and gray-400. */
 		--tv-lost: #7c8494;
 		--tv-on-champion-lost: var(--color-gray-700);
 		--tv-line: var(--color-gray-500);
@@ -182,8 +183,8 @@
 		--tv-held: #b9cdbf;
 		--tv-lost: #9fb8a7;
 		--tv-on-champion-lost: #2f4a37;
-		--tv-line: #6f8f78;
-		--tv-path: #8ef0b0;
+		--tv-line: #4f6b58;
+		--tv-path: #ffd23f;
 		--tv-ring: #ff7b7b;
 		--tv-ring-track: #2c4434;
 	}
