@@ -8,6 +8,9 @@ const championStar = {
 	shade: 'M50 52 L50 8 L60.6 37.4 Z M50 52 L91.8 38.4 L67.1 57.6 Z M50 52 L75.9 87.6 L50 70 Z M50 52 L24.1 87.6 L32.9 57.6 Z M50 52 L8.2 38.4 L39.4 37.4 Z',
 };
 
+// The pale gold of the sparkles round the champion's star.
+const sparkleColour = '#fff6cf';
+
 // Where each four-pointed sparkle round the champion's star sits, and how far it reaches.
 const sparkles = [
 	{ x: 10, y: 12, reach: 7 },
@@ -19,7 +22,7 @@ const sparkles = [
 // One sparkle, the one at the place given, twinkling when allowed to move.
 const Sparkle = ({ place, isMoving }: { place: number; isMoving: boolean }) => {
 	const { x, y, reach } = sparkles[place];
-	const { className, style } = describeTwinkle(isMoving, place);
+	const { className, style } = describeTwinkle({ isMoving, place, glowColour: sparkleColour });
 	const waist = reach / 4;
 	const points = [
 		[x, y - reach],
@@ -36,7 +39,7 @@ const Sparkle = ({ place, isMoving }: { place: number; isMoving: boolean }) => {
 			className={className}
 			style={style}
 			points={points.map((point) => point.join(',')).join(' ')}
-			fill="#fff6cf"
+			fill={sparkleColour}
 		/>
 	);
 };

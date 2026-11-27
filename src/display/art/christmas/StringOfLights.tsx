@@ -18,7 +18,7 @@ const glassShape = 'M10 6 C 17 10, 17 22, 10 28 C 3 22, 3 10, 10 6 Z';
 // The bulb at the place given along the string, hanging from its socket in a soft glow.
 const Bulb = ({ place, isMoving }: { place: number; isMoving: boolean }) => {
 	const { glass, shade } = lightColours[place % lightColours.length];
-	const { className, style } = describeTwinkle(isMoving, place);
+	const { className, style } = describeTwinkle({ isMoving, place, glowColour: glass });
 	return (
 		<svg
 			viewBox="0 0 20 30"

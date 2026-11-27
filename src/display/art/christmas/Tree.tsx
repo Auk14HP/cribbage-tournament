@@ -54,7 +54,7 @@ const TreeTier = ({ shape, shade }: { shape: string; shade: string }) => (
 // One bauble, the one at the place given on the tree, with a glint, twinkling when allowed to move.
 const Bauble = ({ place, isMoving }: { place: number; isMoving: boolean }) => {
 	const { cx, cy, fill } = baubles[place];
-	const { className, style } = describeTwinkle(isMoving, place);
+	const { className, style } = describeTwinkle({ isMoving, place, glowColour: fill });
 	return (
 		<g className={className} style={style}>
 			<circle cx={cx} cy={cy} r="3.6" fill={fill} stroke={outlineColour} strokeWidth="1" />

@@ -194,8 +194,10 @@
 }
 
 /*
- * A TV Theme's lights and sparkles twinkle: slowly from bright to dim and back, so nothing flashes. Each piece
- * sets its own delay, so neighbours don't dim together. Only on the TV itself, and only while it allows motion.
+ * A TV Theme's lights and sparkles twinkle: slowly from a gentle dim up to a bright peak and back, so nothing
+ * flashes. At the peak each one shines brighter than its own colour and glows in it: the glow takes the piece's
+ * `color`, which it sets to its own. Each piece sets its own delay, so neighbours don't peak together. Only on
+ * the TV itself, and only while it allows motion; still, a piece shows its own colour.
  */
 @theme {
 	--animate-twinkle: twinkle 3.2s ease-in-out infinite;
@@ -203,10 +205,12 @@
 	@keyframes twinkle {
 		0%,
 		100% {
-			opacity: 1;
+			opacity: 0.6;
+			filter: none;
 		}
 		50% {
-			opacity: 0.55;
+			opacity: 1;
+			filter: brightness(1.35) drop-shadow(0 0 0.5cqh currentColor);
 		}
 	}
 }

@@ -15,6 +15,9 @@ const snowballs = [
 	{ cx: 50, cy: 30, r: 12 },
 ];
 
+// The white of the snowflakes round the snowman.
+const snowflakeColour = '#ffffff';
+
 // Where the snowflakes round the snowman fall, and how far each arm reaches from its middle.
 const snowflakes = [
 	{ x: 10, y: 16, reach: 5 },
@@ -55,7 +58,7 @@ const Snowball = ({ cx, cy, r }: { cx: number; cy: number; r: number }) => (
 // The snowflake at the place given: three crossed strokes, twinkling when allowed to move.
 const Snowflake = ({ place, isMoving }: { place: number; isMoving: boolean }) => {
 	const { x, y, reach } = snowflakes[place];
-	const { className, style } = describeTwinkle(isMoving, place);
+	const { className, style } = describeTwinkle({ isMoving, place, glowColour: snowflakeColour });
 	const across = reach * 0.87;
 	const half = reach / 2;
 	return (
@@ -63,7 +66,7 @@ const Snowflake = ({ place, isMoving }: { place: number; isMoving: boolean }) =>
 			className={className}
 			style={style}
 			d={`M${x} ${y - reach} L${x} ${y + reach} M${x - across} ${y - half} L${x + across} ${y + half} M${x - across} ${y + half} L${x + across} ${y - half}`}
-			stroke="#ffffff"
+			stroke={snowflakeColour}
 			strokeWidth="1.3"
 			strokeLinecap="round"
 		/>
