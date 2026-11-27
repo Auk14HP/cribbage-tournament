@@ -1,7 +1,8 @@
 /*
- * The TV screen on show, drawn wherever it is wanted: on the TV itself and as the Organizer's thumbnail of it.
- * Sizes are in cqh and cqw, hundredths of the TV screen's frame (a box with `tvFrame`), so the screen
- * scales with whatever frame holds it: the TV's whole window, or a thumbnail on the laptop.
+ * The TV screen on show, drawn wherever it is wanted: on the TV itself and as the
+ * Organizer's thumbnail of it. Sizes are in cqh and cqw, hundredths of the TV screen's frame
+ * (a box with `tvFrame`), so the screen scales with whatever frame holds it: the TV's whole
+ * window, or a thumbnail on the laptop.
  */
 import type { ReactNode } from 'react';
 import type { Random, Tournament, TvScreen, TvScreenOnShow } from '../tournament';
@@ -19,8 +20,8 @@ const tvScreens: Record<TvScreen, (tournament: Tournament) => ReactNode> = {
 };
 
 /*
- * The screen the TV shows for the Tournament's phase: before Start the phase's own screen, from Start the
- * screen on show. Fun Facts are chosen with the random source given.
+ * The screen the TV shows for the Tournament's phase: before Start the phase's own screen, from
+ * Start the screen on show. Fun Facts are chosen with the random source given.
  */
 export const TvScreenView = ({
 	tournament,
@@ -38,8 +39,8 @@ export const TvScreenView = ({
 		return <HouseRules tournament={tournament} />;
 	}
 	/*
-	 * From Tonight's Draw on, every screen keeps clear of the countdown ring's strip, ring or not, so the
-	 * bracket doesn't shift at Start and holding a screen doesn't shift it.
+	 * From Tonight's Draw on, every screen keeps clear of the countdown ring's strip, ring or not,
+	 * so the bracket doesn't shift at Start and holding a screen doesn't shift it.
 	 */
 	return (
 		<div className={countdownRing.clearance}>

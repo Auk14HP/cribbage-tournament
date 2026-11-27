@@ -1,8 +1,9 @@
 /*
- * The step bar under the Organizer screen's header: the night's five steps in order, one per phase. Steps
- * already done are ticked, the current step is ringed and named in bold, and later steps are empty circles. A
- * line runs through the steps, filled up to the current one. It only shows progress: nothing in it can be
- * clicked, so the Organizer can't skip a step the Tournament's rules require.
+ * The step bar under the Organizer screen's header: the night's five steps in order, one per
+ * phase. Steps already done are ticked, the current step is ringed and named in bold, and later
+ * steps are empty circles. A line runs through the steps, filled up to the current one. It only
+ * shows progress: nothing in it can be clicked, so the Organizer can't skip a step the
+ * Tournament's rules require.
  */
 import type { Phase } from '../tournament';
 
@@ -18,8 +19,9 @@ const steps: readonly { phase: Phase; name: string }[] = [
 ];
 
 /*
- * Each step's mark, centred in a box of the same size whichever it is, so the line through them meets every
- * mark at its middle. The ring round the current step is drawn outside its box, the canvas showing between.
+ * Each step's mark, centred in a box of the same size whichever it is, so the line through
+ * them meets every mark at its middle. The ring round the current step is drawn outside its
+ * box, the canvas showing between.
  */
 const markBox = 'grid size-5 place-items-center';
 const markClasses: Record<StepStatus, string> = {
@@ -70,8 +72,9 @@ const Step = ({ name, status }: { name: string; status: StepStatus }) => {
 export const StepBar = ({ phase }: { phase: Phase }) => {
 	const currentIndex = steps.findIndex((step) => step.phase === phase);
 	/*
-	 * The steps share the bar's width equally, so the first mark sits a tenth of the way in and the last a tenth
-	 * from the end: the line runs between them, filled a fifth of the width for each step done.
+	 * The steps share the bar's width equally, so the first mark sits a tenth of the way in
+	 * and the last a tenth from the end: the line runs between them, filled a fifth of the
+	 * width for each step done.
 	 */
 	const filledPercent = currentIndex * 20;
 	return (

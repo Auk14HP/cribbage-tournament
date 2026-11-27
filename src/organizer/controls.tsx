@@ -1,4 +1,7 @@
-// Shared by the organizer route's screens: the confirm dialog, number box, refusals, stacked labels and Apply.
+/*
+ * Shared by the organizer route's screens: the confirm dialog, number box, refusals,
+ * stacked labels and Apply.
+ */
 import { useId, useState, type RefObject } from 'react';
 import type { Result } from '../result';
 import type { Tournament } from '../tournament';
@@ -8,9 +11,10 @@ import { button, confirmButton, confirmColours, dialogBox, textInput } from './c
 export type Apply = (outcome: Result<Tournament>) => string;
 
 /*
- * Asks the Organizer to confirm an action before it is taken: open it with `showModal()` on its ref.
- * Cancel or Escape closes it and nothing happens. A destructive action gets a red confirm button. Being the browser's modal <dialog>, it takes focus
- * when it opens (on Cancel, the safe answer) and gives it back to the page when it closes.
+ * Asks the Organizer to confirm an action before it is taken: open it with `showModal()` on its
+ * ref. Cancel or Escape closes it and nothing happens. A destructive action gets a red confirm
+ * button. Being the browser's modal <dialog>, it takes focus when it opens (on Cancel, the safe
+ * answer) and gives it back to the page when it closes.
  */
 export const ConfirmDialog = ({
 	ref,
@@ -57,10 +61,10 @@ export const Refusal = ({ reason }: { reason: string }) => (
 );
 
 /*
- * A box for a number the Organizer types, saved only once they are done with it: when the box loses focus
- * or they press Enter. Until then the Tournament keeps the number last saved. Leaving the box unchanged
- * saves nothing, so tabbing through it neither refuses a blank nor saves the same number again. A disabled
- * box is faded and can't be typed in.
+ * A box for a number the Organizer types, saved only once they are done with it: when the box loses
+ * focus or they press Enter. Until then the Tournament keeps the number last saved. Leaving the box
+ * unchanged saves nothing, so tabbing through it neither refuses a blank nor saves the same number
+ * again. A disabled box is faded and can't be typed in.
  */
 export const NumberBox = ({
 	label,
@@ -104,8 +108,9 @@ export const NumberBox = ({
 };
 
 /*
- * One of a box's labels, such as a button's, put in the first cell of the box's grid, where its other labels sit
- * too. A label not shown is hidden but still takes up its space, and isn't read out.
+ * One of a box's labels, such as a button's, put in the first cell of the box's grid,
+ * where its other labels sit too. A label not shown is hidden but still takes up its
+ * space, and isn't read out.
  */
 export const StackedLabel = ({ label, isShown }: { label: string; isShown: boolean }) => (
 	<span

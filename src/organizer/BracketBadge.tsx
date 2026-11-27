@@ -1,8 +1,9 @@
 import type { BracketName } from '../tournament';
 
 /*
- * The letter and colours of each bracket's badge: the Winners Bracket's a W filled in the theme's yellow, the
- * Losers Bracket's an L outlined, so the two tell apart at a glance by more than their letter.
+ * The letter and colours of each bracket's badge: the Winners Bracket's a W filled in the
+ * theme's yellow, the Losers Bracket's an L outlined, so the two tell apart at a glance
+ * by more than their letter.
  */
 const badges: Record<BracketName, { letter: string; colours: string }> = {
 	winners: { letter: 'W', colours: 'border-fill bg-fill text-on-fill' },
@@ -15,8 +16,8 @@ const badgeSizes = {
 };
 
 /*
- * A small square naming a bracket by its letter, wherever a Match's bracket is shown. Hidden from screen
- * readers, as the bracket's name is always written beside it.
+ * A small square naming a bracket by its letter, wherever a Match's bracket is shown. Hidden from
+ * screen readers, as the bracket's name is always written beside it.
  */
 export const BracketBadge = ({
 	bracketName,

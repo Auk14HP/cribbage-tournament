@@ -1,4 +1,7 @@
-// Seating Matches at Boards: which Match holds which Board, and which wait for one, after every command.
+/*
+ * Seating Matches at Boards: which Match holds which Board, and which wait for
+ * one, after every command.
+ */
 import {
 	findPlayers,
 	hasChampion,
@@ -18,15 +21,16 @@ import type {
 } from './types';
 
 /*
- * Brings the Boards in line with the Matches: each Match with a Player known and no winner yet holds a
- * Board, or waits for one. A Match with a Home Board Player in it is at their Home Board, and no other Match
- * takes that Board while they are in the Tournament. A Match that no longer needs a Board gives it up. A
- * Match newly needing one joins the end of the queue, in bracket order, and each free Board goes to the
- * first, lowest-numbered first. A Match moved off a Home Board its Player has taken back goes ahead of the
- * queue. When there are too few free Boards for the queue, Matches ready to play, both Players known, go
- * ahead of those still waiting on a Player, and a Player waiting alone at a Board other than their Home Board
- * gives it up to one, latest seated first, so a Board never sits idle while two Players are ready. A Match
- * being re-opened may ask for its own Board back, and gets it if it is free.
+ * Brings the Boards in line with the Matches: each Match with a Player known and no winner yet
+ * holds a Board, or waits for one. A Match with a Home Board Player in it is at their Home Board,
+ * and no other Match takes that Board while they are in the Tournament. A Match that no longer
+ * needs a Board gives it up. A Match newly needing one joins the end of the queue, in bracket
+ * order, and each free Board goes to the first, lowest-numbered first. A Match moved off a Home
+ * Board its Player has taken back goes ahead of the queue. When there are too few free Boards for
+ * the queue, Matches ready to play, both Players known, go ahead of those still waiting on a
+ * Player, and a Player waiting alone at a Board other than their Home Board gives it up to one,
+ * latest seated first, so a Board never sits idle while two Players are ready. A Match being
+ * re-opened may ask for its own Board back, and gets it if it is free.
  */
 export const reseat = (tournament: Tournament, returning?: BoardTaken): Tournament => {
 	const live = listLiveMatches(tournament);
@@ -83,9 +87,9 @@ export const reseat = (tournament: Tournament, returning?: BoardTaken): Tourname
 		.slice(0, freeBoards.length)
 		.map((match, index) => ({ match, board: freeBoards[index] }));
 	/*
-	 * Matches at their Home Boards are worked out afresh each time and listed first. Only the order of the
-	 * Matches at the other Boards matters: it decides which Player waiting alone gives up their Board to a
-	 * Match ready to play.
+	 * Matches at their Home Boards are worked out afresh each time and listed first. Only the order
+	 * of the Matches at the other Boards matters: it decides which Player waiting alone gives up
+	 * their Board to a Match ready to play.
 	 */
 	return {
 		...tournament,
@@ -95,8 +99,9 @@ export const reseat = (tournament: Tournament, returning?: BoardTaken): Tourname
 };
 
 /*
- * Whether a Player is still in the Tournament: in the Winners Bracket until they lose there or win it, and
- * then, if they stay for the Losers Bracket, until no Losers Bracket is played, or they lose there or win it.
+ * Whether a Player is still in the Tournament: in the Winners Bracket until they lose there or
+ * win it, and then, if they stay for the Losers Bracket, until no Losers Bracket is played, or
+ * they lose there or win it.
  */
 export const isInTournament = (tournament: Tournament, player: PlayerId): boolean => {
 	const isStillIn = (bracket: BracketName) =>
@@ -109,7 +114,10 @@ export const isInTournament = (tournament: Tournament, player: PlayerId): boolea
 	return loss.loserAnswer === 'staying' && tournament.losersDraw !== null && isStillIn('losers');
 };
 
-// Matches ready to play first, both Players known, then those still waiting on a Player, each in turn.
+/*
+ * Matches ready to play first, both Players known, then those still waiting
+ * on a Player, each in turn.
+ */
 export const orderReadyFirst = (
 	tournament: Tournament,
 	matches: readonly MatchPlace[],

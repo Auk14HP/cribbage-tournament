@@ -35,9 +35,9 @@ import {
 } from './testSetup';
 
 /*
- * 5 Players on 2 Boards, Started, the Home Board 2 for the Bye Player waiting for the first-Round Match's
- * winner, up to that Bye Player's first Match: the first-Round Match is won, its loser leaving, and the winner
- * comes to the Home Board. The two other Bye Players play at Board 1.
+ * 5 Players on 2 Boards, Started, the Home Board 2 for the Bye Player waiting for the first-Round
+ * Match's winner, up to that Bye Player's first Match: the first-Round Match is won, its loser
+ * leaving, and the winner comes to the Home Board. The two other Bye Players play at Board 1.
  */
 const playToHomePlayersFirstMatch = () => {
 	const started = startWithByePlayerHome();
@@ -51,8 +51,8 @@ const playToHomePlayersFirstMatch = () => {
 };
 
 /*
- * After an undo: if the Home Board Player's Match came back to their Home Board while another Match held it,
- * that other Match holds a Board or is first in line for one.
+ * After an undo: if the Home Board Player's Match came back to their Home Board while another Match
+ * held it, that other Match holds a Board or is first in line for one.
  */
 const expectMovedOffFirst = (
 	tournament: Tournament,
@@ -73,8 +73,9 @@ const expectMovedOffFirst = (
 };
 
 /*
- * 5 Players on 2 Boards, Started, the Home Board 2 for the Bye Player waiting for the first-Round Match's
- * winner. That Match takes Board 1, and the two other Bye Players, ready to play, wait for a Board.
+ * 5 Players on 2 Boards, Started, the Home Board 2 for the Bye Player waiting for the
+ * first-Round Match's winner. That Match takes Board 1, and the two other Bye Players, ready
+ * to play, wait for a Board.
  */
 const startWithByePlayerHome = () =>
 	startWithHomeBoard({ players: 5, boards: 2, homeBoard: 2 }, (drawn) => {
@@ -84,8 +85,9 @@ const startWithByePlayerHome = () =>
 	});
 
 /*
- * A Tournament Started with one Player given a Home Board. The Draw doesn't depend on Home Boards, so the
- * Player is picked from the Draw made the same way without one: choosePlayer receives that Draw, Started.
+ * A Tournament Started with one Player given a Home Board. The Draw doesn't depend on Home
+ * Boards, so the Player is picked from the Draw made the same way without one: choosePlayer
+ * receives that Draw, Started.
  */
 const startWithHomeBoard = (
 	{ players, boards, homeBoard, seed = 1 }: TournamentSetup & { homeBoard: number },
@@ -186,8 +188,8 @@ describe('giving a Player a Home Board', () => {
 		expect(boardStillSetOut.homeBoards).toHaveLength(1);
 		expect(boardNoLongerSetOut.homeBoards).toEqual([]);
 		/*
-		 * With one Board left, keeping it for one Player could leave their opponent's earlier Match with no
-		 * Board to be played at.
+		 * With one Board left, keeping it for one Player could leave their opponent's earlier Match
+		 * with no Board to be played at.
 		 */
 		const onBoardOne = expectOk(setHomeBoard(registered, ann.id, 1));
 		const oneBoardLeft = expectOk(setBoardCount(onBoardOne, '1'));
@@ -235,8 +237,8 @@ describe('a Home Board through the night', () => {
 
 	it('brings an opponent already waiting alone at another Board to the Home Board, freeing theirs', () => {
 		/*
-		 * 8 Players on 4 Boards, the Home Board 4: the first Match in the bracket takes it, and the second
-		 * Match, whose winner meets the first's, takes Board 1.
+		 * 8 Players on 4 Boards, the Home Board 4: the first Match in the bracket takes it, and the
+		 * second Match, whose winner meets the first's, takes Board 1.
 		 */
 		const started = startWithHomeBoard({ players: 8, boards: 4, homeBoard: 4 }, (drawn) => {
 			const firstInBracket = getMatchesOnBoards(drawn).find((m) => m.match.place === 0)!;
@@ -365,8 +367,9 @@ describe('a Home Board through the night', () => {
 
 	it('goes back to ordinary use once its Player loses a later Match, though their first opponent stayed', () => {
 		/*
-		 * 5 Players on 2 Boards, the Home Board 2 for a Player in the first-Round Match. The two other Bye
-		 * Players take Board 1, and the Bye Player waiting for the first-Round Match's winner waits for a Board.
+		 * 5 Players on 2 Boards, the Home Board 2 for a Player in the first-Round Match. The two
+		 * other Bye Players take Board 1, and the Bye Player waiting for the first-Round Match's
+		 * winner waits for a Board.
 		 */
 		const started = startWithHomeBoard({ players: 5, boards: 2, homeBoard: 2 }, (drawn) => {
 			const [firstMatch] = getMatchesOnBoards(drawn).filter(
@@ -401,7 +404,10 @@ describe('a Home Board through the night', () => {
 		const byePair = getMatchesOnBoards(tournament).find(hasBothPlayersKnown)!;
 		const [byeWinner] = byePair.players as [Player, Player];
 
-		// The Bye pair's loser stays too, so the Losers Draw is made: a final against the Home Board Player.
+		/*
+		 * The Bye pair's loser stays too, so the Losers Draw is made: a final
+		 * against the Home Board Player.
+		 */
 		tournament = expectOk(recordWinner(tournament, byePair.match, byeWinner.id, 'staying'));
 
 		const losersFinal = findMatchOf(tournament, homePlayer);

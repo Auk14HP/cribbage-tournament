@@ -4,9 +4,9 @@ import { test } from './setUpTournament';
 import { expectTextFits } from './textFits';
 
 /*
- * The registration screen's Players grid, in a real browser, since jsdom can't lay out a page: a typical field
- * fits without scrolling, renaming a Player happens in their own cell and moves no other, and the Home Board tag
- * fits beside the longest name.
+ * The registration screen's Players grid, in a real browser, since jsdom can't lay out a page: a
+ * typical field fits without scrolling, renaming a Player happens in their own cell and moves no
+ * other, and the Home Board tag fits beside the longest name.
  */
 
 test.use({ viewport: { width: 1280, height: 720 } });
@@ -23,8 +23,9 @@ const giveHomeBoard = async (page: Page, { name, board }: { name: string; board:
 };
 
 /*
- * The parts of the registration screen around the grid: the Players' refusal line, found by its place as the
- * first on the page, the name box, Register, the running count, and every Player's cell.
+ * The parts of the registration screen around the grid: the Players' refusal line,
+ * found by its place as the first on the page, the name box, Register, the running
+ * count, and every Player's cell.
  */
 const listRegistrationParts = (page: Page) => [
 	page.getByRole('alert').first(),
@@ -39,7 +40,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('in a common laptop window', () => {
-	// A 1280 by 720 window holds 8 rows of 3 Players; a laptop's usual 1440 by 900 holds a field of 30.
+	/*
+	 * A 1280 by 720 window holds 8 rows of 3 Players; a laptop's usual 1440
+	 * by 900 holds a field of 30.
+	 */
 	test.use({ viewport: { width: 1440, height: 900 } });
 
 	test('fits a field of 30 Players in the grid without scrolling', async ({ page }) => {
@@ -84,7 +88,10 @@ test('moves no cell in the grid as a Player is renamed, cancelled, refused or sa
 	});
 });
 
-// Checks the Player's name, once Rename is clicked, shows in the name box where and as it was drawn.
+/*
+ * Checks the Player's name, once Rename is clicked, shows in the name box
+ * where and as it was drawn.
+ */
 const expectNameStaysOnRename = async (page: Page, name: string) => {
 	const text = {
 		before: findPlayersGrid(page).getByText(name, { exact: true }),

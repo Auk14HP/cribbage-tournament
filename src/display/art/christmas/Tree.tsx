@@ -2,8 +2,8 @@ import type { MovingProps } from '../artwork';
 import { describeTwinkle, outlineColour } from './drawing';
 
 /*
- * The tree's three tiers, top first: each a triangle with a scalloped hem, and its right half, in shade, as the
- * light falls from the left.
+ * The tree's three tiers, top first: each a triangle with a scalloped hem, and its right half, in
+ * shade, as the light falls from the left.
  */
 const treeTiers = [
 	{

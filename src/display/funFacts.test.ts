@@ -45,8 +45,8 @@ describe('the Fun Fact list', () => {
 });
 
 /*
- * The most characters a Fun Fact line holds in two lines on the 1258×955 TV the browser tests use. Measured in
- * Chrome on macOS, the shortest line that wraps to three is 152 characters; this leaves room for a wider font
- * on another system. A third line would take room from the names above.
+ * The most characters a Fun Fact line holds in two lines on the 1258×955 TV the browser tests use.
+ * Measured in Chrome on macOS, the shortest line that wraps to three is 152 characters; this leaves
+ * room for a wider font on another system. A third line would take room from the names above.
  */
 const twoLineCharacterBudget = 140;

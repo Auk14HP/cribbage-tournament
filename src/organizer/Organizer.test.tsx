@@ -45,8 +45,8 @@ const themeKey = 'organizer-theme-test';
 const heartbeatKey = 'organizer-heartbeat-test';
 
 /*
- * jsdom has no media queries, so this stands in for the laptop's light or dark setting, which a test can
- * change while the screen is open, as the laptop does at dusk.
+ * jsdom has no media queries, so this stands in for the laptop's light or dark setting, which a
+ * test can change while the screen is open, as the laptop does at dusk.
  */
 let isLaptopDark = false;
 const laptopSchemeListeners = new Set<() => void>();
@@ -57,9 +57,9 @@ const setLaptopScheme = (scheme: 'light' | 'dark') => {
 };
 
 /*
- * jsdom has no modal dialogs, so these stand in for the browser's, opening and closing only. Escape and
- * moving focus are the browser's, covered in e2e/. Nor does it lay out a page, so scrolling a row into view
- * does nothing here; e2e/ covers it.
+ * jsdom has no modal dialogs, so these stand in for the browser's, opening and closing only. Escape
+ * and moving focus are the browser's, covered in e2e/. Nor does it lay out a page, so scrolling a
+ * row into view does nothing here; e2e/ covers it.
  */
 beforeAll(() => {
 	Element.prototype.scrollIntoView = () => {};
@@ -70,9 +70,10 @@ beforeAll(() => {
 		this.open = false;
 	};
 	/*
-	 * The browser's `window.matchMedia(query)` answers whether a CSS media query fits the page now, such as
-	 * `(prefers-color-scheme: dark)` while the laptop is set dark, and tells listeners when the answer changes.
-	 * `matches` is a getter, so each read answers for the laptop's setting at that moment, as the browser's does.
+	 * The browser's `window.matchMedia(query)` answers whether a CSS media query fits the page now,
+	 * such as `(prefers-color-scheme: dark)` while the laptop is set dark, and tells listeners when
+	 * the answer changes. `matches` is a getter, so each read answers for the laptop's setting at
+	 * that moment, as the browser's does.
 	 */
 	window.matchMedia = (query: string) =>
 		({
@@ -152,8 +153,8 @@ const confirmDraw = async (user: User) => {
 };
 
 /*
- * Registers the named Players, sets out the Boards, goes to the House Rules step and makes the Draw,
- * confirming it.
+ * Registers the named Players, sets out the Boards, goes to the House Rules step and
+ * makes the Draw, confirming it.
  */
 const makeTheDraw = async (user: User, names: string[], boards: string) => {
 	for (const name of names) {
@@ -167,7 +168,10 @@ const makeTheDraw = async (user: User, names: string[], boards: string) => {
 // The line saying how many House Rules the TV shows: "2 of 4 on the TV".
 const readHouseRulesShown = () => screen.getByText(/^\d+ of \d+ on the TV$/).textContent;
 
-// Each House Rule card's tag, in order: "ON THE TV" for those shown, "NEXT" for the next, '' for the rest.
+/*
+ * Each House Rule card's tag, in order: "ON THE TV" for those shown, "NEXT" for
+ * the next, '' for the rest.
+ */
 const listHouseRuleTags = () => {
 	const houseRulesList = within(screen.getByRole('list', { name: 'House Rules' }));
 	return houseRulesList
@@ -180,8 +184,8 @@ const findShowRuleButton = () =>
 	screen.getByRole('button', { name: /^Show rule \d on the TV$|^Every rule is on the TV$/ });
 
 /*
- * The tiles of every Match on a Board, bracket by bracket. Each recorded result re-renders them, so they are
- * looked up afresh each time.
+ * The tiles of every Match on a Board, bracket by bracket. Each recorded result re-renders them, so
+ * they are looked up afresh each time.
  */
 const listMatchTiles = () =>
 	within(screen.getByRole('region', { name: 'Matches' })).getAllByRole('listitem');
@@ -197,8 +201,8 @@ const listBracketHeadings = () =>
 		.map((heading) => heading.textContent);
 
 /*
- * What a bracket's panel of Matches on a Board says in its header: its badge's letter, and its Rounds and
- * how many Boards it holds ("Round 2 · 3 Boards").
+ * What a bracket's panel of Matches on a Board says in its header: its badge's letter, and its
+ * Rounds and how many Boards it holds ("Round 2 · 3 Boards").
  */
 const readBracketPanel = (bracketTitle: string) => {
 	const bracketPanel = within(screen.getByRole('region', { name: bracketTitle }));
@@ -270,8 +274,8 @@ const recordWin = (user: User, tile: HTMLElement, winner: string) =>
 	user.click(within(tile).getByRole('button', { name: winner }));
 
 /*
- * Makes the Draw for 8 Players on 4 Boards: four first-Round Matches, each on a Board. Once they are played
- * and their losers stay, both brackets hold Boards.
+ * Makes the Draw for 8 Players on 4 Boards: four first-Round Matches, each on a Board. Once they
+ * are played and their losers stay, both brackets hold Boards.
  */
 const drawEightPlayersOnFourBoards = async (user: User) => {
 	const names = ['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe', 'Bev', 'Kim', 'Lou'];
@@ -303,7 +307,10 @@ const listResults = () =>
 		.getAllByRole('listitem')
 		.map((item) => item.textContent);
 
-// What each champion's card reads, in the order shown: its bracket's badge, its title, the name and the Final.
+/*
+ * What each champion's card reads, in the order shown: its bracket's badge, its
+ * title, the name and the Final.
+ */
 const listChampionCards = () =>
 	screen.queryAllByRole('region', { name: /champion$/ }).map((card) => card.textContent);
 
@@ -315,7 +322,10 @@ const listTvChoices = () => {
 		.map((radio) => (radio as HTMLInputElement).labels![0].textContent);
 };
 
-// The running count of Players registered, in the Organizer's Players panel rather than the TV's thumbnail.
+/*
+ * The running count of Players registered, in the Organizer's Players panel
+ * rather than the TV's thumbnail.
+ */
 const readPlayerCount = () => {
 	const playersPanel = within(screen.getByRole('region', { name: 'Players' }));
 	return playersPanel.getByText(/ registered$/).textContent;
@@ -734,7 +744,10 @@ describe('the organizer route', () => {
 		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '1');
 
 		expect(listMatchTiles()).toHaveLength(1);
-		// 3 Players in a 4-place bracket: the Bye Player waits for the first Round's winner in the Final.
+		/*
+		 * 3 Players in a 4-place bracket: the Bye Player waits for the first
+		 * Round's winner in the Final.
+		 */
 		expect(listWaitingText()).toEqual([
 			expect.stringMatching(/^Winners Bracket · Final.+ vs Winner of .+ \/ .+$/),
 		]);
@@ -760,7 +773,10 @@ describe('the organizer route', () => {
 
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tonight’s Draw');
 		expect(screen.queryByLabelText('Player name')).not.toBeInTheDocument();
-		// 3 Players: one first-Round Match, and the Bye Player sits at a Board of their own to wait for its winner.
+		/*
+		 * 3 Players: one first-Round Match, and the Bye Player sits at a Board of their
+		 * own to wait for its winner.
+		 */
 		expect(listMatchTiles()).toHaveLength(2);
 		expect(findTileAwaitingWinner()).toHaveTextContent(/^Board \d+.+ vs Winner of .+ \/ .+$/);
 		const byePlayerName = readByePlayerName();
@@ -938,14 +954,20 @@ describe('the organizer route', () => {
 		const user = showOrganizer();
 		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
 		await clickButton(user, 'Start');
-		// 3 Players: two play on Board 1, and the Bye Player waits at Board 2 in the Final for its winner.
+		/*
+		 * 3 Players: two play on Board 1, and the Bye Player waits at Board 2 in
+		 * the Final for its winner.
+		 */
 		const byePlayerName = readByePlayerName();
 		const [winner] = listWinnerNames(findPlayingTile());
 		await recordWin(user, findPlayingTile(), winner);
 		await answerDialog(user, 'Leaving');
 		expect(listChampionCards()).toEqual([]);
 
-		// The first loser left, so no Losers Bracket can open: the Bye Player isn't asked whether they are staying.
+		/*
+		 * The first loser left, so no Losers Bracket can open: the Bye Player isn't asked
+		 * whether they are staying.
+		 */
 		const [final] = listMatchTiles();
 		await recordWin(user, final, winner);
 
@@ -1041,7 +1063,10 @@ describe('the organizer route', () => {
 			`Winners Bracket · Round 1Board 1: ${winner} beat ${loser}Undo`,
 		]);
 
-		// The Bye Player's first Match is the final, and a Forfeit asks too, about the Player leaving it.
+		/*
+		 * The Bye Player's first Match is the final, and a Forfeit asks too,
+		 * about the Player leaving it.
+		 */
 		const [final] = listMatchTiles();
 		const [, bye] = listWinnerNames(final);
 		await user.click(within(final).getByRole('button', { name: 'Forfeit' }));
@@ -1063,8 +1088,8 @@ describe('the organizer route', () => {
 		await clickButton(user, 'Start');
 
 		/*
-		 * 8 Players on 4 Boards: once the Draw's four Matches are played and their losers stay, two Winners
-		 * Bracket Matches and two Losers Bracket Matches hold the Boards.
+		 * 8 Players on 4 Boards: once the Draw's four Matches are played and their losers stay, two
+		 * Winners Bracket Matches and two Losers Bracket Matches hold the Boards.
 		 */
 		const losers = await playTheDrawWithLosersStaying(user);
 
@@ -1104,7 +1129,10 @@ describe('the organizer route', () => {
 
 	it('names every Round a bracket’s panel holds, and each Match’s Round only then', async () => {
 		const user = showOrganizer();
-		// 3 Players on 2 Boards: a first-Round Match, and the Bye Player waiting at the Final for its winner.
+		/*
+		 * 3 Players on 2 Boards: a first-Round Match, and the Bye Player waiting at
+		 * the Final for its winner.
+		 */
 		await makeTheDraw(user, ['Dave K.', 'Big Dave', 'Sue'], '2');
 
 		expect(readBracketPanel('Winners Bracket').summary).toBe('Round 1 and Final · 2 Boards');
@@ -1127,13 +1155,16 @@ describe('the organizer route', () => {
 		await playTheDrawWithLosersStaying(user);
 
 		/*
-		 * 8 Players: the Winners Bracket's second of three Rounds. The 4 who stayed make a Losers Bracket of two
-		 * Rounds, its first being played.
+		 * 8 Players: the Winners Bracket's second of three Rounds. The 4 who stayed make a Losers
+		 * Bracket of two Rounds, its first being played.
 		 */
 		expect(readBracketPanel('Winners Bracket').summary).toBe('Round 2 · 2 Boards');
 		expect(readBracketPanel('Losers Bracket').summary).toBe('Round 1 · 2 Boards');
 
-		// The Losers Bracket's second Round is its last: the Final, though the Winners Bracket has one more.
+		/*
+		 * The Losers Bracket's second Round is its last: the Final, though the
+		 * Winners Bracket has one more.
+		 */
 		await playEveryMatchIn(user, 'Losers Bracket');
 		expect(readBracketPanel('Losers Bracket').summary).toBe('Final · 1 Board');
 		await playEveryMatchIn(user, 'Winners Bracket');
@@ -1148,8 +1179,8 @@ describe('the organizer route', () => {
 		expect(screen.queryByRole('list', { name: 'Waiting for a Board' })).not.toBeInTheDocument();
 
 		/*
-		 * 6 Players on 3 Boards: once the Draw's three Matches are played and their losers stay, the
-		 * Losers Bracket is one Match on a Board and a Bye Player waiting for one.
+		 * 6 Players on 3 Boards: once the Draw's three Matches are played and their losers stay,
+		 * the Losers Bracket is one Match on a Board and a Bye Player waiting for one.
 		 */
 		await playTheDrawWithLosersStaying(user);
 
@@ -1178,7 +1209,10 @@ describe('the organizer route', () => {
 		const recordFirstNamedWinIn = (tile: HTMLElement) =>
 			recordWin(user, tile, listWinnerNames(tile)[0]);
 
-		// Round 2 of the Winners Bracket, then the Losers Bracket's first Round and its Round 2 final.
+		/*
+		 * Round 2 of the Winners Bracket, then the Losers Bracket's first
+		 * Round and its Round 2 final.
+		 */
 		await recordFirstNamedWinIn(findWinnersTile());
 		await recordFirstNamedWinIn(findLosersTile());
 		const [winnerOfFinal, loserOfFinal] = listWinnerNames(findLosersTile());
@@ -1188,7 +1222,10 @@ describe('the organizer route', () => {
 		expect(results[0]).toMatch(/^Losers Bracket · Final/);
 		expect(results[0]).toContain(`${winnerOfFinal} beat ${loserOfFinal}`);
 		expect(new Set(results).size).toBe(results.length);
-		// The Winners final: its two Players' earlier result can no longer be undone, so its row goes.
+		/*
+		 * The Winners final: its two Players' earlier result can no longer
+		 * be undone, so its row goes.
+		 */
 		const [champion, runnerUp] = listWinnerNames(findWinnersTile());
 		await recordFirstNamedWinIn(findWinnersTile());
 
@@ -1669,8 +1706,8 @@ describe('looking at the brackets on the laptop', () => {
 });
 
 /*
- * The organizer route, opened on the Tournament given, if any, and the store it saves to, which a test saves
- * to as well, as the Organizer's own steps would.
+ * The organizer route, opened on the Tournament given, if any, and the store it saves to, which a
+ * test saves to as well, as the Organizer's own steps would.
  */
 const showOrganizerWithStore = (saved?: Tournament): Store<Tournament> => {
 	const store = createLocalStorageStore<Tournament>(key, tournamentVersion);
@@ -1692,8 +1729,8 @@ const createHeartbeatStore = () =>
 	createLocalStorageStore<TvHeartbeat>(heartbeatKey, tvHeartbeatVersion);
 
 /*
- * Saves the TV's heartbeat as the TV's own window does: through a store of its own, which the browser then
- * tells the Organizer's window about with a storage event.
+ * Saves the TV's heartbeat as the TV's own window does: through a store of its own, which the
+ * browser then tells the Organizer's window about with a storage event.
  */
 const saveHeartbeatFromTv = () => {
 	const tvHeartbeatStore = createHeartbeatStore();
@@ -1712,14 +1749,20 @@ const showOrganizerCyclingScreens = () => {
 	return userEvent.setup();
 };
 
-// Records the only Match left, the Final, for its first-named Player, the loser leaving: the Tournament finished.
+/*
+ * Records the only Match left, the Final, for its first-named Player, the loser
+ * leaving: the Tournament finished.
+ */
 const winTheFinal = async (user: User) => {
 	const [champion] = listWinnerNames(findPlayingTile());
 	await recordWin(user, findPlayingTile(), champion);
 	await answerDialog(user, 'Leaving');
 };
 
-// Checks the choice of what the TV shows, and its seconds, are gone: before Start there is never a choice.
+/*
+ * Checks the choice of what the TV shows, and its seconds, are gone: before
+ * Start there is never a choice.
+ */
 const expectTvControlsHidden = () => {
 	expect(screen.queryByRole('group', { name: 'TV shows' })).not.toBeInTheDocument();
 	expect(screen.queryByLabelText('Seconds per TV screen')).not.toBeInTheDocument();
@@ -1730,7 +1773,10 @@ const getThumbnail = () => screen.getByRole('img', { name: /^The TV showing / })
 
 const readThumbnailName = () => getThumbnail().getAttribute('aria-label');
 
-// The thumbnail is a picture, hidden from assistive technology, so its heading is found among hidden ones.
+/*
+ * The thumbnail is a picture, hidden from assistive technology, so its heading
+ * is found among hidden ones.
+ */
 const readThumbnailHeading = () => {
 	const thumbnail = within(getThumbnail());
 	return thumbnail.getByRole('heading', { level: 1, hidden: true }).textContent;
@@ -1743,8 +1789,8 @@ const listThumbnailPlayers = () => {
 };
 
 /*
- * The organizer route once the Losers Bracket is drawn, with the TV held on it, and the store it saves to, so a
- * test can check the TV's choice is still saved.
+ * The organizer route once the Losers Bracket is drawn, with the TV held on it, and the store it
+ * saves to, so a test can check the TV's choice is still saved.
  */
 const showOrganizerHoldingLosersBracket = () => {
 	const intoLosersBracket = playIntoLosersBracket();
@@ -1803,8 +1849,9 @@ const playMatches = (
 };
 
 /*
- * Plays every Match left, as playToTheEnd does, except that each Losers Bracket Match is won by Forfeit: its
- * second-named Player leaves. Returns the finished Tournament and each bracket's Final, its winner's name first.
+ * Plays every Match left, as playToTheEnd does, except that each Losers Bracket Match is won by
+ * Forfeit: its second-named Player leaves. Returns the finished Tournament and each bracket's
+ * Final, its winner's name first.
  */
 const playToTheEndForfeitingLosersBracket = (playing: Tournament) => {
 	const finals: Partial<Record<BracketName, [string, string]>> = {};
@@ -1823,8 +1870,8 @@ const playToTheEndForfeitingLosersBracket = (playing: Tournament) => {
 };
 
 /*
- * Plays every Match left, the first-named Player winning each and every loser leaving, until both brackets
- * have their champion: the Tournament finished.
+ * Plays every Match left, the first-named Player winning each and every loser leaving, until both
+ * brackets have their champion: the Tournament finished.
  */
 const playToTheEnd = (playing: Tournament): Tournament => playMatches(playing);
 

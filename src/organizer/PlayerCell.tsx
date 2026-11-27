@@ -4,9 +4,10 @@ import type { BoardNumber, Player } from '../tournament';
 import { confirmColours, textInput } from './classes';
 
 /*
- * One Player's cell in the Players grid: their name, a Home Board tag if they have one, and Rename and Remove.
- * Renaming lays a name box with Save and Cancel over the cell, in the same place. The name and its buttons
- * stay drawn beneath it, hidden, so the cell keeps its size and no other name in the grid moves.
+ * One Player's cell in the Players grid: their name, a Home Board tag if they have one, and
+ * Rename and Remove. Renaming lays a name box with Save and Cancel over the cell, in the same
+ * place. The name and its buttons stay drawn beneath it, hidden, so the cell keeps its size and
+ * no other name in the grid moves.
  */
 export const PlayerCell = ({
 	player,
@@ -27,7 +28,10 @@ export const PlayerCell = ({
 }) => {
 	const renameButton = useRef<HTMLButtonElement>(null);
 	const wasRenaming = useRef(isRenaming);
-	// Gives focus back to Rename once renaming ends, so a keyboard user carries on from the same Player.
+	/*
+	 * Gives focus back to Rename once renaming ends, so a keyboard user
+	 * carries on from the same Player.
+	 */
 	useEffect(() => {
 		if (wasRenaming.current && !isRenaming) {
 			renameButton.current?.focus();
@@ -42,7 +46,10 @@ export const PlayerCell = ({
 			<div
 				className={`col-start-1 row-start-1 flex items-start gap-1 ${nameText.row} ${isRenaming ? 'invisible' : ''}`}
 			>
-				{/* A long name pushes its Home Board tag onto a line below it rather than breaking the name. */}
+				{/*
+				 * A long name pushes its Home Board tag onto a line below it
+				 * rather than breaking the name.
+				 */}
 				<div
 					className={`flex min-w-0 flex-1 flex-wrap items-center gap-x-2 ${nameText.lines}`}
 				>
@@ -77,8 +84,9 @@ export const PlayerCell = ({
 };
 
 /*
- * A Player's cell, plain or renaming. Its border is there in both, clear but for the line beneath a plain cell,
- * and in the theme's fill colour round a cell being renamed, so the cell keeps its size either way.
+ * A Player's cell, plain or renaming. Its border is there in both, clear but for the line
+ * beneath a plain cell, and in the theme's fill colour round a cell being renamed, so the cell
+ * keeps its size either way.
  */
 const playerCell = {
 	// One column the cell's width, so the name box laid over the name never widens the cell.
@@ -87,7 +95,10 @@ const playerCell = {
 	renaming: 'border-fill bg-raised',
 };
 
-// A button showing only an icon, named for screen readers by its label. Its colours say what it does.
+/*
+ * A button showing only an icon, named for screen readers by its label. Its
+ * colours say what it does.
+ */
 const iconButton = {
 	shape: 'grid size-9 shrink-0 place-items-center rounded-lg',
 	plain: 'text-muted hover:bg-divider hover:text-ink',
@@ -122,13 +133,13 @@ const IconButton = ({
 );
 
 /*
- * A Player's name and the name box that takes its place on Rename, drawn in the same place and the same way, so
- * the name doesn't shift as it becomes editable. Both rows sit at the top of the cell. The plain row starts the
- * name 0.75rem in from the cell's edge (`row`), and its lines are padded (`lines`) so the name's first line is
- * as tall as the name box, its middle where the box's text is. The name box spans the cell from its edge, its
- * 1px border and its left padding starting its text as far in. Its padding overrides the text box's own
- * (`textInput`), marked important so it wins whatever order the two are written in. Both are as large and as
- * bold.
+ * A Player's name and the name box that takes its place on Rename, drawn in the same place and the
+ * same way, so the name doesn't shift as it becomes editable. Both rows sit at the top of the cell.
+ * The plain row starts the name 0.75rem in from the cell's edge (`row`), and its lines are padded
+ * (`lines`) so the name's first line is as tall as the name box, its middle where the box's text
+ * is. The name box spans the cell from its edge, its 1px border and its left padding starting its
+ * text as far in. Its padding overrides the text box's own (`textInput`), marked important so it
+ * wins whatever order the two are written in. Both are as large and as bold.
  */
 const nameText = {
 	row: 'pl-3',
@@ -138,8 +149,8 @@ const nameText = {
 };
 
 /*
- * The name box laid over a Player's cell while they are renamed: Enter or Save saves the new name, and Escape
- * or Cancel puts the cell back as it was.
+ * The name box laid over a Player's cell while they are renamed: Enter or Save saves the new name,
+ * and Escape or Cancel puts the cell back as it was.
  */
 const RenameForm = ({
 	player,
@@ -152,7 +163,10 @@ const RenameForm = ({
 }) => {
 	const [name, setName] = useState(player.name);
 	const form = useRef<HTMLFormElement>(null);
-	// Brings the whole cell into view in the Players grid, its Save and Cancel too, however far down it is.
+	/*
+	 * Brings the whole cell into view in the Players grid, its Save and Cancel
+	 * too, however far down it is.
+	 */
 	useEffect(() => {
 		form.current?.scrollIntoView({ block: 'nearest' });
 	}, []);

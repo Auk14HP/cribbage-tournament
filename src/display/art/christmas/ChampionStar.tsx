@@ -44,7 +44,10 @@ const Sparkle = ({ place, isMoving }: { place: number; isMoving: boolean }) => {
 	);
 };
 
-// Christmas's motif for the Winners Bracket's champion: a large gold star, sparkles twinkling round it.
+/*
+ * Christmas's motif for the Winners Bracket's champion: a large gold star,
+ * sparkles twinkling round it.
+ */
 export const ChampionStar = ({ isMoving }: MovingProps) => (
 	<svg viewBox="0 0 100 100" className="h-full overflow-visible">
 		<polygon points={championStar.outline} fill="#ffd23f" />

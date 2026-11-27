@@ -1,8 +1,9 @@
 /*
- * Each TV Theme's own Fun Facts, which join the general ones (`funFacts.ts`) while it is the TV Theme. They keep
- * the same ground rules: kind, no he, she, him, her, his or hers, nothing about looks, age, money, relationships
- * or how much anyone drinks, and nothing that reads aloud in a busy bar as a joke at a Player's expense. Each
- * names no Players, one in {A}, or two in {A} and {B}. As many as fit the theme without feeling like a stretch.
+ * Each TV Theme's own Fun Facts, which join the general ones (`funFacts.ts`) while it is the TV
+ * Theme. They keep the same ground rules: kind, no he, she, him, her, his or hers, nothing about
+ * looks, age, money, relationships or how much anyone drinks, and nothing that reads aloud in a
+ * busy bar as a joke at a Player's expense. Each names no Players, one in {A}, or two in {A} and
+ * {B}. As many as fit the theme without feeling like a stretch.
  */
 import type { TvTheme } from '../tournament';
 

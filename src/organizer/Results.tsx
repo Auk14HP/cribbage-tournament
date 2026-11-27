@@ -12,9 +12,10 @@ import { button, panel } from './classes';
 import { Refusal, type Apply } from './controls';
 
 /*
- * The results that can still be undone, latest first, each with its own Undo. Each names its bracket and
- * Round, so the Organizer undoes the Match they mean. None until a result is recorded. The panel keeps its
- * whole height, its list scrolling with the column that holds it rather than on its own. Named by its heading.
+ * The results that can still be undone, latest first, each with its own Undo. Each names its
+ * bracket and Round, so the Organizer undoes the Match they mean. None until a result is recorded.
+ * The panel keeps its whole height, its list scrolling with the column that holds it rather than on
+ * its own. Named by its heading.
  */
 export const Results = ({ tournament, apply }: { tournament: Tournament; apply: Apply }) => {
 	const results = getUndoableResults(tournament);

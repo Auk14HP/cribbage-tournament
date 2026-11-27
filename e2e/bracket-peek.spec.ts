@@ -9,16 +9,16 @@ import {
 import { expectWhollyOnScreen } from './whollyOnScreen';
 
 /*
- * Looking at the brackets on the laptop, in a real browser beside the TV: jsdom has no modal dialogs, so
- * Escape and where focus goes are checked here, and it has one window, so the TV's own screen is too. The
- * route tests cover which bracket the dialog opens on and its tabs.
+ * Looking at the brackets on the laptop, in a real browser beside the TV: jsdom has no modal
+ * dialogs, so Escape and where focus goes are checked here, and it has one window, so the TV's own
+ * screen is too. The route tests cover which bracket the dialog opens on and its tabs.
  */
 
 test.use({ viewport: { width: 1280, height: 720 } });
 
 /*
- * 6 Players, Started, the Draw's three Matches played with every loser staying, and the TV held on the Losers
- * Bracket. The TV opens beside the Organizer.
+ * 6 Players, Started, the Draw's three Matches played with every loser staying, and the TV held on
+ * the Losers Bracket. The TV opens beside the Organizer.
  */
 const setUpHeldOnLosersBracket = async (organizer: Page) => {
 	await startTournament(organizer, { players: 6 });

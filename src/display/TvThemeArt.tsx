@@ -1,9 +1,10 @@
 /*
- * The TV Theme's artwork, each piece in its place: the border along the top of the safe area, the motifs beside
- * a screen's title, the motif in the countdown ring and the one beside each champion's name. Each draws the
- * artwork of the TV Theme its frame is drawn in, or nothing in Classic, which has none, so Classic's screens
- * are laid out as before. Decorative, so hidden from assistive technology. Named for the browser tests, which
- * check the artwork keeps clear of the text and the safe area's margins.
+ * The TV Theme's artwork, each piece in its place: the border along the top of the safe area, the
+ * motifs beside a screen's title, the motif in the countdown ring and the one beside each
+ * champion's name. Each draws the artwork of the TV Theme its frame is drawn in, or nothing in
+ * Classic, which has none, so Classic's screens are laid out as before. Decorative, so hidden from
+ * assistive technology. Named for the browser tests, which check the artwork keeps clear of the
+ * text and the safe area's margins.
  */
 import type { BracketName, TvTheme } from '../tournament';
 import type { TvThemeArtwork } from './art/artwork';
@@ -22,8 +23,8 @@ const useArtwork = () => {
 };
 
 /*
- * The border, along the top of the safe area, in the band the screens start below. Placed in the TV screen's
- * frame, which needs to be positioned.
+ * The border, along the top of the safe area, in the band the screens start below. Placed in the TV
+ * screen's frame, which needs to be positioned.
  */
 export const TvThemeBorder = () => {
 	const { artwork, isMoving } = useArtwork();

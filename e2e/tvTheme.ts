@@ -1,15 +1,19 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import { listTvThemes, tvThemeNames } from '../src/tournament';
 
-// The TV Themes the browser tests draw the TV in, by the names the menu shows: Classic and every month's.
+/*
+ * The TV Themes the browser tests draw the TV in, by the names the menu shows:
+ * Classic and every month's.
+ */
 export const tvThemeMenuNames = listTvThemes().map((tvTheme) => tvThemeNames[tvTheme]);
 
 // The first TV Theme with a border, in calendar order.
 const [firstBorderedTvTheme] = listTvThemes().filter((tvTheme) => tvTheme !== 'classic');
 
 /*
- * The TV Themes a layout is measured in: Classic, and one TV Theme with a border standing in for all of them,
- * since every TV Theme but Classic takes the same band from the screens (--tv-border-band in src/style.css).
+ * The TV Themes a layout is measured in: Classic, and one TV Theme with a border standing in for
+ * all of them, since every TV Theme but Classic takes the same band from the screens
+ * (--tv-border-band in src/style.css).
  */
 export const layoutTvThemeMenuNames = [tvThemeNames.classic, tvThemeNames[firstBorderedTvTheme]];
 
@@ -33,10 +37,10 @@ export const countMovingArtwork = (frame: Page | Locator) =>
 	);
 
 /*
- * Fails, naming each piece of text, if any text on the TV reads below its contrast with what is behind it:
- * 7:1 for names, headings and bracket text, and 4.5:1 for secondary text: the TV Theme's muted, Fun Fact and
- * held-place colours, and a Match's loser, faded below the names.
- * Each colour is read as the browser draws it, through a one-pixel canvas, so any colour format compares.
+ * Fails, naming each piece of text, if any text on the TV reads below its contrast with what is
+ * behind it: 7:1 for names, headings and bracket text, and 4.5:1 for secondary text: the TV Theme's
+ * muted, Fun Fact and held-place colours, and a Match's loser, faded below the names. Each colour
+ * is read as the browser draws it, through a one-pixel canvas, so any colour format compares.
  */
 export const expectTvTextReadable = async (tv: Page, moment: string) => {
 	const hardToRead = await tv.evaluate(() => {
@@ -69,7 +73,10 @@ export const expectTvTextReadable = async (tv: Page, moment: string) => {
 			return 'white';
 		};
 		const tvScreen = document.querySelector('main')!;
-		// Each named TV colour as the browser writes an element's colour, to compare with the text's.
+		/*
+		 * Each named TV colour as the browser writes an element's colour,
+		 * to compare with the text's.
+		 */
 		const probe = document.createElement('span');
 		tvScreen.append(probe);
 		const readTvColour = (role: string) => {
@@ -107,9 +114,9 @@ export const expectTvTextReadable = async (tv: Page, moment: string) => {
 };
 
 /*
- * Fails, naming the text, if any piece of the TV Theme's artwork overlaps a line of text or the countdown
- * ring. Text is measured line by line as the browser draws it, not by the box of its element, which may
- * stretch across the TV beside a short line.
+ * Fails, naming the text, if any piece of the TV Theme's artwork overlaps a line of text or the
+ * countdown ring. Text is measured line by line as the browser draws it, not by the box of its
+ * element, which may stretch across the TV beside a short line.
  */
 export const expectArtworkClearOfText = async (tv: Page) => {
 	const { artworkCount, overlaps } = await tv.evaluate(() => {

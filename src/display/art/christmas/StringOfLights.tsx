@@ -56,8 +56,8 @@ const Dip = ({ place, isMoving }: { place: number; isMoving: boolean }) => (
 );
 
 /*
- * Christmas's border: a string of lights along the top of the TV. Each dip of the wire takes an equal share of
- * the width, so the string spans any TV.
+ * Christmas's border: a string of lights along the top of the TV. Each dip of the wire takes an
+ * equal share of the width, so the string spans any TV.
  */
 export const StringOfLights = ({ isMoving }: MovingProps) => (
 	<div className="flex h-[3cqh]">

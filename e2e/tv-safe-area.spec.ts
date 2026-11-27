@@ -21,10 +21,11 @@ const playerCount = 32;
 const firstMatchCount = playerCount / 2;
 
 /*
- * Every TV screen keeps its content, the countdown ring and the TV Theme's artwork included, inside the safe
- * area a TV that overscans leaves uncropped, and the artwork clear of every line of text and the ring. With the
- * field that fills the most of each screen, on a 16:9 TV and on a narrower one, in Classic and in one TV Theme
- * with a border, which stands in for all of them: every TV Theme's own artwork is checked in tv-theme.spec.ts.
+ * Every TV screen keeps its content, the countdown ring and the TV Theme's artwork included, inside
+ * the safe area a TV that overscans leaves uncropped, and the artwork clear of every line of text
+ * and the ring. With the field that fills the most of each screen, on a 16:9 TV and on a narrower
+ * one, in Classic and in one TV Theme with a border, which stands in for all of them: every TV
+ * Theme's own artwork is checked in tv-theme.spec.ts.
  */
 
 // Checks the TV screen sits inside the safe area, and its TV Theme's artwork covers nothing.
@@ -51,8 +52,9 @@ for (const [tvSize, tvThemeName] of tvSizes.flatMap((size) =>
 			await expectScreenFits(tv, tvThemeName);
 
 			/*
-			 * Every Player's name wholly on screen, too. The safe-area check measures only the part of each
-			 * element its list leaves visible, so a name the list clips out of sight would still pass it.
+			 * Every Player's name wholly on screen, too. The safe-area check measures only the
+			 * part of each element its list leaves visible, so a name the list clips out of
+			 * sight would still pass it.
 			 */
 			const playersList = tv.getByRole('list', { name: 'Players' });
 			const playerNameItems = playersList.getByRole('listitem');

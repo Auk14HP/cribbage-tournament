@@ -7,8 +7,9 @@ import { configDefaults, defineConfig } from 'vitest/config';
 import { pagesBase } from './pagesBase.ts';
 
 /*
- * GitHub Pages serves 404.html for any path it has no file for, so a copy of the entry there lets a direct load
- * or reload of the display route (`<base>display`) start the app, which then picks the route from the path.
+ * GitHub Pages serves 404.html for any path it has no file for, so a copy of the entry there
+ * lets a direct load or reload of the display route (`<base>display`) start the app, which then
+ * picks the route from the path.
  */
 const copyEntryTo404 = (): Plugin => {
 	let outDir = '';
@@ -26,13 +27,16 @@ const copyEntryTo404 = (): Plugin => {
 
 export default defineConfig(({ command, isPreview }) => ({
 	/*
-	 * A build is for GitHub Pages, served under the repository's name, and `vite preview` serves it there too;
-	 * the dev server and Vitest stay at the root.
+	 * A build is for GitHub Pages, served under the repository's name, and `vite preview` serves it
+	 * there too; the dev server and Vitest stay at the root.
 	 */
 	base: command === 'build' || isPreview ? pagesBase : '/',
 	plugins: [react(), tailwindcss(), copyEntryTo404()],
 	test: {
-		// e2e/ and screens/ are Playwright's, run by `npm run e2e` and `npm run screens`, not Vitest.
+		/*
+		 * e2e/ and screens/ are Playwright's, run by `npm run e2e` and
+		 * `npm run screens`, not Vitest.
+		 */
 		exclude: [...configDefaults.exclude, 'e2e/**', 'screens/**'],
 		setupFiles: ['src/failOnConsoleOutput.ts'],
 		// Every spy is put back after its test, even one whose assertion failed.

@@ -16,14 +16,15 @@ import { expectInsideTvSafeArea } from './tvSafeArea';
 import { chooseTvTheme, findArtwork, layoutTvThemeMenuNames } from './tvTheme';
 
 /*
- * The Winners Bracket's layout on a TV, measured from where the browser drew each Match: every Round header
- * and Board label is one line, every column's Matches start level, every Match sits level with the middle of
- * the two that feed it, and everything sits inside the TV's safe area. A Bye's place in the first Round has no
- * Match, so its empty slot is measured instead. Measured at Start; at the final, when the narrow final column
- * names its Board; and after the final, when winners' names fill later Rounds. On a 16:9 TV and on a narrower
- * one, in Classic and in one TV Theme with a border, which takes room from the bracket the same in every TV
- * Theme. Then, every Round header and Match card stays put from Tonight's Draw through Start. Last, a long
- * champion's name keeps the bracket's heading on one line, its motifs beside it.
+ * The Winners Bracket's layout on a TV, measured from where the browser drew each Match: every
+ * Round header and Board label is one line, every column's Matches start level, every Match sits
+ * level with the middle of the two that feed it, and everything sits inside the TV's safe area. A
+ * Bye's place in the first Round has no Match, so its empty slot is measured instead. Measured at
+ * Start; at the final, when the narrow final column names its Board; and after the final, when
+ * winners' names fill later Rounds. On a 16:9 TV and on a narrower one, in Classic and in one TV
+ * Theme with a border, which takes room from the bracket the same in every TV Theme. Then, every
+ * Round header and Match card stays put from Tonight's Draw through Start. Last, a long champion's
+ * name keeps the bracket's heading on one line, its motifs beside it.
  */
 
 const findMiddle = async (slot: Locator): Promise<number> => {
@@ -152,8 +153,8 @@ for (const { players, rounds } of [
 }
 
 /*
- * Tonight's Draw is the Winners Bracket before Start, so pressing Start moves none of its Round headers or
- * Match cards. With 21 Players, Byes put Matches in later Rounds too.
+ * Tonight's Draw is the Winners Bracket before Start, so pressing Start moves none of its Round
+ * headers or Match cards. With 21 Players, Byes put Matches in later Rounds too.
  */
 for (const tvSize of tvSizes) {
 	test(`with 21 Players on a ${tvSize.width}×${tvSize.height} TV, every Round header and Match card stays still from Tonight’s Draw to Start`, async ({
@@ -189,8 +190,8 @@ const narrowerTv = tvSizes[1];
 const longNamedPlayerCount = 8;
 
 /*
- * The box of the TV Theme's artwork level with the heading and to its right: the motifs beside it, not the
- * border above it.
+ * The box of the TV Theme's artwork level with the heading and to its right: the motifs beside
+ * it, not the border above it.
  */
 const findMotifsBesideHeading = async (tv: Page, heading: Locator) => {
 	const headingBox = (await heading.boundingBox())!;

@@ -1,6 +1,7 @@
 /*
- * The organizer route: shown on the laptop. Forwards the Organizer's actions to the Tournament core,
- * saves accepted changes through the store, and shows the core's reason when a change is refused.
+ * The organizer route: shown on the laptop. Forwards the Organizer's actions to the
+ * Tournament core, saves accepted changes through the store, and shows the core's reason
+ * when a change is refused.
  */
 import { useLayoutEffect, useRef, useState } from 'react';
 import { makeDisplayPath } from '../routes';
@@ -47,8 +48,9 @@ export const Organizer = ({
 	const { choice: themeChoice, theme, laptopTheme } = useTheme(themeStore);
 
 	/*
-	 * The theme goes on the page's root, not only this screen, so the window's own edges and scrollbar take its
-	 * colours too. Before paint, so the screen never shows a frame in the wrong theme.
+	 * The theme goes on the page's root, not only this screen, so the window's own edges
+	 * and scrollbar take its colours too. Before paint, so the screen never shows a
+	 * frame in the wrong theme.
 	 */
 	useLayoutEffect(() => {
 		document.documentElement.dataset.theme = theme;
@@ -56,7 +58,10 @@ export const Organizer = ({
 			delete document.documentElement.dataset.theme;
 		};
 	}, [theme]);
-	// Bumped by a new Tournament, so registration starts afresh: empty boxes, nothing being renamed.
+	/*
+	 * Bumped by a new Tournament, so registration starts afresh: empty
+	 * boxes, nothing being renamed.
+	 */
 	const [newTournaments, setNewTournaments] = useState(0);
 
 	const apply: Apply = (outcome) => {
@@ -64,8 +69,9 @@ export const Organizer = ({
 			return outcome.reason;
 		}
 		/*
-		 * Starts Auto's TV cycle again now if the command calls for it, so every window works out the same screen.
-		 * Every save of a Started Tournament goes through here: docs/adr/0003-tv-cycle-runs-from-the-clock.md.
+		 * Starts Auto's TV cycle again now if the command calls for it, so every window works out
+		 * the same screen. Every save of a Started Tournament goes through here:
+		 * docs/adr/0003-tv-cycle-runs-from-the-clock.md.
 		 */
 		const now = Date.now();
 		store.save(restartTvCycleIfDue({ before: tournament, after: outcome.value, now }));
@@ -81,25 +87,30 @@ export const Organizer = ({
 
 	return (
 		/*
-		 * Fills the window and never scrolls as a page: a long list scrolls on its own inside it, so the controls
-		 * around the list stay on screen. A band of the theme's yellow along its top edge matches the TV's.
+		 * Fills the window and never scrolls as a page: a long list scrolls on its own inside it,
+		 * so the controls around the list stay on screen. A band of the theme's yellow along its
+		 * top edge matches the TV's.
 		 */
 		<main className="border-fill bg-canvas font-organizer text-ink flex h-dvh flex-col border-t-4 px-8 py-6">
-			{/* Named for the browser tests, which check it keeps its size: it is no landmark of its own. */}
+			{/*
+			 * Named for the browser tests, which check it keeps its size: it
+			 * is no landmark of its own.
+			 */}
 			<header
 				data-testid="organizer header"
 				className="flex items-center justify-between gap-4"
 			>
 				<h1 className="text-3xl font-bold">{headings[tournament.phase]}</h1>
 				{/*
-				 * Stretched to one height, so the palette button, holding an icon rather than a line of text, is as
-				 * tall as the buttons beside it.
+				 * Stretched to one height, so the palette button, holding an icon rather than a
+				 * line of text, is as tall as the buttons beside it.
 				 */}
 				<nav className="flex items-stretch gap-2">
 					{/*
-					 * Outlined on the canvas, not filled like the buttons the night runs on, so it doesn't draw the
-					 * Organizer's eye mid-Tournament. Once the Tournament is finished it is what comes next, so it
-					 * becomes the main button. Its dialog still asks before anything is cleared.
+					 * Outlined on the canvas, not filled like the buttons the night runs on, so it
+					 * doesn't draw the Organizer's eye mid-Tournament. Once the Tournament is
+					 * finished it is what comes next, so it becomes the main button. Its dialog
+					 * still asks before anything is cleared.
 					 */}
 					<button
 						type="button"
@@ -113,9 +124,9 @@ export const Organizer = ({
 					{/* Beside Open TV display, the button that brings a closed TV back. */}
 					<TvBadge isTvOpen={isTvOpen} />
 					{/*
-					 * While the TV is closed, opening it is what the Organizer needs to do next, so it becomes the main
-					 * button. Its label keeps the main button's bolder width in either look, so the buttons beside it
-					 * stay put as the TV opens or closes.
+					 * While the TV is closed, opening it is what the Organizer needs to do next, so
+					 * it becomes the main button. Its label keeps the main button's bolder width in
+					 * either look, so the buttons beside it stay put as the TV opens or closes.
 					 */}
 					<a
 						href={makeDisplayPath(import.meta.env.BASE_URL)}
@@ -130,7 +141,9 @@ export const Organizer = ({
 							Open TV display
 						</span>
 					</a>
-					{/* The TV Theme is the Tournament's, so a pick is saved with the Tournament. */}
+					{/*
+					 * The TV Theme is the Tournament's, so a pick is saved with the Tournament.
+					 */}
 					<ThemeMenu
 						choice={themeChoice}
 						laptopTheme={laptopTheme}

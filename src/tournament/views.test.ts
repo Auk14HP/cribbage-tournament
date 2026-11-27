@@ -52,7 +52,10 @@ describe('the Winners Bracket picture', () => {
 
 describe('who has lost in the Winners Bracket', () => {
 	it('counts only a Player beaten in a Match, not one with a Bye or still to play', () => {
-		// 5 Players: Ann and Bob play the one first-Round Match; Cat has a Bye and waits for its winner.
+		/*
+		 * 5 Players: Ann and Bob play the one first-Round Match; Cat has a Bye
+		 * and waits for its winner.
+		 */
 		let tournament = startTournament({ players: 5, boards: 4 });
 		const [firstMatch, waiting] = getMatchesOnBoards(tournament);
 		const [ann, bob] = firstMatch.players as [Player, Player];
@@ -76,7 +79,10 @@ describe('who has lost in the Winners Bracket', () => {
 
 describe('the champions', () => {
 	it('names the Winners Bracket champion once its Final is won, and the Player they beat there', () => {
-		// 3 Players: Ann and Bob play the one first-Round Match; Cat has a Bye and waits in the Final.
+		/*
+		 * 3 Players: Ann and Bob play the one first-Round Match; Cat has a
+		 * Bye and waits in the Final.
+		 */
 		let tournament = startTournament({ players: 3, boards: 2 });
 		const [firstMatch, final] = getMatchesOnBoards(tournament);
 		const [, bob] = firstMatch.players as [Player, Player];
@@ -94,7 +100,10 @@ describe('the champions', () => {
 	});
 
 	it('names each bracket’s champion, the Winners Bracket’s first, and says when the Final was a Forfeit', () => {
-		// 4 Players on 2 Boards: both first-Round losers stay, so the Losers Bracket is one Match, its Final.
+		/*
+		 * 4 Players on 2 Boards: both first-Round losers stay, so the Losers
+		 * Bracket is one Match, its Final.
+		 */
 		let tournament = playDrawStaying(startTournament({ players: 4, boards: 2 }));
 		const matches = getMatchesOnBoards(tournament);
 		const winnersFinal = matches.find((m) => m.match.bracket === 'winners')!;

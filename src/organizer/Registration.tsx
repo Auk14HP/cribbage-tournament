@@ -1,4 +1,7 @@
-// Registration: Players registered, renamed and removed, and the Boards set out, before the House Rules.
+/*
+ * Registration: Players registered, renamed and removed, and the Boards set
+ * out, before the House Rules.
+ */
 import { useEffect, useRef, useState, type SubmitEvent } from 'react';
 import type { Result } from '../result';
 import {
@@ -29,8 +32,8 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 	const shownPlayerCount = useRef(playerCount);
 
 	/*
-	 * Scrolls the Players list to its end when a Player is registered, so the new Player's row, added last,
-	 * is in view however long the list.
+	 * Scrolls the Players list to its end when a Player is registered, so the new Player's row,
+	 * added last, is in view however long the list.
 	 */
 	useEffect(() => {
 		const list = playersList.current;
@@ -60,7 +63,10 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 		setPlayersRefusal('');
 	};
 
-	// The Boards, the Home Board and Show House Rules share one refusal line, below Show House Rules.
+	/*
+	 * The Boards, the Home Board and Show House Rules share one refusal
+	 * line, below Show House Rules.
+	 */
 	const applyToBoards = (outcome: Result<Tournament>) => {
 		const refusal = apply(outcome);
 		setBoardsRefusal(refusal);
@@ -150,8 +156,9 @@ export const Registration = ({ tournament, apply }: { tournament: Tournament; ap
 						onSave={saveBoardCount}
 					/>
 					{/*
-					 * Its line is kept even when empty, so saving the Boards as the Organizer leaves the box for
-					 * Show House Rules doesn't move the button out from under their click.
+					 * Its line is kept even when empty, so saving the Boards as the
+					 * Organizer leaves the box for Show House Rules doesn't move the button
+					 * out from under their click.
 					 */}
 					<p className="text-muted mt-2 min-h-6">
 						{!boardsRefusal &&

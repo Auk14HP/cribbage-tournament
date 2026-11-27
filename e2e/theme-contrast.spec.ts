@@ -14,10 +14,11 @@ import {
 import { chooseTvTheme } from './tvTheme';
 
 /*
- * The Organizer screen's themes, in a real browser: every phase's text is readable in Light, Dark, and Same as
- * laptop with the laptop set light or dark; the screen draws in Inter served with the app; and the TV keeps
- * its TV Theme whatever the Organizer's theme. The header holding the theme menu is checked here too: opening
- * the menu moves nothing, and the palette button is as tall as the buttons beside it.
+ * The Organizer screen's themes, in a real browser: every phase's text is readable in Light,
+ * Dark, and Same as laptop with the laptop set light or dark; the screen draws in Inter served
+ * with the app; and the TV keeps its TV Theme whatever the Organizer's theme. The header holding
+ * the theme menu is checked here too: opening the menu moves nothing, and the palette button is
+ * as tall as the buttons beside it.
  */
 
 // Picks a theme from the palette menu in the Organizer screen's header.
@@ -27,13 +28,13 @@ const chooseTheme = async (page: Page, themeName: 'Same as laptop' | 'Light' | '
 };
 
 /*
- * Fails, naming each piece of text, if any text on screen reads below WCAG's 4.5:1 contrast with what is behind
- * it (3:1 for large text), as axe's color-contrast rule measures it.
+ * Fails, naming each piece of text, if any text on screen reads below WCAG's 4.5:1 contrast with
+ * what is behind it (3:1 for large text), as axe's color-contrast rule measures it.
  */
 const expectReadableText = async (page: Page, moment: string) => {
 	/*
-	 * The TV Display panel's thumbnail is left out: it is a picture of the TV, drawn in the TV's own colours
-	 * rather than the theme's, and caught mid-fade it reads as low contrast.
+	 * The TV Display panel's thumbnail is left out: it is a picture of the TV, drawn in the TV's
+	 * own colours rather than the theme's, and caught mid-fade it reads as low contrast.
 	 */
 	const results = await new AxeBuilder({ page })
 		.withRules(['color-contrast'])
@@ -46,10 +47,10 @@ const expectReadableText = async (page: Page, moment: string) => {
 };
 
 /*
- * Walks a Tournament from registration to its champion, checking the text at each phase and at the moments
- * that add colours of their own: the theme menu open, a Home Board tag and a Player renamed, a House Rule
- * shown with the rest still to come, a confirmation dialog, Swap mode with a Player picked, a refusal, the
- * question whether a loser is staying, and the Losers Bracket open.
+ * Walks a Tournament from registration to its champion, checking the text at each phase and at the
+ * moments that add colours of their own: the theme menu open, a Home Board tag and a Player
+ * renamed, a House Rule shown with the rest still to come, a confirmation dialog, Swap mode with a
+ * Player picked, a refusal, the question whether a loser is staying, and the Losers Bracket open.
  */
 const expectEveryPhaseReadable = async (page: Page) => {
 	await page.goto('/?players=9&boards=4');
@@ -60,7 +61,10 @@ const expectEveryPhaseReadable = async (page: Page) => {
 	await page.getByLabel('Player name').press('Enter');
 	await expect(page.getByRole('alert').first()).not.toBeEmpty();
 	await expectReadableText(page, 'registration, a name refused');
-	// A Home Board tag on one Player while another is renamed, then both put back, so the Draw is unchanged.
+	/*
+	 * A Home Board tag on one Player while another is renamed, then both put back,
+	 * so the Draw is unchanged.
+	 */
 	await page.getByLabel('Home Board for').selectOption('Big Dave');
 	await page.getByRole('button', { name: 'Rename Sue' }).click();
 	await expectReadableText(page, 'registration, a Home Board tag and a Player renamed');
@@ -163,8 +167,9 @@ test('keeps the TV in Classic, its plain black look, despite the Organizer scree
 });
 
 /*
- * The buttons in the Organizer screen's header: Start a new Tournament, Open TV display and the palette button.
- * The header sits inside the page's main landmark, so it is no banner of its own: each is found by its name.
+ * The buttons in the Organizer screen's header: Start a new Tournament, Open TV display and the
+ * palette button. The header sits inside the page's main landmark, so it is no banner of its
+ * own: each is found by its name.
  */
 const findHeaderButtons = (page: Page) => [
 	page.getByRole('button', { name: 'Start a new Tournament' }),

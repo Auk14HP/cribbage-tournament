@@ -1,6 +1,7 @@
 /*
- * Set-up shared by the core's tests and the routes' tests: Tournaments registered, drawn and Started, the
- * commands' outcomes checked, and lookups on who sits where. No browser here: the core's tests run in Node.
+ * Set-up shared by the core's tests and the routes' tests: Tournaments registered, drawn and
+ * Started, the commands' outcomes checked, and lookups on who sits where. No browser here: the
+ * core's tests run in Node.
  */
 import { expect } from 'vitest';
 import type { Result } from '../result';
@@ -37,9 +38,9 @@ export const createSeededRandom = (seed: number) => () => {
 };
 
 /*
- * Returns the Tournament a command made, failing the test if the command was refused or left the Boards or
- * the TV in a state no Tournament should reach. Every command a test runs goes through here, so each one is
- * checked.
+ * Returns the Tournament a command made, failing the test if the command was refused or left the
+ * Boards or the TV in a state no Tournament should reach. Every command a test runs goes through
+ * here, so each one is checked.
  */
 export const expectOk = (outcome: Result<Tournament>): Tournament => {
 	if (!outcome.ok) {
@@ -51,9 +52,10 @@ export const expectOk = (outcome: Result<Tournament>): Tournament => {
 };
 
 /*
- * Checks the Boards: each Match holding a Board is at a Board set out, no Board holds two Matches, no Match
- * holds two Boards, and no Match both holds a Board and waits for one. Whether every Match that needs a Board
- * holds one or waits for one can't be read through the Tournament's queries, so it isn't checked here.
+ * Checks the Boards: each Match holding a Board is at a Board set out, no Board holds two Matches,
+ * no Match holds two Boards, and no Match both holds a Board and waits for one. Whether every
+ * Match that needs a Board holds one or waits for one can't be read through the Tournament's
+ * queries, so it isn't checked here.
  */
 export const expectSeatingHolds = (tournament: Tournament) => {
 	const matchesOnBoards = getMatchesOnBoards(tournament);
@@ -68,7 +70,10 @@ export const expectSeatingHolds = (tournament: Tournament) => {
 	expect(waitingKeys.filter((key) => seatedKeys.includes(key))).toEqual([]);
 };
 
-// Checks the TV's choice is Auto or a Held screen the current phase has, so one left from another phase fails.
+/*
+ * Checks the TV's choice is Auto or a Held screen the current phase has, so one left
+ * from another phase fails.
+ */
 const expectTvChoiceOffered = (tournament: Tournament) => {
 	const offered = ['auto', ...listTvScreens(tournament)];
 	expect(offered).toContain(tournament.tvChoice);
@@ -105,7 +110,10 @@ export const registerPlayers = (...names: string[]): Tournament => {
 	return tournament;
 };
 
-// Goes on from registration to the House Rules step and makes the Draw there, as the Organizer does.
+/*
+ * Goes on from registration to the House Rules step and makes the Draw
+ * there, as the Organizer does.
+ */
 export const makeDrawAfterHouseRules = (
 	registered: Tournament,
 	random: Random,
@@ -131,8 +139,9 @@ export const startTournament = (setup: TournamentSetup): Tournament => {
 };
 
 /*
- * Records a win in a Match holding a Board, both its Players known: by the Player given, or else by its
- * first-named Player. The loser's answer counts only if they are asked whether they are staying.
+ * Records a win in a Match holding a Board, both its Players known: by the Player given,
+ * or else by its first-named Player. The loser's answer counts only if they are asked
+ * whether they are staying.
  */
 export const recordWin = (
 	tournament: Tournament,
@@ -142,8 +151,8 @@ export const recordWin = (
 ): Tournament => expectOk(recordWinner(tournament, matchOnBoard.match, winner.id, loserAnswer));
 
 /*
- * Records every Match the Draw started, its first-named Player winning and the loser staying for the
- * Losers Bracket.
+ * Records every Match the Draw started, its first-named Player winning and the loser
+ * staying for the Losers Bracket.
  */
 export const playDrawStaying = (started: Tournament): Tournament => {
 	let tournament = started;
@@ -189,10 +198,10 @@ export const findOpponentIn = (match: MatchOnBoard, player: Player): Player =>
 	match.players.find((p) => 'id' in p && p.id !== player.id) as Player;
 
 /*
- * 5 Players on 4 Boards, Started, up to the Losers Draw: Ann beats Bob in the one first-Round Match, Cat
- * has a Bye and waits for Ann, and Dan beats Eve in Round 2, where they met as Byes. Bob and Eve answer
- * whether they are staying; Cat's first Match is still to come. losersMatch lists the Players of the
- * Losers Bracket's first-Round Match in the order its Draw put them.
+ * 5 Players on 4 Boards, Started, up to the Losers Draw: Ann beats Bob in the one first-Round
+ * Match, Cat has a Bye and waits for Ann, and Dan beats Eve in Round 2, where they met as Byes. Bob
+ * and Eve answer whether they are staying; Cat's first Match is still to come. losersMatch lists
+ * the Players of the Losers Bracket's first-Round Match in the order its Draw put them.
  */
 export const setUpHeldPlace = (answers: readonly [StayingAnswer, StayingAnswer]) => {
 	let tournament = startTournament({ players: 5, boards: 4 });
@@ -211,7 +220,10 @@ export const setUpHeldPlace = (answers: readonly [StayingAnswer, StayingAnswer])
 	return { tournament, ann, bob, cat, dan, eve, losersMatch };
 };
 
-// The Players known in a Match of a bracket's picture: none still to come, nor a place held for one.
+/*
+ * The Players known in a Match of a bracket's picture: none still to come,
+ * nor a place held for one.
+ */
 export const listKnownPlayers = (match: BracketMatch | undefined): Player[] => {
 	const players: readonly BracketPlayer[] = match?.players ?? [];
 	return players.filter((p): p is Player => p !== undefined && 'id' in p);
@@ -231,8 +243,8 @@ export const hasOneByePlayer = (tournament: Tournament, match: MatchOnBoard): bo
 	match.players.filter((p) => isByePlayerIn(tournament, p)).length === 1;
 
 /*
- * The one Bye Player still to play their first Match, waiting for the first-Round Match's winner, and
- * that Match of theirs: in a Tournament whose Draw has an odd number of first-Round Matches.
+ * The one Bye Player still to play their first Match, waiting for the first-Round Match's winner,
+ * and that Match of theirs: in a Tournament whose Draw has an odd number of first-Round Matches.
  */
 export const findByePlayerStillToPlay = (tournament: Tournament) => {
 	const firstMatch = getMatchesOnBoards(tournament).find(

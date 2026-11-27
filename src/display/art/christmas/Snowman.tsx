@@ -74,8 +74,8 @@ const Snowflake = ({ place, isMoving }: { place: number; isMoving: boolean }) =>
 };
 
 /*
- * Christmas's motif for the Losers Bracket's champion: a snowman in a top hat and a red scarf, with a carrot
- * nose, coal eyes, smile and buttons, and stick arms, snowflakes twinkling round him.
+ * Christmas's motif for the Losers Bracket's champion: a snowman in a top hat and a red scarf, with
+ * a carrot nose, coal eyes, smile and buttons, and stick arms, snowflakes twinkling round him.
  */
 export const Snowman = ({ isMoving }: MovingProps) => (
 	<svg viewBox="0 0 100 116" className="h-full overflow-visible">

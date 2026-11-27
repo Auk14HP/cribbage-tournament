@@ -1,6 +1,6 @@
 /*
- * Recording each Match's result, a win or a Forfeit, with a first-Match loser's answer to whether they are
- * staying for the Losers Bracket; and undoing a result.
+ * Recording each Match's result, a win or a Forfeit, with a first-Match loser's answer to whether
+ * they are staying for the Losers Bracket; and undoing a result.
  */
 import type { Result } from '../result';
 import {
@@ -21,10 +21,11 @@ import { dropHeldScreenIfGone } from './tvScreen';
 import type { MatchPlace, PlayerId, StayingAnswer, Tournament } from './types';
 
 /*
- * Records a Match's winner, who advances to the next Round. The Match's Board frees. The winner goes to
- * their next Match's Board, where their opponent already waits; or, if it has none yet, the next Match
- * takes the lowest-numbered free Board and the winner waits there for their opponent. That is often the
- * Board they just won at. A loser the Losers Bracket is open to must say whether they are staying for it.
+ * Records a Match's winner, who advances to the next Round. The Match's Board frees. The winner
+ * goes to their next Match's Board, where their opponent already waits; or, if it has none yet,
+ * the next Match takes the lowest-numbered free Board and the winner waits there for their
+ * opponent. That is often the Board they just won at. A loser the Losers Bracket is open to must
+ * say whether they are staying for it.
  */
 export const recordWinner = (
 	tournament: Tournament,
@@ -48,8 +49,8 @@ export const recordWinner = (
 };
 
 /*
- * Records a Forfeit: the Player leaves before finishing the Match, and their opponent wins it. The Losers
- * Bracket is open to them as to any loser.
+ * Records a Forfeit: the Player leaves before finishing the Match, and their opponent wins it. The
+ * Losers Bracket is open to them as to any loser.
  */
 export const recordForfeit = (
 	tournament: Tournament,
@@ -81,9 +82,9 @@ const findAnswerRefusal = (
 		: undefined;
 
 /*
- * Whether a Player who loses their Match now is asked if they are staying for the Losers Bracket: it is
- * their first Match, and the Losers Draw is still to come or holds a place for them. A Bye is not a Match,
- * so a Bye Player's first Match is in Round 2.
+ * Whether a Player who loses their Match now is asked if they are staying for the Losers Bracket:
+ * it is their first Match, and the Losers Draw is still to come or holds a place for them. A Bye is
+ * not a Match, so a Bye Player's first Match is in Round 2.
  */
 export const isLosersBracketOpenTo = (tournament: Tournament, player: PlayerId): boolean => {
 	// A Player who has played no Winners Bracket Match has played none.
@@ -158,10 +159,10 @@ const isFinished = (tournament: Tournament): boolean => {
 };
 
 /*
- * Undoes a Match's recorded result, so it can be played again or its winner corrected. The winner leaves
- * their next Match, which frees its Board unless their opponent already waits there, and the Match takes a
- * Board again: its own if it is still free. Undoing a first Match when no Losers Bracket was drawn leaves
- * the Losers Draw to be made again, once that Match has a result.
+ * Undoes a Match's recorded result, so it can be played again or its winner corrected. The winner
+ * leaves their next Match, which frees its Board unless their opponent already waits there, and the
+ * Match takes a Board again: its own if it is still free. Undoing a first Match when no Losers
+ * Bracket was drawn leaves the Losers Draw to be made again, once that Match has a result.
  */
 export const undoResult = (tournament: Tournament, match: MatchPlace): Result<Tournament> => {
 	const result = tournament.results.find((r) => isSameMatch(r.match, match));
@@ -184,8 +185,8 @@ export const undoResult = (tournament: Tournament, match: MatchPlace): Result<To
 };
 
 /*
- * Why a Match's result can't be undone, or undefined if it can: its winner has played their next Match,
- * or it decided who could stay for a Losers Bracket now drawn.
+ * Why a Match's result can't be undone, or undefined if it can: its winner has played their next
+ * Match, or it decided who could stay for a Losers Bracket now drawn.
  */
 export const findUndoRefusal = (tournament: Tournament, match: MatchPlace): string | undefined => {
 	if (hasPlayedOn(tournament, match)) {

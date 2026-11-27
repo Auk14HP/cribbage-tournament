@@ -2,8 +2,9 @@ import { expect } from '@playwright/test';
 import { test } from './setUpTournament';
 
 /*
- * The app's confirmation dialog, in a real browser: jsdom has no modal dialogs, so Escape and where
- * focus goes are checked here. The route tests cover what Cancel and confirming do to the Tournament.
+ * The app's confirmation dialog, in a real browser: jsdom has no modal dialogs, so
+ * Escape and where focus goes are checked here. The route tests cover what Cancel and
+ * confirming do to the Tournament.
  */
 test('Start a new Tournament asks first: Escape and Cancel keep the Tournament, and focus moves into the dialog and back', async ({
 	page,
