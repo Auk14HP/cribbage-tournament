@@ -3,6 +3,7 @@ import {
 	answerIsLoserStayingDialogIfAsked,
 	confirmDrawFromHouseRules,
 	findMatchesOnBoards,
+	parkCycleOn,
 	showHouseRules,
 	test,
 	tvClosingTimeoutMs,
@@ -31,6 +32,8 @@ const isShownWithin = async (element: Locator, timeout: number) => {
  *                                           picked, then after swapping them with the last Player listed
  *   ... DRAW=1 START=1                      and after Start
  *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
+ *   ... DRAW=1 START=1 LOSERS=1             and, every Player's first Match played with its loser staying, the
+ *                                           Losers Bracket parked on the TV. Stops there.
  *   ... DRAW=1 START=1 RESULTS=12 PEEK=1    and the brackets looked at on the laptop: the bracket on show,
  *                                           then the Losers Bracket's tab once it has one
  *   ... DRAW=1 START=1 RESULTS=3 FORFEIT=1  and the Forfeit dialog, then after that Forfeit
@@ -131,6 +134,21 @@ test('screens', async ({ context, page: organizer }) => {
 	await organizer.getByRole('button', { name: 'Start', exact: true }).click();
 	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 	await shoot('started');
+	if (process.env.LOSERS) {
+		/*
+		 * The Losers Bracket is drawn once every Player has played their first Match, a Bye Player's included, so
+		 * results go to the first Match on the list, its loser staying, until the TV has its screen to show.
+		 */
+		const losersBracketChoice = organizer.getByRole('radio', { name: 'Losers Bracket' });
+		const firstWinnerButton = findMatchesOnBoards(organizer).getByRole('button').first();
+		while ((await losersBracketChoice.count()) === 0) {
+			await firstWinnerButton.click();
+			await answerIsLoserStayingDialogIfAsked(organizer, 'Staying');
+		}
+		await parkCycleOn(organizer, tv, 'Losers Bracket');
+		await shoot('losers-bracket');
+		return;
+	}
 	if (!process.env.RESULTS) {
 		return;
 	}

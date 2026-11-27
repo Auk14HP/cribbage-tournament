@@ -23,6 +23,7 @@ When the change shows a moment the script doesn't reach yet (a Forfeit, the Lose
 
 The display route is read from across the room by an audience mostly 55+: text large and high-contrast, black filling the whole screen, nothing cropped. On the Winners Bracket, every Match sits level with the middle of the two that feed it, in every Round; `e2e/bracket-layout.spec.ts` measures this, but look at it too, because a change that keeps the measurements right can still make pairs hard to tell apart.
 
+In a TV Theme other than Classic (`TV_THEME=<Name>`), look at each piece of artwork in a full-size crop, against the rules in `docs/tv-themes.md`: the winners' path stands apart from the plain lines at a glance, and every glint sits on something round and glossy.
 On the organizer route, check inputs show their full placeholder and controls line up. In the Matches list, the Boards, both Players and the "vs" each line up down the list, whether a name is a button or plain text and however long it is.
 
 To see the Organizer's own Tournament rather than a test one, open `localhost:5173/display` (or `/`) in a new Claude in Chrome tab: it shares the local storage of the Organizer's Chrome, so it shows their saved Tournament exactly. Measure a layout there with JavaScript (element sizes and positions) instead of judging a screenshot by eye.

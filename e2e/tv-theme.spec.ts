@@ -30,6 +30,8 @@ import {
 const playerCount = 8;
 const firstMatchCount = playerCount / 2;
 
+const narrowerTv = tvSizes[1];
+
 // The TV's screen, which carries the TV Theme it is drawn in.
 const findTvScreen = (tv: Page) => tv.getByRole('main');
 
@@ -45,46 +47,58 @@ test('changes the TV at once when the Organizer picks a TV Theme', async ({ page
 	await expect(findTvScreen(tv)).toHaveCSS('background-color', 'rgb(0, 0, 0)');
 });
 
+/*
+ * Checks a TV screen in the TV Theme given reads well: its text at 7:1 or 4.5:1, everything inside the safe
+ * area, and the TV Theme's artwork, if it has any, clear of every line of text and the countdown ring.
+ */
+const expectScreenDrawnWell = async (tv: Page, tvThemeName: string, moment: string) => {
+	await expectTvTextReadable(tv, moment);
+	await expectInsideTvSafeArea(tv);
+	if (tvThemeName !== 'Classic') {
+		await expectArtworkClearOfText(tv);
+	}
+};
+
+/*
+ * Every TV Theme, on every TV screen: each draws its own colours and artwork, so each is walked. On the narrower
+ * TV, where the artwork has least room beside the text. The layout that every TV Theme with a border shares is
+ * measured at its fullest fields in tv-safe-area.spec.ts and bracket-layout.spec.ts.
+ */
 for (const tvThemeName of tvThemeNames) {
-	test(`reads well on every TV screen in ${tvThemeName}: 7:1 for names, headings and bracket text, 4.5:1 for the rest`, async ({
+	test(`draws every TV screen well in ${tvThemeName}: text at 7:1 or 4.5:1, artwork clear of it, all inside the safe area`, async ({
 		page: organizer,
 	}) => {
 		// Playing to the champions and parking the cycle on each screen takes longer than a test's usual 30 seconds.
 		test.setTimeout(120_000);
 		await organizer.goto(`/?players=${playerCount}&boards=${firstMatchCount}`);
 		await chooseTvTheme(organizer, tvThemeName);
-		const tv = await openTv(organizer, tvSizes[0]);
+		const tv = await openTv(organizer, narrowerTv);
 		// The Fun Fact fades in at the start of its time, so the screen is measured once it is fully shown.
 		await expect(tv.getByText(/^Fun fact: /)).toHaveCSS('opacity', '1');
-		await expectTvTextReadable(tv, 'Tonight’s Players');
+		await expectScreenDrawnWell(tv, tvThemeName, 'Tonight’s Players');
 
 		await showHouseRules(organizer);
 		await organizer.getByRole('button', { name: 'Show all' }).click();
 		await tv.getByRole('heading', { name: 'House Rules' }).waitFor();
-		await expectTvTextReadable(tv, 'House Rules, every one shown');
+		await expectScreenDrawnWell(tv, tvThemeName, 'House Rules, every one shown');
 
 		await confirmDrawFromHouseRules(organizer);
 		await tv.getByRole('heading', { name: 'Tonight’s Draw' }).waitFor();
-		await expectTvTextReadable(tv, 'Tonight’s Draw');
+		await expectScreenDrawnWell(tv, tvThemeName, 'Tonight’s Draw');
 
 		await organizer.getByRole('button', { name: 'Start', exact: true }).click();
 		await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
-		await expectTvTextReadable(tv, 'Winners Bracket');
+		await expectScreenDrawnWell(tv, tvThemeName, 'Winners Bracket');
 
 		await playFirstMatchesWithLosersStaying(organizer, { firstMatchCount });
 		await parkCycleOn(organizer, tv, 'Losers Bracket');
-		await expectTvTextReadable(tv, 'Losers Bracket');
+		await expectScreenDrawnWell(tv, tvThemeName, 'Losers Bracket');
 
 		await playToFinal(organizer);
 		await parkCycleOn(organizer, tv, 'Tonight’s Champions');
-		await expectTvTextReadable(tv, 'Tonight’s Champions');
-		// Both brackets' champions, each with their own motif: the one screen tv-safe-area.spec.ts doesn't reach.
-		await expectInsideTvSafeArea(tv);
-		if (tvThemeName !== 'Classic') {
-			await expectArtworkClearOfText(tv);
-		}
+		await expectScreenDrawnWell(tv, tvThemeName, 'Tonight’s Champions');
 		await parkCycleOn(organizer, tv, 'Winners Bracket');
-		await expectTvTextReadable(tv, 'Winners Bracket, its champion found');
+		await expectScreenDrawnWell(tv, tvThemeName, 'Winners Bracket, its champion found');
 	});
 }
 
