@@ -1,9 +1,9 @@
 /*
- * Before the Draw: the Tournament's title and the night's date, then every Player registered
- * so far, up to the 32 a bracket holds, in three columns on one screen, and a Fun Fact pinned
- * to the bottom of the safe area. The names take the space between, so the Fun Fact keeps its
- * place as the list grows. The TV Theme's motifs stand at the right, below the title's line
- * and above the names, beside the date and the count, which never reach that far.
+ * Before the Draw: the Tournament's title and the night's date, then every Player registered so
+ * far, up to the 32 a bracket holds, in three columns on one screen, and a Fun Fact pinned to the
+ * bottom of the safe area. The names take the space between, so the Fun Fact keeps its place as the
+ * list grows. The TV Theme's motifs stand at the right, below the title's line and above the names,
+ * beside the date and the count, which never reach that far.
  */
 import type { Random, Tournament } from '../tournament';
 import { describePlayersRegistered } from '../wording';

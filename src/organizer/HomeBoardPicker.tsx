@@ -5,10 +5,10 @@ import { clearHomeBoard, setHomeBoard, type BoardNumber, type Tournament } from 
 import { textInput } from './classes';
 
 /*
- * Gives one Player a Home Board: a Player, or Nobody, and a Board from those
- * set out. Picking another Player moves the Home Board to them. A Board
- * picked while Nobody has it is kept here for when a Player is picked. Always
- * shown, so Make the Draw below never moves as the Boards are set out.
+ * Gives one Player a Home Board: a Player, or Nobody, and a Board from those set out.
+ * Picking another Player moves the Home Board to them. A Board picked while Nobody has it
+ * is kept here for when a Player is picked. Always shown, so Make the Draw below never
+ * moves as the Boards are set out.
  */
 export const HomeBoardPicker = ({
 	tournament,

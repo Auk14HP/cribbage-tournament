@@ -1,11 +1,11 @@
 /*
  * The Fun Facts the TV rotates along the bottom of Tonight’s Players during registration:
- * light-hearted, mostly made up, with a few true facts about cribbage. Each names no
- * Players, one in {A}, or two in {A} and {B}, filled with registered Players' names.
- * Every line keeps to the ground rules. Each is kind: no he, she, him, her, his or hers,
- * nothing about looks, age, money, relationships or how much anyone drinks, and nothing
- * that reads aloud in a busy bar as a joke at a Player's expense. A made-up line is
- * clearly made up; a true one is a real fact about cribbage and names nobody.
+ * light-hearted, mostly made up, with a few true facts about cribbage. Each names no Players, one
+ * in {A}, or two in {A} and {B}, filled with registered Players' names. Every line keeps to the
+ * ground rules. Each is kind: no he, she, him, her, his or hers, nothing about looks, age, money,
+ * relationships or how much anyone drinks, and nothing that reads aloud in a busy bar as a joke
+ * at a Player's expense. A made-up line is clearly made up; a true one is a real fact about
+ * cribbage and names nobody.
  */
 import type { TvTheme } from '../tournament';
 import { tvThemeFunFacts } from './tvThemeFunFacts';

@@ -18,22 +18,22 @@ export interface FunFactRotation {
 	 */
 	readonly usedThisPass: readonly string[];
 	/*
-	 * Counts the facts shown, so each one is told apart from the last, even when the same fact
-	 * comes back.
+	 * Counts the facts shown, so each one is told apart from the last, even when
+	 * the same fact comes back.
 	 */
 	readonly turn: number;
 }
 
 /*
- * Returns the next Fun Fact from the facts given, or the first when nothing is on show yet. A fact
- * fits when enough Players are registered to fill its slots, and can be shown next when its slots
- * can be filled leaving out every Player the fact on show names, so nobody is named twice in a row.
- * The next is chosen at random from the facts not yet used this pass that can be shown next, and
- * its names at random from the Players it may name. When the only unused facts this pass can't be
- * shown next, as can happen with one or two Players, a fact already used stands in for one turn and
- * the pass goes on: the one shown longest ago, naming nobody if one can, so the turn after can show
- * an unused fact. Once every fitting fact is used, a new pass begins, starting with any fact but
- * the one on show.
+ * Returns the next Fun Fact from the facts given, or the first when nothing is on show yet. A
+ * fact fits when enough Players are registered to fill its slots, and can be shown next when its
+ * slots can be filled leaving out every Player the fact on show names, so nobody is named twice
+ * in a row. The next is chosen at random from the facts not yet used this pass that can be shown
+ * next, and its names at random from the Players it may name. When the only unused facts this
+ * pass can't be shown next, as can happen with one or two Players, a fact already used stands in
+ * for one turn and the pass goes on: the one shown longest ago, naming nobody if one can, so the
+ * turn after can show an unused fact. Once every fitting fact is used, a new pass begins,
+ * starting with any fact but the one on show.
  */
 export const chooseNextFunFact = ({
 	shown,
@@ -78,8 +78,8 @@ export const chooseNextFunFact = ({
 };
 
 /*
- * The line on show, its slots filled with the named Players' current names, so a rename shows at
- * once.
+ * The line on show, its slots filled with the named Players' current names,
+ * so a rename shows at once.
  */
 export const fillFunFact = (rotation: FunFactRotation, players: readonly Player[]): string => {
 	const [nameA, nameB] = rotation.namedPlayerIds.map(

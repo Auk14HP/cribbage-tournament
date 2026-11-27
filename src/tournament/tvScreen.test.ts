@@ -255,8 +255,8 @@ const findScreenOnShowAt = (tournament: Tournament, time: TestTime) =>
 	findTvScreenOnShow(tournament, getClockTime(time));
 
 /*
- * The Tournament made from the one before, as the Organizer's window saves it at
- * the test's time: with Auto's cycle started again if the change calls for it.
+ * The Tournament made from the one before, as the Organizer's window saves it at the test's time:
+ * with Auto's cycle started again if the change calls for it.
  */
 const saveAtSecond = (before: Tournament, after: Tournament, time: TestTime): Tournament =>
 	restartTvCycleIfDue({ before, after, now: getClockTime(time) });
@@ -266,9 +266,9 @@ const runCommand = (before: Tournament, outcome: Result<Tournament>, time: TestT
 	saveAtSecond(before, expectOk(outcome), time);
 
 /*
- * 6 Players on 3 Boards, Started, the Draw's three Matches played
- * and their losers staying, the last of them at the test's time: the
- * TV cycles the Winners Bracket and the Losers Bracket from then.
+ * 6 Players on 3 Boards, Started, the Draw's three Matches played and their losers
+ * staying, the last of them at the test's time: the TV cycles the Winners Bracket and the
+ * Losers Bracket from then.
  */
 const playIntoLosersBracket = (time: TestTime): Tournament => {
 	const started = startTournament({ players: 6, boards: 3 });

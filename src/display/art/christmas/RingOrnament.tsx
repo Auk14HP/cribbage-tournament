@@ -1,9 +1,9 @@
 import { outlineColour } from './drawing';
 
 /*
- * Christmas's ring motif: a red bauble on a gold cap and loop, drawn in the
- * countdown ring's own units, centred in the ring's hole. Turned a quarter
- * back, since the ring is turned a quarter so it fills from the top.
+ * Christmas's ring motif: a red bauble on a gold cap and loop, drawn in the countdown ring's own
+ * units, centred in the ring's hole. Turned a quarter back, since the ring is turned a quarter
+ * so it fills from the top.
  */
 export const RingOrnament = () => (
 	<g transform="rotate(90 18 18)">

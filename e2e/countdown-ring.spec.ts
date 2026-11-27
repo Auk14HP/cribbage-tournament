@@ -10,10 +10,10 @@ import {
 } from './setUpTournament';
 
 /*
- * The TV's countdown ring sits in a corner, clear of every card: measured from
- * where the browser drew it and each Match card, with a full 32-place bracket,
- * on a 16:9 TV and on a narrower one. The ring shows only while the TV has two
- * screens to cycle: once the Losers Bracket is drawn, or once finished.
+ * The TV's countdown ring sits in a corner, clear of every card: measured from where the
+ * browser drew it and each Match card, with a full 32-place bracket, on a 16:9 TV and on a
+ * narrower one. The ring shows only while the TV has two screens to cycle: once the Losers
+ * Bracket is drawn, or once finished.
  */
 
 type Box = { x: number; y: number; width: number; height: number };
@@ -33,9 +33,9 @@ const expectClearOfRing = async (tv: Page, cards: Locator) => {
 };
 
 /*
- * Each Match's slot on the Winners Bracket, found by its Round's list as the TV reads
- * it out. A slot holds its Match card and is at least as large, so a slot clear of the
- * ring means a card clear of it. A Bye's empty place is hidden, so it isn't found.
+ * Each Match's slot on the Winners Bracket, found by its Round's list as the TV reads it out. A
+ * slot holds its Match card and is at least as large, so a slot clear of the ring means a card
+ * clear of it. A Bye's empty place is hidden, so it isn't found.
  */
 const findBracketSlots = (tv: Page) =>
 	tv.getByRole('list', { name: /^(Round \d+|Final)$/ }).getByRole('listitem');
@@ -54,9 +54,9 @@ for (const tvSize of tvSizes) {
 			const tv = await openTv(organizer, tvSize);
 
 			/*
-			 * The TV picks up Auto's cycle where the clock has it, which
-			 * may be the Losers Bracket by the time it opens, so the
-			 * cycle is moved on to the Winners Bracket and parked there.
+			 * The TV picks up Auto's cycle where the clock has it, which may be the Losers
+			 * Bracket by the time it opens, so the cycle is moved on to the Winners
+			 * Bracket and parked there.
 			 */
 			await parkCycleOn(organizer, tv, 'Winners Bracket');
 			await expect(tv.getByTestId('countdown ring')).toBeAttached();
@@ -76,9 +76,9 @@ for (const tvSize of tvSizes) {
 }
 
 /*
- * How far the ring has filled, from 0 (empty) to 1 (full), and the animation the
- * browser plays on it. Read from the browser's computed style, since jsdom plays no
- * animations: a line of the ring's CSS the browser rejects drops the whole animation.
+ * How far the ring has filled, from 0 (empty) to 1 (full), and the animation the browser plays on
+ * it. Read from the browser's computed style, since jsdom plays no animations: a line of the ring's
+ * CSS the browser rejects drops the whole animation.
  */
 const readRingFill = async (tv: Page) => {
 	const filling = tv.getByTestId('countdown ring filling');

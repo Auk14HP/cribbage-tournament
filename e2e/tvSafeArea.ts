@@ -1,8 +1,8 @@
 import { expect, type Page } from '@playwright/test';
 
 /*
- * A TV that overscans crops the picture's edges, so the display route's content
- * must sit inside a margin of 5% of the screen's width and height on each side.
+ * A TV that overscans crops the picture's edges, so the display route's content must sit inside a
+ * margin of 5% of the screen's width and height on each side.
  */
 const safeMargin = 0.05;
 
@@ -10,10 +10,10 @@ const safeMargin = 0.05;
 const roundingLeeway = 0.5;
 
 /*
- * Checks every element the TV drew, the countdown ring included, sits inside
- * the safe area, and that the page doesn't scroll. Measured from where the
- * browser drew each element inside the display route's main, cut to what its
- * clipping ancestors show, so the hidden end of a name cut short doesn't count.
+ * Checks every element the TV drew, the countdown ring included, sits inside the safe area,
+ * and that the page doesn't scroll. Measured from where the browser drew each element inside
+ * the display route's main, cut to what its clipping ancestors show, so the hidden end of a
+ * name cut short doesn't count.
  */
 export const expectInsideTvSafeArea = async (tv: Page) => {
 	const { width, height, scrollHeight, boxes } = await tv.evaluate(() => {
@@ -47,8 +47,8 @@ export const expectInsideTvSafeArea = async (tv: Page) => {
 			height: window.innerHeight,
 			scrollHeight: document.documentElement.scrollHeight,
 			/*
-			 * Every element, not one found by its role or test
-			 * ID: anything drawn may stray into a margin.
+			 * Every element, not one found by its role or test ID: anything
+			 * drawn may stray into a margin.
 			 */
 			boxes: [...document.querySelectorAll('main *')]
 				.map((element) => ({

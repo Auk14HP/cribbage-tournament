@@ -19,8 +19,8 @@ export const describePlayersTonight = (count: number): string =>
 	`${describePlayerCount(count)} tonight`;
 
 /*
- * A Match's Player, or who they wait for: the winner of a Match between two known
- * Players, or of one not yet set, or the Bye Player a Losers Bracket place is held for.
+ * A Match's Player, or who they wait for: the winner of a Match between two known Players, or of
+ * one not yet set, or the Bye Player a Losers Bracket place is held for.
  */
 export const getPlayerName = (player: Opponent): string => {
 	if ('name' in player) {
@@ -40,8 +40,8 @@ export const bracketTitles: Record<BracketName, string> = {
 };
 
 /*
- * A Round's name, as the TV bracket heads its column:
- * "Round 1", "Round 2", …, and "Final" for the last.
+ * A Round's name, as the TV bracket heads its column: "Round 1", "Round 2", …,
+ * and "Final" for the last.
  */
 export const describeRound = ({ round, roundCount }: ShownRound): string =>
 	round === roundCount ? 'Final' : `Round ${round}`;
@@ -57,8 +57,8 @@ export const joinInSentence = (names: readonly string[]): string =>
 		: `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 
 /*
- * A Match's bracket and Round, for a list holding
- * both brackets' Matches: "Losers Bracket · Round 1".
+ * A Match's bracket and Round, for a list holding both brackets' Matches:
+ * "Losers Bracket · Round 1".
  */
 export const describeBracketRound = (tournament: Tournament, match: MatchPlace): string => {
 	const roundName = describeRound(getShownRound(tournament, match));

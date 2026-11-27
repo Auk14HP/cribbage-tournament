@@ -1,8 +1,8 @@
 /*
- * Fails any test that logs an error or a warning, such as React's warning that two list rows
- * share a key. React only logs these, so without this a test passes while the screen shows
- * stale rows. A log from a timer a test left running is blamed on the next test, or on the file
- * when it lands before the file's last hooks finish; one landing later still goes unchecked.
+ * Fails any test that logs an error or a warning, such as React's warning that two list rows share
+ * a key. React only logs these, so without this a test passes while the screen shows stale rows. A
+ * log from a timer a test left running is blamed on the next test, or on the file when it lands
+ * before the file's last hooks finish; one landing later still goes unchecked.
  */
 import { afterAll, afterEach, expect } from 'vitest';
 

@@ -3,8 +3,8 @@ import { getPlayerName } from '../wording';
 import { pickedTag, playerNameBox } from './classes';
 
 /*
- * Swap mode, as each Match listed sees it: the Player
- * tapped first, if any, and what tapping a Player does.
+ * Swap mode, as each Match listed sees it: the Player tapped first, if any, and
+ * what tapping a Player does.
  */
 export interface SwapPicking {
 	readonly picked?: PlayerId;
@@ -12,9 +12,9 @@ export interface SwapPicking {
 }
 
 /*
- * One side of a Match waiting for a Board: in Swap mode a known Player's
- * name is a button to tap, otherwise it is plain. Either way it takes
- * the same box, so turning Swap mode on or off moves no name and no row.
+ * One side of a Match waiting for a Board: in Swap mode a known Player's name is a button to
+ * tap, otherwise it is plain. Either way it takes the same box, so turning Swap mode on or off
+ * moves no name and no row.
  */
 export const PlayerName = ({
 	player,
@@ -39,9 +39,9 @@ export const PlayerName = ({
 	);
 
 /*
- * A Player's name in Swap mode, a seat tapped to pick them or to swap them with the Player
- * picked first. The Player picked is tagged PICKED. The tag is hidden from screen readers,
- * which hear the button pressed instead, so the button is still named by the Player alone.
+ * A Player's name in Swap mode, a seat tapped to pick them or to swap them with the Player picked
+ * first. The Player picked is tagged PICKED. The tag is hidden from screen readers, which hear the
+ * button pressed instead, so the button is still named by the Player alone.
  */
 export const SwapButton = ({
 	player,

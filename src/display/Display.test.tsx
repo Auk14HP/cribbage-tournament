@@ -183,9 +183,9 @@ describe('the Fun Fact line', () => {
 	});
 
 	/*
-	 * With two Players, a fact naming both can't follow one naming either, so once
-	 * only those are left a fact naming nobody stands in for a turn, letting one
-	 * naming both follow. So at most one stand-in is needed for each fact naming two.
+	 * With two Players, a fact naming both can't follow one naming either, so once only those are
+	 * left a fact naming nobody stands in for a turn, letting one naming both follow. So at most
+	 * one stand-in is needed for each fact naming two.
 	 */
 	it('with two Players, shows every Fun Fact with at most one stand-in for each naming two, each naming nobody, never naming anyone twice in a row', () => {
 		vi.useFakeTimers({ now: monday });
@@ -361,8 +361,8 @@ describe('Tonight’s Draw screen', () => {
 		saveTournament(store, tournament);
 
 		/*
-		 * 5 Players: a first-Round Match on Board 1, and in Round 2 a Bye Player at Board 2
-		 * waiting for its winner and a Match between the other two Bye Players on Board 3.
+		 * 5 Players: a first-Round Match on Board 1, and in Round 2 a Bye Player at Board 2 waiting
+		 * for its winner and a Match between the other two Bye Players on Board 3.
 		 */
 		const draw = getMatchesOnBoards(tournament);
 		expect(draw.map((m) => m.match.round)).toEqual([1, 2, 2]);
@@ -405,8 +405,8 @@ describe('Tonight’s Draw screen', () => {
 	it('shows a Match waiting for a Board as a card with its Player and no Board, with no list of them', () => {
 		const store = showDisplay();
 		/*
-		 * 5 Players on 2 Boards: the first-Round Match and the Bye Players' Match take
-		 * the Boards, and the Bye Player waiting for a winner waits for a Board too.
+		 * 5 Players on 2 Boards: the first-Round Match and the Bye Players' Match take the Boards,
+		 * and the Bye Player waiting for a winner waits for a Board too.
 		 */
 		const tournament = setUpDraw(['Dave K.', 'Big Dave', 'Sue', 'Ann', 'Joe'], { boards: 2 });
 
@@ -442,8 +442,8 @@ describe('the Winners Bracket screen', () => {
 		saveTournament(store, tournament);
 
 		/*
-		 * 3 Players in a 4-place bracket: one first-Round
-		 * Match, and a Bye Player waiting in the final.
+		 * 3 Players in a 4-place bracket: one first-Round Match, and a Bye
+		 * Player waiting in the final.
 		 */
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Winners Bracket');
 		expect(listRound('Round 1')).toEqual([`Board 1${playerA.name}${playerB.name}`]);
@@ -666,8 +666,8 @@ describe('the Losers Bracket', () => {
 	it('names the Bye Player a Held Place is held for, faded with a question mark, until their first Match is decided', () => {
 		const store = showDisplay();
 		/*
-		 * Cat, a Bye Player, waits for Ann; Bob and Eve lost
-		 * and stay, and the Losers Draw holds Cat a place.
+		 * Cat, a Bye Player, waits for Ann; Bob and Eve lost and stay, and the
+		 * Losers Draw holds Cat a place.
 		 */
 		const heldPlace = setUpHeldPlace(['staying', 'staying']);
 		const { ann, cat } = heldPlace;
@@ -760,8 +760,8 @@ const readFunFact = () => screen.getByText(/^Fun fact: /).textContent;
 type ShownFunFact = { fact: string; names: string[] };
 
 /*
- * Works out which Fun Fact the line shows, and the registered Players it names, by matching
- * it against each line written, its name slots standing for any registered Player.
+ * Works out which Fun Fact the line shows, and the registered Players it names, by matching it
+ * against each line written, its name slots standing for any registered Player.
  */
 const parseFunFact = (players: readonly Player[]): ShownFunFact => {
 	const shown = readFunFact()!.replace(/^Fun fact: /, '');

@@ -7,10 +7,10 @@ import { bracketTitles } from '../wording';
 import { tvPicture } from './classes';
 
 /*
- * The brackets drawn as the TV draws them, full size on the laptop, in a dialog. Tabs
- * switch between the Winners Bracket and, once there is one, the Losers Bracket. The
- * bracket on show is the one given; the close button closes the dialog. Looking changes
- * nothing the TV shows. The brackets are drawn in the TV Theme, its artwork still.
+ * The brackets drawn as the TV draws them, full size on the laptop, in a dialog. Tabs switch
+ * between the Winners Bracket and, once there is one, the Losers Bracket. The bracket on show is
+ * the one given; the close button closes the dialog. Looking changes nothing the TV shows. The
+ * brackets are drawn in the TV Theme, its artwork still.
  */
 export const BracketPeek = ({
 	ref,
@@ -30,8 +30,8 @@ export const BracketPeek = ({
 	const makeTabId = (name: BracketName) => `${idPrefix}-${name}`;
 	const bracketNames = listBracketNames(tournament);
 	/*
-	 * The arrow keys move between the tabs, choosing
-	 * each as they reach it, as between radio buttons.
+	 * The arrow keys move between the tabs, choosing each as they reach it,
+	 * as between radio buttons.
 	 */
 	const moveBetweenTabs = (event: KeyboardEvent, from: BracketName) => {
 		const step = tabSteps[event.key];
@@ -94,8 +94,8 @@ export const BracketPeek = ({
 				>
 					<TvThemePage tournament={tournament} isMoving={false} className="h-full">
 						{/*
-						 * The same clearance as the TV's, so the bracket
-						 * is laid out just as the TV lays it out.
+						 * The same clearance as the TV's, so the bracket is laid out
+						 * just as the TV lays it out.
 						 */}
 						<div className={countdownRing.clearance}>
 							<Bracket tournament={tournament} bracketName={bracketName} />
@@ -108,8 +108,8 @@ export const BracketPeek = ({
 };
 
 /*
- * One bracket's tab, filled when chosen. Only the chosen tab is
- * reached with the Tab key; the arrow keys move between the tabs.
+ * One bracket's tab, filled when chosen. Only the chosen tab is reached with the Tab key; the arrow
+ * keys move between the tabs.
  */
 const BracketTab = ({
 	bracketName,
@@ -149,8 +149,8 @@ const BracketTab = ({
 );
 
 /*
- * Returns the brackets drawn so far: the Winners Bracket
- * from the Draw, and the Losers Bracket once it has one.
+ * Returns the brackets drawn so far: the Winners Bracket from the Draw, and the
+ * Losers Bracket once it has one.
  */
 const listBracketNames = (tournament: Tournament): BracketName[] =>
 	getBracketPicture(tournament, 'losers') ? ['winners', 'losers'] : ['winners'];
@@ -164,9 +164,9 @@ const tabSteps: Partial<Record<string, number>> = {
 };
 
 /*
- * The dialog is as wide as the window allows, up to the size of the TV
- * picture the laptop's screen can show in full; the bracket's frame
- * shrinks to fit the window's height as well, keeping the TV's 16:9.
+ * The dialog is as wide as the window allows, up to the size of the TV picture the
+ * laptop's screen can show in full; the bracket's frame shrinks to fit the window's height
+ * as well, keeping the TV's 16:9.
  */
 const peekBox =
 	'm-auto w-[min(72rem,calc(100vw-3rem))] max-w-none rounded-2xl border border-divider bg-panel p-5 text-ink shadow-xl backdrop:bg-scrim';

@@ -8,10 +8,10 @@ export const outlineColour = '#08180f';
 const twinkleSeconds = 3.2;
 
 /*
- * Returns the class that makes a light twinkle, when the artwork may move, and
- * its style: where in the twinkle the light given by its place is from the start,
- * so neighbouring lights don't peak together and none waits, unmoving, before it
- * begins, and the colour of its glow at the peak, the light's own colour.
+ * Returns the class that makes a light twinkle, when the artwork may move, and its style: where
+ * in the twinkle the light given by its place is from the start, so neighbouring lights don't
+ * peak together and none waits, unmoving, before it begins, and the colour of its glow at the
+ * peak, the light's own colour.
  */
 export const describeTwinkle = ({
 	isMoving,

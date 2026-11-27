@@ -12,9 +12,9 @@ import {
 } from './setUpTournament';
 
 /*
- * The TV Display panel's thumbnail beside the TV itself: two windows
- * working out the screen on show each from the clock, which must agree.
- * jsdom has one window and no layout, so this runs in a real browser.
+ * The TV Display panel's thumbnail beside the TV itself: two windows working out the screen
+ * on show each from the clock, which must agree. jsdom has one window and no layout, so
+ * this runs in a real browser.
  */
 
 test.use({ viewport: { width: 1280, height: 720 } });
@@ -26,9 +26,9 @@ const findThumbnail = (organizer: Page) => organizer.getByRole('img', { name: /^
 const findTvHeading = (tv: Page) => tv.getByRole('heading', { level: 1 });
 
 /*
- * How long the second window may lag the first. Each window looks at the
- * clock the moment its screen's time is up, and a saved change reaches
- * the TV through a storage event, so the two meet within moments.
+ * How long the second window may lag the first. Each window looks at the clock the moment
+ * its screen's time is up, and a saved change reaches the TV through a storage event, so
+ * the two meet within moments.
  */
 const sameMomentMs = 500;
 
@@ -46,8 +46,8 @@ const enterScreenSeconds = async (organizer: Page, seconds: string) => {
 };
 
 /*
- * 6 Players, Started, and the Draw's three Matches played with every loser staying: the
- * Losers Bracket is drawn, so the TV cycles two screens. The TV opens beside the Organizer.
+ * 6 Players, Started, and the Draw's three Matches played with every loser staying: the Losers
+ * Bracket is drawn, so the TV cycles two screens. The TV opens beside the Organizer.
  */
 const setUpTwoScreenCycle = async (organizer: Page) => {
 	await startTournament(organizer, { players: 6 });

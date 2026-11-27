@@ -1,8 +1,8 @@
 /*
- * `?players=26&boards=12` on the organizer route replaces the saved Tournament with
- * one that has that many Players registered and Boards set out, so a Tournament can
- * be tried without typing every name. It asks first if a Tournament is already under
- * way. Every build has it, so the GitHub Pages demo can open with a field of Players.
+ * `?players=26&boards=12` on the organizer route replaces the saved Tournament with one that has
+ * that many Players registered and Boards set out, so a Tournament can be tried without typing
+ * every name. It asks first if a Tournament is already under way. Every build has it, so the GitHub
+ * Pages demo can open with a field of Players.
  */
 import type { Store } from './storage';
 import { createTournament, registerPlayer, setBoardCount, type Tournament } from './tournament';

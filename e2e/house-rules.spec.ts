@@ -4,10 +4,10 @@ import { houseRules } from '../src/tournament/houseRules';
 import { showHouseRules, test } from './setUpTournament';
 
 /*
- * Showing a House Rule on the TV, or hiding one, moves nothing on the House
- * Rules step: the cards change tag and look in place, and the main button's
- * label changes in its own box. jsdom can't lay out a page, so this runs in a
- * real browser, in a narrow window too, where the longest House Rule wraps.
+ * Showing a House Rule on the TV, or hiding one, moves nothing on the House Rules step: the
+ * cards change tag and look in place, and the main button's label changes in its own box. jsdom
+ * can't lay out a page, so this runs in a real browser, in a narrow window too, where the
+ * longest House Rule wraps.
  */
 
 // The line counting the House Rules on the TV: "2 of 4 on the TV".
@@ -50,8 +50,8 @@ for (const viewport of [
 		const countLine = findCountLine(page);
 
 		/*
-		 * Each House Rule shown in turn: the first card goes
-		 * from NEXT to ON THE TV, the second from none to NEXT.
+		 * Each House Rule shown in turn: the first card goes from NEXT to ON THE TV, the
+		 * second from none to NEXT.
 		 */
 		for (const ruleNumber of [1, 2, 3]) {
 			await expectNothingMoves(parts, async () => {

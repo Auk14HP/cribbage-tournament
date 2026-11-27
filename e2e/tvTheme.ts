@@ -70,8 +70,8 @@ export const expectTvTextReadable = async (tv: Page, moment: string) => {
 		};
 		const tvScreen = document.querySelector('main')!;
 		/*
-		 * Each named TV colour as the browser writes an
-		 * element's colour, to compare with the text's.
+		 * Each named TV colour as the browser writes an element's colour,
+		 * to compare with the text's.
 		 */
 		const probe = document.createElement('span');
 		tvScreen.append(probe);
@@ -110,9 +110,9 @@ export const expectTvTextReadable = async (tv: Page, moment: string) => {
 };
 
 /*
- * Fails, naming the text, if any piece of the TV Theme's artwork overlaps a line of
- * text or the countdown ring. Text is measured line by line as the browser draws it,
- * not by the box of its element, which may stretch across the TV beside a short line.
+ * Fails, naming the text, if any piece of the TV Theme's artwork overlaps a line of text or the
+ * countdown ring. Text is measured line by line as the browser draws it, not by the box of its
+ * element, which may stretch across the TV beside a short line.
  */
 export const expectArtworkClearOfText = async (tv: Page) => {
 	const { artworkCount, overlaps } = await tv.evaluate(() => {

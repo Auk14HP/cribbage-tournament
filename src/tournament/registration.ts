@@ -1,6 +1,6 @@
 /*
- * Setting up the night at registration, before the House Rules and the Draw:
- * Players, Boards and a Home Board, and how long the TV shows each screen.
+ * Setting up the night at registration, before the House Rules and the Draw: Players, Boards and a
+ * Home Board, and how long the TV shows each screen.
  */
 import type { Result } from '../result';
 import { findPlayer, listIndexes } from './bracket';
@@ -37,8 +37,8 @@ export const registerPlayer = (
 };
 
 /*
- * A day as YYYY-MM-DD in the laptop's time zone, so
- * a night's date reads the same as its wall clock.
+ * A day as YYYY-MM-DD in the laptop's time zone, so a night's date reads
+ * the same as its wall clock.
  */
 const formatDate = (day: Date): string => {
 	const month = String(day.getMonth() + 1).padStart(2, '0');
@@ -53,9 +53,9 @@ const noSuchPlayer: Result<Tournament> = { ok: false, reason: notRegistered };
 const playersDrawn = 'Players can’t be renamed or removed once the Draw is made.';
 
 /*
- * Returns why a change to the Players or Boards is refused: during registration
- * nothing (undefined), on the House Rules step a reason asking to go back to
- * registration first, and once the Draw is made the reason passed in as onceDrawn.
+ * Returns why a change to the Players or Boards is refused: during registration nothing
+ * (undefined), on the House Rules step a reason asking to go back to registration first, and once
+ * the Draw is made the reason passed in as onceDrawn.
  */
 const findRegistrationClosedRefusal = (
 	tournament: Tournament,
@@ -153,9 +153,9 @@ export const setBoardCount = (tournament: Tournament, typedCount: string): Resul
 		};
 	}
 	/*
-	 * A Home Board is cleared when its Board is no longer set out, and when
-	 * only one Board is left: keeping the only Board for one Player could
-	 * leave their opponent's earlier Match with no Board to be played at.
+	 * A Home Board is cleared when its Board is no longer set out, and when only one Board is
+	 * left: keeping the only Board for one Player could leave their opponent's earlier Match with
+	 * no Board to be played at.
 	 */
 	const homeBoards = tournament.homeBoards.filter(
 		(homeBoard) => count > 1 && homeBoard.board <= count,
@@ -167,9 +167,9 @@ export const setBoardCount = (tournament: Tournament, typedCount: string): Resul
 };
 
 /*
- * Gives a Player a Home Board, or moves theirs to another Board.
- * Refused with only one Board: keeping it for one Player could leave
- * their opponent's earlier Match with no Board to be played at.
+ * Gives a Player a Home Board, or moves theirs to another Board. Refused with only
+ * one Board: keeping it for one Player could leave their opponent's earlier Match
+ * with no Board to be played at.
  */
 export const setHomeBoard = (
 	tournament: Tournament,

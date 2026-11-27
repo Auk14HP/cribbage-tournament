@@ -39,8 +39,8 @@ const startFourPlayerTournament = () => {
 describe('the Losers Bracket', () => {
 	it('asks whether a Player losing their first Match is staying, in whichever Round, Forfeits included', () => {
 		/*
-		 * 5 Players: Ann and Bob play the one first-Round Match, Cat has a Bye
-		 * and waits for its winner, and Dan and Eve, both Byes, meet in Round 2.
+		 * 5 Players: Ann and Bob play the one first-Round Match, Cat has a Bye and waits for its
+		 * winner, and Dan and Eve, both Byes, meet in Round 2.
 		 */
 		let tournament = startTournament({ players: 5, boards: 4 });
 		const [firstMatch, waiting] = getMatchesOnBoards(tournament);
@@ -55,8 +55,8 @@ describe('the Losers Bracket', () => {
 		tournament = expectOk(recordWinner(tournament, firstMatch.match, ann.id, 'staying'));
 
 		/*
-		 * Cat's first Match is in Round 2, and a Forfeit
-		 * counts. Ann has played, so losing now isn't asked.
+		 * Cat's first Match is in Round 2, and a Forfeit counts. Ann has played,
+		 * so losing now isn't asked.
 		 */
 		const annAndCat = getMatchesOnBoards(tournament).find((m) => isPlaying(m, ann, cat))!;
 		expect(isLosersBracketOpenTo(tournament, cat.id)).toBe(true);
@@ -71,8 +71,8 @@ describe('the Losers Bracket', () => {
 
 	it('is drawn from those staying once every Match the Draw started has a result, its Matches waiting for a Board when none is free', () => {
 		/*
-		 * 6 Players on 3 Boards: Ann and Bob, and Cat and Dan, play
-		 * first-Round Matches; Eve and Fay, both Byes, meet in Round 2.
+		 * 6 Players on 3 Boards: Ann and Bob, and Cat and Dan, play first-Round Matches; Eve and
+		 * Fay, both Byes, meet in Round 2.
 		 */
 		let tournament = startTournament({ players: 6, boards: 3 });
 		const [ann, bob, cat, dan] = listPlayersInRound(tournament, 1);
@@ -87,10 +87,10 @@ describe('the Losers Bracket', () => {
 		tournament = expectOk(recordWinner(tournament, eveAndFay.match, eve.id, 'staying'));
 
 		/*
-		 * The Winners Bracket holds 2 Boards: Ann and Cat's Match, and Eve waiting for the
-		 * final. Bob, Dan and Fay make a Losers Bracket of one Match and a Bye. The two Boards
-		 * Cat and Eve won at free, and the Losers Match, ready to play, takes the lower one
-		 * ahead of Eve, who waits at the other. The Bye Player waits for a Board of their own.
+		 * The Winners Bracket holds 2 Boards: Ann and Cat's Match, and Eve waiting for the final.
+		 * Bob, Dan and Fay make a Losers Bracket of one Match and a Bye. The two Boards Cat and Eve
+		 * won at free, and the Losers Match, ready to play, takes the lower one ahead of Eve, who
+		 * waits at the other. The Bye Player waits for a Board of their own.
 		 */
 		const [[losersMatch], [losersFinal]] = getBracketPicture(tournament, 'losers')!.rounds;
 		const [byePlayer] = listKnownPlayers(losersFinal);
@@ -133,8 +133,8 @@ describe('the Losers Bracket', () => {
 
 	it('finishes the Tournament only once both brackets have a champion', () => {
 		/*
-		 * 4 Players: Ann beats Bob and Cat beats Dan, and Bob
-		 * and Dan both stay to meet in the Losers Bracket.
+		 * 4 Players: Ann beats Bob and Cat beats Dan, and Bob and Dan both stay to
+		 * meet in the Losers Bracket.
 		 */
 		const { started, ann, bob, cat, dan, annAndBob, catAndDan } = startFourPlayerTournament();
 		let tournament = started;
@@ -219,8 +219,8 @@ describe('the Losers Bracket', () => {
 
 	it('refuses to undo a first-Match result once the Losers Bracket is drawn, and lists only the others', () => {
 		/*
-		 * 4 Players: Ann beats Bob and Cat beats Dan, and Bob
-		 * and Dan both stay to meet in the Losers Bracket.
+		 * 4 Players: Ann beats Bob and Cat beats Dan, and Bob and Dan both stay to
+		 * meet in the Losers Bracket.
 		 */
 		const { started, ann, bob, cat, dan, annAndBob, catAndDan } = startFourPlayerTournament();
 		let tournament = started;
@@ -301,8 +301,8 @@ describe('the Losers Bracket', () => {
 				}
 				const [a, b] = ready.players as [Player, Player];
 				/*
-				 * Cat's Winners Bracket Matches go the way this
-				 * case asks, every other to its first-named Player.
+				 * Cat's Winners Bracket Matches go the way this case asks, every other
+				 * to its first-named Player.
 				 */
 				const otherPlayer = a.id === cat.id ? b : a;
 				const isCatsMatch = ready.match.bracket === 'winners' && isPlaying(ready, cat);
@@ -335,12 +335,12 @@ describe('the Losers Bracket', () => {
 
 	it('seats Matches ready to play ahead of a Player waiting alone, and gives each Board that frees to the queue, whichever its bracket', () => {
 		/*
-		 * 10 Players on 5 Boards: two first-Round Matches, and three Round 2 Matches
-		 * between Bye Players. Once all five are played, the Winners Bracket holds 3
-		 * Boards, and the five losers, all staying, make a Losers Bracket of one
-		 * first-Round Match and three Byes. Its first-Round Match and the Bye pair's
-		 * Match, both ready to play, take the 2 free Boards ahead of the Bye Player
-		 * waiting for a winner, though that Bye Player comes first in the bracket.
+		 * 10 Players on 5 Boards: two first-Round Matches, and three Round 2 Matches between
+		 * Bye Players. Once all five are played, the Winners Bracket holds 3 Boards, and the
+		 * five losers, all staying, make a Losers Bracket of one first-Round Match and three
+		 * Byes. Its first-Round Match and the Bye pair's Match, both ready to play, take the 2
+		 * free Boards ahead of the Bye Player waiting for a winner, though that Bye Player
+		 * comes first in the bracket.
 		 */
 		let tournament = playDrawStaying(startTournament({ players: 10, boards: 5 }));
 		const losersOnBoards = getMatchesOnBoards(tournament).filter(

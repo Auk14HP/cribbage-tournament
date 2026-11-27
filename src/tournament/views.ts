@@ -1,6 +1,6 @@
 /*
- * What the screens show, worked out from the Tournament: who sits at each Board, who waits for
- * one, who is playing, each bracket's picture, and the results the Organizer can still undo.
+ * What the screens show, worked out from the Tournament: who sits at each Board, who waits for one,
+ * who is playing, each bracket's picture, and the results the Organizer can still undo.
  */
 import {
 	countRounds,
@@ -42,8 +42,8 @@ export interface MatchOnBoard {
 }
 
 /*
- * Every Match holding a Board, in Board order, so the Organizer can find each Match's seat:
- * on Tonight’s Draw, and as the Matches being played once Started. None before the Draw.
+ * Every Match holding a Board, in Board order, so the Organizer can find each Match's seat: on
+ * Tonight’s Draw, and as the Matches being played once Started. None before the Draw.
  */
 export const getMatchesOnBoards = (tournament: Tournament): readonly MatchOnBoard[] =>
 	tournament.onBoards
@@ -55,8 +55,8 @@ export const getMatchesOnBoards = (tournament: Tournament): readonly MatchOnBoar
 		.sort((a, b) => a.board - b.board);
 
 /*
- * A Match's Players as they are seated: one known, named first
- * while they wait, and the other known too or still to come.
+ * A Match's Players as they are seated: one known, named first while they wait, and the other
+ * known too or still to come.
  */
 const findSeatedPlayers = (
 	tournament: Tournament,
@@ -93,8 +93,8 @@ export const getWaitingForBoard = (tournament: Tournament): readonly MatchWaitin
 	}));
 
 /*
- * One side of a Match in a bracket's picture: a Player known, the place held for
- * a Bye Player, or undefined while they are still to come from an earlier Match.
+ * One side of a Match in a bracket's picture: a Player known, the place held for a Bye Player, or
+ * undefined while they are still to come from an earlier Match.
  */
 export type BracketPlayer = Player | PlaceHeld | undefined;
 
@@ -108,9 +108,9 @@ export interface BracketMatch {
 
 export interface BracketPicture {
 	/*
-	 * Each Round's Matches, in bracket order, from the first Round to the
-	 * final. A Bye's place in the first Round is undefined: its Player is
-	 * in Round 2. A first Round of nothing but Byes is left out.
+	 * Each Round's Matches, in bracket order, from the first Round to the final. A Bye's
+	 * place in the first Round is undefined: its Player is in Round 2. A first Round of
+	 * nothing but Byes is left out.
 	 */
 	readonly rounds: readonly (readonly (BracketMatch | undefined)[])[];
 	// The final's winner, once it is recorded.
@@ -118,9 +118,9 @@ export interface BracketPicture {
 }
 
 /*
- * A whole bracket as it stands: who has advanced, who is still
- * playing. Undefined while that bracket has no Draw: before it is
- * made, and when fewer than two Players stay for a Losers Bracket.
+ * A whole bracket as it stands: who has advanced, who is still playing. Undefined
+ * while that bracket has no Draw: before it is made, and when fewer than two Players
+ * stay for a Losers Bracket.
  */
 export const getBracketPicture = (
 	tournament: Tournament,
@@ -159,9 +159,9 @@ export const getBracketPicture = (
 };
 
 /*
- * Whether a bracket's picture leaves out its first Round. A Held Place that became a
- * Bye can leave a first Round of nothing but Byes: the bracket was drawn for one
- * more Player than came. It is left out, so the bracket looks the size of its field.
+ * Whether a bracket's picture leaves out its first Round. A Held Place that became a Bye can leave
+ * a first Round of nothing but Byes: the bracket was drawn for one more Player than came. It is
+ * left out, so the bracket looks the size of its field.
  */
 const isFirstRoundLeftOut = (tournament: Tournament, name: BracketName): boolean => {
 	return (
@@ -173,8 +173,8 @@ const isFirstRoundLeftOut = (tournament: Tournament, name: BracketName): boolean
 };
 
 /*
- * A Round as its bracket's picture numbers it: counted
- * from the first Round shown, out of the Rounds shown.
+ * A Round as its bracket's picture numbers it: counted from the first Round
+ * shown, out of the Rounds shown.
  */
 export interface ShownRound {
 	readonly round: number;
@@ -182,8 +182,8 @@ export interface ShownRound {
 }
 
 /*
- * A Match's Round as its bracket's picture shows it,
- * so every screen numbers it as the TV bracket does.
+ * A Match's Round as its bracket's picture shows it, so every screen numbers
+ * it as the TV bracket does.
  */
 export const getShownRound = (
 	tournament: Tournament,
@@ -205,8 +205,8 @@ export interface ChampionOfBracket {
 }
 
 /*
- * Each bracket that has a champion, the Winners Bracket
- * first, with whom its champion beat in the Final.
+ * Each bracket that has a champion, the Winners Bracket first, with whom its
+ * champion beat in the Final.
  */
 export const getChampions = (tournament: Tournament): readonly ChampionOfBracket[] =>
 	(['winners', 'losers'] as const)

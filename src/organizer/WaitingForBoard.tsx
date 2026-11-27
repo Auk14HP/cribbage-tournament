@@ -4,10 +4,10 @@ import { BracketBadge } from './BracketBadge';
 import { PlayerName, type SwapPicking } from './PlayerName';
 
 /*
- * The Matches waiting for a Board, in turn, each with its bracket's badge, its
- * bracket and its Round, since the list mixes both brackets. A dashed outline
- * sets each apart from the Matches holding a Board above. None while every
- * Match has a Board. In Swap mode their Players' names can be tapped too.
+ * The Matches waiting for a Board, in turn, each with its bracket's badge, its bracket and
+ * its Round, since the list mixes both brackets. A dashed outline sets each apart from the
+ * Matches holding a Board above. None while every Match has a Board. In Swap mode their
+ * Players' names can be tapped too.
  */
 export const WaitingForBoard = ({
 	tournament,

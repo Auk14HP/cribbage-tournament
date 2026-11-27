@@ -1,14 +1,14 @@
 /*
- * The House Rules step between registration and the Draw: the Organizer
- * announces the House Rules, and the TV shows them one at a time as they go. The
- * Tournament saves how many are shown, so both windows resume where they were.
+ * The House Rules step between registration and the Draw: the Organizer announces the House Rules,
+ * and the TV shows them one at a time as they go. The Tournament saves how many are shown, so both
+ * windows resume where they were.
  */
 import type { Result } from '../result';
 import type { Tournament } from './types';
 
 /*
- * The Tournament's own rules of play, the same every
- * night, in the order the Organizer announces them.
+ * The Tournament's own rules of play, the same every night, in the order the
+ * Organizer announces them.
  */
 export const houseRules: readonly string[] = [
 	'31 scores 2 points. No extra point for the go.',
@@ -25,8 +25,8 @@ const notOnHouseRulesStep: Result<Tournament> = {
 const allShown: Result<Tournament> = { ok: false, reason: 'Every House Rule is already shown.' };
 
 /*
- * Closes registration's screen for the House Rules
- * step, showing as many House Rules as when last left.
+ * Closes registration's screen for the House Rules step, showing as many
+ * House Rules as when last left.
  */
 export const showHouseRules = (tournament: Tournament): Result<Tournament> => {
 	if (tournament.phase !== 'registration') {
@@ -36,8 +36,8 @@ export const showHouseRules = (tournament: Tournament): Result<Tournament> => {
 };
 
 /*
- * Returns to registration, so a late arrival can be
- * entered. The House Rules shown are kept for the return.
+ * Returns to registration, so a late arrival can be entered. The House Rules
+ * shown are kept for the return.
  */
 export const goBackToRegistration = (tournament: Tournament): Result<Tournament> => {
 	if (tournament.phase !== 'houseRules') {

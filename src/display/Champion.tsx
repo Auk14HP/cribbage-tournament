@@ -5,10 +5,10 @@ import { tvSafeArea } from './tvSafeArea';
 import { TvThemeChampionMotif } from './TvThemeArt';
 
 /*
- * Once the Tournament is finished: the Tournament's title and the night's date across
- * the top, then the champions in the space left, as large as the TV allows. The
- * Winners Bracket's is the night's only champion when no Losers Bracket is played.
- * Each champion's name has the TV Theme's motif for their bracket either side.
+ * Once the Tournament is finished: the Tournament's title and the night's date across the top, then
+ * the champions in the space left, as large as the TV allows. The Winners Bracket's is the night's
+ * only champion when no Losers Bracket is played. Each champion's name has the TV Theme's motif for
+ * their bracket either side.
  */
 export const Champion = ({ tournament }: { tournament: Tournament }) => {
 	const winnersChampion = getBracketPicture(tournament, 'winners')!.champion!;
@@ -59,9 +59,9 @@ const BracketChampion = ({
 );
 
 /*
- * The size of a champion's name and of the motifs beside it, which stand
- * as tall as the name's line: larger for the night's only champion than
- * for one of two. Each class is written out whole so Tailwind finds it.
+ * The size of a champion's name and of the motifs beside it, which stand as tall as the name's
+ * line: larger for the night's only champion than for one of two. Each class is written out
+ * whole so Tailwind finds it.
  */
 const championNameSizes = {
 	alone: { text: 'text-[14cqh]', motif: 'h-[14cqh]' },
@@ -69,8 +69,8 @@ const championNameSizes = {
 };
 
 /*
- * A champion's name, in the highlight colour, with the TV
- * Theme's motif for their bracket's champion either side.
+ * A champion's name, in the highlight colour, with the TV Theme's motif for their
+ * bracket's champion either side.
  */
 const ChampionName = ({
 	bracketName,

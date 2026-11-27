@@ -18,10 +18,10 @@ const bracketText = ['text-[5cqh]', 'text-[5cqh]', 'text-[4cqh]', 'text-[3.2cqh]
 
 /*
  * The bracket's line spacing and its Match cards' padding, which the cards read from
- * --card-padding. The 32-place bracket's cards fill their column with none to spare, so a TV
- * Theme whose border takes room from the screen sets them a little closer
- * (--tv-largest-bracket-leading and --tv-largest-bracket-card-padding in src/style.css),
- * keeping the letters their full size. Each class is written out whole so Tailwind finds it.
+ * --card-padding. The 32-place bracket's cards fill their column with none to spare, so a TV Theme
+ * whose border takes room from the screen sets them a little closer (--tv-largest-bracket-leading
+ * and --tv-largest-bracket-card-padding in src/style.css), keeping the letters their full size.
+ * Each class is written out whole so Tailwind finds it.
  */
 const bracketSpacing = {
 	usual: 'leading-[1.15] [--card-padding:0.3cqh]',
@@ -30,11 +30,11 @@ const bracketSpacing = {
 };
 
 /*
- * A whole bracket: its two halves run in from either side to the final in the middle.
- * Each Round's Matches share their column's height equally and sit in the middle of their
- * share, so every Match is centred between the two that feed it, and bracket lines join
- * them. Headed with the bracket's title, or the heading given, and the TV Theme's motifs
- * beside it: the bracket fills the rest, so the artwork keeps to the heading's line.
+ * A whole bracket: its two halves run in from either side to the final in the middle. Each Round's
+ * Matches share their column's height equally and sit in the middle of their share, so every Match
+ * is centred between the two that feed it, and bracket lines join them. Headed with the bracket's
+ * title, or the heading given, and the TV Theme's motifs beside it: the bracket fills the rest, so
+ * the artwork keeps to the heading's line.
  */
 export const Bracket = ({
 	tournament,
@@ -55,11 +55,11 @@ export const Bracket = ({
 	return (
 		<div className={`flex flex-col ${tvSafeArea.fullHeight}`}>
 			{/*
-			 * The heading and its motifs never wrap, so the motifs stay beside it. A
-			 * champion's line takes the width left on one line, cut short with an ellipsis
-			 * when the name is too long for it: the final's card names the champion too. The
-			 * line is padded below and pulled back by the same amount, so the cut doesn't
-			 * clip the tails of letters such as g and y, and the row keeps its height.
+			 * The heading and its motifs never wrap, so the motifs stay beside it. A champion's
+			 * line takes the width left on one line, cut short with an ellipsis when the name is
+			 * too long for it: the final's card names the champion too. The line is padded below
+			 * and pulled back by the same amount, so the cut doesn't clip the tails of letters such
+			 * as g and y, and the row keeps its height.
 			 */}
 			<div
 				className={`flex items-baseline justify-between gap-[2cqw] ${tvSafeArea.headingClearance}`}
@@ -104,11 +104,11 @@ export const Bracket = ({
 };
 
 /*
- * One Round column, or half of one: its slots share the column's height equally.
- * Columns start at their content's width but may shrink below it, so long names never
- * push a column off the TV, and a header never wraps, so every column's Matches start
- * level. No column shrinks narrower than its header or a Board label: a name may
- * break anywhere, so these are the widest things in the column that cannot.
+ * One Round column, or half of one: its slots share the column's height equally. Columns start
+ * at their content's width but may shrink below it, so long names never push a column off the
+ * TV, and a header never wraps, so every column's Matches start level. No column shrinks
+ * narrower than its header or a Board label: a name may break anywhere, so these are the widest
+ * things in the column that cannot.
  */
 const BracketColumn = ({
 	name,
@@ -139,8 +139,8 @@ const BracketColumn = ({
 );
 
 /*
- * The winner bright and the loser faded. On the final once it has a champion, the loser takes
- * the champion card's own faded shade, since the card is drawn in the highlight colour.
+ * The winner bright and the loser faded. On the final once it has a champion, the loser takes the
+ * champion card's own faded shade, since the card is drawn in the highlight colour.
  */
 const getPlayerShade = (match: BracketMatch, player: BracketPlayer, champion?: Player) => {
 	if (match.winner === undefined) {
@@ -153,11 +153,11 @@ const getPlayerShade = (match: BracketMatch, player: BracketPlayer, champion?: P
 };
 
 /*
- * A Match's two Players: the winner bright, the loser faded, a Player still to come
- * as a dash, and a place held for a Bye Player as their name with a question mark.
- * A Match holding a Board names it. A Match on the path of a Player still in the
- * bracket has a border in the TV Theme's path colour (green in Classic). The final
- * fills with the highlight colour (yellow in Classic) once it has a champion.
+ * A Match's two Players: the winner bright, the loser faded, a Player still to come as a dash,
+ * and a place held for a Bye Player as their name with a question mark. A Match holding a
+ * Board names it. A Match on the path of a Player still in the bracket has a border in the TV
+ * Theme's path colour (green in Classic). The final fills with the highlight colour (yellow in
+ * Classic) once it has a champion.
  */
 const MatchBox = ({
 	match,
@@ -187,10 +187,10 @@ const MatchBox = ({
 );
 
 /*
- * One Player's name in a Match card, or a dash while they are still to come. A place held for a
- * Bye Player shows their name and a question mark, faded and in italics: they will be here if
- * they lose their first Match and stay. It needs no more room than a name. One line, cut short
- * with an ellipsis. It may break anywhere, so it never holds its column wider than it needs.
+ * One Player's name in a Match card, or a dash while they are still to come. A place held for a Bye
+ * Player shows their name and a question mark, faded and in italics: they will be here if they lose
+ * their first Match and stay. It needs no more room than a name. One line, cut short with an
+ * ellipsis. It may break anywhere, so it never holds its column wider than it needs.
  */
 const MatchPlayer = ({ player, shade }: { player: BracketPlayer; shade: string }) => {
 	if (player && 'placeHeldFor' in player) {

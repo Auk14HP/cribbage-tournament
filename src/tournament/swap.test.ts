@@ -68,8 +68,8 @@ describe('swapping two Players on Tonight’s Draw', () => {
 
 	it('puts the Match a Home Board Player leaves first in line for a Board, when their new Match was waiting for one', () => {
 		/*
-		 * 8 Players on 2 Boards, the Home Board 2 for the first Player registered:
-		 * their Match takes it, another takes Board 1, and two wait for a Board.
+		 * 8 Players on 2 Boards, the Home Board 2 for the first Player registered: their Match
+		 * takes it, another takes Board 1, and two wait for a Board.
 		 */
 		const registered = setUpTournament({ players: 8, boards: 2 });
 		const [homePlayer] = registered.players;
@@ -97,8 +97,8 @@ describe('swapping two Players on Tonight’s Draw', () => {
 
 	it('moves a Bye to whoever is swapped with a Bye Player, including the one waiting for a first-Round winner', () => {
 		/*
-		 * 5 Players on 4 Boards: one first-Round Match, a Bye Player waiting
-		 * alone for its winner, and two Bye Players meeting in Round 2.
+		 * 5 Players on 4 Boards: one first-Round Match, a Bye Player waiting alone for its winner,
+		 * and two Bye Players meeting in Round 2.
 		 */
 		const drawn = expectOk(makeSeededDraw({ players: 5, boards: 4 }));
 		const matches = getMatchesOnBoards(drawn);

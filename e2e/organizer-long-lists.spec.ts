@@ -10,22 +10,22 @@ import {
 import { expectWhollyOnScreen } from './whollyOnScreen';
 
 /*
- * The organizer route fills the laptop's window and never scrolls as a
- * page: a long list scrolls on its own, so the controls around it stay
- * on screen. jsdom can't lay out a page, so these run in a real browser.
+ * The organizer route fills the laptop's window and never scrolls as a page: a long list
+ * scrolls on its own, so the controls around it stay on screen. jsdom can't lay out a page, so
+ * these run in a real browser.
  */
 
 const windowSize = { width: 1280, height: 720 };
 
 /*
- * A window too short for the side column's panels together,
- * such as a laptop browser with its toolbars open.
+ * A window too short for the side column's panels together, such as a laptop
+ * browser with its toolbars open.
  */
 const shortWindowHeight = 505;
 
 /*
- * The Organizer's Players panel, apart from the TV
- * Display panel's thumbnail, which shows the count too.
+ * The Organizer's Players panel, apart from the TV Display panel's thumbnail,
+ * which shows the count too.
  */
 const findPlayersPanel = (page: Page) => page.getByRole('region', { name: 'Players' });
 
@@ -40,8 +40,8 @@ const expectPageDoesNotScroll = async (page: Page) => {
 };
 
 /*
- * Every refusal line on the page, empty or not, is
- * wholly on screen, ready for a refusal to show in.
+ * Every refusal line on the page, empty or not, is wholly on screen, ready
+ * for a refusal to show in.
  */
 const expectRefusalLinesOnScreen = async (page: Page) => {
 	await expectWhollyOnScreen(await page.getByRole('alert').all());
@@ -51,17 +51,17 @@ const isScrollable = (list: Locator) =>
 	list.evaluate((element) => element.scrollHeight > element.clientHeight);
 
 /*
- * The area a long list scrolls in fills the space left on screen: the column holding it, made
- * of panels, ends at the bottom of the window, above the page's own padding. The area is the
- * only box in the column that shrinks, so the column reaches the bottom only if the area grows
- * to fill what the other boxes leave. The column is the list's outermost box short of the row
- * it shares with the other column, and this measures the bottom of the last box drawn in it.
+ * The area a long list scrolls in fills the space left on screen: the column holding it, made of
+ * panels, ends at the bottom of the window, above the page's own padding. The area is the only box
+ * in the column that shrinks, so the column reaches the bottom only if the area grows to fill what
+ * the other boxes leave. The column is the list's outermost box short of the row it shares with the
+ * other column, and this measures the bottom of the last box drawn in it.
  */
 const expectScrollingAreaFillsSpaceLeft = async (list: Locator) => {
 	const { columnBottom, spaceBottom } = await list.evaluate((element) => {
 		/*
-		 * A box that isn't a flex box reports a flex direction
-		 * of row too, so the row is the flex box among them.
+		 * A box that isn't a flex box reports a flex direction of row too, so the row
+		 * is the flex box among them.
 		 */
 		const isFlexRow = (box: Element) => {
 			const { display, flexDirection } = getComputedStyle(box);
@@ -90,14 +90,14 @@ const expectScrollingAreaFillsSpaceLeft = async (list: Locator) => {
 };
 
 /*
- * The last row of a list, found by its place rather than by its Players: the test needs
- * whichever row sits furthest past the visible part of the list, not a particular Match.
+ * The last row of a list, found by its place rather than by its Players: the test needs whichever
+ * row sits furthest past the visible part of the list, not a particular Match.
  */
 const findLastRow = (list: Locator) => list.getByRole('listitem').last();
 
 /*
- * Scrolls a row into view and checks it then shows
- * whole, not cut off by the edge of its list's area.
+ * Scrolls a row into view and checks it then shows whole, not cut off by
+ * the edge of its list's area.
  */
 const expectWhollyOnScreenOnceScrolledTo = async (row: Locator) => {
 	await row.scrollIntoViewIfNeeded();
@@ -105,8 +105,8 @@ const expectWhollyOnScreenOnceScrolledTo = async (row: Locator) => {
 };
 
 /*
- * A row below the visible part of its list is scrolled to, as the Organizer would
- * with the mouse wheel: it comes wholly on screen while the page itself stays put.
+ * A row below the visible part of its list is scrolled to, as the Organizer would with the mouse
+ * wheel: it comes wholly on screen while the page itself stays put.
  */
 const expectRowScrollsIntoView = async (page: Page, row: Locator) => {
 	await expect(row).not.toBeInViewport();
@@ -115,8 +115,8 @@ const expectRowScrollsIntoView = async (page: Page, row: Locator) => {
 };
 
 /*
- * A part of the side column below what fits in the window is scrolled to, as the Organizer
- * would with the mouse wheel: the side column scrolls, and the page itself stays put.
+ * A part of the side column below what fits in the window is scrolled to, as the Organizer would
+ * with the mouse wheel: the side column scrolls, and the page itself stays put.
  */
 const expectReachableInSideColumn = async (page: Page, part: Locator) => {
 	await expect(part).not.toBeInViewport({ ratio: 1 });
@@ -125,8 +125,8 @@ const expectReachableInSideColumn = async (page: Page, part: Locator) => {
 };
 
 /*
- * Every part given sits inside its panel's box, top to bottom: a panel squeezed
- * shorter than what it holds would leave its parts spilling out below it.
+ * Every part given sits inside its panel's box, top to bottom: a panel squeezed shorter than what
+ * it holds would leave its parts spilling out below it.
  */
 const expectPanelHoldsEveryPart = async (panel: Locator, parts: Locator[]) => {
 	const panelBox = (await panel.boundingBox())!;
@@ -167,8 +167,8 @@ test.describe('Registering a long field', () => {
 		expect(await isScrollable(players)).toBe(true);
 		await expectScrollingAreaFillsSpaceLeft(players);
 		/*
-		 * Below the TV Display panel's full-size thumbnail,
-		 * a window this short scrolls the side column to it.
+		 * Below the TV Display panel's full-size thumbnail, a window this short
+		 * scrolls the side column to it.
 		 */
 		await expectReachableInSideColumn(
 			page,
@@ -237,8 +237,8 @@ test.describe('Playing a long field', () => {
 
 		await expectPageDoesNotScroll(page);
 		/*
-		 * The refusal line beneath the Matches, found by its place: the main column
-		 * comes first on the page. The side column's own refusal lines scroll with it.
+		 * The refusal line beneath the Matches, found by its place: the main column comes first on
+		 * the page. The side column's own refusal lines scroll with it.
 		 */
 		const matchesRefusalLine = page.getByRole('alert').first();
 		await expectWhollyOnScreen([
@@ -306,8 +306,8 @@ test.describe('Playing a long field', () => {
 });
 
 /*
- * Every list on screen can be scrolled to its last row, which then shows whole, while
- * the page itself stays put: no list is squeezed so small that a row is cut off.
+ * Every list on screen can be scrolled to its last row, which then shows whole, while the page
+ * itself stays put: no list is squeezed so small that a row is cut off.
  */
 const expectEveryLastRowReachable = async (page: Page) => {
 	for (const list of await page.getByRole('list').all()) {
@@ -321,11 +321,11 @@ const expectEveryLastRowReachable = async (page: Page) => {
 };
 
 /*
- * Each field below is checked on registration, Tonight's Draw and once Started,
- * since a layout bug can show in only one shape. 26 Players on 12 Boards seat 12 of
- * their 13 opening Matches, leaving one waiting beneath a long list. One Board makes
- * most Matches wait. An odd field gives a Bye: 33 on 16 fill every Board exactly
- * beside it. 22 on 12 leave one Board to spare, 9 on 6 and 20 on 14 several.
+ * Each field below is checked on registration, Tonight's Draw and once Started, since a layout
+ * bug can show in only one shape. 26 Players on 12 Boards seat 12 of their 13 opening Matches,
+ * leaving one waiting beneath a long list. One Board makes most Matches wait. An odd field
+ * gives a Bye: 33 on 16 fill every Board exactly beside it. 22 on 12 leave one Board to spare,
+ * 9 on 6 and 20 on 14 several.
  */
 const fieldShapes = [
 	{ playerCount: 3, boardCount: 1 },
