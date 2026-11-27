@@ -20,7 +20,7 @@ const seedDraw = async (context: BrowserContext, seed: number) => {
 };
 
 /*
- * Moves every window's calendar to the same day of the month in November, or the 28th if the month is longer:
+ * Moves every window's calendar to the same day of the month in November, or its last, the 30th, from the 31st:
  * November has no TV Theme of its own, so the TV draws in Classic unless a test picks another TV Theme, in
  * whatever month the tests run. Every window moves back by the same whole number of days, worked out from
  * today's date, so the Organizer's and the TV's windows still agree on the time, and the clock still runs.
@@ -30,21 +30,24 @@ const setCalendarToNovember = async (context: BrowserContext) => {
 		const RealDate = Date;
 		const today = new RealDate();
 		const todayMidnight = new RealDate(today.getFullYear(), today.getMonth(), today.getDate());
-		const novemberDay = Math.min(today.getDate(), 28);
-		const novemberMidnight = new RealDate(today.getFullYear(), 10, novemberDay);
-		const shift = todayMidnight.getTime() - novemberMidnight.getTime();
+		// Months as Date counts them, from 0 for January.
+		const novemberIndex = 10;
+		const novemberDayCount = 30;
+		const novemberDay = Math.min(today.getDate(), novemberDayCount);
+		const novemberMidnight = new RealDate(today.getFullYear(), novemberIndex, novemberDay);
+		const shiftMs = todayMidnight.getTime() - novemberMidnight.getTime();
 		// A Date made with no arguments, and Date.now(), give the moved time; a Date made from a time is as given.
 		class NovemberDate extends RealDate {
 			constructor(...dateParts: unknown[]) {
 				if (dateParts.length === 0) {
-					super(RealDate.now() - shift);
+					super(RealDate.now() - shiftMs);
 				} else {
 					super(...(dateParts as [number, number]));
 				}
 			}
 
 			static now() {
-				return RealDate.now() - shift;
+				return RealDate.now() - shiftMs;
 			}
 		}
 		globalThis.Date = NovemberDate as DateConstructor;
@@ -85,6 +88,19 @@ export const openTv = async (organizer: Page, tvSize: { width: number; height: n
 	await tv.goto('/display');
 	return tv;
 };
+
+// Registers Players by typing each name given into the Player name box, as an Organizer does.
+export const registerPlayersByName = async (organizer: Page, names: readonly string[]) => {
+	const playerName = organizer.getByLabel('Player name');
+	for (const name of names) {
+		await playerName.fill(name);
+		await playerName.press('Enter');
+	}
+};
+
+// Names as long as a name can sensibly be, numbered so each is different.
+export const makeLongNames = (playerCount: number) =>
+	Array.from({ length: playerCount }, (_, index) => `Bartholomew Featherstonehaugh ${index + 1}`);
 
 // Goes from registration to the House Rules step, where the Draw is made.
 export const showHouseRules = async (organizer: Page) => {

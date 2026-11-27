@@ -1,5 +1,12 @@
 import { expect, type Page } from '@playwright/test';
-import { confirmDraw, openTv, test, tvSizes } from './setUpTournament';
+import {
+	confirmDraw,
+	makeLongNames,
+	openTv,
+	registerPlayersByName,
+	test,
+	tvSizes,
+} from './setUpTournament';
 import { expectInsideTvSafeArea } from './tvSafeArea';
 
 /*
@@ -35,17 +42,6 @@ const expectRoundOneCardsFitTv = async (tv: Page, boardCount: number) => {
 	await expectInsideTvSafeArea(tv);
 };
 
-const registerPlayers = async (organizer: Page, names: string[]) => {
-	const playerName = organizer.getByLabel('Player name');
-	for (const name of names) {
-		await playerName.fill(name);
-		await playerName.press('Enter');
-	}
-};
-
-const makeLongNames = (playerCount: number) =>
-	Array.from({ length: playerCount }, (_, index) => `Bartholomew Featherstonehaugh ${index + 1}`);
-
 for (const boardCount of [2, 13]) {
 	test(`Matches waiting for a Board show on the TV's bracket at 32 Players on ${boardCount} Boards`, async ({
 		page: organizer,
@@ -70,7 +66,7 @@ test('Long names keep Tonight’s Draw inside the TV', async ({ page: organizer 
 	const boardCount = 13;
 	await organizer.goto(`/?players=0&boards=${boardCount}`);
 	const tv = await openTv(organizer, sixteenByNineTv);
-	await registerPlayers(organizer, makeLongNames(32));
+	await registerPlayersByName(organizer, makeLongNames(32));
 
 	await showDrawOnTv(organizer, tv);
 

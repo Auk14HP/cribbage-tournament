@@ -47,6 +47,8 @@ export const Bracket = ({
 	const { rounds, champion } = getBracketPicture(tournament, bracketName)!;
 	const isStillInBracket = (player: PlayerId) => !hasLostIn(tournament, bracketName, player);
 	const earlier = rounds.slice(0, -1).map((_, round) => round);
+	// The 32-place bracket: as many Rounds as there are text sizes.
+	const isLargestBracket = rounds.length === bracketText.length;
 	const nameRound = (round: number) =>
 		describeRound({ round: round + 1, roundCount: rounds.length });
 	return (
@@ -73,7 +75,7 @@ export const Bracket = ({
 				)}
 			</div>
 			<div
-				className={`mt-[2cqh] flex flex-1 gap-[1cqw] ${rounds.length === bracketText.length ? bracketSpacing.largest : bracketSpacing.usual} ${bracketText[rounds.length - 1]}`}
+				className={`mt-[2cqh] flex flex-1 gap-[1cqw] ${isLargestBracket ? bracketSpacing.largest : bracketSpacing.usual} ${bracketText[rounds.length - 1]}`}
 			>
 				{earlier.map((round) => (
 					<BracketColumn

@@ -15,7 +15,7 @@ import { findTvThemeToday, TvThemeContext } from './tvThemeContext';
 export const TvThemePage = ({
 	tournament,
 	isMoving,
-	element: Page = 'div',
+	element: PageElement = 'div',
 	className,
 	isHidden = false,
 	children,
@@ -29,7 +29,7 @@ export const TvThemePage = ({
 }) => {
 	const tvTheme = findTvThemeToday(tournament);
 	return (
-		<Page
+		<PageElement
 			data-tv-theme={tvTheme}
 			aria-hidden={isHidden || undefined}
 			className={`bg-tv-ground text-tv-ink relative ${tvSafeArea.page} ${className}`}
@@ -38,6 +38,6 @@ export const TvThemePage = ({
 				<TvThemeBorder />
 				{children}
 			</TvThemeContext>
-		</Page>
+		</PageElement>
 	);
 };

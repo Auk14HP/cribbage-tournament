@@ -23,8 +23,8 @@ import {
 /*
  * Fun Facts are chosen with the random source given, so tests can repeat them. The window is the TV screen's
  * frame, so the screen fills it, drawn in the TV Theme, whose artwork moves here alone. The countdown ring
- * shows over the screen's time on Auto; a Held screen, or a phase's only screen, has none. While open, it saves the TV's heartbeat, so the Organizer screen knows the TV
- * is running.
+ * shows over the screen's time on Auto; a Held screen, or a phase's only screen, has none. While open, it saves
+ * the TV's heartbeat, so the Organizer screen knows the TV is running.
  */
 export const Display = ({
 	store,
@@ -66,6 +66,8 @@ const CountdownRing = ({ countdown }: { countdown: Countdown }) => {
 			style={countdownTimes}
 			className={`fixed -rotate-90 ${tvSafeArea.bottomRightCorner} ${countdownRing.size}`}
 		>
+			{/* In the ring's hole, clear of the circles drawn after it, so the filling stays the ring's last part. */}
+			<TvThemeRingMotif />
 			<circle {...ringCircle} className="stroke-tv-ring-track" />
 			<circle
 				{...ringCircle}
@@ -73,7 +75,6 @@ const CountdownRing = ({ countdown }: { countdown: Countdown }) => {
 				strokeDasharray={1}
 				className="animate-countdown stroke-tv-ring"
 			/>
-			<TvThemeRingMotif />
 		</svg>
 	);
 };
