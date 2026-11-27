@@ -53,15 +53,6 @@ export const ChampionStar = ({ isMoving }: MovingProps) => (
 			strokeWidth="2.4"
 			strokeLinejoin="round"
 		/>
-		<ellipse
-			cx="42"
-			cy="40"
-			rx="3"
-			ry="6"
-			fill="#ffffff"
-			opacity="0.6"
-			transform="rotate(-25 42 40)"
-		/>
 		{sparkles.map((sparkle, place) => (
 			<Sparkle key={`${sparkle.x} ${sparkle.y}`} place={place} isMoving={isMoving} />
 		))}

@@ -1,5 +1,6 @@
 // What artwork a TV Theme draws, and where: every TV Theme but Classic has each piece.
 import type { FC } from 'react';
+import type { BracketName } from '../../tournament';
 
 // Whether the artwork may move: only on the TV itself, and only while it allows motion.
 export interface MovingProps {
@@ -13,6 +14,9 @@ export interface TvThemeArtwork {
 	readonly TitleMotifs: FC<MovingProps>;
 	// Inside the countdown ring, in the ring's own units: a viewBox 36 wide, centred on 18, 18.
 	readonly RingMotif: FC;
-	// Beside each champion's name, the height of the box given.
-	readonly ChampionMotif: FC<MovingProps>;
+	/*
+	 * Beside each champion's name, the height of the box given: one for each bracket's champion. A TV Theme may
+	 * give both the same.
+	 */
+	readonly ChampionMotifs: Readonly<Record<BracketName, FC<MovingProps>>>;
 }

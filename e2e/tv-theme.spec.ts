@@ -10,9 +10,11 @@ import {
 	test,
 	tvSizes,
 } from './setUpTournament';
+import { expectInsideTvSafeArea } from './tvSafeArea';
 import {
 	chooseTvTheme,
 	countMovingArtwork,
+	expectArtworkClearOfText,
 	expectTvTextReadable,
 	findArtwork,
 	tvThemeNames,
@@ -76,6 +78,11 @@ for (const tvThemeName of tvThemeNames) {
 		await playToFinal(organizer);
 		await parkCycleOn(organizer, tv, 'Tonight’s Champions');
 		await expectTvTextReadable(tv, 'Tonight’s Champions');
+		// Both brackets' champions, each with their own motif: the one screen tv-safe-area.spec.ts doesn't reach.
+		await expectInsideTvSafeArea(tv);
+		if (tvThemeName !== 'Classic') {
+			await expectArtworkClearOfText(tv);
+		}
 		await parkCycleOn(organizer, tv, 'Winners Bracket');
 		await expectTvTextReadable(tv, 'Winners Bracket, its champion found');
 	});

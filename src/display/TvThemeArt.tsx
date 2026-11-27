@@ -5,7 +5,7 @@
  * are laid out as before. Decorative, so hidden from assistive technology. Named for the browser tests, which
  * check the artwork keeps clear of the text and the safe area's margins.
  */
-import type { TvTheme } from '../tournament';
+import type { BracketName, TvTheme } from '../tournament';
 import type { TvThemeArtwork } from './art/artwork';
 import { christmasArtwork } from './art/christmas';
 import { useTvTheme } from './tvThemeContext';
@@ -55,15 +55,22 @@ export const TvThemeRingMotif = () => {
 	return artwork ? <artwork.RingMotif /> : null;
 };
 
-// The motif beside a champion's name, sized by the class given.
-export const TvThemeChampionMotif = ({ className }: { className: string }) => {
+// The motif beside the champion's name of the bracket given, sized by the class given.
+export const TvThemeChampionMotif = ({
+	bracketName,
+	className,
+}: {
+	bracketName: BracketName;
+	className: string;
+}) => {
 	const { artwork, isMoving } = useArtwork();
 	if (!artwork) {
 		return null;
 	}
+	const ChampionMotif = artwork.ChampionMotifs[bracketName];
 	return (
 		<span data-testid="tv theme art" aria-hidden className={`flex shrink-0 ${className}`}>
-			<artwork.ChampionMotif isMoving={isMoving} />
+			<ChampionMotif isMoving={isMoving} />
 		</span>
 	);
 };

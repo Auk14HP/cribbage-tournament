@@ -7,7 +7,7 @@ import { TvThemeChampionMotif } from './TvThemeArt';
 /*
  * Once the Tournament is finished: the Tournament's title and the night's date across the top, then the
  * champions in the space left, as large as the TV allows. The Winners Bracket's is the night's only champion
- * when no Losers Bracket is played. Each champion's name has the TV Theme's champion motif either side.
+ * when no Losers Bracket is played. Each champion's name has the TV Theme's motif for their bracket either side.
  */
 export const Champion = ({ tournament }: { tournament: Tournament }) => {
 	const winnersChampion = getBracketPicture(tournament, 'winners')!.champion!;
@@ -25,7 +25,11 @@ export const Champion = ({ tournament }: { tournament: Tournament }) => {
 					</>
 				) : (
 					<p className="mt-[6cqh]">
-						<ChampionName name={winnersChampion.name} size={championNameSizes.alone} />
+						<ChampionName
+							bracketName="winners"
+							name={winnersChampion.name}
+							size={championNameSizes.alone}
+						/>
 					</p>
 				)}
 			</div>
@@ -45,7 +49,11 @@ const BracketChampion = ({
 		<span className="text-tv-muted block text-[5cqh] font-bold">
 			{bracketTitles[bracketName]}
 		</span>
-		<ChampionName name={champion.name} size={championNameSizes.besideAnother} />
+		<ChampionName
+			bracketName={bracketName}
+			name={champion.name}
+			size={championNameSizes.besideAnother}
+		/>
 	</p>
 );
 
@@ -58,19 +66,24 @@ const championNameSizes = {
 	besideAnother: { text: 'text-[11cqh]', motif: 'h-[11cqh]' },
 };
 
-// A champion's name, in the highlight colour, with the TV Theme's champion motif either side.
+/*
+ * A champion's name, in the highlight colour, with the TV Theme's motif for their bracket's champion either
+ * side.
+ */
 const ChampionName = ({
+	bracketName,
 	name,
 	size,
 }: {
+	bracketName: BracketName;
 	name: string;
 	size: (typeof championNameSizes)[keyof typeof championNameSizes];
 }) => (
 	<span
 		className={`text-tv-highlight flex items-center justify-center gap-[3cqw] leading-none font-bold ${size.text}`}
 	>
-		<TvThemeChampionMotif className={size.motif} />
+		<TvThemeChampionMotif bracketName={bracketName} className={size.motif} />
 		<span>{name}</span>
-		<TvThemeChampionMotif className={size.motif} />
+		<TvThemeChampionMotif bracketName={bracketName} className={size.motif} />
 	</span>
 );
