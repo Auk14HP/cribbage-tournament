@@ -79,10 +79,10 @@ for (const tvSize of tvSizes) {
  * rejects drops the whole animation.
  */
 const readRingFill = async (tv: Page) => {
-	const ring = tv.getByTestId('countdown ring');
-	const computed = await ring.evaluate((svg) => {
-		const filling = getComputedStyle(svg.lastElementChild!);
-		return { animationName: filling.animationName, dashOffset: filling.strokeDashoffset };
+	const filling = tv.getByTestId('countdown ring filling');
+	const computed = await filling.evaluate((circle) => {
+		const style = getComputedStyle(circle);
+		return { animationName: style.animationName, dashOffset: style.strokeDashoffset };
 	});
 	// The filling's dash offset runs from 1 (empty) down to 0 (full).
 	return { animationName: computed.animationName, fill: 1 - parseFloat(computed.dashOffset) };

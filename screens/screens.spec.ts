@@ -3,6 +3,8 @@ import {
 	answerIsLoserStayingDialogIfAsked,
 	confirmDrawFromHouseRules,
 	findMatchesOnBoards,
+	parkCycleOn,
+	playUntilLosersBracketOpens,
 	showHouseRules,
 	test,
 	tvClosingTimeoutMs,
@@ -31,6 +33,8 @@ const isShownWithin = async (element: Locator, timeout: number) => {
  *                                           picked, then after swapping them with the last Player listed
  *   ... DRAW=1 START=1                      and after Start
  *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
+ *   ... DRAW=1 START=1 LOSERS=1             and, every Player's first Match played with its loser staying, the
+ *                                           Losers Bracket parked on the TV. Stops there.
  *   ... DRAW=1 START=1 RESULTS=12 PEEK=1    and the brackets looked at on the laptop: the bracket on show,
  *                                           then the Losers Bracket's tab once it has one
  *   ... DRAW=1 START=1 RESULTS=3 FORFEIT=1  and the Forfeit dialog, then after that Forfeit
@@ -131,6 +135,12 @@ test('screens', async ({ context, page: organizer }) => {
 	await organizer.getByRole('button', { name: 'Start', exact: true }).click();
 	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 	await shoot('started');
+	if (process.env.LOSERS) {
+		await playUntilLosersBracketOpens(organizer);
+		await parkCycleOn(organizer, tv, 'Losers Bracket');
+		await shoot('losers-bracket');
+		return;
+	}
 	if (!process.env.RESULTS) {
 		return;
 	}

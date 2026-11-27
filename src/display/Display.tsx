@@ -66,10 +66,12 @@ const CountdownRing = ({ countdown }: { countdown: Countdown }) => {
 			style={countdownTimes}
 			className={`fixed -rotate-90 ${tvSafeArea.bottomRightCorner} ${countdownRing.size}`}
 		>
-			{/* In the ring's hole, clear of the circles drawn after it, so the filling stays the ring's last part. */}
+			{/* In the ring's hole, clear of the circles drawn round it. */}
 			<TvThemeRingMotif />
 			<circle {...ringCircle} className="stroke-tv-ring-track" />
+			{/* Named for the browser tests, which read how far it has filled. */}
 			<circle
+				data-testid="countdown ring filling"
 				{...ringCircle}
 				pathLength={1}
 				strokeDasharray={1}

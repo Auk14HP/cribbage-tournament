@@ -93,7 +93,7 @@ export type TvScreen = 'winnersBracket' | 'losersBracket' | 'champion';
  */
 export type TvChoice = 'auto' | TvScreen;
 
-// A TV Theme: Classic, the TV's plain black look, or one of the months'.
+// A TV Theme: Classic, the TV's plain black look, or one of the months'. Adding one: docs/tv-themes.md.
 export type TvTheme = 'classic' | 'christmas';
 
 /*

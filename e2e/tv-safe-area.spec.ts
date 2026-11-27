@@ -11,7 +11,7 @@ import {
 	tvSizes,
 } from './setUpTournament';
 import { expectInsideTvSafeArea } from './tvSafeArea';
-import { chooseTvTheme, expectArtworkClearOfText, tvThemeNames } from './tvTheme';
+import { chooseTvTheme, expectArtworkClearOfText, layoutTvThemeMenuNames } from './tvTheme';
 import { expectWhollyOnScreen } from './whollyOnScreen';
 
 // The field that fills the most of each TV screen.
@@ -23,7 +23,8 @@ const firstMatchCount = playerCount / 2;
 /*
  * Every TV screen keeps its content, the countdown ring and the TV Theme's artwork included, inside the safe
  * area a TV that overscans leaves uncropped, and the artwork clear of every line of text and the ring. With the
- * field that fills the most of each screen, on a 16:9 TV and on a narrower one, in every TV Theme.
+ * field that fills the most of each screen, on a 16:9 TV and on a narrower one, in Classic and in one TV Theme
+ * with a border, which stands in for all of them: every TV Theme's own artwork is checked in tv-theme.spec.ts.
  */
 
 // Checks the TV screen sits inside the safe area, and its TV Theme's artwork covers nothing.
@@ -35,7 +36,7 @@ const expectScreenFits = async (tv: Page, tvThemeName: string) => {
 };
 
 for (const [tvSize, tvThemeName] of tvSizes.flatMap((size) =>
-	tvThemeNames.map((name) => [size, name] as const),
+	layoutTvThemeMenuNames.map((name) => [size, name] as const),
 )) {
 	test.describe(`on a ${tvSize.width}×${tvSize.height} TV with ${playerCount} Players in ${tvThemeName}`, () => {
 		test('Tonight’s Players, every name wholly shown, the House Rules and Tonight’s Draw sit inside the safe area', async ({

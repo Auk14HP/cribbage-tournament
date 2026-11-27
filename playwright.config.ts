@@ -23,6 +23,12 @@ export default defineConfig({
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 1 : 0,
 	/*
+	 * CI never saves a picture e2e/tv-classic.spec.ts compares with: a missing or changed one fails every
+	 * attempt, and the run's artifact holds the picture CI took (docs/tv-themes.md, "Classic"). Locally a
+	 * missing picture is saved, as Playwright does by default.
+	 */
+	updateSnapshots: process.env.CI ? 'none' : 'missing',
+	/*
 	 * A dot per test, then each failure in full and the totals, so a run's output stays short enough to read
 	 * whole, piped or not. CI used it already: it is Playwright's default there.
 	 */

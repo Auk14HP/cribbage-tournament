@@ -13,17 +13,17 @@ import {
 	tvSizes,
 } from './setUpTournament';
 import { expectInsideTvSafeArea } from './tvSafeArea';
-import { chooseTvTheme, findArtwork, tvThemeNames } from './tvTheme';
+import { chooseTvTheme, findArtwork, layoutTvThemeMenuNames } from './tvTheme';
 
 /*
  * The Winners Bracket's layout on a TV, measured from where the browser drew each Match: every Round header
- * and Board label is one line, every column's Matches start level, every Match sits level with the middle of the two that
- * feed it, and everything sits inside the TV's safe area. A Bye's place in the first Round has no Match, so its empty
- * slot is measured instead. Measured at Start; at the final, when the narrow final column names its Board;
- * and after the final, when winners' names fill later Rounds. On a 16:9 TV and on a narrower one, in every TV
- * Theme, since a TV Theme's border takes room from the bracket. Then, every
- * Round header and Match card stays put from Tonight's Draw through Start. Last, a long champion's name keeps
- * the bracket's heading on one line, its motifs beside it.
+ * and Board label is one line, every column's Matches start level, every Match sits level with the middle of
+ * the two that feed it, and everything sits inside the TV's safe area. A Bye's place in the first Round has no
+ * Match, so its empty slot is measured instead. Measured at Start; at the final, when the narrow final column
+ * names its Board; and after the final, when winners' names fill later Rounds. On a 16:9 TV and on a narrower
+ * one, in Classic and in one TV Theme with a border, which takes room from the bracket the same in every TV
+ * Theme. Then, every Round header and Match card stays put from Tonight's Draw through Start. Last, a long
+ * champion's name keeps the bracket's heading on one line, its motifs beside it.
  */
 
 const findMiddle = async (slot: Locator): Promise<number> => {
@@ -60,7 +60,7 @@ for (const { players, rounds } of [
 ]) {
 	for (const moment of ['at Start', 'at the final', 'after the final'] as const) {
 		for (const [tvSize, tvThemeName] of tvSizes.flatMap((size) =>
-			tvThemeNames.map((name) => [size, name] as const),
+			layoutTvThemeMenuNames.map((name) => [size, name] as const),
 		)) {
 			test(`with ${players} Players ${moment} on a ${tvSize.width}×${tvSize.height} TV in ${tvThemeName}, the bracket lines up, inside the safe area`, async ({
 				page: organizer,

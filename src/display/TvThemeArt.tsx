@@ -10,14 +10,15 @@ import type { TvThemeArtwork } from './art/artwork';
 import { christmasArtwork } from './art/christmas';
 import { useTvTheme } from './tvThemeContext';
 
-const artworks: Partial<Record<TvTheme, TvThemeArtwork>> = {
+// Every TV Theme's artwork: each has its own but Classic, which has none.
+const artworks: Record<Exclude<TvTheme, 'classic'>, TvThemeArtwork> = {
 	christmas: christmasArtwork,
 };
 
 // The artwork of the frame's TV Theme, if it has any, and whether it may move.
 const useArtwork = () => {
 	const { tvTheme, isMoving } = useTvTheme();
-	return { artwork: artworks[tvTheme], isMoving };
+	return { artwork: tvTheme === 'classic' ? undefined : artworks[tvTheme], isMoving };
 };
 
 /*
