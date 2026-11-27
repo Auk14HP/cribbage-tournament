@@ -34,9 +34,10 @@ export default defineConfig([
 		languageOptions: {
 			globals: globals.browser,
 			/*
-			 * Type information, so rules such as no-deprecated can see what a name refers to. The project
-			 * service finds each file's tsconfig as an editor does, from the root tsconfig.json's references,
-			 * so a file an editor would leave without its types fails lint.
+			 * Type information, so rules such as no-deprecated can see what a name refers to. The
+			 * project service finds each file's tsconfig as an editor does, from the root
+			 * tsconfig.json's references, so a file an editor would leave without its types fails
+			 * lint.
 			 */
 			parserOptions: {
 				projectService: true,
@@ -46,6 +47,22 @@ export default defineConfig([
 	},
 	// Prettier owns formatting, so its config switches off ESLint's formatting rules.
 	prettier,
+	/*
+	 * Comment lines in every file this config checks, itself included, run no longer than
+	 * Prettier's print width: 100 columns, a tab counted as 4. Prettier wraps code but leaves
+	 * comments as they are. Code's own limit is set too high ever to apply, leaving its length to
+	 * Prettier. A line holding a URL may run on, since a URL can't be broken.
+	 */
+	{
+		files: ['**/*.{js,ts,tsx}'],
+		plugins: { '@stylistic': stylistic },
+		rules: {
+			'@stylistic/max-len': [
+				'error',
+				{ code: 1000, comments: 100, tabWidth: 4, ignoreUrls: true },
+			],
+		},
+	},
 	/*
 	 * House rules, after Prettier's config so they stay on. None of them fight Prettier:
 	 * it keeps braced bodies on their own line and leaves comment style alone.
@@ -58,23 +75,15 @@ export default defineConfig([
 			'func-style': ['error', 'expression'],
 			'prefer-arrow-callback': 'error',
 			'@stylistic/multiline-comment-style': ['error', 'starred-block'],
-			/*
-			 * Comments wrap at Prettier's print width, which Prettier leaves comments to: a comment line runs no
-			 * longer than 100 columns, a tab counted as 4, as Prettier counts. Code is Prettier's to wrap, so its
-			 * limit here is out of reach. A line holding a URL may run on, since a URL can't be broken.
-			 */
-			'@stylistic/max-len': [
-				'error',
-				{ code: 1000, comments: 100, tabWidth: 4, ignoreUrls: true },
-			],
 			'@typescript-eslint/no-deprecated': 'error',
 			'@typescript-eslint/no-floating-promises': 'error',
 			'no-restricted-syntax': [
 				'error',
 				/*
-				 * A call inside a call's arguments, inside another call's arguments. A callback's body starts
-				 * afresh, so iterating nested arrays is fine. A call made on a call's result, such as
-				 * within(...).getByRole(...), slips past: CODING_STANDARDS.md covers it at review.
+				 * A call inside a call's arguments, inside another call's arguments. A callback's
+				 * body starts afresh, so iterating nested arrays is fine. A call made on a call's
+				 * result, such as within(...).getByRole(...), slips past: CODING_STANDARDS.md
+				 * covers it at review.
 				 */
 				{
 					selector:
@@ -82,15 +91,19 @@ export default defineConfig([
 					message:
 						'Name the inner result first: a call nests at most one level inside another call’s arguments (CODING_STANDARDS.md, Readability).',
 				},
-				// Playwright reads a timeout of 0 as no limit, so a wait that was meant to look once hangs instead.
+				/*
+				 * Playwright reads a timeout of 0 as no limit, so a wait that was meant to look
+				 * once hangs instead.
+				 */
 				{
 					selector: "Property[key.name='timeout'][value.value=0]",
 					message:
 						'Playwright waits forever on timeout: 0. To look once, read the state directly, as `await locator.isVisible()` does.',
 				},
 				/*
-				 * A Match's place compared as an object. The core works out places afresh on each command, so
-				 * two places for the same Match are rarely the same object, and === quietly finds no match.
+				 * A Match's place compared as an object. The core works out places afresh on each
+				 * command, so two places for the same Match are rarely the same object, and ===
+				 * quietly finds no match.
 				 */
 				{
 					selector:
@@ -104,9 +117,10 @@ export default defineConfig([
 					message: 'Make this its own component instead of a renderX helper.',
 				},
 				/*
-				 * A list item looked up on a window (`page`, `organizer` or `tv` in Playwright, `screen` in Testing
-				 * Library) or on its main landmark, rather than inside its own list. Every list there counts, so a
-				 * list added anywhere, such as the step bar, changes what it finds.
+				 * A list item looked up on a window (`page`, `organizer` or `tv` in Playwright,
+				 * `screen` in Testing Library) or on its main landmark, rather than inside its own
+				 * list. Every list there counts, so a list added anywhere, such as the step bar,
+				 * changes what it finds.
 				 */
 				{
 					selector:
@@ -114,7 +128,10 @@ export default defineConfig([
 					message:
 						'Find list items inside their named list: look the list up by role and name first, then its items inside it.',
 				},
-				// A row that works anything out, such as its own callbacks, is a component, not a map body.
+				/*
+				 * A row that works anything out, such as its own callbacks, is a component, not a
+				 * map body.
+				 */
 				{
 					selector:
 						"JSXExpressionContainer > CallExpression[callee.property.name='map'] > ArrowFunctionExpression > BlockStatement",
@@ -125,8 +142,8 @@ export default defineConfig([
 		},
 	},
 	/*
-	 * Browser tests and screenshots take `test` from e2e/setUpTournament.ts, which seeds every Draw, so none
-	 * of them depends on a random Draw.
+	 * Browser tests and screenshots take `test` from e2e/setUpTournament.ts, which seeds every
+	 * Draw, so none of them depends on a random Draw.
 	 */
 	{
 		files: ['e2e/**/*.ts', 'screens/**/*.ts'],
@@ -148,15 +165,16 @@ export default defineConfig([
 		},
 	},
 	/*
-	 * The Tournament core's files, each holding one concept (#57). Each imports only from the files above it
-	 * in this list, so they never import in a cycle. index.ts re-exports them, and the core's tests may import
-	 * any of them.
+	 * The Tournament core's files, each holding one concept (#57). Each imports only from the files
+	 * above it in this list, so they never import in a cycle. index.ts re-exports them, and the
+	 * core's tests may import any of them.
 	 */
 	...coreFiles.map((coreFile, index) => {
 		const above = coreFiles.slice(0, index);
 		/*
-		 * Any path into the core, from beside the file (./draw, or . for index.ts) or back in from outside
-		 * the folder (../tournament/draw, or ../tournament for index.ts), unless it names a file above this one.
+		 * Any path into the core, from beside the file (./draw, or . for index.ts) or back in from
+		 * outside the folder (../tournament/draw, or ../tournament for index.ts), unless it names a
+		 * file above this one.
 		 */
 		const intoCore = String.raw`^(\.(/|$)|\.\./tournament(/|$))`;
 		const unlessAbove = above.length === 0 ? '' : `(?!(${above.join('|')})$)`;
@@ -178,8 +196,8 @@ export default defineConfig([
 		};
 	}),
 	/*
-	 * One file per screen in each route (#42). The cap keeps a screen from regrowing to the size that
-	 * prompted the split: past it, move a part out to its own file. Test files are exempt.
+	 * One file per screen in each route (#42). The cap keeps a screen from regrowing to the size
+	 * that prompted the split: past it, move a part out to its own file. Test files are exempt.
 	 */
 	{
 		files: ['src/organizer/**/*.{ts,tsx}', 'src/display/**/*.{ts,tsx}'],

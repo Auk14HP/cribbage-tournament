@@ -1,4 +1,7 @@
-// The palette button's icon, and the tick beside each chosen item in the theme menu.
+/*
+ * The palette button's icon, and the check mark beside each section's
+ * chosen item in the theme menu.
+ */
 
 export const PaletteIcon = () => (
 	<svg
