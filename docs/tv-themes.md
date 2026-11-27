@@ -26,12 +26,22 @@ Done when `npm run check` and `npm run e2e` pass, and every TV screen in the new
 
 ## Looking at it
 
-`TV_THEME=<Name> npm run screens` shoots every TV screen in the TV Theme (`.claude/skills/run-app/SKILL.md`). Open each one, then a full-size crop of each piece of artwork: at half size a glint, a twinkle or a path colour can't be judged. Shoot the champions screen with a Losers Bracket, so both champion motifs show.
+Shoot every TV screen in the TV Theme, the champions screen with both brackets' champions, and the Losers Bracket mid-play (`.claude/skills/run-app/SKILL.md` for viewing them):
+
+```bash
+PLAYERS=32 BOARDS=16 DRAW=1 START=1 RESULTS=all TV_THEME=<Name> npm run screens
+```
+
+```bash
+PLAYERS=32 BOARDS=16 DRAW=1 START=1 LOSERS=1 TV_THEME=<Name> npm run screens
+```
+
+Open each, then a full-size crop of each piece of artwork: at half size a glint or a path colour can't be judged. Check that the winners' path stands apart from the plain lines at a glance, and that every glint sits on something round and glossy.
 
 ## Classic
 
-Classic is the TV as it always looked. `e2e/tv-classic.spec.ts` compares every TV screen in Classic with a saved picture, pixel by pixel, and fails on any change. When Classic is meant to change:
+Classic is the TV as it always looked. `e2e/tv-classic.spec.ts` compares every TV screen in Classic with a saved picture, pixel by pixel, and fails when more than 20 pixels differ in any shade. The pictures differ by system, since the TV draws in the system's font: `-dev-darwin.png` from a Mac, `-dev-linux.png` from CI. To save them for the first time, or when Classic is meant to change:
 
-1. Save the Mac pictures: `npx playwright test tv-classic --update-snapshots`.
-2. Push. CI fails `tv-classic` against its old Linux pictures and uploads the new ones in its `playwright-traces` artifact: `gh run download <run id> -n playwright-traces -D <scratchpad>/traces`.
-3. Copy each `*-actual.png` from there over its `-dev-linux.png` in `e2e/tv-classic.spec.ts-snapshots/`, look at it, commit, and push again.
+1. Save the Mac pictures: `npx playwright test tv-classic --update-snapshots`, and look at each.
+2. Push. CI never saves a picture (`updateSnapshots` in `playwright.config.ts`), so `tv-classic` fails there and the run uploads what CI took in its `playwright-traces` artifact: `gh run download <run id> -n playwright-traces -D <scratchpad>/traces`.
+3. Copy each `*-actual.png` from there to its `-dev-linux.png` in `e2e/tv-classic.spec.ts-snapshots/`, look at it, commit, and push again.

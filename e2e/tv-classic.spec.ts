@@ -14,10 +14,11 @@ import { chooseTvTheme } from './tvTheme';
 /*
  * Classic, the TV's plain black look, drawn the same from one change to the next: every TV screen compared with
  * a saved picture of it, pixel by pixel. A change that alters Classic fails here with a picture of the
- * difference in test-results/. When Classic is meant to change, save the new pictures with
- * `npx playwright test tv-classic --update-snapshots` and commit them; the pictures differ by system, since the
- * TV draws in the system's font, so CI's are saved from its own run (docs/tv-themes.md).
+ * difference in test-results/. When Classic is meant to change, save new pictures as docs/tv-themes.md says,
+ * under "Classic": the pictures differ by system, since the TV draws in the system's font.
  */
+
+const [sixteenByNineTv] = tvSizes;
 
 // The field: enough for a Losers Bracket and two champions, quick to play out.
 const playerCount = 12;
@@ -51,7 +52,7 @@ test('draws every TV screen in Classic just as its saved picture', async ({ page
 	test.setTimeout(120_000);
 	await organizer.goto(`/?players=${playerCount}&boards=${firstMatchCount}`);
 	await chooseTvTheme(organizer, 'Classic');
-	const tv = await openTv(organizer, tvSizes[0]);
+	const tv = await openTv(organizer, sixteenByNineTv);
 	await tv.getByRole('list', { name: 'Players' }).waitFor();
 	await expectScreenUnchanged(tv, 'tonights-players');
 

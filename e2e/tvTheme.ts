@@ -1,14 +1,17 @@
 import { expect, type Locator, type Page } from '@playwright/test';
-import { listTvThemes, tvThemeNames as namesByTvTheme } from '../src/tournament';
+import { listTvThemes, tvThemeNames } from '../src/tournament';
 
 // The TV Themes the browser tests draw the TV in, by the names the menu shows: Classic and every month's.
-export const tvThemeNames = listTvThemes().map((tvTheme) => namesByTvTheme[tvTheme]);
+export const tvThemeMenuNames = listTvThemes().map((tvTheme) => tvThemeNames[tvTheme]);
+
+// The first TV Theme with a border, in calendar order.
+const [firstBorderedTvTheme] = listTvThemes().filter((tvTheme) => tvTheme !== 'classic');
 
 /*
  * The TV Themes a layout is measured in: Classic, and one TV Theme with a border standing in for all of them,
  * since every TV Theme but Classic takes the same band from the screens (--tv-border-band in src/style.css).
  */
-export const layoutTvThemeNames = tvThemeNames.slice(0, 2);
+export const layoutTvThemeMenuNames = [tvThemeNames.classic, tvThemeNames[firstBorderedTvTheme]];
 
 // Picks a TV Theme from the TV section of the palette menu in the Organizer screen's header.
 export const chooseTvTheme = async (organizer: Page, tvThemeName: string) => {

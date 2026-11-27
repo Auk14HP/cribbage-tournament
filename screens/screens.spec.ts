@@ -4,6 +4,7 @@ import {
 	confirmDrawFromHouseRules,
 	findMatchesOnBoards,
 	parkCycleOn,
+	playUntilLosersBracketOpens,
 	showHouseRules,
 	test,
 	tvClosingTimeoutMs,
@@ -135,16 +136,7 @@ test('screens', async ({ context, page: organizer }) => {
 	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 	await shoot('started');
 	if (process.env.LOSERS) {
-		/*
-		 * The Losers Bracket is drawn once every Player has played their first Match, a Bye Player's included, so
-		 * results go to the first Match on the list, its loser staying, until the TV has its screen to show.
-		 */
-		const losersBracketChoice = organizer.getByRole('radio', { name: 'Losers Bracket' });
-		const firstWinnerButton = findMatchesOnBoards(organizer).getByRole('button').first();
-		while ((await losersBracketChoice.count()) === 0) {
-			await firstWinnerButton.click();
-			await answerIsLoserStayingDialogIfAsked(organizer, 'Staying');
-		}
+		await playUntilLosersBracketOpens(organizer);
 		await parkCycleOn(organizer, tv, 'Losers Bracket');
 		await shoot('losers-bracket');
 		return;

@@ -185,6 +185,22 @@ export const playFirstMatchesWithLosersStaying = async (
 	}
 };
 
+/*
+ * Records results, each loser of a first Match staying, until the Losers Bracket has a Match on a Board, so its
+ * panel is on the Organizer screen and its screen on the TV. A Bye Player's first Match comes in Round 2, so
+ * this plays on past the first Round when the field has Byes. Fails if the Matches run out first: too few
+ * Players stayed for a Losers Bracket.
+ */
+export const playUntilLosersBracketOpens = async (organizer: Page) => {
+	const losersPanel = organizer.getByRole('region', { name: 'Losers Bracket' });
+	const nextWinnerButton = findMatchesOnBoards(organizer).getByRole('button').first();
+	while (!(await losersPanel.isVisible()) && (await nextWinnerButton.count()) > 0) {
+		await nextWinnerButton.click();
+		await answerIsLoserStayingDialogIfAsked(organizer, 'Staying');
+	}
+	await expect(losersPanel, 'the Losers Bracket opens').toBeVisible();
+};
+
 export const playToFinal = (page: Page) => playUntilMatchesLeft(page, 0);
 
 export const playUntilTheFinal = (page: Page) => playUntilMatchesLeft(page, 1);

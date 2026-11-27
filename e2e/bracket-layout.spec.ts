@@ -13,7 +13,7 @@ import {
 	tvSizes,
 } from './setUpTournament';
 import { expectInsideTvSafeArea } from './tvSafeArea';
-import { chooseTvTheme, findArtwork, layoutTvThemeNames } from './tvTheme';
+import { chooseTvTheme, findArtwork, layoutTvThemeMenuNames } from './tvTheme';
 
 /*
  * The Winners Bracket's layout on a TV, measured from where the browser drew each Match: every Round header
@@ -60,7 +60,7 @@ for (const { players, rounds } of [
 ]) {
 	for (const moment of ['at Start', 'at the final', 'after the final'] as const) {
 		for (const [tvSize, tvThemeName] of tvSizes.flatMap((size) =>
-			layoutTvThemeNames.map((name) => [size, name] as const),
+			layoutTvThemeMenuNames.map((name) => [size, name] as const),
 		)) {
 			test(`with ${players} Players ${moment} on a ${tvSize.width}×${tvSize.height} TV in ${tvThemeName}, the bracket lines up, inside the safe area`, async ({
 				page: organizer,

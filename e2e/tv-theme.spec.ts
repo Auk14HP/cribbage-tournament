@@ -17,7 +17,7 @@ import {
 	expectArtworkClearOfText,
 	expectTvTextReadable,
 	findArtwork,
-	tvThemeNames,
+	tvThemeMenuNames,
 } from './tvTheme';
 
 /*
@@ -64,7 +64,7 @@ const expectScreenDrawnWell = async (tv: Page, tvThemeName: string, moment: stri
  * TV, where the artwork has least room beside the text. The layout that every TV Theme with a border shares is
  * measured at its fullest fields in tv-safe-area.spec.ts and bracket-layout.spec.ts.
  */
-for (const tvThemeName of tvThemeNames) {
+for (const tvThemeName of tvThemeMenuNames) {
 	test(`draws every TV screen well in ${tvThemeName}: text at 7:1 or 4.5:1, artwork clear of it, all inside the safe area`, async ({
 		page: organizer,
 	}) => {

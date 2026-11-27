@@ -2,10 +2,10 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { expectNothingMoves } from './screenStill';
 import {
-	answerIsLoserStayingDialogIfAsked,
 	confirmDrawFromHouseRules,
 	findMatchesOnBoards,
 	openTv,
+	playUntilLosersBracketOpens,
 	playToFinal,
 	showHouseRules,
 	test,
@@ -43,26 +43,6 @@ const expectReadableText = async (page: Page, moment: string) => {
 		violation.nodes.map((node) => `${node.html}: ${node.failureSummary}`),
 	);
 	expect(hardToRead, moment).toEqual([]);
-};
-
-/*
- * Records results, each loser of a first Match staying, until the Losers Bracket has a Match on a Board, so its
- * panel and its outlined L badge are on screen.
- */
-const playUntilLosersBracketOpens = async (page: Page) => {
-	const losersPanel = page.getByRole('region', { name: 'Losers Bracket' });
-	const nextWinnerButton = findMatchesOnBoards(page).getByRole('button').first();
-	// The walk's 9 Players play 8 Winners Bracket Matches: the Losers Bracket opens within them, or never.
-	const winnersMatchCount = 8;
-	for (
-		let recorded = 0;
-		recorded < winnersMatchCount && !(await losersPanel.isVisible());
-		recorded++
-	) {
-		await nextWinnerButton.click();
-		await answerIsLoserStayingDialogIfAsked(page, 'Staying');
-	}
-	await expect(losersPanel, 'the Losers Bracket opens').toBeVisible();
 };
 
 /*
