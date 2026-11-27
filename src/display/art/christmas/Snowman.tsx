@@ -5,6 +5,9 @@ import { describeTwinkle, outlineColour } from './drawing';
 const snow = { lit: '#f4f8f6', shade: '#c5d6cd' };
 const coal = '#1c1f24';
 
+// The red of the scarf and the hat's band, and of the scarf's darker stripes.
+const scarfRed = { cloth: '#d64545', stripe: '#a83030' };
+
 // The snowman's three snowballs, bottom first, so each one above overlaps the one below.
 const snowballs = [
 	{ cx: 50, cy: 88, r: 22 },
@@ -99,7 +102,7 @@ export const Snowman = ({ isMoving }: MovingProps) => (
 		{/* The scarf round the neck and its tail, striped in a darker red. */}
 		<path
 			d="M56 43 L61 60 L55 61.5 L51 45 Z"
-			fill="#d64545"
+			fill={scarfRed.cloth}
 			stroke={outlineColour}
 			strokeWidth="1.2"
 			strokeLinejoin="round"
@@ -110,11 +113,15 @@ export const Snowman = ({ isMoving }: MovingProps) => (
 			width="28"
 			height="6.5"
 			rx="3"
-			fill="#d64545"
+			fill={scarfRed.cloth}
 			stroke={outlineColour}
 			strokeWidth="1.2"
 		/>
-		<path d="M43 39.8 V45.8 M50 39.8 V45.8 M57 39.8 V45.8" stroke="#a83030" strokeWidth="1.6" />
+		<path
+			d="M43 39.8 V45.8 M50 39.8 V45.8 M57 39.8 V45.8"
+			stroke={scarfRed.stripe}
+			strokeWidth="1.6"
+		/>
 		{/* The top hat: its crown, a red band and the brim. */}
 		<rect
 			x="40"
@@ -126,7 +133,7 @@ export const Snowman = ({ isMoving }: MovingProps) => (
 			stroke={outlineColour}
 			strokeWidth="1.2"
 		/>
-		<rect x="40.6" y="13" width="18.8" height="3.5" fill="#d64545" />
+		<rect x="40.6" y="13" width="18.8" height="3.5" fill={scarfRed.cloth} />
 		<rect
 			x="33"
 			y="18"
