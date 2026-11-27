@@ -4,7 +4,7 @@
  * How callers read it: CODING_STANDARDS.md, "The Tournament core".
  *
  * Callers import the core from here. Its files, each holding one concept, import only from the files above
- * them in this list, so they never import in a cycle: types, tvScreen, bracket, registration, houseRules,
+ * them in this list, so they never import in a cycle: types, tvTheme, tvScreen, bracket, registration, houseRules,
  * seating, draw, results, views.
  */
 export {
@@ -29,7 +29,9 @@ export {
 	type TvChoice,
 	type TvCycleStart,
 	type TvScreen,
+	type TvTheme,
 } from './types';
+export { findTvTheme, listTvThemes, pickTvTheme, tvThemeMonths, tvThemeNames } from './tvTheme';
 export {
 	chooseTvScreen,
 	findTvScreenOnShow,

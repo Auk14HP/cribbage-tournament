@@ -1,18 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { funFacts } from './funFacts';
+import { christmasFunFacts } from './tvThemeFunFacts';
 
 // Every name slot a Fun Fact holds, such as "{A}", each counted once however often it appears.
 const listSlots = (fact: string): string[] => [...new Set(fact.match(/\{[^}]*\}/g) ?? [])];
 
+// Every Fun Fact written: the general ones and every TV Theme's own.
+const everyFunFact = [...funFacts, ...christmasFunFacts];
+
 describe('the Fun Fact list', () => {
 	it('holds at least 150, enough for 30 minutes of registration at one every 12 seconds, each written once', () => {
 		expect(funFacts.length).toBeGreaterThanOrEqual(150);
-		expect(new Set(funFacts).size).toBe(funFacts.length);
+		expect(new Set(everyFunFact).size).toBe(everyFunFact.length);
 	});
 
 	it('names no Players, one in {A}, or two in {A} and {B}', () => {
 		const validSlots = [[], ['{A}'], ['{A}', '{B}']].map((slots) => slots.join(' '));
-		const invalid = funFacts.filter((fact) => {
+		const invalid = everyFunFact.filter((fact) => {
 			const slots = listSlots(fact).sort().join(' ');
 			return !validSlots.includes(slots);
 		});
@@ -21,17 +25,17 @@ describe('the Fun Fact list', () => {
 	});
 
 	it('never guesses anyone’s gender', () => {
-		const gendered = funFacts.filter((fact) => /\b(he|she|him|her|his|hers)\b/i.test(fact));
+		const gendered = everyFunFact.filter((fact) => /\b(he|she|him|her|his|hers)\b/i.test(fact));
 
 		expect(gendered).toEqual([]);
 	});
 
 	it('never says “pegged”', () => {
-		expect(funFacts.filter((fact) => /pegged/i.test(fact))).toEqual([]);
+		expect(everyFunFact.filter((fact) => /pegged/i.test(fact))).toEqual([]);
 	});
 
 	it('fits in two lines on the narrower TV the browser tests use, even naming the test Tournament’s longest names', () => {
-		const tooLong = funFacts.filter((fact) => {
+		const tooLong = everyFunFact.filter((fact) => {
 			const line = `Fun fact: ${fact.replaceAll('{A}', 'Frank the Tank').replaceAll('{B}', 'Christopher')}`;
 			return line.length > twoLineCharacterBudget;
 		});

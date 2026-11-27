@@ -2,23 +2,28 @@ import { expect, type Locator, type Page } from '@playwright/test';
 import { expectNothingMoves } from './screenStill';
 import {
 	confirmDraw,
+	makeLongNames,
 	parkCycleOn,
 	openTv,
 	playToFinal,
 	playUntilTheFinal,
+	registerPlayersByName,
 	startTournament,
 	test,
 	tvSizes,
 } from './setUpTournament';
 import { expectInsideTvSafeArea } from './tvSafeArea';
+import { chooseTvTheme, findArtwork, tvThemeNames } from './tvTheme';
 
 /*
  * The Winners Bracket's layout on a TV, measured from where the browser drew each Match: every Round header
  * and Board label is one line, every column's Matches start level, every Match sits level with the middle of the two that
  * feed it, and everything sits inside the TV's safe area. A Bye's place in the first Round has no Match, so its empty
  * slot is measured instead. Measured at Start; at the final, when the narrow final column names its Board;
- * and after the final, when winners' names fill later Rounds. On a 16:9 TV and on a narrower one. Last, every
- * Round header and Match card stays put from Tonight's Draw through Start.
+ * and after the final, when winners' names fill later Rounds. On a 16:9 TV and on a narrower one, in every TV
+ * Theme, since a TV Theme's border takes room from the bracket. Then, every
+ * Round header and Match card stays put from Tonight's Draw through Start. Last, a long champion's name keeps
+ * the bracket's heading on one line, its motifs beside it.
  */
 
 const findMiddle = async (slot: Locator): Promise<number> => {
@@ -54,11 +59,14 @@ for (const { players, rounds } of [
 	{ players: 5, rounds: 3 },
 ]) {
 	for (const moment of ['at Start', 'at the final', 'after the final'] as const) {
-		for (const tvSize of tvSizes) {
-			test(`with ${players} Players ${moment} on a ${tvSize.width}×${tvSize.height} TV, the bracket lines up, inside the safe area`, async ({
+		for (const [tvSize, tvThemeName] of tvSizes.flatMap((size) =>
+			tvThemeNames.map((name) => [size, name] as const),
+		)) {
+			test(`with ${players} Players ${moment} on a ${tvSize.width}×${tvSize.height} TV in ${tvThemeName}, the bracket lines up, inside the safe area`, async ({
 				page: organizer,
 			}) => {
 				await startTournament(organizer, { players });
+				await chooseTvTheme(organizer, tvThemeName);
 				if (moment === 'at the final') {
 					await playUntilTheFinal(organizer);
 				}
@@ -164,3 +172,60 @@ for (const tvSize of tvSizes) {
 		});
 	});
 }
+
+// Whether the element's text runs to a second line: taller than one line of its own text.
+const isWrapped = (element: Locator) =>
+	element.evaluate((box) => {
+		const fontSize = parseFloat(getComputedStyle(box).fontSize);
+		return box.getBoundingClientRect().height > fontSize * 1.5;
+	});
+
+type Box = { x: number; y: number; width: number; height: number };
+
+// The narrower of the browser tests' TVs, where a long champion's line has the least room.
+const narrowerTv = tvSizes[1];
+
+// The long champion's field: every name long, so the winner's line can't fit beside the heading.
+const longNamedPlayerCount = 8;
+
+/*
+ * The box of the TV Theme's artwork level with the heading and to its right: the motifs beside it, not the
+ * border above it.
+ */
+const findMotifsBesideHeading = async (tv: Page, heading: Locator) => {
+	const headingBox = (await heading.boundingBox())!;
+	const artworkBoxes = await findArtwork(tv).evaluateAll((pieces) =>
+		pieces.map((piece) => piece.getBoundingClientRect().toJSON() as Box),
+	);
+	return artworkBoxes.find(
+		(box) =>
+			box.x > headingBox.x &&
+			box.y < headingBox.y + headingBox.height &&
+			headingBox.y < box.y + box.height,
+	)!;
+};
+
+test('keeps the Winners Bracket’s heading on one line, its motifs beside it, when a long name is champion on the narrower TV', async ({
+	page: organizer,
+}) => {
+	await organizer.goto(`/?boards=${longNamedPlayerCount / 2}`);
+	await registerPlayersByName(organizer, makeLongNames(longNamedPlayerCount));
+	await chooseTvTheme(organizer, 'Christmas');
+	await confirmDraw(organizer);
+	await organizer.getByRole('button', { name: 'Start', exact: true }).click();
+	await playToFinal(organizer);
+	const tv = await openTv(organizer, narrowerTv);
+	await parkCycleOn(organizer, tv, 'Winners Bracket');
+	const heading = tv.getByRole('heading', { name: 'Winners Bracket' });
+	const championLine = tv.getByText(/^Champion: /);
+	await expect(championLine).toBeVisible();
+
+	expect(await isWrapped(heading), 'the heading wraps').toBe(false);
+	expect(await isWrapped(championLine), 'the champion’s line wraps').toBe(false);
+	const headingBox = (await heading.boundingBox())!;
+	const motifsBox = await findMotifsBesideHeading(tv, heading);
+	const gapToMotifs = motifsBox.x - (headingBox.x + headingBox.width);
+	// The motifs sit 1.5cqw from the heading: 1.5% of the TV's width, and a pixel for rounding.
+	expect(gapToMotifs).toBeLessThanOrEqual(narrowerTv.width * 0.015 + 1);
+	await expectInsideTvSafeArea(tv);
+});

@@ -1,13 +1,16 @@
 /*
- * The palette button in the Organizer screen's header and the menu it opens: Same as laptop, Light and Dark,
- * the chosen one ticked. It works by keyboard as a menu button does: Enter, Space or the down arrow opens it
- * on the chosen theme, the arrow keys, Home and End move between the themes, Enter or Space picks one, and
- * Escape closes it, focus back on the button. Tab, a click elsewhere or a pick closes it too. Pointing at a
- * theme moves focus to it, so only one theme is ever highlighted, and it is the one Enter would pick.
+ * The palette button in the Organizer screen's header and the menu it opens, in two sections, each ticking its
+ * choice: This screen, the Organizer screen's Theme (Same as laptop, Light and Dark), and TV, the Tournament's
+ * TV Theme (Classic, then the months' in calendar order). Every choice shows a swatch of its colours.
+ * It works by keyboard as a menu button does: Enter, Space or the down arrow opens it on the chosen Theme, the
+ * arrow keys, Home and End move through both sections as one list, Enter or Space picks one, and Escape closes
+ * it, focus back on the button. Tab, a click elsewhere or a pick closes it too. Pointing at a choice moves focus
+ * to it, so only one choice is ever highlighted, and it is the one Enter would pick.
  */
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { listTvThemes, tvThemeMonths, tvThemeNames, type TvTheme } from '../tournament';
 import { quietButtons } from './classes';
-import { themeChoices, type ThemeChoice } from './themes';
+import { themeChoices, type Theme, type ThemeChoice } from './themes';
 
 /*
  * The menu floats below the button, over the screen, so opening it moves nothing. The focused theme is highlighted and
@@ -16,7 +19,44 @@ import { themeChoices, type ThemeChoice } from './themes';
 const menuClasses = {
 	menu: 'absolute top-full right-0 z-10 mt-2 flex min-w-48 flex-col rounded-lg border border-divider bg-panel p-1 shadow-xl',
 	item: 'flex items-center gap-2 rounded px-3 py-2 text-left focus:bg-raised focus:outline-2 focus:-outline-offset-2 focus:outline-accent',
+	heading: 'px-3 pt-2 pb-1 text-xs font-bold tracking-wider text-muted uppercase',
+	separator: 'mx-1 my-1 h-px bg-divider',
+	month: 'ml-auto pl-4 text-sm text-muted',
 };
+
+/*
+ * A swatch: a circle split corner to corner between a choice's ground and its bright colour. Each swatch takes
+ * its colours from its own theme attribute, so it shows the Theme or TV Theme it stands for whatever the
+ * screen is drawn in.
+ */
+const swatchShape = 'size-4 shrink-0 rounded-full border border-line bg-linear-135 from-50% to-50%';
+
+const ThemeSwatch = ({ theme }: { theme: Theme }) => (
+	<span aria-hidden data-theme={theme} className={`${swatchShape} from-canvas to-fill`} />
+);
+
+const TvThemeSwatch = ({ tvTheme }: { tvTheme: TvTheme }) => (
+	<span
+		aria-hidden
+		data-tv-theme={tvTheme}
+		className={`${swatchShape} from-tv-ground to-tv-highlight`}
+	/>
+);
+
+// Returns a month's short name, 1 for "Jan" to 12 for "Dec".
+const nameMonthShort = (month: number) =>
+	new Date(2000, month - 1, 1).toLocaleDateString('en-US', { month: 'short' });
+
+// One choice in the menu: its name, its swatch, whether it is chosen, and what picking it does.
+interface MenuChoice {
+	readonly key: string;
+	readonly label: string;
+	// The TV Theme's month's short name, shown after its name.
+	readonly month?: string;
+	readonly swatch: ReactNode;
+	readonly isChosen: boolean;
+	readonly pick: () => void;
+}
 
 // Where each arrow key, Home and End moves focus in a list of the given length, wrapping round at the ends.
 const findNextIndex = (key: string, index: number, count: number) => {
@@ -67,33 +107,105 @@ const CheckIcon = ({ isShown }: { isShown: boolean }) => (
 	</svg>
 );
 
+/*
+ * One choice in the menu: ticked if chosen, its swatch, its name and, for a month's TV Theme, the month. Reached
+ * by the arrow keys rather than Tab; pointing at it moves focus to it.
+ */
+const MenuItem = ({
+	choice,
+	onMount,
+	onPick,
+	onKeyDown,
+}: {
+	choice: MenuChoice;
+	onMount: (item: HTMLButtonElement | null) => void;
+	onPick: () => void;
+	onKeyDown: (event: KeyboardEvent) => void;
+}) => (
+	<button
+		ref={onMount}
+		type="button"
+		role="menuitemradio"
+		aria-checked={choice.isChosen}
+		tabIndex={-1}
+		className={menuClasses.item}
+		onClick={onPick}
+		onPointerMove={(event) => event.currentTarget.focus()}
+		onKeyDown={onKeyDown}
+	>
+		<CheckIcon isShown={choice.isChosen} />
+		{choice.swatch}
+		{choice.label}
+		{/* A space between the name and the month, so a screen reader says them apart. */}
+		{choice.month && (
+			<>
+				{' '}
+				<span className={menuClasses.month}>{choice.month}</span>
+			</>
+		)}
+	</button>
+);
+
+/*
+ * Same as laptop's swatch is the Theme the laptop is on now. The Tournament's TV Theme is the one ticked in the
+ * TV section.
+ */
 export const ThemeMenu = ({
 	choice,
+	laptopTheme,
 	onChoose,
+	tvTheme,
+	onChooseTvTheme,
 }: {
 	choice: ThemeChoice;
+	laptopTheme: Theme;
 	onChoose: (choice: ThemeChoice) => void;
+	tvTheme: TvTheme;
+	onChooseTvTheme: (tvTheme: TvTheme) => void;
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const menuId = useId();
 	const menuButton = useRef<HTMLButtonElement>(null);
-	const themeItems = useRef<(HTMLButtonElement | null)[]>([]);
-	const chosenIndex = themeChoices.findIndex((c) => c.choice === choice);
-
-	// Opening the menu puts focus on the chosen theme, so the arrow keys start from it.
-	useEffect(() => {
-		if (isOpen) {
-			themeItems.current[chosenIndex]?.focus();
-		}
-	}, [isOpen, chosenIndex]);
+	const menuItems = useRef<(HTMLButtonElement | null)[]>([]);
 
 	const closeAndFocusButton = () => {
 		setIsOpen(false);
 		menuButton.current?.focus();
 	};
 
-	const choose = (picked: ThemeChoice) => {
-		onChoose(picked);
+	const screenChoices: MenuChoice[] = themeChoices.map((option) => ({
+		key: option.choice,
+		label: option.label,
+		swatch: <ThemeSwatch theme={option.choice === 'laptop' ? laptopTheme : option.choice} />,
+		isChosen: option.choice === choice,
+		pick: () => onChoose(option.choice),
+	}));
+	const tvChoices: MenuChoice[] = listTvThemes().map((tvThemeOption) => ({
+		key: tvThemeOption,
+		label: tvThemeNames[tvThemeOption],
+		month:
+			tvThemeOption === 'classic' ? undefined : nameMonthShort(tvThemeMonths[tvThemeOption]),
+		swatch: <TvThemeSwatch tvTheme={tvThemeOption} />,
+		isChosen: tvThemeOption === tvTheme,
+		pick: () => onChooseTvTheme(tvThemeOption),
+	}));
+	const sections = [
+		{ name: 'This screen', choices: screenChoices },
+		{ name: 'TV', choices: tvChoices },
+	];
+	// Every choice in both sections, in order, as the arrow keys move through them.
+	const allChoices = [...screenChoices, ...tvChoices];
+	const chosenIndex = screenChoices.findIndex((c) => c.isChosen);
+
+	// Opening the menu puts focus on the chosen Theme, so the arrow keys start from it.
+	useEffect(() => {
+		if (isOpen) {
+			menuItems.current[chosenIndex]?.focus();
+		}
+	}, [isOpen, chosenIndex]);
+
+	const choose = (picked: MenuChoice) => {
+		picked.pick();
 		closeAndFocusButton();
 	};
 
@@ -107,10 +219,10 @@ export const ThemeMenu = ({
 			setIsOpen(false);
 			return;
 		}
-		const nextIndex = findNextIndex(event.key, index, themeChoices.length);
+		const nextIndex = findNextIndex(event.key, index, allChoices.length);
 		if (nextIndex !== undefined) {
 			event.preventDefault();
-			themeItems.current[nextIndex]?.focus();
+			menuItems.current[nextIndex]?.focus();
 		}
 	};
 
@@ -150,24 +262,35 @@ export const ThemeMenu = ({
 			</button>
 			{isOpen && (
 				<div id={menuId} role="menu" aria-label="Theme" className={menuClasses.menu}>
-					{themeChoices.map((option, index) => (
-						<button
-							key={option.choice}
-							ref={(item) => {
-								themeItems.current[index] = item;
-							}}
-							type="button"
-							role="menuitemradio"
-							aria-checked={option.choice === choice}
-							tabIndex={-1}
-							className={menuClasses.item}
-							onClick={() => choose(option.choice)}
-							onPointerMove={(event) => event.currentTarget.focus()}
-							onKeyDown={(event) => answerItemKey(event, index)}
-						>
-							<CheckIcon isShown={option.choice === choice} />
-							{option.label}
-						</button>
+					{sections.map((section, sectionIndex) => (
+						/*
+						 * Each section a group of its own, named by its heading. The heading is drawn for the eye and
+						 * the group's name says it to a screen reader, as a menu holds only groups and choices.
+						 */
+						<div key={section.name} className="contents">
+							{sectionIndex > 0 && (
+								<div role="separator" className={menuClasses.separator} />
+							)}
+							<div role="group" aria-label={section.name} className="flex flex-col">
+								<div aria-hidden className={menuClasses.heading}>
+									{section.name}
+								</div>
+								{section.choices.map((menuChoice) => (
+									<MenuItem
+										key={menuChoice.key}
+										choice={menuChoice}
+										onMount={(item) => {
+											menuItems.current[allChoices.indexOf(menuChoice)] =
+												item;
+										}}
+										onPick={() => choose(menuChoice)}
+										onKeyDown={(event) =>
+											answerItemKey(event, allChoices.indexOf(menuChoice))
+										}
+									/>
+								))}
+							</div>
+						</div>
 					))}
 				</div>
 			)}

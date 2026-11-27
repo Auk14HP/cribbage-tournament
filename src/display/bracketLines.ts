@@ -1,4 +1,4 @@
-// A bracket's lines between Matches, and the green of a winner's path along them.
+// A bracket's lines between Matches, and the colour of a winner's path along them.
 import type { BracketMatch, PlayerId } from '../tournament';
 
 type Side = 'left' | 'right';
@@ -10,14 +10,14 @@ export type IsStillInBracket = (player: PlayerId) => boolean;
 
 /*
  * The colours of a winner's path, kept in one place: a Match card's border, and a bracket line on a
- * slot's ::after or ::before. Green is the path a Player still in the bracket took, from each
- * Match they won to the Match they're in now; everything else is grey. Each class is written out whole
+ * slot's ::after or ::before. The TV Theme's path colour (green in Classic) is the path a Player still in the
+ * bracket took, from each Match they won to the Match they're in now; everything else is its line colour. Each class is written out whole
  * so Tailwind finds it.
  */
 const pathShade = {
-	card: { plain: 'border-gray-500', path: 'border-green-400' },
-	after: { plain: 'after:border-gray-500', path: 'after:border-green-400' },
-	before: { plain: 'before:border-gray-500', path: 'before:border-green-400' },
+	card: { plain: 'border-tv-line', path: 'border-tv-path' },
+	after: { plain: 'after:border-tv-line', path: 'after:border-tv-path' },
+	before: { plain: 'before:border-tv-line', path: 'before:border-tv-path' },
 };
 
 export const getPathShade = (element: keyof typeof pathShade, isPath: boolean) =>

@@ -109,9 +109,10 @@ export const pickedTag =
 	'absolute -top-1.5 right-2 rounded bg-highlight px-1 text-[0.625rem] leading-3 font-extrabold tracking-widest text-accent';
 
 /*
- * A TV screen drawn on the laptop: a black 16:9 box in the TV's own colours rather than the theme's, and the
- * TV screen's frame, so every size on the screen scales with the box.
+ * A TV screen drawn on the laptop: a 16:9 box, filled by the page it holds (TvThemePage), drawn in the TV
+ * Theme rather than the Organizer screen's Theme, and the TV screen's frame, so every size on the screen scales
+ * with the box.
  */
 export const tvPicture = {
-	frame: `aspect-video overflow-hidden bg-black font-sans text-white ${tvFrame}`,
+	frame: `aspect-video overflow-hidden font-sans ${tvFrame}`,
 };

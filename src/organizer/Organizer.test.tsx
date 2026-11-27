@@ -351,12 +351,25 @@ const chooseTheme = async (user: User, themeName: string) => {
 	await user.click(screen.getByRole('menuitemradio', { name: themeName }));
 };
 
-// The theme menu's choices, by name, and which one is chosen.
-const listThemeChoices = () =>
-	screen.getAllByRole('menuitemradio').map((item) => ({
+// The choices in one section of the theme menu, This screen or TV, by name, and which is chosen.
+const listThemeChoices = (sectionName: 'This screen' | 'TV') => {
+	const section = within(screen.getByRole('group', { name: sectionName }));
+	return section.getAllByRole('menuitemradio').map((item) => ({
 		name: item.textContent,
 		isChosen: item.getAttribute('aria-checked') === 'true',
 	}));
+};
+
+// Picks a TV Theme from the palette menu's TV section.
+const chooseTvTheme = async (user: User, tvThemeName: string) => {
+	await openThemeMenu(user);
+	const tvSection = within(screen.getByRole('group', { name: 'TV' }));
+	await user.click(tvSection.getByRole('menuitemradio', { name: tvThemeName }));
+};
+
+// A night in December, whose TV Theme is Christmas, and one in November, which has none yet.
+const decemberNight = new Date(2026, 11, 17, 19, 30);
+const novemberNight = new Date(2026, 10, 9, 19, 30);
 
 // The step bar: Register, House Rules, Draw, Now playing and Finished.
 const getStepBar = () => screen.getByRole('list', { name: 'Tournament steps' });
@@ -1310,7 +1323,7 @@ describe('the organizer route', () => {
 		expect(readScreenTheme()).toBe('light');
 
 		await openThemeMenu(user);
-		expect(listThemeChoices()).toEqual([
+		expect(listThemeChoices('This screen')).toEqual([
 			{ name: 'Same as laptop', isChosen: true },
 			{ name: 'Light', isChosen: false },
 			{ name: 'Dark', isChosen: false },
@@ -1323,7 +1336,7 @@ describe('the organizer route', () => {
 		expect(screen.getByRole('menuitemradio', { name: 'Dark' })).toBeChecked();
 	});
 
-	it('works the theme menu by keyboard: opens on the chosen theme, moves with the arrows, picks with Enter, and closes on Escape', async () => {
+	it('works the theme menu by keyboard: opens on the chosen theme, moves with the arrows and Home, picks with Enter, and closes on Escape', async () => {
 		const user = showOrganizer();
 		const themeButton = screen.getByRole('button', { name: 'Theme' });
 		themeButton.focus();
@@ -1332,9 +1345,9 @@ describe('the organizer route', () => {
 		expect(screen.getByRole('menuitemradio', { name: 'Same as laptop' })).toHaveFocus();
 		await user.keyboard('{ArrowDown}{ArrowDown}');
 		expect(screen.getByRole('menuitemradio', { name: 'Dark' })).toHaveFocus();
-		await user.keyboard('{ArrowDown}');
+		await user.keyboard('{Home}');
 		expect(screen.getByRole('menuitemradio', { name: 'Same as laptop' })).toHaveFocus();
-		await user.keyboard('{ArrowUp}{Enter}');
+		await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
 
 		expect(readScreenTheme()).toBe('dark');
 		expect(themeButton).toHaveFocus();
@@ -1382,6 +1395,80 @@ describe('the organizer route', () => {
 		expect(readScreenTheme()).toBe('dark');
 		await openThemeMenu(user);
 		expect(screen.getByRole('menuitemradio', { name: 'Same as laptop' })).toBeChecked();
+	});
+
+	it('offers Classic and then the TV Themes in calendar order, each with its month, ticking the Tournament’s', async () => {
+		vi.setSystemTime(decemberNight);
+		const user = showOrganizer();
+
+		await openThemeMenu(user);
+
+		expect(listThemeChoices('TV')).toEqual([
+			{ name: 'Classic', isChosen: false },
+			{ name: 'Christmas Dec', isChosen: true },
+		]);
+		expect(listThemeChoices('This screen')).toEqual([
+			{ name: 'Same as laptop', isChosen: true },
+			{ name: 'Light', isChosen: false },
+			{ name: 'Dark', isChosen: false },
+		]);
+	});
+
+	it('saves the TV Theme picked on the Tournament, leaving the screen’s Theme as it was, until Start a new Tournament drops it', async () => {
+		vi.setSystemTime(decemberNight);
+		const store = showOrganizerWithStore(registerPlayers('Dave K.', 'Big Dave'));
+		const user = userEvent.setup();
+
+		await chooseTvTheme(user, 'Classic');
+
+		expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+		expect(store.load()?.tvTheme).toBe('classic');
+		expect(readScreenTheme()).toBe('light');
+		await openThemeMenu(user);
+		expect(listThemeChoices('TV')).toEqual([
+			{ name: 'Classic', isChosen: true },
+			{ name: 'Christmas Dec', isChosen: false },
+		]);
+		expect(listThemeChoices('This screen')[0]).toEqual({
+			name: 'Same as laptop',
+			isChosen: true,
+		});
+		await user.keyboard('{Escape}');
+
+		await clickButton(user, 'Start a new Tournament');
+		await answerDialog(user, 'Start a new Tournament');
+		expect(store.load()?.tvTheme).toBeUndefined();
+		await openThemeMenu(user);
+		expect(screen.getByRole('menuitemradio', { name: 'Christmas Dec' })).toBeChecked();
+	});
+
+	it('ticks Classic for a Tournament in a month without its TV Theme yet', async () => {
+		vi.setSystemTime(novemberNight);
+		const user = showOrganizer();
+
+		await openThemeMenu(user);
+
+		expect(screen.getByRole('menuitemradio', { name: 'Classic' })).toBeChecked();
+	});
+
+	it('moves through both sections of the theme menu by keyboard, and picks a TV Theme with Enter', async () => {
+		vi.setSystemTime(decemberNight);
+		const store = showOrganizerWithStore();
+		const user = userEvent.setup();
+		const themeButton = screen.getByRole('button', { name: 'Theme' });
+		themeButton.focus();
+
+		await user.keyboard('{Enter}{ArrowDown}{ArrowDown}{ArrowDown}');
+		expect(screen.getByRole('menuitemradio', { name: 'Classic' })).toHaveFocus();
+		await user.keyboard('{End}');
+		expect(screen.getByRole('menuitemradio', { name: 'Christmas Dec' })).toHaveFocus();
+		await user.keyboard('{ArrowDown}');
+		expect(screen.getByRole('menuitemradio', { name: 'Same as laptop' })).toHaveFocus();
+		await user.keyboard('{ArrowUp}{ArrowUp}{Enter}');
+
+		expect(store.load()?.tvTheme).toBe('classic');
+		expect(themeButton).toHaveFocus();
+		expect(readScreenTheme()).toBe('light');
 	});
 
 	it('moves focus in the theme menu to the theme under the pointer, the chosen theme keeping its tick', async () => {

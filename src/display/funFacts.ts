@@ -6,7 +6,8 @@
  * nothing that reads aloud in a busy bar as a joke at a Player's expense. A made-up line is clearly made up;
  * a true one is a real fact about cribbage and names nobody.
  */
-import type { Player, PlayerId, Random } from '../tournament';
+import type { Player, PlayerId, Random, TvTheme } from '../tournament';
+import { tvThemeFunFacts } from './tvThemeFunFacts';
 
 export const funFacts: readonly string[] = [
 	// No names, so the line works before anyone registers.
@@ -199,8 +200,14 @@ export interface FunFactRotation {
 	readonly turn: number;
 }
 
+// Returns the Fun Facts the TV draws from in the TV Theme given: the general ones and its own.
+export const listFunFacts = (tvTheme: TvTheme): readonly string[] => [
+	...funFacts,
+	...tvThemeFunFacts[tvTheme],
+];
+
 /*
- * Returns the next Fun Fact, or the first when nothing is on show yet. A fact fits when enough Players are
+ * Returns the next Fun Fact from the facts given, or the first when nothing is on show yet. A fact fits when enough Players are
  * registered to fill its slots, and can be shown next when its slots can be filled leaving out every Player the
  * fact on show names, so nobody is named twice in a row. The next is chosen at random from the facts not yet
  * used this pass that can be shown next, and its names at random from the Players it may name. When the only
@@ -209,16 +216,22 @@ export interface FunFactRotation {
  * turn after can show an unused fact. Once every fitting fact is used, a new pass begins, starting with any
  * fact but the one on show.
  */
-export const chooseNextFunFact = (
-	shown: FunFactRotation | undefined,
-	players: readonly Player[],
-	random: Random,
-): FunFactRotation => {
+export const chooseNextFunFact = ({
+	shown,
+	players,
+	facts,
+	random,
+}: {
+	shown: FunFactRotation | undefined;
+	players: readonly Player[];
+	facts: readonly string[];
+	random: Random;
+}): FunFactRotation => {
 	const namedBefore = shown?.namedPlayerIds ?? [];
 	const namable = players.filter((p) => !namedBefore.includes(p.id));
 	const canShowNext = (fact: string) => hasEnoughPlayers(fact, namable) && fact !== shown?.fact;
 	const usedBefore = shown?.usedThisPass ?? [];
-	const unused = funFacts.filter(
+	const unused = facts.filter(
 		(fact) => hasEnoughPlayers(fact, players) && !usedBefore.includes(fact),
 	);
 	const unusedShowable = unused.filter(canShowNext);
@@ -233,7 +246,7 @@ export const chooseNextFunFact = (
 		[fact] = usedNameless.length > 0 ? usedNameless : usedShowable;
 		usedThisPass = [...usedBefore.filter((f) => f !== fact), fact];
 	} else {
-		fact = pickOne(funFacts.filter(canShowNext), random);
+		fact = pickOne(facts.filter(canShowNext), random);
 		usedThisPass = [fact];
 	}
 	const namedPlayers = pickSome(namable, countNameSlots(fact), random);

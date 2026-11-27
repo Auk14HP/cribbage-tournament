@@ -2,11 +2,12 @@ import { getBracketPicture, type BracketName, type Player, type Tournament } fro
 import { bracketTitles } from '../wording';
 import { TournamentTitle } from './TournamentTitle';
 import { tvSafeArea } from './tvSafeArea';
+import { TvThemeChampionMotif } from './TvThemeArt';
 
 /*
  * Once the Tournament is finished: the Tournament's title and the night's date across the top, then the
  * champions in the space left, as large as the TV allows. The Winners Bracket's is the night's only champion
- * when no Losers Bracket is played.
+ * when no Losers Bracket is played. Each champion's name has the TV Theme's motif for their bracket either side.
  */
 export const Champion = ({ tournament }: { tournament: Tournament }) => {
 	const winnersChampion = getBracketPicture(tournament, 'winners')!.champion!;
@@ -23,8 +24,12 @@ export const Champion = ({ tournament }: { tournament: Tournament }) => {
 						<BracketChampion bracketName="losers" champion={losersChampion} />
 					</>
 				) : (
-					<p className="mt-[6cqh] text-[14cqh] leading-none font-bold text-yellow-300">
-						{winnersChampion.name}
+					<p className="mt-[6cqh]">
+						<ChampionName
+							bracketName="winners"
+							name={winnersChampion.name}
+							size={championNameSizes.alone}
+						/>
 					</p>
 				)}
 			</div>
@@ -41,11 +46,44 @@ const BracketChampion = ({
 	champion: Player;
 }) => (
 	<p className="mt-[6cqh]">
-		<span className="block text-[5cqh] font-bold text-gray-300">
+		<span className="text-tv-muted block text-[5cqh] font-bold">
 			{bracketTitles[bracketName]}
 		</span>
-		<span className="block text-[11cqh] leading-none font-bold text-yellow-300">
-			{champion.name}
-		</span>
+		<ChampionName
+			bracketName={bracketName}
+			name={champion.name}
+			size={championNameSizes.besideAnother}
+		/>
 	</p>
+);
+
+/*
+ * The size of a champion's name and of the motifs beside it, which stand as tall as the name's line: larger
+ * for the night's only champion than for one of two. Each class is written out whole so Tailwind finds it.
+ */
+const championNameSizes = {
+	alone: { text: 'text-[14cqh]', motif: 'h-[14cqh]' },
+	besideAnother: { text: 'text-[11cqh]', motif: 'h-[11cqh]' },
+};
+
+/*
+ * A champion's name, in the highlight colour, with the TV Theme's motif for their bracket's champion either
+ * side.
+ */
+const ChampionName = ({
+	bracketName,
+	name,
+	size,
+}: {
+	bracketName: BracketName;
+	name: string;
+	size: (typeof championNameSizes)[keyof typeof championNameSizes];
+}) => (
+	<span
+		className={`text-tv-highlight flex items-center justify-center gap-[3cqw] leading-none font-bold ${size.text}`}
+	>
+		<TvThemeChampionMotif bracketName={bracketName} className={size.motif} />
+		<span>{name}</span>
+		<TvThemeChampionMotif bracketName={bracketName} className={size.motif} />
+	</span>
 );

@@ -1,7 +1,7 @@
 import { useId, useRef, type KeyboardEvent, type RefObject } from 'react';
 import { Bracket } from '../display/Bracket';
-import { tvSafeArea } from '../display/tvSafeArea';
 import { countdownRing } from '../display/tvScreenOnShow';
+import { TvThemePage } from '../display/TvThemePage';
 import { getBracketPicture, type BracketName, type Tournament } from '../tournament';
 import { bracketTitles } from '../wording';
 import { tvPicture } from './classes';
@@ -9,7 +9,8 @@ import { tvPicture } from './classes';
 /*
  * The brackets drawn as the TV draws them, full size on the laptop, in a dialog. Tabs switch between the
  * Winners Bracket and, once there is one, the Losers Bracket. The bracket on show is the one given; the close
- * button closes the dialog. Looking changes nothing the TV shows.
+ * button closes the dialog. Looking changes nothing the TV shows. The brackets are drawn in the TV Theme, its
+ * artwork still.
  */
 export const BracketPeek = ({
 	ref,
@@ -88,12 +89,12 @@ export const BracketPeek = ({
 					aria-labelledby={makeTabId(bracketName)}
 					className={`mx-auto mt-4 w-full ${peekFrameWidth} ${tvPicture.frame}`}
 				>
-					<div className={`h-full ${tvSafeArea.page}`}>
+					<TvThemePage tournament={tournament} isMoving={false} className="h-full">
 						{/* The same clearance as the TV's, so the bracket is laid out just as the TV lays it out. */}
 						<div className={countdownRing.clearance}>
 							<Bracket tournament={tournament} bracketName={bracketName} />
 						</div>
-					</div>
+					</TvThemePage>
 				</div>
 			)}
 		</dialog>
