@@ -21,9 +21,9 @@ import {
 } from './tvTheme';
 
 /*
- * The TV Theme in a real browser: picking one in the Organizer's palette menu changes the TV in its own window
- * at once; every TV screen's text reads well in every TV Theme; and the artwork moves only on the TV, and not
- * there when the TV asks for reduced motion.
+ * The TV Theme in a real browser: picking one in the Organizer's palette menu changes the TV in its
+ * own window at once; every TV screen's text reads well in every TV Theme; and the artwork moves
+ * only on the TV, and not there when the TV asks for reduced motion.
  */
 
 // The field the walk through every TV screen plays: enough for a Losers Bracket, quick to play out.
@@ -48,8 +48,9 @@ test('changes the TV at once when the Organizer picks a TV Theme', async ({ page
 });
 
 /*
- * Checks a TV screen in the TV Theme given reads well: its text at 7:1 or 4.5:1, everything inside the safe
- * area, and the TV Theme's artwork, if it has any, clear of every line of text and the countdown ring.
+ * Checks a TV screen in the TV Theme given reads well: its text at 7:1 or 4.5:1, everything
+ * inside the safe area, and the TV Theme's artwork, if it has any, clear of every line of
+ * text and the countdown ring.
  */
 const expectScreenDrawnWell = async (tv: Page, tvThemeName: string, moment: string) => {
 	await expectTvTextReadable(tv, moment);
@@ -60,20 +61,27 @@ const expectScreenDrawnWell = async (tv: Page, tvThemeName: string, moment: stri
 };
 
 /*
- * Every TV Theme, on every TV screen: each draws its own colours and artwork, so each is walked. On the narrower
- * TV, where the artwork has least room beside the text. The layout that every TV Theme with a border shares is
- * measured at its fullest fields in tv-safe-area.spec.ts and bracket-layout.spec.ts.
+ * Every TV Theme, on every TV screen: each draws its own colours and artwork, so each is
+ * walked. On the narrower TV, where the artwork has least room beside the text. The layout
+ * that every TV Theme with a border shares is measured at its fullest fields in
+ * tv-safe-area.spec.ts and bracket-layout.spec.ts.
  */
 for (const tvThemeName of tvThemeMenuNames) {
 	test(`draws every TV screen well in ${tvThemeName}: text at 7:1 or 4.5:1, artwork clear of it, all inside the safe area`, async ({
 		page: organizer,
 	}) => {
-		// Playing to the champions and parking the cycle on each screen takes longer than a test's usual 30 seconds.
+		/*
+		 * Playing to the champions and parking the cycle on each screen takes longer than
+		 * a test's usual 30 seconds.
+		 */
 		test.setTimeout(120_000);
 		await organizer.goto(`/?players=${playerCount}&boards=${firstMatchCount}`);
 		await chooseTvTheme(organizer, tvThemeName);
 		const tv = await openTv(organizer, narrowerTv);
-		// The Fun Fact fades in at the start of its time, so the screen is measured once it is fully shown.
+		/*
+		 * The Fun Fact fades in at the start of its time, so the screen is measured
+		 * once it is fully shown.
+		 */
 		await expect(tv.getByText(/^Fun fact: /)).toHaveCSS('opacity', '1');
 		await expectScreenDrawnWell(tv, tvThemeName, 'Tonight’s Players');
 

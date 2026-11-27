@@ -21,10 +21,11 @@ import {
 } from './tvScreenOnShow';
 
 /*
- * Fun Facts are chosen with the random source given, so tests can repeat them. The window is the TV screen's
- * frame, so the screen fills it, drawn in the TV Theme, whose artwork moves here alone. The countdown ring
- * shows over the screen's time on Auto; a Held screen, or a phase's only screen, has none. While open, it saves
- * the TV's heartbeat, so the Organizer screen knows the TV is running.
+ * Fun Facts are chosen with the random source given, so tests can repeat them. The window is
+ * the TV screen's frame, so the screen fills it, drawn in the TV Theme, whose artwork moves
+ * here alone. The countdown ring shows over the screen's time on Auto; a Held screen, or a
+ * phase's only screen, has none. While open, it saves the TV's heartbeat, so the Organizer
+ * screen knows the TV is running.
  */
 export const Display = ({
 	store,
@@ -50,11 +51,11 @@ export const Display = ({
 };
 
 /*
- * A ring in the safe area's bottom-right corner that fills over the screen's time, so the room sees a change
- * coming. It sits in the strip the screen keeps clear for it, clear of every Match card. It starts filled as
- * far as the time already gone when it appears, and fills on from there. The TV Theme's motif sits in its hole.
- * Decorative, so hidden from assistive technology. The times reach the animation through inherited CSS
- * variables.
+ * A ring in the safe area's bottom-right corner that fills over the screen's time, so the room sees
+ * a change coming. It sits in the strip the screen keeps clear for it, clear of every Match card.
+ * It starts filled as far as the time already gone when it appears, and fills on from there. The TV
+ * Theme's motif sits in its hole. Decorative, so hidden from assistive technology. The times reach
+ * the animation through inherited CSS variables.
  */
 const CountdownRing = ({ countdown }: { countdown: Countdown }) => {
 	const countdownTimes = useCountdownTimes(countdown);

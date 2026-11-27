@@ -1,7 +1,7 @@
 /*
- * Checks the style sheet gives every TV Theme the core lists a value for every TV colour, so a new TV Theme
- * whose colours are missing fails `npm run check`, not only the browser tests. Read as text, since a test can't
- * load the style sheet as styles.
+ * Checks the style sheet gives every TV Theme the core lists a value for every TV colour, so a new
+ * TV Theme whose colours are missing fails `npm run check`, not only the browser tests. Read as
+ * text, since a test can't load the style sheet as styles.
  */
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';

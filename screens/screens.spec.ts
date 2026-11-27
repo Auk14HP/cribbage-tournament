@@ -23,30 +23,38 @@ const isShownWithin = async (element: Locator, timeout: number) => {
 };
 
 /*
- * Not a test: screenshots of both routes for a Tournament of any size, set up through the test Tournament URL.
- * Before running it, read the run-app skill (.claude/skills/run-app/SKILL.md) for how to shoot and view these
- * screenshots.
+ * Not a test: screenshots of both routes for a Tournament of any size, set up through the test
+ * Tournament URL. Before running it, read the run-app skill (.claude/skills/run-app/SKILL.md) for
+ * how to shoot and view these screenshots.
  *   PLAYERS=29 BOARDS=16 npm run screens    registration
  *   ... HOME_BOARD=3                        with the first Player registered given Home Board 3
- *   ... DRAW=1                              and the House Rules, two then every one shown, then Tonight's Draw
- *   ... DRAW=1 SWAP=1                       and Swap mode, the Player with the longest name in a Match tile
- *                                           picked, then after swapping them with the last Player listed
+ *   ... DRAW=1                              and the House Rules, two then every one shown, then
+ *                                           Tonight's Draw
+ *   ... DRAW=1 SWAP=1                       and Swap mode, the Player with the longest name in a
+ *                                           Match tile picked, then after swapping them with the
+ *                                           last Player listed
  *   ... DRAW=1 START=1                      and after Start
- *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all: to the champion)
- *   ... DRAW=1 START=1 LOSERS=1             and, every Player's first Match played with its loser staying, the
- *                                           Losers Bracket parked on the TV. Stops there.
- *   ... DRAW=1 START=1 RESULTS=12 PEEK=1    and the brackets looked at on the laptop: the bracket on show,
- *                                           then the Losers Bracket's tab once it has one
+ *   ... DRAW=1 START=1 RESULTS=12           and after 12 Match results are recorded (RESULTS=all:
+ *                                           to the champion)
+ *   ... DRAW=1 START=1 LOSERS=1             and, every Player's first Match played with its loser
+ *                                           staying, the Losers Bracket parked on the TV. Stops
+ *                                           there.
+ *   ... DRAW=1 START=1 RESULTS=12 PEEK=1    and the brackets looked at on the laptop: the bracket
+ *                                           on show, then the Losers Bracket's tab once it has one
  *   ... DRAW=1 START=1 RESULTS=3 FORFEIT=1  and the Forfeit dialog, then after that Forfeit
- *   ... SCHEME=dark                         with the laptop set dark (or light), which the Organizer screen's
- *                                           Same as laptop Theme follows
+ *   ... SCHEME=dark                         with the laptop set dark (or light), which the
+ *                                           Organizer screen's Same as laptop Theme follows
  *   ... THEME_MENU=1                        and the Theme menu open at registration
- *   ... TV_THEME=Christmas                  with the TV drawn in that TV Theme, picked from the Theme menu;
- *                                           otherwise Classic, as the calendar is moved to November
- *   ... TV_CLOSED=1                         and, after registration, the TV window closed: the organizer
- *                                           alone, its badge reading TV closed. Stops there.
- * Writes test-results/screens/{organizer,tv}-{registration,theme-menu,house-rules-two-shown,house-rules,draw,swap-picked,swapped,started,results,losers-bracket,champion,
- * peek,peek-losers,forfeit-dialog,forfeit}.png and test-results/screens/organizer-tv-closed.png: the organizer at
+ *   ... TV_THEME=Christmas                  with the TV drawn in that TV Theme, picked from the
+ *                                           Theme menu; otherwise Classic, as the calendar is moved
+ *                                           to November
+ *   ... TV_CLOSED=1                         and, after registration, the TV window closed: the
+ *                                           organizer alone, its badge reading TV closed. Stops
+ *                                           there.
+ * Writes test-results/screens/organizer-<moment>.png and tv-<moment>.png for each moment
+ * reached: registration, theme-menu, house-rules-two-shown, house-rules, draw, swap-picked,
+ * swapped, started, results, losers-bracket, champion, peek, peek-losers, forfeit-dialog and
+ * forfeit; and, with TV_CLOSED, test-results/screens/organizer-tv-closed.png. The organizer at
  * 1280×720, the TV at 1920×1080.
  */
 const players = process.env.PLAYERS ?? '26';
@@ -85,7 +93,10 @@ test('screens', async ({ context, page: organizer }) => {
 		// The first Player registered: the first option after Nobody.
 		await homeBoardForSelect.selectOption({ index: 1 });
 	}
-	// The Fun Fact fades in at the start of its 12 seconds, so Tonight's Players is shot once it is fully shown.
+	/*
+	 * The Fun Fact fades in at the start of its 12 seconds, so Tonight's Players is
+	 * shot once it is fully shown.
+	 */
 	await expect(tv.getByText(/^Fun fact: /)).toHaveCSS('opacity', '1');
 	await shoot('registration');
 	if (process.env.TV_CLOSED) {
@@ -154,8 +165,9 @@ test('screens', async ({ context, page: organizer }) => {
 		await nextWinnerButton.click();
 		await answerIsLoserStayingDialogIfAsked(organizer, 'Staying');
 		/*
-		 * Each screen for 1 second, so the TV soon cycles to each bracket. The box is usable once the TV has a
-		 * second screen to cycle: the Losers Bracket drawn, or the Tournament finished.
+		 * Each screen for 1 second, so the TV soon cycles to each bracket. The box is
+		 * usable once the TV has a second screen to cycle: the Losers Bracket drawn, or
+		 * the Tournament finished.
 		 */
 		if (!isOneSecondSet && (await secondsInput.isEnabled())) {
 			await secondsInput.fill('1');
@@ -163,7 +175,10 @@ test('screens', async ({ context, page: organizer }) => {
 			isOneSecondSet = true;
 		}
 	}
-	// The TV cycles each second, so wait for the screen to shoot: the bracket, then the champion once finished.
+	/*
+	 * The TV cycles each second, so wait for the screen to shoot: the bracket, then
+	 * the champion once finished.
+	 */
 	await tv.getByRole('heading', { name: 'Winners Bracket' }).waitFor();
 	await shoot('results');
 	// With a Losers Bracket drawn, its screen.

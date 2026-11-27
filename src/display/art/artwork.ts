@@ -1,6 +1,6 @@
 /*
- * What artwork a TV Theme draws, and where: every TV Theme but Classic has each piece. Adding a TV Theme, and
- * the style its artwork shares: docs/tv-themes.md.
+ * What artwork a TV Theme draws, and where: every TV Theme but Classic has each piece. Adding a TV
+ * Theme, and the style its artwork shares: docs/tv-themes.md.
  */
 import type { FC } from 'react';
 import type { BracketName } from '../../tournament';

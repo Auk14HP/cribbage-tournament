@@ -1,15 +1,19 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import { listTvThemes, tvThemeNames } from '../src/tournament';
 
-// The TV Themes the browser tests draw the TV in, by the names the menu shows: Classic and every month's.
+/*
+ * The TV Themes the browser tests draw the TV in, by the names the menu shows:
+ * Classic and every month's.
+ */
 export const tvThemeMenuNames = listTvThemes().map((tvTheme) => tvThemeNames[tvTheme]);
 
 // The first TV Theme with a border, in calendar order.
 const [firstBorderedTvTheme] = listTvThemes().filter((tvTheme) => tvTheme !== 'classic');
 
 /*
- * The TV Themes a layout is measured in: Classic, and one TV Theme with a border standing in for all of them,
- * since every TV Theme but Classic takes the same band from the screens (--tv-border-band in src/style.css).
+ * The TV Themes a layout is measured in: Classic, and one TV Theme with a border standing in for
+ * all of them, since every TV Theme but Classic takes the same band from the screens
+ * (--tv-border-band in src/style.css).
  */
 export const layoutTvThemeMenuNames = [tvThemeNames.classic, tvThemeNames[firstBorderedTvTheme]];
 
